@@ -8,6 +8,11 @@ import Index from "./pages/Index";
 import News from "./pages/News";
 import Players from "./pages/Players";
 import Matches from "./pages/Matches";
+import Training from "./pages/Training";
+import Press from "./pages/Press";
+import Kits from "./pages/Kits";
+import Calendar from "./pages/Calendar";
+import PlayerProfile from "./pages/PlayerProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,7 +27,12 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/news" element={<News />} />
           <Route path="/players" element={<Players />} />
+          <Route path="/players/:id" element={<PlayerProfile />} />
           <Route path="/matches" element={<Matches />} />
+          <Route path="/training" element={<Training />} />
+          <Route path="/press" element={<Press />} />
+          <Route path="/kits" element={<Kits />} />
+          <Route path="/calendar" element={<Calendar />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

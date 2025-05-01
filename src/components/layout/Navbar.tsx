@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Calendar, Users, Video, FileText, Image } from "lucide-react";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -32,9 +32,9 @@ export function Navbar() {
             />
           </div>
           <span className="font-montserrat font-bold text-xl md:text-2xl tracking-tight">
-            <span className="text-madrid-blue">Hala</span>
-            <span className="text-black dark:text-white">Madrid</span>
-            <span className="text-madrid-gold">360</span>
+            <span className="text-madrid-blue">HALA</span>
+            <span className="text-black dark:text-white">MADRID</span>
+            <span className="text-madrid-gold">TV</span>
           </span>
         </Link>
 
@@ -47,21 +47,38 @@ export function Navbar() {
         </div>
 
         {/* Desktop Menu */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-5">
           <Link to="/" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
             Accueil
           </Link>
-          <Link to="/news" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
-            Actualités 📰
+          <Link to="/news" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1">
+            <FileText className="h-4 w-4" />
+            Actualités
           </Link>
-          <Link to="/players" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
-            Effectif 🧑‍🤝‍🧑
+          <Link to="/players" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1">
+            <Users className="h-4 w-4" />
+            Effectif
           </Link>
           <Link to="/matches" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
-            Matchs ⚽
+            Matchs
+          </Link>
+          <Link to="/training" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1">
+            <Video className="h-4 w-4" />
+            Entrainement
+          </Link>
+          <Link to="/press" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
+            Conférences
+          </Link>
+          <Link to="/kits" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1">
+            <Image className="h-4 w-4" />
+            Maillots
+          </Link>
+          <Link to="/calendar" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1">
+            <Calendar className="h-4 w-4" />
+            Calendrier
           </Link>
           <Link to="/stats" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
-            Statistiques 📊
+            Stats
           </Link>
           <ThemeToggle />
         </nav>
@@ -79,31 +96,59 @@ export function Navbar() {
               </Link>
               <Link 
                 to="/news" 
-                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
+                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
                 onClick={closeMenu}
               >
-                Actualités 📰
+                <FileText className="h-4 w-4" /> Actualités
               </Link>
               <Link 
                 to="/players" 
-                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
+                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
                 onClick={closeMenu}
               >
-                Effectif 🧑‍🤝‍🧑
+                <Users className="h-4 w-4" /> Effectif
               </Link>
               <Link 
                 to="/matches" 
                 className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
                 onClick={closeMenu}
               >
-                Matchs ⚽
+                Matchs
+              </Link>
+              <Link 
+                to="/training" 
+                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
+                onClick={closeMenu}
+              >
+                <Video className="h-4 w-4" /> Entrainement
+              </Link>
+              <Link 
+                to="/press" 
+                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
+                onClick={closeMenu}
+              >
+                Conférences
+              </Link>
+              <Link 
+                to="/kits" 
+                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
+                onClick={closeMenu}
+              >
+                <Image className="h-4 w-4" /> Maillots
+              </Link>
+              <Link 
+                to="/calendar" 
+                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
+                onClick={closeMenu}
+              >
+                <Calendar className="h-4 w-4" /> Calendrier
               </Link>
               <Link 
                 to="/stats" 
                 className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
                 onClick={closeMenu}
               >
-                Statistiques 📊
+                Stats
               </Link>
             </div>
           </div>

@@ -7,9 +7,9 @@ export function Footer() {
       <div className="madrid-container py-8 md:py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <h3 className="text-xl font-bold mb-4">HalaMadrid360</h3>
+            <h3 className="text-xl font-bold mb-4">HALA MADRID TV</h3>
             <p className="text-gray-300">
-              Votre source d'actualités et d'informations sur le Real Madrid.
+              Votre chaîne d'actualités, de vidéos et d'informations sur le Real Madrid.
             </p>
             <div className="flex gap-4 mt-4">
               <a href="#" className="text-white hover:text-madrid-gold transition-colors">
@@ -54,8 +54,18 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/stats" className="text-gray-300 hover:text-white transition-colors">
-                  Statistiques
+                <Link to="/training" className="text-gray-300 hover:text-white transition-colors">
+                  Entrainement
+                </Link>
+              </li>
+              <li>
+                <Link to="/press" className="text-gray-300 hover:text-white transition-colors">
+                  Conférences
+                </Link>
+              </li>
+              <li>
+                <Link to="/calendar" className="text-gray-300 hover:text-white transition-colors">
+                  Calendrier
                 </Link>
               </li>
             </ul>
@@ -84,7 +94,7 @@ export function Footer() {
         </div>
         
         <div className="border-t border-gray-600 mt-8 pt-8 text-center text-gray-300">
-          <p>© {new Date().getFullYear()} HalaMadrid360. Tous droits réservés.</p>
+          <p>© {new Date().getFullYear()} HALA MADRID TV. Tous droits réservés.</p>
         </div>
       </div>
     </footer>
