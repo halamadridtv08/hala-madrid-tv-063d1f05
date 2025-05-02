@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useEmblaCarousel } from "embla-carousel-react"
+import useEmblaCarousel from 'embla-carousel-react';
 
 export function NewsCarousel() {
   // Simuler des données de slides
