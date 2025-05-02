@@ -10,7 +10,7 @@ import { useState } from "react";
 const Calendar = () => {
   const [date, setDate] = useState(new Date());
   
-  // Simuler des données de calendrier
+  // Données de calendrier avec logos
   const matches = [
     {
       id: 1,
@@ -60,6 +60,38 @@ const Calendar = () => {
       venue: "Santiago Bernabéu",
       tickets: false
     },
+    {
+      id: 4,
+      competition: "La Liga",
+      round: "Journée 1",
+      date: new Date("2025-05-25T21:00:00"),
+      homeTeam: {
+        name: "Real Madrid",
+        logo: "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png"
+      },
+      awayTeam: {
+        name: "FC Barcelona",
+        logo: "https://upload.wikimedia.org/wikipedia/en/thumb/4/47/FC_Barcelona_%28crest%29.svg/1200px-FC_Barcelona_%28crest%29.svg.png"
+      },
+      venue: "Santiago Bernabéu",
+      tickets: false
+    },
+    {
+      id: 5,
+      competition: "Supercoupe d'Europe",
+      round: "Finale",
+      date: new Date("2025-06-05T20:45:00"),
+      homeTeam: {
+        name: "Real Madrid",
+        logo: "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png"
+      },
+      awayTeam: {
+        name: "Bayern Munich",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/FC_Bayern_München_logo_%282017%29.svg/1200px-FC_Bayern_München_logo_%282017%29.svg.png"
+      },
+      venue: "Stade de France",
+      tickets: false
+    }
   ];
 
   const formatMatchDate = (date) => {
@@ -84,6 +116,9 @@ const Calendar = () => {
     match.date.getFullYear() === date.getFullYear()
   );
 
+  // Jours spéciaux avec des matchs pour le calendrier
+  const matchDays = matches.map(match => new Date(match.date));
+
   return (
     <>
       <Navbar />
@@ -93,13 +128,40 @@ const Calendar = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-1">
-              <Card className="p-4">
+              <Card className="p-4 transform transition-all hover:scale-105 hover:shadow-xl">
                 <CalendarComponent
                   mode="single"
                   selected={date}
                   onSelect={setDate}
                   className="rounded-md border"
+                  modifiers={{
+                    matchDay: matchDays
+                  }}
+                  modifiersStyles={{
+                    matchDay: {
+                      fontWeight: 'bold',
+                      color: '#FEBE10',
+                      backgroundColor: '#00529F20'
+                    }
+                  }}
                 />
+                <div className="mt-4">
+                  <h3 className="text-lg font-bold">Prochains matchs importants</h3>
+                  <div className="space-y-2 mt-2">
+                    {matches.slice(0, 3).map((match) => (
+                      <div key={match.id} className="flex items-center text-sm p-2 rounded-md bg-gray-50 dark:bg-gray-800">
+                        <img 
+                          src={match.awayTeam.name === "Real Madrid" ? match.homeTeam.logo : match.awayTeam.logo} 
+                          alt="Logo adversaire"
+                          className="w-5 h-5 mr-2"
+                        />
+                        <span>
+                          {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(match.date)} - {match.awayTeam.name === "Real Madrid" ? match.homeTeam.name : match.awayTeam.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </Card>
             </div>
             
@@ -109,7 +171,7 @@ const Calendar = () => {
               {currentMonthMatches.length > 0 ? (
                 <div className="space-y-4">
                   {currentMonthMatches.map((match) => (
-                    <Card key={match.id} className="overflow-hidden">
+                    <Card key={match.id} className="overflow-hidden transform transition-all hover:scale-102 hover:shadow-lg">
                       <CardContent className="p-0">
                         <div className="bg-gradient-to-r from-madrid-blue to-blue-800 p-4">
                           <div className="flex justify-between items-center text-white">
@@ -122,7 +184,7 @@ const Calendar = () => {
                         
                         <div className="p-4">
                           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                            <div className="flex flex-col items-center">
+                            <div className="flex flex-col items-center transform transition-transform hover:scale-110">
                               <img 
                                 src={match.homeTeam.logo} 
                                 alt={match.homeTeam.name}
@@ -146,7 +208,7 @@ const Calendar = () => {
                               </div>
                             </div>
                             
-                            <div className="flex flex-col items-center">
+                            <div className="flex flex-col items-center transform transition-transform hover:scale-110">
                               <img 
                                 src={match.awayTeam.logo} 
                                 alt={match.awayTeam.name}

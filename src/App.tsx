@@ -12,6 +12,7 @@ import Training from "./pages/Training";
 import Press from "./pages/Press";
 import Kits from "./pages/Kits";
 import Calendar from "./pages/Calendar";
+import Stats from "./pages/Stats";
 import PlayerProfile from "./pages/PlayerProfile";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/press" element={<Press />} />
           <Route path="/kits" element={<Kits />} />
           <Route path="/calendar" element={<Calendar />} />
+          <Route path="/stats" element={<Stats />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
