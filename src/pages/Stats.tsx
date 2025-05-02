@@ -1,4 +1,3 @@
-
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,7 +25,7 @@ import {
   Legend, 
   ResponsiveContainer 
 } from "recharts";
-import { ChartBarIcon, ChartLineUp, ChartPie } from "lucide-react";
+import { ChartBarIcon, ChartLine, ChartPie } from "lucide-react";
 import { useState } from "react";
 
 const Stats = () => {
@@ -293,7 +292,7 @@ const Stats = () => {
                 <Card className="transform transition-all hover:shadow-lg">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <ChartLineUp className="h-5 w-5 text-madrid-gold" />
+                      <ChartLine className="h-5 w-5 text-madrid-gold" />
                       Meilleurs Passeurs
                     </CardTitle>
                   </CardHeader>
