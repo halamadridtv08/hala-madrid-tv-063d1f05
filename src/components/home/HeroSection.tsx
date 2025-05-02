@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { YouTubeChannel } from "@/components/YouTubeChannel";
+import { NewsCarousel } from "@/components/home/NewsCarousel";
 import { motion } from "framer-motion";
 
 export function HeroSection() {
@@ -46,6 +47,11 @@ export function HeroSection() {
           </motion.div>
         </div>
       </motion.div>
+      
+      {/* Nouveau carrousel de nouvelles */}
+      <div className="w-full">
+        <NewsCarousel />
+      </div>
       
       <div className="madrid-container py-8">
         <YouTubeChannel channelUrl="https://www.youtube.com/@HALAMADRIDTV10" className="mb-8" />
