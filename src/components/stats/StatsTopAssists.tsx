@@ -3,7 +3,7 @@ import { ChartLine } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, ChartTooltip } from "recharts";
+import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
 
 interface StatsTopAssistsProps {
   topAssists: any[] | undefined;
@@ -32,7 +32,7 @@ export const StatsTopAssists = ({ topAssists }: StatsTopAssistsProps) => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Tooltip content={<ChartTooltipContent />} />
                   <Line type="monotone" dataKey="assists" name="Passes décisives" stroke="#FEBE10" strokeWidth={2} />
                 </LineChart>
               </ChartContainer>

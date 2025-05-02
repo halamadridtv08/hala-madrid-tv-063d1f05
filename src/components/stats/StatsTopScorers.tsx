@@ -3,7 +3,7 @@ import { ChartBarIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, CartesianGrid, XAxis, YAxis, ChartTooltip } from "recharts";
+import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
 
 interface StatsTopScorersProps {
   topScorers: any[] | undefined;
@@ -32,7 +32,7 @@ export const StatsTopScorers = ({ topScorers }: StatsTopScorersProps) => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Tooltip content={<ChartTooltipContent />} />
                   <Bar dataKey="goals" name="Buts" fill="#00529F" />
                 </BarChart>
               </ChartContainer>
