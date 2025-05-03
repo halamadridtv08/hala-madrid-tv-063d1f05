@@ -2,6 +2,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { Flag, Medal, Star, Heart } from "lucide-react";
+import { useState } from "react";
+import { toast } from "@/components/ui/sonner";
 
 interface PlayerCardProps {
   id: number;
@@ -14,6 +17,8 @@ interface PlayerCardProps {
 }
 
 export const PlayerCard = ({ id, name, number, position, secondaryPosition, nationality, image }: PlayerCardProps) => {
+  const [isFavorite, setIsFavorite] = useState(false);
+  
   // Fallback image if none is provided
   const playerImage = image || `https://placehold.co/300x400/1a365d/ffffff/?text=${name.charAt(0)}`;
   
@@ -25,6 +30,18 @@ export const PlayerCard = ({ id, name, number, position, secondaryPosition, nati
     return "bg-gray-600 hover:bg-gray-700";
   };
 
+  const toggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsFavorite(!isFavorite);
+    
+    if (!isFavorite) {
+      toast.success(`${name} a été ajouté à vos favoris`);
+    } else {
+      toast.info(`${name} a été retiré de vos favoris`);
+    }
+  };
+
   return (
     <Link to={`/players/${id}`}>
       <Card className="overflow-hidden transition-all transform hover:scale-105 hover:shadow-xl cursor-pointer h-full flex flex-col">
@@ -32,9 +49,19 @@ export const PlayerCard = ({ id, name, number, position, secondaryPosition, nati
           <div className="absolute top-2 left-2 w-10 h-10 rounded-full bg-white text-madrid-blue flex items-center justify-center font-bold text-xl">
             {number}
           </div>
+          <button 
+            onClick={toggleFavorite} 
+            className="absolute top-2 right-2 text-white hover:text-red-500 transition-colors"
+            aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+          >
+            <Heart className={`h-5 w-5 ${isFavorite ? "fill-red-500 text-red-500" : "fill-transparent"}`} />
+          </button>
           <h3 className="text-lg font-bold text-white mt-1">{name}</h3>
           {nationality && (
-            <p className="text-white text-opacity-80 text-sm">{nationality}</p>
+            <div className="flex items-center justify-center gap-1 text-white text-opacity-80 text-sm">
+              <Flag className="h-3.5 w-3.5" />
+              <span>{nationality}</span>
+            </div>
           )}
         </div>
         
