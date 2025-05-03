@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, MapPin, Users, AlertCircle } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, AlertCircle, Activity, Shield, Share2, Flag } from "lucide-react";
 
 interface PlayerType {
   name: string;
@@ -42,7 +42,7 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
     { name: "Mbappé", position: "ST", number: 9 }
   ];
 
-  const awayLineup = match.awayTeam ? [
+  const awayLineup = [
     { name: "Ederson", position: "GK", number: 31 },
     { name: "Walker", position: "RB", number: 2 },
     { name: "Dias", position: "CB", number: 3 },
@@ -54,14 +54,36 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
     { name: "Foden", position: "LW", number: 47 },
     { name: "Grealish", position: "RW", number: 10 },
     { name: "Haaland", position: "ST", number: 9 }
-  ] : [];
+  ];
+
+  // Données pour les remplaçants
+  const homeSubs = [
+    { name: "Lunin", position: "GK", number: 13 },
+    { name: "Lucas Vázquez", position: "RB", number: 17 },
+    { name: "Alaba", position: "CB", number: 4 },
+    { name: "Modrić", position: "CM", number: 10 },
+    { name: "Ceballos", position: "CM", number: 19 },
+    { name: "Rodrygo", position: "RW", number: 11 },
+    { name: "Endrick", position: "ST", number: 16 }
+  ];
+
+  const awaySubs = [
+    { name: "Ortega", position: "GK", number: 18 },
+    { name: "Lewis", position: "LB", number: 82 },
+    { name: "Akanji", position: "CB", number: 25 },
+    { name: "Kovačić", position: "CM", number: 8 },
+    { name: "Bernardo", position: "AM", number: 20 },
+    { name: "Doku", position: "LW", number: 11 },
+    { name: "Álvarez", position: "ST", number: 19 }
+  ];
 
   // Données simulées pour les joueurs absents
   const absentPlayers = [
     { name: "Alaba", reason: "Blessure (Ligament croisé)", team: "Real Madrid", return: "Septembre 2025" },
-    { name: "Ceballos", reason: "Blessure (Cheville)", team: "Real Madrid", return: "1 semaine" },
+    { name: "Ceballos", reason: "Suspension (Cumulation de cartons jaunes)", team: "Real Madrid", return: "Prochain match" },
     { name: "Rodrygo", reason: "Incertain (Fatigue musculaire)", team: "Real Madrid", return: "Test avant-match" },
-    { name: "Doku", reason: "Blessure (Ischio-jambiers)", team: "Manchester City", return: "2 semaines" }
+    { name: "Doku", reason: "Blessure (Ischio-jambiers)", team: "Manchester City", return: "2 semaines" },
+    { name: "Aké", reason: "Suspension (Carton rouge direct)", team: "Manchester City", return: "2 matchs" }
   ];
 
   const formatMatchDate = (dateString: string) => {
@@ -91,7 +113,7 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
     }
   };
 
-  const renderLineup = (lineup: PlayerType[], teamName: string) => {
+  const renderLineup = (lineup: PlayerType[], subs: PlayerType[], teamName: string) => {
     return (
       <div className="py-4">
         <h4 className="font-bold text-center mb-4">{teamName}</h4>
@@ -119,7 +141,24 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
           </div>
           <div>
             <h5 className="font-semibold mb-2">Remplaçants</h5>
-            <p className="text-sm text-gray-500">Liste des remplaçants à confirmer</p>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>No</TableHead>
+                  <TableHead>Joueur</TableHead>
+                  <TableHead>Pos</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {subs.map((player) => (
+                  <TableRow key={player.name}>
+                    <TableCell>{player.number}</TableCell>
+                    <TableCell>{player.name}</TableCell>
+                    <TableCell>{player.position}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </div>
       </div>
@@ -185,9 +224,9 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
           <TabsContent value="lineups">
             <Card>
               <CardContent className="pt-6">
-                {renderLineup(homeLineup, match.homeTeam.name)}
+                {match.homeTeam && renderLineup(homeLineup, homeSubs, match.homeTeam.name)}
                 <hr className="my-4" />
-                {renderLineup(awayLineup, match.awayTeam.name)}
+                {match.awayTeam && renderLineup(awayLineup, awaySubs, match.awayTeam.name)}
               </CardContent>
             </Card>
           </TabsContent>

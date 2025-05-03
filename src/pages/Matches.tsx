@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -6,12 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, MapPin, ChevronRight } from "lucide-react";
+import { Calendar, Clock, MapPin, ChevronRight, Activity, Shield, Share2, Flag } from "lucide-react";
 import { MatchDetail } from "@/components/matches/MatchDetail";
+import { MatchStats } from "@/components/matches/MatchStats";
 
 const Matches = () => {
   const [selectedMatch, setSelectedMatch] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isStatsOpen, setIsStatsOpen] = useState(false);
 
   // Simuler des données de matchs passés
   const pastMatches = [
@@ -31,7 +34,35 @@ const Matches = () => {
         score: 0
       },
       venue: "Santiago Bernabéu",
-      scorers: ["Mbappé (23', 45', 67')"]
+      scorers: ["Mbappé (23', 45', 67')"],
+      stats: {
+        attack: {
+          totalShots: { home: 18, away: 9 },
+          shotsOnTarget: { home: 8, away: 2 },
+          shotsOffTarget: { home: 10, away: 7 }
+        },
+        defense: {
+          saves: { home: 2, away: 5 },
+          tackles: { home: 16, away: 12 }
+        },
+        distribution: {
+          totalPasses: { home: 587, away: 423 },
+          completedPasses: { home: 532, away: 358 }
+        },
+        discipline: {
+          fouls: { home: 8, away: 14 },
+          yellowCards: { home: 1, away: 3 },
+          redCards: { home: 0, away: 0 }
+        }
+      },
+      timeline: [
+        { minute: 23, event: "But", player: "Mbappé", team: "Real Madrid", details: "Frappe du pied gauche après un centre de Vinicius Jr" },
+        { minute: 32, event: "Carton jaune", player: "De Jong", team: "FC Barcelone", details: "Tacle par derrière sur Bellingham" },
+        { minute: 45, event: "But", player: "Mbappé", team: "Real Madrid", details: "Penalty après une faute sur Vinicius Jr" },
+        { minute: 56, event: "Carton jaune", player: "Gavi", team: "FC Barcelone", details: "Contestation" },
+        { minute: 67, event: "But", player: "Mbappé", team: "Real Madrid", details: "Contre-attaque rapide, passe décisive de Bellingham" },
+        { minute: 78, event: "Carton jaune", player: "Yamal", team: "FC Barcelone", details: "Simulation" }
+      ]
     },
     {
       id: 2,
@@ -49,7 +80,35 @@ const Matches = () => {
         score: 0
       },
       venue: "Santiago Bernabéu",
-      scorers: ["Vinicius Jr (34'), Bellingham (78')"]
+      scorers: ["Vinicius Jr (34'), Bellingham (78')"],
+      stats: {
+        attack: {
+          totalShots: { home: 15, away: 12 },
+          shotsOnTarget: { home: 7, away: 4 },
+          shotsOffTarget: { home: 8, away: 8 }
+        },
+        defense: {
+          saves: { home: 4, away: 5 },
+          tackles: { home: 18, away: 14 }
+        },
+        distribution: {
+          totalPasses: { home: 492, away: 508 },
+          completedPasses: { home: 436, away: 458 }
+        },
+        discipline: {
+          fouls: { home: 10, away: 12 },
+          yellowCards: { home: 2, away: 2 },
+          redCards: { home: 0, away: 0 }
+        }
+      },
+      timeline: [
+        { minute: 34, event: "But", player: "Vinicius Jr", team: "Real Madrid", details: "Frappe enroulée depuis l'entrée de la surface" },
+        { minute: 42, event: "Carton jaune", player: "Kimmich", team: "Bayern Munich", details: "Tacle dangereux sur Mbappé" },
+        { minute: 65, event: "Carton jaune", player: "Carvajal", team: "Real Madrid", details: "Tirage de maillot sur Musiala" },
+        { minute: 78, event: "But", player: "Bellingham", team: "Real Madrid", details: "Tête sur corner tiré par Modrić" },
+        { minute: 81, event: "Carton jaune", player: "Mendy", team: "Real Madrid", details: "Gain de temps" },
+        { minute: 85, event: "Carton jaune", player: "Goretzka", team: "Bayern Munich", details: "Faute tactique" }
+      ]
     },
     {
       id: 3,
@@ -67,7 +126,36 @@ const Matches = () => {
         score: 2
       },
       venue: "Coliseum Alfonso Pérez",
-      scorers: ["Rodrygo (56'), Mbappé (71')"]
+      scorers: ["Rodrygo (56'), Mbappé (71')"],
+      stats: {
+        attack: {
+          totalShots: { home: 7, away: 16 },
+          shotsOnTarget: { home: 2, away: 9 },
+          shotsOffTarget: { home: 5, away: 7 }
+        },
+        defense: {
+          saves: { home: 7, away: 2 },
+          tackles: { home: 22, away: 8 }
+        },
+        distribution: {
+          totalPasses: { home: 312, away: 621 },
+          completedPasses: { home: 256, away: 568 }
+        },
+        discipline: {
+          fouls: { home: 18, away: 6 },
+          yellowCards: { home: 4, away: 1 },
+          redCards: { home: 1, away: 0 }
+        }
+      },
+      timeline: [
+        { minute: 32, event: "Carton jaune", player: "Djené", team: "Getafe", details: "Faute sur Vinicius Jr" },
+        { minute: 48, event: "Carton jaune", player: "Arambarri", team: "Getafe", details: "Tacle dangereux sur Camavinga" },
+        { minute: 56, event: "But", player: "Rodrygo", team: "Real Madrid", details: "Frappe à l'entrée de la surface" },
+        { minute: 62, event: "Carton rouge", player: "Djené", team: "Getafe", details: "Second carton jaune pour une faute sur Mbappé" },
+        { minute: 71, event: "But", player: "Mbappé", team: "Real Madrid", details: "Contre-attaque, passe décisive de Bellingham" },
+        { minute: 76, event: "Carton jaune", player: "Tchouaméni", team: "Real Madrid", details: "Faute tactique" },
+        { minute: 85, event: "Carton jaune", player: "Mayoral", team: "Getafe", details: "Contestation" }
+      ]
     }
   ];
 
@@ -153,6 +241,11 @@ const Matches = () => {
   const handleOpenMatchDetail = (match: any) => {
     setSelectedMatch(match);
     setIsDetailOpen(true);
+  };
+
+  const handleOpenMatchStats = (match: any) => {
+    setSelectedMatch(match);
+    setIsStatsOpen(true);
   };
 
   return (
@@ -299,11 +392,19 @@ const Matches = () => {
                           </div>
                         </div>
                         
-                        <div className="mt-8 text-center">
+                        <div className="mt-8 flex flex-wrap justify-center gap-4">
                           <Button asChild variant="outline">
                             <Link to={`/news/${match.id}`}>
                               Voir le résumé du match
                             </Link>
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            onClick={() => handleOpenMatchStats(match)}
+                            className="flex items-center gap-2"
+                          >
+                            <Activity size={16} />
+                            Statistiques du match
                           </Button>
                         </div>
                       </div>
@@ -322,6 +423,14 @@ const Matches = () => {
         isOpen={isDetailOpen} 
         onClose={() => setIsDetailOpen(false)} 
       />
+      
+      {selectedMatch && (
+        <MatchStats
+          match={selectedMatch}
+          isOpen={isStatsOpen}
+          onClose={() => setIsStatsOpen(false)}
+        />
+      )}
     </>
   );
 };

@@ -9,10 +9,11 @@ interface PlayerCardProps {
   number: number;
   position: string;
   secondaryPosition?: string;
+  nationality?: string;
   image?: string;
 }
 
-export const PlayerCard = ({ id, name, number, position, secondaryPosition, image }: PlayerCardProps) => {
+export const PlayerCard = ({ id, name, number, position, secondaryPosition, nationality, image }: PlayerCardProps) => {
   // Fallback image if none is provided
   const playerImage = image || `https://placehold.co/300x400/1a365d/ffffff/?text=${name.charAt(0)}`;
   
@@ -32,6 +33,9 @@ export const PlayerCard = ({ id, name, number, position, secondaryPosition, imag
             {number}
           </div>
           <h3 className="text-lg font-bold text-white mt-1">{name}</h3>
+          {nationality && (
+            <p className="text-white text-opacity-80 text-sm">{nationality}</p>
+          )}
         </div>
         
         <div className="flex-grow relative overflow-hidden">
