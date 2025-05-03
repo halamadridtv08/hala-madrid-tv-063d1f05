@@ -1,4 +1,4 @@
-
+import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,9 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, MapPin } from "lucide-react";
+import { Calendar, Clock, MapPin, ChevronRight } from "lucide-react";
+import { MatchDetail } from "@/components/matches/MatchDetail";
 
 const Matches = () => {
+  const [selectedMatch, setSelectedMatch] = useState<any>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
   // Simuler des données de matchs passés
   const pastMatches = [
     {
@@ -146,6 +150,11 @@ const Matches = () => {
     }
   };
 
+  const handleOpenMatchDetail = (match: any) => {
+    setSelectedMatch(match);
+    setIsDetailOpen(true);
+  };
+
   return (
     <>
       <Navbar />
@@ -166,7 +175,7 @@ const Matches = () => {
             <TabsContent value="upcoming">
               <div className="grid gap-6">
                 {upcomingMatches.map(match => (
-                  <Card key={match.id} className="overflow-hidden">
+                  <Card key={match.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleOpenMatchDetail(match)}>
                     <CardContent className="p-0">
                       <div className="bg-gradient-to-r from-madrid-blue to-blue-800 p-4">
                         <div className="flex justify-between items-center text-white">
@@ -216,12 +225,15 @@ const Matches = () => {
                           </div>
                         </div>
                         
-                        <div className="mt-8 text-center">
+                        <div className="mt-8 text-center flex justify-between items-center">
                           {match.tickets && (
                             <Button className="bg-madrid-blue hover:bg-blue-700 text-white">
                               Acheter des billets
                             </Button>
                           )}
+                          <Button variant="outline" className="ml-auto" onClick={(e) => { e.stopPropagation(); handleOpenMatchDetail(match); }}>
+                            Voir détails <ChevronRight className="ml-1 h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -304,6 +316,12 @@ const Matches = () => {
         </div>
       </main>
       <Footer />
+      
+      <MatchDetail 
+        match={selectedMatch} 
+        isOpen={isDetailOpen} 
+        onClose={() => setIsDetailOpen(false)} 
+      />
     </>
   );
 };

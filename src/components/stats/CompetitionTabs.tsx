@@ -6,6 +6,7 @@ import { StatsTopScorers } from "./StatsTopScorers";
 import { StatsTopAssists } from "./StatsTopAssists";
 import { StatsMostPlayed } from "./StatsMostPlayed";
 import { StatsStandings } from "./StatsStandings";
+import { StatsGlobalOverview } from "./StatsGlobalOverview";
 
 interface CompetitionTabsProps {
   topScorers: Record<string, any[]>;
@@ -26,13 +27,18 @@ export const CompetitionTabs = ({
 
   return (
     <Tabs defaultValue="laliga" value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-5 mb-8">
+      <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-6 mb-8">
+        <TabsTrigger value="global">Global</TabsTrigger>
         <TabsTrigger value="laliga">La Liga</TabsTrigger>
         <TabsTrigger value="cl">Champions League</TabsTrigger>
         <TabsTrigger value="copaDelRey">Copa del Rey</TabsTrigger>
         <TabsTrigger value="supercoupeEurope">Supercoupe d'Europe</TabsTrigger>
         <TabsTrigger value="supercoupeEspagne">Supercoupe d'Espagne</TabsTrigger>
       </TabsList>
+
+      <TabsContent value="global" className="space-y-8">
+        <StatsGlobalOverview />
+      </TabsContent>
 
       {["laliga", "cl", "copaDelRey", "supercoupeEurope", "supercoupeEspagne"].map((competition) => (
         <TabsContent key={competition} value={competition} className="space-y-8">
