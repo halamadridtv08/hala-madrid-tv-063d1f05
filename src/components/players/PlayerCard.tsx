@@ -2,7 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Flag, Heart, Star } from "lucide-react";
+import { Flag, Heart, Shield, Star, Award, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/sonner";
 
@@ -35,6 +35,14 @@ export const PlayerCard = ({ id, name, number, position, secondaryPosition, nati
     if (pos.includes("Milieu")) return "bg-green-600 hover:bg-green-700";
     if (pos.includes("Ailier") || pos.includes("Attaquant")) return "bg-red-600 hover:bg-red-700";
     return "bg-gray-600 hover:bg-gray-700";
+  };
+
+  const getPositionIcon = (pos: string) => {
+    if (pos.includes("Gardien")) return <Star className="h-3.5 w-3.5 mr-1" />;
+    if (pos.includes("Défenseur")) return <Shield className="h-3.5 w-3.5 mr-1" />;
+    if (pos.includes("Milieu")) return <Award className="h-3.5 w-3.5 mr-1" />;
+    if (pos.includes("Ailier") || pos.includes("Attaquant")) return <Flag className="h-3.5 w-3.5 mr-1" />;
+    return <User className="h-3.5 w-3.5 mr-1" />;
   };
 
   const toggleFavorite = (e: React.MouseEvent) => {
@@ -87,9 +95,13 @@ export const PlayerCard = ({ id, name, number, position, secondaryPosition, nati
           <img src={playerImage} alt={name} className="w-full h-64 object-cover object-top" />
           <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 p-2">
             <div className="flex flex-wrap justify-center gap-1">
-              <Badge className={`${getPositionColor(position)}`}>{position}</Badge>
+              <Badge className={`${getPositionColor(position)} flex items-center`}>
+                {getPositionIcon(position)}
+                {position}
+              </Badge>
               {secondaryPosition && (
-                <Badge variant="outline" className="bg-opacity-80 bg-white text-black border-0">
+                <Badge variant="outline" className="bg-opacity-80 bg-white text-black border-0 flex items-center">
+                  {getPositionIcon(secondaryPosition)}
                   {secondaryPosition}
                 </Badge>
               )}

@@ -3,36 +3,29 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Flag, CalendarDays, Ruler, Award, Timer, Users } from "lucide-react";
+import { Flag, CalendarDays, Ruler, Award, Timer, Users, Shield, Star } from "lucide-react";
+import playersData from "@/data/playerData";
 
 export function PlayerSpotlight() {
-  // Données de joueur enrichies avec plus de détails
-  const featuredPlayer = {
-    id: 1,
-    name: "Kylian Mbappé",
-    position: "Attaquant",
-    number: 10,
-    image: "https://media.gettyimages.com/id/1809515629/photo/real-madrid-cf-unveil-new-signing-kylian-mbappe-at-estadio-santiago-bernabeu-on-july-16-2024.jpg?s=2048x2048&w=gi&k=20&c=YecqQkxXHhuhfLrqKDsz-lIj-fPlMNZZnt-EvIr1L40=",
-    nationality: "France",
-    nationalityFlag: "https://upload.wikimedia.org/wikipedia/en/c/c3/Flag_of_France.svg",
-    birthDate: "20/12/1998",
-    height: "178 cm",
-    weight: "73 kg",
-    preferredFoot: "Droit",
-    joinedDate: "Juillet 2025",
-    previousClub: "Paris Saint-Germain",
-    achievements: ["Champion du Monde 2018", "Meilleur buteur Ligue 1 (5×)", "Finaliste Ligue des Champions 2020"],
-    stats: {
-      goals: 15,
-      assists: 8,
-      matches: 20,
-      minutes: 1720,
-      yellowCards: 2,
-      redCards: 0,
-      passingAccuracy: "89%",
-      shotsOnTarget: 28,
-      dribbleSuccess: "76%"
-    }
+  // Utilisons Mbappé (ID 26) comme joueur en vedette, puisque nous avons ses données complètes
+  const playerId = "26";
+  const featuredPlayer = playersData[playerId];
+
+  if (!featuredPlayer) {
+    return null;
+  }
+
+  const formattedBirthDate = new Date(featuredPlayer.birthDate).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'numeric',
+    year: 'numeric'
+  });
+
+  const getPositionIcon = (pos: string) => {
+    if (pos.includes("Gardien")) return <Star className="h-5 w-5 text-madrid-blue" />;
+    if (pos.includes("Défenseur")) return <Shield className="h-5 w-5 text-madrid-blue" />;
+    if (pos.includes("Milieu")) return <Award className="h-5 w-5 text-madrid-blue" />;
+    return <Flag className="h-5 w-5 text-madrid-blue" />;
   };
 
   return (
@@ -53,7 +46,8 @@ export function PlayerSpotlight() {
                   <div className="text-white">
                     <h3 className="text-3xl font-bold">{featuredPlayer.name}</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge className="bg-madrid-gold text-black">
+                      <Badge className="bg-madrid-gold text-black flex items-center gap-1">
+                        {getPositionIcon(featuredPlayer.position)}
                         {featuredPlayer.position}
                       </Badge>
                       <div className="bg-madrid-blue text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
@@ -70,10 +64,7 @@ export function PlayerSpotlight() {
                     <Flag className="h-5 w-5 text-madrid-blue" />
                     <div>
                       <p className="text-sm text-gray-500">Nationalité</p>
-                      <div className="flex items-center gap-2">
-                        <img src={featuredPlayer.nationalityFlag} alt={featuredPlayer.nationality} className="w-5 h-4" />
-                        <p className="font-medium">{featuredPlayer.nationality}</p>
-                      </div>
+                      <p className="font-medium">{featuredPlayer.nationality}</p>
                     </div>
                   </div>
                   
@@ -81,7 +72,7 @@ export function PlayerSpotlight() {
                     <CalendarDays className="h-5 w-5 text-madrid-blue" />
                     <div>
                       <p className="text-sm text-gray-500">Date de naissance</p>
-                      <p className="font-medium">{featuredPlayer.birthDate} (26 ans)</p>
+                      <p className="font-medium">{formattedBirthDate}</p>
                     </div>
                   </div>
                   
@@ -93,21 +84,19 @@ export function PlayerSpotlight() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3">
-                    <Users className="h-5 w-5 text-madrid-blue" />
-                    <div>
-                      <p className="text-sm text-gray-500">Ancien club</p>
-                      <p className="font-medium">{featuredPlayer.previousClub}</p>
+                  {featuredPlayer.secondaryPosition && (
+                    <div className="flex items-center gap-3">
+                      <Shield className="h-5 w-5 text-madrid-blue" />
+                      <div>
+                        <p className="text-sm text-gray-500">Poste secondaire</p>
+                        <p className="font-medium">{featuredPlayer.secondaryPosition}</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   
                   <div className="mt-2">
-                    <p className="text-sm text-gray-500">Palmarès</p>
-                    <ul className="list-disc list-inside mt-1">
-                      {featuredPlayer.achievements.map((achievement, index) => (
-                        <li key={index} className="text-sm">{achievement}</li>
-                      ))}
-                    </ul>
+                    <p className="text-sm text-gray-500">Biographie</p>
+                    <p className="mt-1 text-sm line-clamp-4">{featuredPlayer.bio}</p>
                   </div>
                 </div>
                 
@@ -129,24 +118,6 @@ export function PlayerSpotlight() {
                       {featuredPlayer.stats.matches}
                     </p>
                     <p className="text-sm text-gray-500">Matchs</p>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-madrid-blue">
-                      {featuredPlayer.stats.passingAccuracy}
-                    </p>
-                    <p className="text-sm text-gray-500">Précision passes</p>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-madrid-blue">
-                      {featuredPlayer.stats.shotsOnTarget}
-                    </p>
-                    <p className="text-sm text-gray-500">Tirs cadrés</p>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
-                    <p className="text-2xl font-bold text-madrid-blue">
-                      {featuredPlayer.stats.dribbleSuccess}
-                    </p>
-                    <p className="text-sm text-gray-500">Dribbles réussis</p>
                   </div>
                 </div>
                 
