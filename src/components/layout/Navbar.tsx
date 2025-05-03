@@ -1,14 +1,24 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, X, Calendar, Users, Video, FileText, Image } from "lucide-react";
+import { Menu, X, Calendar, Users, Video, FileText, Image, Search } from "lucide-react";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -20,15 +30,24 @@ export function Navbar() {
     }
   };
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery("");
+      closeMenu();
+    }
+  };
+
   return (
     <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 shadow-sm">
       <div className="madrid-container py-4 flex justify-between items-center">
         <Link to="/" className="flex items-center gap-2" onClick={closeMenu}>
           <div className="relative">
             <img 
-              src="https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png" 
-              alt="Logo" 
-              className="h-10 w-10"
+              src="/lovable-uploads/b475ad56-9770-4b40-a504-a1e193850dc8.png" 
+              alt="Hala Madrid Logo" 
+              className="h-12 w-12 object-contain"
             />
           </div>
           <span className="font-montserrat font-bold text-xl md:text-2xl tracking-tight">
@@ -37,6 +56,25 @@ export function Navbar() {
             <span className="text-madrid-gold">TV</span>
           </span>
         </Link>
+
+        {/* Search Bar for Desktop */}
+        <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center flex-1 mx-8">
+          <div className="relative w-full max-w-md">
+            <input
+              type="text"
+              placeholder="Rechercher joueurs, matchs, actualités..."
+              className="w-full pl-4 pr-10 py-2 border border-gray-300 dark:border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-madrid-blue dark:bg-gray-800 dark:text-white"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button 
+              type="submit" 
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-madrid-blue"
+            >
+              <Search className="h-5 w-5" />
+            </button>
+          </div>
+        </form>
 
         {/* Mobile Menu Button */}
         <div className="flex items-center gap-2 md:hidden">
@@ -48,108 +86,228 @@ export function Navbar() {
 
         {/* Desktop Menu */}
         <nav className="hidden md:flex items-center gap-5">
-          <Link to="/" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
-            Accueil
-          </Link>
-          <Link to="/news" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1">
-            <FileText className="h-4 w-4" />
-            Actualités
-          </Link>
-          <Link to="/players" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1">
-            <Users className="h-4 w-4" />
-            Effectif
-          </Link>
-          <Link to="/matches" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
-            Matchs
-          </Link>
-          <Link to="/training" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1">
-            <Video className="h-4 w-4" />
-            Entrainement
-          </Link>
-          <Link to="/press" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
-            Conférences
-          </Link>
-          <Link to="/kits" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1">
-            <Image className="h-4 w-4" />
-            Maillots
-          </Link>
-          <Link to="/calendar" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1">
-            <Calendar className="h-4 w-4" />
-            Calendrier
-          </Link>
-          <Link to="/stats" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
-            Stats
-          </Link>
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <Link to="/" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
+                  Accueil
+                </Link>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Actualités</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid gap-3 p-4 w-[400px] md:grid-cols-2">
+                    <li className="row-span-3">
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/news"
+                          className="flex flex-col h-full w-full justify-between rounded-md bg-gradient-to-b from-madrid-blue/20 to-madrid-gold/20 p-6 no-underline hover:shadow-md"
+                        >
+                          <div className="mb-2 mt-4 text-lg font-medium">
+                            Dernières Actualités
+                          </div>
+                          <p className="text-sm leading-tight text-muted-foreground">
+                            Découvrez les dernières nouvelles concernant le Real Madrid.
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/press"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="text-sm font-medium leading-none">Conférences de Presse</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            Les déclarations des joueurs et du staff.
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/training"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="text-sm font-medium leading-none">Entraînements</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            Les séances d'entraînement de l'équipe.
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/players" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1">
+                  <Users className="h-4 w-4" />
+                  Effectif
+                </Link>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/matches" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
+                  Matchs
+                </Link>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <NavigationMenuTrigger>Média</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/training"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="text-sm font-medium leading-none">Entraînements</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            Vidéos des séances d'entraînement
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/press"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="text-sm font-medium leading-none">Conférences</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            Conférences de presse du staff et des joueurs
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                    <li>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/kits"
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="text-sm font-medium leading-none">Maillots</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            Découvrez les maillots du Real Madrid
+                          </p>
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/calendar" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  Calendrier
+                </Link>
+              </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/stats" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
+                  Stats
+                </Link>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+          
           <ThemeToggle />
         </nav>
 
         {/* Mobile Menu Dropdown */}
         {isMenuOpen && (
           <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-900 shadow-md md:hidden z-50">
-            <div className="flex flex-col p-4 gap-4">
-              <Link 
-                to="/" 
-                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
-                onClick={closeMenu}
-              >
-                Accueil
-              </Link>
-              <Link 
-                to="/news" 
-                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
-                onClick={closeMenu}
-              >
-                <FileText className="h-4 w-4" /> Actualités
-              </Link>
-              <Link 
-                to="/players" 
-                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
-                onClick={closeMenu}
-              >
-                <Users className="h-4 w-4" /> Effectif
-              </Link>
-              <Link 
-                to="/matches" 
-                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
-                onClick={closeMenu}
-              >
-                Matchs
-              </Link>
-              <Link 
-                to="/training" 
-                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
-                onClick={closeMenu}
-              >
-                <Video className="h-4 w-4" /> Entrainement
-              </Link>
-              <Link 
-                to="/press" 
-                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
-                onClick={closeMenu}
-              >
-                Conférences
-              </Link>
-              <Link 
-                to="/kits" 
-                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
-                onClick={closeMenu}
-              >
-                <Image className="h-4 w-4" /> Maillots
-              </Link>
-              <Link 
-                to="/calendar" 
-                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
-                onClick={closeMenu}
-              >
-                <Calendar className="h-4 w-4" /> Calendrier
-              </Link>
-              <Link 
-                to="/stats" 
-                className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
-                onClick={closeMenu}
-              >
-                Stats
-              </Link>
+            <div className="p-4">
+              <form onSubmit={handleSearchSubmit} className="mb-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Rechercher..."
+                    className="w-full pl-4 pr-10 py-2 border border-gray-300 dark:border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-madrid-blue dark:bg-gray-800 dark:text-white"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <button 
+                    type="submit" 
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-madrid-blue"
+                  >
+                    <Search className="h-5 w-5" />
+                  </button>
+                </div>
+              </form>
+              
+              <div className="flex flex-col gap-4">
+                <Link 
+                  to="/" 
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
+                  onClick={closeMenu}
+                >
+                  Accueil
+                </Link>
+                <Link 
+                  to="/news" 
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
+                  onClick={closeMenu}
+                >
+                  <FileText className="h-4 w-4" /> Actualités
+                </Link>
+                <Link 
+                  to="/players" 
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
+                  onClick={closeMenu}
+                >
+                  <Users className="h-4 w-4" /> Effectif
+                </Link>
+                <Link 
+                  to="/matches" 
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
+                  onClick={closeMenu}
+                >
+                  Matchs
+                </Link>
+                <Link 
+                  to="/training" 
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
+                  onClick={closeMenu}
+                >
+                  <Video className="h-4 w-4" /> Entrainement
+                </Link>
+                <Link 
+                  to="/press" 
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
+                  onClick={closeMenu}
+                >
+                  Conférences
+                </Link>
+                <Link 
+                  to="/kits" 
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
+                  onClick={closeMenu}
+                >
+                  <Image className="h-4 w-4" /> Maillots
+                </Link>
+                <Link 
+                  to="/calendar" 
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
+                  onClick={closeMenu}
+                >
+                  <Calendar className="h-4 w-4" /> Calendrier
+                </Link>
+                <Link 
+                  to="/stats" 
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
+                  onClick={closeMenu}
+                >
+                  Stats
+                </Link>
+              </div>
             </div>
           </div>
         )}

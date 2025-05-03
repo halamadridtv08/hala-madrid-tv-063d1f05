@@ -2,8 +2,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Flag, Medal, Star, Heart } from "lucide-react";
-import { useState } from "react";
+import { Flag, Heart, Star } from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/sonner";
 
 interface PlayerCardProps {
@@ -17,11 +17,18 @@ interface PlayerCardProps {
 }
 
 export const PlayerCard = ({ id, name, number, position, secondaryPosition, nationality, image }: PlayerCardProps) => {
+  // Retrieve favorites from localStorage
   const [isFavorite, setIsFavorite] = useState(false);
   
   // Fallback image if none is provided
   const playerImage = image || `https://placehold.co/300x400/1a365d/ffffff/?text=${name.charAt(0)}`;
   
+  // Load favorite status on component mount
+  useEffect(() => {
+    const favoritePlayers = JSON.parse(localStorage.getItem('favoritePlayers') || '[]');
+    setIsFavorite(favoritePlayers.includes(id));
+  }, [id]);
+
   const getPositionColor = (pos: string) => {
     if (pos.includes("Gardien")) return "bg-yellow-600 hover:bg-yellow-700";
     if (pos.includes("Défenseur")) return "bg-blue-600 hover:bg-blue-700";
@@ -33,13 +40,24 @@ export const PlayerCard = ({ id, name, number, position, secondaryPosition, nati
   const toggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsFavorite(!isFavorite);
     
-    if (!isFavorite) {
-      toast.success(`${name} a été ajouté à vos favoris`);
-    } else {
+    // Get current favorites from localStorage
+    const favoritePlayers = JSON.parse(localStorage.getItem('favoritePlayers') || '[]');
+    
+    let updatedFavorites;
+    if (isFavorite) {
+      // Remove player from favorites
+      updatedFavorites = favoritePlayers.filter((playerId: number) => playerId !== id);
       toast.info(`${name} a été retiré de vos favoris`);
+    } else {
+      // Add player to favorites
+      updatedFavorites = [...favoritePlayers, id];
+      toast.success(`${name} a été ajouté à vos favoris`);
     }
+    
+    // Update localStorage
+    localStorage.setItem('favoritePlayers', JSON.stringify(updatedFavorites));
+    setIsFavorite(!isFavorite);
   };
 
   return (
