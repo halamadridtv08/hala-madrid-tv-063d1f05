@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { Flag, Heart, Shield, Star, Award, User } from "lucide-react";
 import { useState, useEffect } from "react";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "@/components/ui/use-toast";
 
 interface PlayerCardProps {
   id: number;
@@ -14,9 +14,26 @@ interface PlayerCardProps {
   secondaryPosition?: string;
   nationality?: string;
   image?: string;
+  stats?: {
+    matches: number;
+    goals?: number;
+    assists?: number;
+    cleanSheets?: number;
+    goalsConceded?: number;
+    minutesPlayed: number;
+  };
 }
 
-export const PlayerCard = ({ id, name, number, position, secondaryPosition, nationality, image }: PlayerCardProps) => {
+export const PlayerCard = ({ 
+  id, 
+  name, 
+  number, 
+  position, 
+  secondaryPosition, 
+  nationality, 
+  image,
+  stats 
+}: PlayerCardProps) => {
   // Retrieve favorites from localStorage
   const [isFavorite, setIsFavorite] = useState(false);
   
@@ -56,16 +73,56 @@ export const PlayerCard = ({ id, name, number, position, secondaryPosition, nati
     if (isFavorite) {
       // Remove player from favorites
       updatedFavorites = favoritePlayers.filter((playerId: number) => playerId !== id);
-      toast.info(`${name} a été retiré de vos favoris`);
+      toast({
+        description: `${name} a été retiré de vos favoris`,
+        variant: "default",
+      });
     } else {
       // Add player to favorites
       updatedFavorites = [...favoritePlayers, id];
-      toast.success(`${name} a été ajouté à vos favoris`);
+      toast({
+        description: `${name} a été ajouté à vos favoris`,
+        variant: "default",
+      });
     }
     
     // Update localStorage
     localStorage.setItem('favoritePlayers', JSON.stringify(updatedFavorites));
     setIsFavorite(!isFavorite);
+  };
+
+  // Function to display stat highlights based on position
+  const renderStatHighlight = () => {
+    if (!stats) return null;
+    
+    // If player hasn't played any matches, don't show stats
+    if (stats.matches === 0) return null;
+
+    if (position.includes("Gardien")) {
+      return (
+        <div className="absolute top-0 right-0 bg-black bg-opacity-70 p-1 px-2 rounded-bl-md text-xs text-white">
+          <div className="flex items-center">
+            <Star className="h-3.5 w-3.5 text-yellow-400 mr-1" />
+            <span>{stats.cleanSheets || 0} CS</span>
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <div className="absolute top-0 right-0 bg-black bg-opacity-70 p-1 px-2 rounded-bl-md text-xs text-white">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center">
+              <Flag className="h-3 w-3 text-red-400 mr-1" />
+              <span>{stats.goals || 0}</span>
+            </div>
+            <div className="flex items-center">
+              <Award className="h-3 w-3 text-blue-400 mr-1" />
+              <span>{stats.assists || 0}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
   };
 
   return (
@@ -93,6 +150,7 @@ export const PlayerCard = ({ id, name, number, position, secondaryPosition, nati
         
         <div className="flex-grow relative overflow-hidden">
           <img src={playerImage} alt={name} className="w-full h-64 object-cover object-top" />
+          {renderStatHighlight()}
           <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 p-2">
             <div className="flex flex-wrap justify-center gap-1">
               <Badge className={`${getPositionColor(position)} flex items-center`}>

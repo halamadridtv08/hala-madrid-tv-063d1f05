@@ -8,55 +8,18 @@ import { Footer } from "@/components/layout/Footer";
 import { PlayerCard } from "@/components/players/PlayerCard";
 import { CoachCard } from "@/components/players/CoachCard";
 import { Search, User, Users, X } from "lucide-react";
+import playersData, { PlayerData } from "@/data/playerData";
 
 const Players = () => {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
   
-  // Full player roster with all details
-  const players = [
-    // Gardiens
-    { id: 1, name: "Courtois", number: 1, position: "Gardien de but", nationality: "Belge" },
-    { id: 2, name: "Andriy Lunin", number: 13, position: "Gardien de but", nationality: "Ukrainien" },
-    { id: 3, name: "Fran González", number: 26, position: "Gardien de but", nationality: "Espagnol" },
-    { id: 4, name: "Sergio Mestre", number: 34, position: "Gardien de but", nationality: "Espagnol" },
-    
-    // Défenseurs
-    { id: 5, name: "Carvajal", number: 2, position: "Défenseur Latéral Droite", nationality: "Espagnol" },
-    { id: 6, name: "E. Militão", number: 3, position: "Défenseur Central", nationality: "Brésilien" },
-    { id: 7, name: "Alaba", number: 4, position: "Défenseur Central", nationality: "Autrichien" },
-    { id: 8, name: "Lucas Vázquez", number: 17, position: "Défenseur Latéral Droite", nationality: "Espagnol" },
-    { id: 9, name: "Vallejo", number: 18, position: "Défenseur Central", nationality: "Espagnol" },
-    { id: 10, name: "Fran García", number: 20, position: "Défenseur Latéral Gauche", nationality: "Espagnol" },
-    { id: 11, name: "Rüdiger", number: 22, position: "Défenseur Central", nationality: "Allemand" },
-    { id: 12, name: "F. Mendy", number: 23, position: "Défenseur Latéral Gauche", nationality: "Français" },
-    { id: 13, name: "Jacobo Ramón", number: 31, position: "Défenseur Central", nationality: "Espagnol" },
-    { id: 14, name: "Diego Aguado", number: 43, position: "Défenseur Central", nationality: "Espagnol" },
-    { id: 15, name: "Lorenzo Aguado", number: 39, position: "Défenseur Latéral Droit", nationality: "Espagnol" },
-    { id: 16, name: "Raúl Asencio", number: 35, position: "Défenseur Central", nationality: "Espagnol" },
-    
-    // Milieux
-    { id: 17, name: "Bellingham", number: 5, position: "Milieu de terrain", nationality: "Anglais" },
-    { id: 18, name: "Camavinga", number: 6, position: "Milieu de terrain", secondaryPosition: "Défenseur Latéral Gauche", nationality: "Français" },
-    { id: 19, name: "Valverde", number: 8, position: "Milieu de terrain", secondaryPosition: "Défenseur Latéral Droite", nationality: "Uruguayen" },
-    { id: 20, name: "Modrić", number: 10, position: "Milieu de terrain", nationality: "Croate" },
-    { id: 21, name: "Tchouameni", number: 14, position: "Milieu de terrain défensif", secondaryPosition: "Défenseur Central", nationality: "Français" },
-    { id: 22, name: "Arda Güler", number: 15, position: "Milieu de terrain", secondaryPosition: "Ailier droit", nationality: "Turc" },
-    { id: 23, name: "D. Ceballos", number: 19, position: "Milieu de terrain", nationality: "Espagnol" },
-    { id: 24, name: "Chema Andrés", number: 36, position: "Milieu de terrain", nationality: "Espagnol" },
-    
-    // Attaquants
-    { id: 25, name: "Vini Jr.", number: 7, position: "Ailier gauche", secondaryPosition: "Attaquant", nationality: "Brésilien" },
-    { id: 26, name: "Mbappé", number: 9, position: "Attaquant", secondaryPosition: "Ailier Gauche", nationality: "Français" },
-    { id: 27, name: "Rodrygo", number: 11, position: "Ailier droit", secondaryPosition: "Ailier Gauche", nationality: "Brésilien" },
-    { id: 28, name: "Endrick", number: 16, position: "Attaquant", nationality: "Brésilien" },
-    { id: 29, name: "Brahim", number: 21, position: "Ailier droit", secondaryPosition: "Milieu de terrain", nationality: "Espagnol/Marocain" },
-    { id: 30, name: "Gonzalo García", number: 30, position: "Attaquant", nationality: "Espagnol" }
-  ];
+  // Convert playerData object to array
+  const playersList = Object.values(playersData);
 
   // Filter players based on active tab and search term
-  const filteredPlayers = players.filter(player => {
+  const filteredPlayers = playersList.filter(player => {
     const matchesTab = activeTab === "all" || 
       (activeTab === "goalkeepers" && player.position.includes("Gardien")) ||
       (activeTab === "defenders" && player.position.includes("Défenseur")) ||
