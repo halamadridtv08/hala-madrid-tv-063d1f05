@@ -10,67 +10,50 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import useEmblaCarousel from 'embla-carousel-react';
+import { supabase } from "@/integrations/supabase/client";
+
+interface Article {
+  id: string;
+  title: string;
+  description: string;
+  image_url: string | null;
+  category: string;
+  published_at: string;
+  read_time: string | null;
+  author_id: string;
+}
 
 export function NewsCarousel() {
-  // Données enrichies avec plus de détails et d'images
-  const slides = [
-    {
-      id: 1,
-      title: "Mbappé signe au Real Madrid",
-      description: "La star française rejoint enfin le club madrilène avec un contrat de 5 ans",
-      image: "https://media.gettyimages.com/id/1809515629/photo/real-madrid-cf-unveil-new-signing-kylian-mbappe-at-estadio-santiago-bernabeu-on-july-16-2024.jpg?s=2048x2048&w=gi&k=20&c=YecqQkxXHhuhfLrqKDsz-lIj-fPlMNZZnt-EvIr1L40=",
-      category: "Transfert",
-      date: "16/07/2025",
-      link: "/news/1",
-      author: "Carlos Mendoza"
-    },
-    {
-      id: 2,
-      title: "Victoire éclatante 3-0 contre Barcelone",
-      description: "Le Real Madrid s'impose avec autorité dans le Clasico grâce à un jeu collectif remarquable",
-      image: "https://assets.goal.com/v3/assets/bltcc7a7ffd2fbf71f5/blt40833499a1994542/658321c05d0e6e040ab07374/GOAL_-_Blank_WEB_-_Facebook_-_2023-12-20T153722.101.jpg",
-      category: "Match",
-      date: "20/04/2025",
-      link: "/news/2",
-      author: "Sofia Martinez"
-    },
-    {
-      id: 3,
-      title: "Bellingham élu joueur du mois",
-      description: "Le milieu anglais continue d'impressionner avec ses performances exceptionnelles",
-      image: "https://phantom-marca.unidadeditorial.es/d8170d7ac737a7f930879cefb7707136/resize/1320/f/jpg/assets/multimedia/imagenes/2023/12/21/17031472010196.jpg",
-      category: "Récompense",
-      date: "01/04/2025",
-      link: "/news/3",
-      author: "Luis Rodriguez"
-    },
-    {
-      id: 4,
-      title: "Nouvelles installations d'entraînement inaugurées",
-      description: "Le club dévoile des installations ultramodernes pour optimiser la préparation des joueurs",
-      image: "https://media.gettyimages.com/id/1647102199/photo/real-madrid-players-have-a-training-session-at-real-madrid-city-on-october-22-2023-in-madrid.jpg?s=2048x2048&w=gi&k=20&c=DrjnAEQUQHZXetCdUyxFNiy7pO7ZbJ9DQv1ju-eawvI=",
-      category: "Infrastructure",
-      date: "15/03/2025",
-      link: "/news/4",
-      author: "Maria Sanchez"
-    },
-    {
-      id: 5,
-      title: "Ancelotti prolonge son contrat jusqu'en 2027",
-      description: "L'entraîneur italien s'engage pour deux saisons supplémentaires avec le club merengue",
-      image: "https://media.gettyimages.com/id/2055944671/photo/la-liga-santander-atletico-de-madrid-v-real-madrid-cf.jpg?s=2048x2048&w=gi&k=20&c=A28ZqpQ8XoNWHCvG4EOwiYVXonAnrX0QkYdKmG2gBrk=",
-      category: "Contrat",
-      date: "10/03/2025",
-      link: "/news/5",
-      author: "Miguel Torres"
-    }
-  ];
-
+  const [slides, setSlides] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
   const [api, setApi] = useState<any>(null);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+
+  useEffect(() => {
+    const fetchFeaturedArticles = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('articles')
+          .select('*')
+          .eq('is_published', true)
+          .eq('featured', true)
+          .order('published_at', { ascending: false })
+          .limit(5);
+        
+        if (error) throw error;
+        setSlides(data || []);
+      } catch (error) {
+        console.error('Error fetching featured articles:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedArticles();
+  }, []);
 
   useEffect(() => {
     if (emblaApi) {
@@ -79,25 +62,54 @@ export function NewsCarousel() {
   }, [emblaApi]);
 
   useEffect(() => {
-    if (!api) return;
+    if (!api || slides.length <= 1) return;
 
     const intervalId = setInterval(() => {
       api.scrollNext();
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [api]);
+  }, [api, slides.length]);
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case "Match": return "bg-green-600";
-      case "Transfert": return "bg-blue-600";
-      case "Récompense": return "bg-purple-600";
-      case "Infrastructure": return "bg-orange-600";
-      case "Contrat": return "bg-red-600";
+      case "match": return "bg-green-600";
+      case "joueur": return "bg-blue-600";
+      case "conférence": return "bg-purple-600";
+      case "mercato": return "bg-orange-600";
+      case "hommage": return "bg-red-600";
+      case "formation": return "bg-teal-600";
       default: return "bg-gray-600";
     }
   };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    }).format(date);
+  };
+
+  if (loading) {
+    return (
+      <div className="relative overflow-hidden">
+        <Skeleton className="h-[500px] w-full" />
+      </div>
+    );
+  }
+
+  if (slides.length === 0) {
+    return (
+      <div className="relative overflow-hidden bg-gray-100 dark:bg-gray-800 h-[300px] flex items-center justify-center">
+        <div className="text-center p-8">
+          <h3 className="text-2xl font-bold mb-2">Pas d'articles à la une</h3>
+          <p className="text-gray-500 mb-4">Marquez des articles comme "À la une" pour qu'ils apparaissent ici</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative overflow-hidden">
@@ -114,7 +126,7 @@ export function NewsCarousel() {
                   <CardContent className="p-0">
                     <div className="relative h-[500px] w-full">
                       <img
-                        src={slide.image}
+                        src={slide.image_url || "https://via.placeholder.com/1200x500?text=Real+Madrid"}
                         alt={slide.title}
                         className="w-full h-full object-cover object-center"
                       />
@@ -122,14 +134,16 @@ export function NewsCarousel() {
                       <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                         <div className="flex justify-between items-center mb-2">
                           <Badge className={`${getCategoryColor(slide.category)} mb-2`}>
-                            {slide.category}
+                            {slide.category.charAt(0).toUpperCase() + slide.category.slice(1)}
                           </Badge>
-                          <span className="text-sm opacity-80">{slide.date} | Par {slide.author}</span>
+                          <span className="text-sm opacity-80">
+                            {formatDate(slide.published_at)} {slide.read_time && `| ${slide.read_time} de lecture`}
+                          </span>
                         </div>
                         <h2 className="text-3xl md:text-4xl font-bold mb-2">{slide.title}</h2>
                         <p className="text-lg mb-4 opacity-90">{slide.description}</p>
                         <Button asChild className="bg-madrid-gold text-black hover:bg-yellow-400">
-                          <Link to={slide.link}>Lire l'article</Link>
+                          <Link to={`/news/${slide.id}`}>Lire l'article</Link>
                         </Button>
                       </div>
                     </div>
