@@ -4,7 +4,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, X, Calendar, Users, Video, FileText, Image, Search } from "lucide-react";
+import { Menu, X, Calendar, Users, Video, FileText, Image, Search, Plus } from "lucide-react";
+import { AuthButtons } from "./AuthButtons";
+import { useAuth } from "@/contexts/AuthContext";
+import { AddContentMenu } from "./AddContentMenu";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -17,8 +20,10 @@ import {
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -28,6 +33,10 @@ export function Navbar() {
     if (isMobile) {
       setIsMenuOpen(false);
     }
+  };
+
+  const toggleAddMenu = () => {
+    setIsAddMenuOpen(!isAddMenuOpen);
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -78,7 +87,22 @@ export function Navbar() {
 
         {/* Mobile Menu Button */}
         <div className="flex items-center gap-2 md:hidden">
+          {isAdmin && (
+            <div className="relative">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleAddMenu}
+                className="relative text-madrid-blue"
+                aria-label="Ajouter du contenu"
+              >
+                <Plus className="h-5 w-5" />
+              </Button>
+              {isAddMenuOpen && <AddContentMenu onClose={() => setIsAddMenuOpen(false)} />}
+            </div>
+          )}
           <ThemeToggle />
+          <AuthButtons />
           <Button variant="ghost" size="icon" onClick={toggleMenu}>
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
@@ -218,7 +242,24 @@ export function Navbar() {
             </NavigationMenuList>
           </NavigationMenu>
           
+          {isAdmin && (
+            <div className="relative">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={toggleAddMenu}
+                className="relative text-madrid-blue hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+                aria-label="Ajouter du contenu"
+              >
+                <Plus className="h-5 w-5" />
+                <span className="sr-only">Ajouter du contenu</span>
+              </Button>
+              {isAddMenuOpen && <AddContentMenu onClose={() => setIsAddMenuOpen(false)} />}
+            </div>
+          )}
+          
           <ThemeToggle />
+          <AuthButtons />
         </nav>
 
         {/* Mobile Menu Dropdown */}

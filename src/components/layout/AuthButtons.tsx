@@ -35,6 +35,7 @@ export function AuthButtons() {
           onClick={async () => {
             await signOut();
           }}
+          className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
         >
           Déconnexion
         </Button>
@@ -51,7 +52,7 @@ export function AuthButtons() {
         <Button 
           variant="ghost" 
           size="sm" 
-          className="p-1 h-8 w-8" 
+          className="p-1 h-8 w-8 hover:bg-blue-100 dark:hover:bg-blue-900" 
           onClick={() => signInWithSocial('google')}
           title="Se connecter avec Gmail"
         >
@@ -60,7 +61,7 @@ export function AuthButtons() {
         <Button 
           variant="ghost" 
           size="sm"
-          className="p-1 h-8 w-8" 
+          className="p-1 h-8 w-8 hover:bg-blue-100 dark:hover:bg-blue-900" 
           onClick={() => signInWithSocial('facebook')}
           title="Se connecter avec Facebook"
         >
@@ -69,7 +70,7 @@ export function AuthButtons() {
         <Button 
           variant="ghost" 
           size="sm"
-          className="p-1 h-8 w-8" 
+          className="p-1 h-8 w-8 hover:bg-blue-100 dark:hover:bg-blue-900" 
           onClick={() => signInWithSocial('twitter')}
           title="Se connecter avec X (Twitter)"
         >
