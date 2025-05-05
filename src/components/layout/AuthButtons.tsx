@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Facebook, Twitter, Mail } from "lucide-react";
+import { Facebook, Mail, Twitter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export function AuthButtons() {

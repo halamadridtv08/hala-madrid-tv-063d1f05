@@ -115,7 +115,7 @@ const ArticleDetail = () => {
   const renderContent = () => {
     // Fonction pour convertir les sauts de ligne en paragraphes, tout en conservant les balises HTML
     const formatContent = (content: string) => {
-      // Si le contenu contient déjà des balises HTML (comme des vidéos), ne pas les modifier
+      // Si le contenu contient déjà des balises HTML (comme des vidéos ou des images), ne pas les modifier
       if (content.includes('<video') || content.includes('<img')) {
         return { __html: content };
       }
