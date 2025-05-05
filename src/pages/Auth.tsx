@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Facebook, Twitter, Mail } from "lucide-react";
+import { Twitter, Mail } from "lucide-react";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -56,7 +56,7 @@ const Auth = () => {
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin
+          emailRedirectTo: `${window.location.origin}/auth`
         }
       });
 
@@ -73,7 +73,7 @@ const Auth = () => {
     }
   };
 
-  const signInWithSocial = async (provider: 'google' | 'facebook' | 'twitter') => {
+  const signInWithSocial = async (provider: 'google' | 'twitter') => {
     setLoading(true);
     setError(null);
     
@@ -81,7 +81,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: `${window.location.origin}/auth`,
         },
       });
       
@@ -153,7 +153,7 @@ const Auth = () => {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 gap-2">
                         <Button 
                           type="button" 
                           variant="outline" 
@@ -163,16 +163,6 @@ const Auth = () => {
                         >
                           <Mail className="mr-2 h-4 w-4" />
                           Gmail
-                        </Button>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          onClick={() => signInWithSocial('facebook')}
-                          disabled={loading}
-                          className="flex items-center justify-center"
-                        >
-                          <Facebook className="mr-2 h-4 w-4" />
-                          Facebook
                         </Button>
                         <Button 
                           type="button" 
@@ -241,7 +231,7 @@ const Auth = () => {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 gap-2">
                         <Button 
                           type="button" 
                           variant="outline" 
@@ -251,16 +241,6 @@ const Auth = () => {
                         >
                           <Mail className="mr-2 h-4 w-4" />
                           Gmail
-                        </Button>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          onClick={() => signInWithSocial('facebook')}
-                          disabled={loading}
-                          className="flex items-center justify-center"
-                        >
-                          <Facebook className="mr-2 h-4 w-4" />
-                          Facebook
                         </Button>
                         <Button 
                           type="button" 

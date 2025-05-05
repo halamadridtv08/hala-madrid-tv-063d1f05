@@ -2,18 +2,18 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Facebook, Mail, Twitter } from "lucide-react";
+import { Mail, Twitter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export function AuthButtons() {
   const { user, isAdmin, signOut } = useAuth();
 
-  const signInWithSocial = async (provider: 'google' | 'facebook' | 'twitter') => {
+  const signInWithSocial = async (provider: 'google' | 'twitter') => {
     try {
       await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: `${window.location.origin}/auth`,
         },
       });
     } catch (error) {
@@ -57,15 +57,6 @@ export function AuthButtons() {
           title="Se connecter avec Gmail"
         >
           <Mail size={16} />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm"
-          className="p-1 h-8 w-8 hover:bg-blue-100 dark:hover:bg-blue-900" 
-          onClick={() => signInWithSocial('facebook')}
-          title="Se connecter avec Facebook"
-        >
-          <Facebook size={16} />
         </Button>
         <Button 
           variant="ghost" 
