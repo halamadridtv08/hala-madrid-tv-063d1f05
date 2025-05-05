@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { User, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { formatDate, renderHtmlContent } from "@/utils/formatUtils";
 
 interface Article {
   id: string;
@@ -68,15 +69,6 @@ const ArticleDetail = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    }).format(date);
-  };
-
   if (loading) {
     return (
       <>
@@ -110,28 +102,6 @@ const ArticleDetail = () => {
       </>
     );
   }
-
-  // Fonction pour rendre en toute sécurité le contenu HTML
-  const renderContent = () => {
-    // Fonction pour convertir les sauts de ligne en paragraphes, tout en conservant les balises HTML
-    const formatContent = (content: string) => {
-      // Si le contenu contient déjà des balises HTML (comme des vidéos), ne pas les modifier
-      if (content.includes('<video') || content.includes('<img')) {
-        return { __html: content };
-      }
-      
-      // Sinon, convertir les sauts de ligne en paragraphes
-      return {
-        __html: content
-          .split('\n')
-          .filter(paragraph => paragraph.trim() !== '')
-          .map(paragraph => `<p>${paragraph}</p>`)
-          .join('')
-      };
-    };
-    
-    return <div dangerouslySetInnerHTML={formatContent(article.content)} />;
-  };
 
   return (
     <>
@@ -175,7 +145,7 @@ const ArticleDetail = () => {
           <Card className="mb-8">
             <CardContent className="p-6 sm:p-8">
               <div className="prose dark:prose-invert max-w-none">
-                {renderContent()}
+                <div dangerouslySetInnerHTML={renderHtmlContent(article.content)} />
               </div>
             </CardContent>
           </Card>
