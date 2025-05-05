@@ -2,9 +2,24 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { Facebook, Twitter, Mail } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export function AuthButtons() {
   const { user, isAdmin, signOut } = useAuth();
+
+  const signInWithSocial = async (provider: 'google' | 'facebook' | 'twitter') => {
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: window.location.origin,
+        },
+      });
+    } catch (error) {
+      console.error(`Error signing in with ${provider}:`, error);
+    }
+  };
 
   if (user) {
     return (
@@ -28,8 +43,39 @@ export function AuthButtons() {
   }
 
   return (
-    <Button asChild variant="outline" size="sm">
-      <Link to="/auth">Connexion</Link>
-    </Button>
+    <div className="flex items-center gap-2">
+      <Button asChild variant="outline" size="sm">
+        <Link to="/auth">Connexion</Link>
+      </Button>
+      <div className="hidden md:flex items-center gap-1">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="p-1 h-8 w-8" 
+          onClick={() => signInWithSocial('google')}
+          title="Se connecter avec Gmail"
+        >
+          <Mail size={16} />
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="sm"
+          className="p-1 h-8 w-8" 
+          onClick={() => signInWithSocial('facebook')}
+          title="Se connecter avec Facebook"
+        >
+          <Facebook size={16} />
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="sm"
+          className="p-1 h-8 w-8" 
+          onClick={() => signInWithSocial('twitter')}
+          title="Se connecter avec X (Twitter)"
+        >
+          <Twitter size={16} />
+        </Button>
+      </div>
+    </div>
   );
 }

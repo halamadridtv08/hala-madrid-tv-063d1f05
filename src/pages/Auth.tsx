@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Facebook, Twitter, Mail } from "lucide-react";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -72,6 +73,25 @@ const Auth = () => {
     }
   };
 
+  const signInWithSocial = async (provider: 'google' | 'facebook' | 'twitter') => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: window.location.origin,
+        },
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      setError(error.message || `Erreur de connexion avec ${provider}`);
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -123,6 +143,48 @@ const Auth = () => {
                       <Button type="submit" className="w-full" disabled={loading}>
                         {loading ? "Connexion en cours..." : "Se connecter"}
                       </Button>
+                      
+                      <div className="relative mt-2">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t border-gray-300 dark:border-gray-600" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-white dark:bg-gray-900 px-2 text-gray-500 dark:text-gray-400">Ou continuer avec</span>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => signInWithSocial('google')}
+                          disabled={loading}
+                          className="flex items-center justify-center"
+                        >
+                          <Mail className="mr-2 h-4 w-4" />
+                          Gmail
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => signInWithSocial('facebook')}
+                          disabled={loading}
+                          className="flex items-center justify-center"
+                        >
+                          <Facebook className="mr-2 h-4 w-4" />
+                          Facebook
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => signInWithSocial('twitter')}
+                          disabled={loading}
+                          className="flex items-center justify-center"
+                        >
+                          <Twitter className="mr-2 h-4 w-4" />
+                          X
+                        </Button>
+                      </div>
                     </div>
                   </form>
                 </CardContent>
@@ -169,6 +231,48 @@ const Auth = () => {
                       <Button type="submit" className="w-full" disabled={loading}>
                         {loading ? "Inscription en cours..." : "S'inscrire"}
                       </Button>
+                      
+                      <div className="relative mt-2">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t border-gray-300 dark:border-gray-600" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-white dark:bg-gray-900 px-2 text-gray-500 dark:text-gray-400">Ou s'inscrire avec</span>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => signInWithSocial('google')}
+                          disabled={loading}
+                          className="flex items-center justify-center"
+                        >
+                          <Mail className="mr-2 h-4 w-4" />
+                          Gmail
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => signInWithSocial('facebook')}
+                          disabled={loading}
+                          className="flex items-center justify-center"
+                        >
+                          <Facebook className="mr-2 h-4 w-4" />
+                          Facebook
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => signInWithSocial('twitter')}
+                          disabled={loading}
+                          className="flex items-center justify-center"
+                        >
+                          <Twitter className="mr-2 h-4 w-4" />
+                          X
+                        </Button>
+                      </div>
                     </div>
                   </form>
                 </CardContent>

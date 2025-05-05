@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "lucide-react";
+import { User, ExternalLink } from "lucide-react";
 
 interface Article {
   id: string;
@@ -66,6 +66,7 @@ const News = () => {
       case "mercato": return "bg-orange-600";
       case "hommage": return "bg-red-600";
       case "formation": return "bg-teal-600";
+      case "info": return "bg-yellow-600";
       default: return "bg-gray-600";
     }
   };
@@ -86,7 +87,8 @@ const News = () => {
     { name: "Conférence", value: "conférence" },
     { name: "Mercato", value: "mercato" },
     { name: "Hommage", value: "hommage" },
-    { name: "Formation", value: "formation" }
+    { name: "Formation", value: "formation" },
+    { name: "Info", value: "info" }
   ];
 
   return (
@@ -170,7 +172,15 @@ const News = () => {
                       <span>Admin</span>
                     </div>
                     <Button asChild variant="link" className="p-0 text-madrid-blue dark:text-blue-400">
-                      <Link to={`/news/${article.id}`}>Lire l'article</Link>
+                      <a 
+                        href={`/news/${article.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1"
+                      >
+                        Lire l'article
+                        <ExternalLink className="h-3 w-3 ml-1" />
+                      </a>
                     </Button>
                   </CardFooter>
                 </Card>

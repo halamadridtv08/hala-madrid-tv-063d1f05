@@ -63,6 +63,7 @@ const ArticleDetail = () => {
       case "mercato": return "bg-orange-600";
       case "hommage": return "bg-red-600";
       case "formation": return "bg-teal-600";
+      case "info": return "bg-yellow-600";
       default: return "bg-gray-600";
     }
   };
@@ -110,6 +111,28 @@ const ArticleDetail = () => {
     );
   }
 
+  // Fonction pour rendre en toute sécurité le contenu HTML
+  const renderContent = () => {
+    // Fonction pour convertir les sauts de ligne en paragraphes, tout en conservant les balises HTML
+    const formatContent = (content: string) => {
+      // Si le contenu contient déjà des balises HTML (comme des vidéos), ne pas les modifier
+      if (content.includes('<video') || content.includes('<img')) {
+        return { __html: content };
+      }
+      
+      // Sinon, convertir les sauts de ligne en paragraphes
+      return {
+        __html: content
+          .split('\n')
+          .filter(paragraph => paragraph.trim() !== '')
+          .map(paragraph => `<p>${paragraph}</p>`)
+          .join('')
+      };
+    };
+    
+    return <div dangerouslySetInnerHTML={formatContent(article.content)} />;
+  };
+
   return (
     <>
       <Navbar />
@@ -152,9 +175,7 @@ const ArticleDetail = () => {
           <Card className="mb-8">
             <CardContent className="p-6 sm:p-8">
               <div className="prose dark:prose-invert max-w-none">
-                {article.content.split('\n').map((paragraph, index) => (
-                  <p key={index} className="mb-4">{paragraph}</p>
-                ))}
+                {renderContent()}
               </div>
             </CardContent>
           </Card>

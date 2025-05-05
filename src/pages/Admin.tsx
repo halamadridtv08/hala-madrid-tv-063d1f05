@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { MoreHorizontal, Plus, Eye, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, Plus, Eye, Pencil, Trash2, Image, Video, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Article {
@@ -73,6 +73,11 @@ const Admin = () => {
   const [isFeatured, setIsFeatured] = useState(false);
   const [currentTab, setCurrentTab] = useState("articles");
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
+  const [uploading, setUploading] = useState(false);
+  
+  // Refs for file inputs
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchArticles();
@@ -235,6 +240,96 @@ const Admin = () => {
     });
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    const filePath = `uploads/${fileName}`;
+    
+    try {
+      setUploading(true);
+      
+      // Upload the file to Supabase Storage
+      const { error: uploadError, data } = await supabase.storage
+        .from('media')
+        .upload(filePath, file);
+        
+      if (uploadError) throw uploadError;
+      
+      // Get the public URL
+      const { data: urlData } = supabase.storage
+        .from('media')
+        .getPublicUrl(filePath);
+        
+      if (urlData) {
+        setImageUrl(urlData.publicUrl);
+        
+        toast({
+          title: "Fichier téléchargé",
+          description: "Le fichier a été téléchargé avec succès."
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur de téléchargement",
+        description: error.message || "Une erreur est survenue lors du téléchargement"
+      });
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (imageInputRef.current) imageInputRef.current.value = '';
+    }
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    const filePath = `videos/${fileName}`;
+    
+    try {
+      setUploading(true);
+      
+      // Upload the file to Supabase Storage
+      const { error: uploadError, data } = await supabase.storage
+        .from('media')
+        .upload(filePath, file);
+        
+      if (uploadError) throw uploadError;
+      
+      // Get the public URL
+      const { data: urlData } = supabase.storage
+        .from('media')
+        .getPublicUrl(filePath);
+        
+      if (urlData) {
+        // Insert the video tag into the content
+        const videoTag = `<video controls width="100%" src="${urlData.publicUrl}"></video>`;
+        setContent(content => content + '\n\n' + videoTag);
+        
+        toast({
+          title: "Vidéo téléchargée",
+          description: "La vidéo a été téléchargée et ajoutée à l'article."
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur de téléchargement",
+        description: error.message || "Une erreur est survenue lors du téléchargement"
+      });
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (videoInputRef.current) videoInputRef.current.value = '';
+    }
+  };
+
   return (
     <ProtectedRoute>
       <Navbar />
@@ -380,6 +475,43 @@ const Admin = () => {
                       
                       <div className="grid gap-2">
                         <label htmlFor="content">Contenu*</label>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => imageInputRef.current?.click()}
+                            disabled={uploading}
+                          >
+                            <Image className="mr-2 h-4 w-4" />
+                            Ajouter une image
+                          </Button>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => videoInputRef.current?.click()}
+                            disabled={uploading}
+                          >
+                            <Video className="mr-2 h-4 w-4" />
+                            Ajouter une vidéo
+                          </Button>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            ref={imageInputRef}
+                            onChange={handleImageUpload}
+                            className="hidden" 
+                          />
+                          <input 
+                            type="file" 
+                            accept="video/*" 
+                            ref={videoInputRef}
+                            onChange={handleVideoUpload}
+                            className="hidden" 
+                          />
+                          {uploading && <span className="text-sm text-gray-500">Téléchargement en cours...</span>}
+                        </div>
                         <Textarea 
                           id="content" 
                           value={content}
@@ -392,12 +524,24 @@ const Admin = () => {
                       
                       <div className="grid gap-2">
                         <label htmlFor="image_url">URL de l'image</label>
-                        <Input 
-                          id="image_url" 
-                          value={imageUrl}
-                          onChange={(e) => setImageUrl(e.target.value)}
-                          placeholder="https://example.com/image.jpg"
-                        />
+                        <div className="flex gap-2">
+                          <Input 
+                            id="image_url" 
+                            value={imageUrl}
+                            onChange={(e) => setImageUrl(e.target.value)}
+                            placeholder="https://example.com/image.jpg"
+                            className="flex-1"
+                          />
+                          <Button 
+                            type="button"
+                            variant="outline"
+                            onClick={() => imageInputRef.current?.click()}
+                            disabled={uploading}
+                          >
+                            <Upload className="mr-2 h-4 w-4" />
+                            Upload
+                          </Button>
+                        </div>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -414,6 +558,7 @@ const Admin = () => {
                               <SelectItem value="mercato">Mercato</SelectItem>
                               <SelectItem value="hommage">Hommage</SelectItem>
                               <SelectItem value="formation">Formation</SelectItem>
+                              <SelectItem value="info">Info</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
