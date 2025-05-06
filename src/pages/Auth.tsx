@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Twitter, Mail } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -19,6 +19,26 @@ const Auth = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Redirect authenticated users
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+
+    // Check for hash fragment in URL which indicates OAuth return
+    const handleHashFragment = async () => {
+      const hashFragment = window.location.hash;
+      if (hashFragment && hashFragment.includes('access_token')) {
+        // If we have an access token in the URL, Supabase auth is handling it,
+        // but we'll add this redirect for safety
+        navigate("/");
+      }
+    };
+
+    handleHashFragment();
+  }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
