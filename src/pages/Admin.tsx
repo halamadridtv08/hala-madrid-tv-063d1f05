@@ -28,7 +28,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { 
   Select, 
   SelectContent, 
@@ -37,11 +36,14 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AdminMenuBar } from "@/components/layout/AdminMenuBar";
+import { MediaUploader } from "@/components/admin/MediaUploader";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { MoreHorizontal, Plus, Eye, Pencil, Trash2, Image, Video, Upload } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { MoreHorizontal, Plus, Eye, Pencil, Trash2, Image } from "lucide-react";
 
 interface Article {
   id: string;
@@ -57,6 +59,11 @@ interface Article {
 }
 
 const Admin = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const tabFromUrl = searchParams.get("tab") || "articles";
+  const typeFromUrl = searchParams.get("type") || "article";
+  
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -71,13 +78,24 @@ const Admin = () => {
   const [readTime, setReadTime] = useState("");
   const [isPublished, setIsPublished] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
-  const [currentTab, setCurrentTab] = useState("articles");
+  const [currentTab, setCurrentTab] = useState(tabFromUrl === "create" ? "create" : "articles");
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
-  const [uploading, setUploading] = useState(false);
   
-  // Refs for file inputs
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
+  // Mettre à jour les onglets lorsque l'URL change
+  useEffect(() => {
+    if (tabFromUrl === "create") {
+      setCurrentTab("create");
+      
+      // Si type est spécifié, configurer le formulaire pour ce type
+      if (typeFromUrl === "video") {
+        setCategory("video");
+      } else if (typeFromUrl === "photo") {
+        setCategory("photo");
+      }
+    } else {
+      setCurrentTab(tabFromUrl || "articles");
+    }
+  }, [tabFromUrl, typeFromUrl]);
 
   useEffect(() => {
     fetchArticles();
@@ -143,7 +161,7 @@ const Admin = () => {
       
       resetForm();
       fetchArticles();
-      setCurrentTab("articles");
+      navigate("/admin?tab=articles");
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -175,7 +193,7 @@ const Admin = () => {
     setIsPublished(article.is_published);
     setIsFeatured(article.featured);
     setEditingArticle(article);
-    setCurrentTab("create");
+    navigate("/admin?tab=create");
   };
 
   const handleDelete = async (id: string) => {
@@ -240,94 +258,12 @@ const Admin = () => {
     });
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    
-    const file = e.target.files[0];
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-    const filePath = `uploads/${fileName}`;
-    
-    try {
-      setUploading(true);
-      
-      // Upload the file to Supabase Storage
-      const { error: uploadError, data } = await supabase.storage
-        .from('media')
-        .upload(filePath, file);
-        
-      if (uploadError) throw uploadError;
-      
-      // Get the public URL
-      const { data: urlData } = supabase.storage
-        .from('media')
-        .getPublicUrl(filePath);
-        
-      if (urlData) {
-        setImageUrl(urlData.publicUrl);
-        
-        toast({
-          title: "Fichier téléchargé",
-          description: "Le fichier a été téléchargé avec succès."
-        });
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erreur de téléchargement",
-        description: error.message || "Une erreur est survenue lors du téléchargement"
-      });
-    } finally {
-      setUploading(false);
-      // Reset file input
-      if (imageInputRef.current) imageInputRef.current.value = '';
-    }
-  };
-
-  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    
-    const file = e.target.files[0];
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-    const filePath = `videos/${fileName}`;
-    
-    try {
-      setUploading(true);
-      
-      // Upload the file to Supabase Storage
-      const { error: uploadError, data } = await supabase.storage
-        .from('media')
-        .upload(filePath, file);
-        
-      if (uploadError) throw uploadError;
-      
-      // Get the public URL
-      const { data: urlData } = supabase.storage
-        .from('media')
-        .getPublicUrl(filePath);
-        
-      if (urlData) {
-        // Insert the video tag into the content
-        const videoTag = `<video controls width="100%" src="${urlData.publicUrl}"></video>`;
-        setContent(content => content + '\n\n' + videoTag);
-        
-        toast({
-          title: "Vidéo téléchargée",
-          description: "La vidéo a été téléchargée et ajoutée à l'article."
-        });
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erreur de téléchargement",
-        description: error.message || "Une erreur est survenue lors du téléchargement"
-      });
-    } finally {
-      setUploading(false);
-      // Reset file input
-      if (videoInputRef.current) videoInputRef.current.value = '';
-    }
+  const handleImageUploadSuccess = (url: string) => {
+    setImageUrl(url);
+    toast({
+      title: "Image ajoutée",
+      description: "L'image a été ajoutée avec succès."
+    });
   };
 
   return (
@@ -338,6 +274,8 @@ const Admin = () => {
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold">Tableau de bord administrateur</h1>
           </div>
+          
+          <AdminMenuBar />
           
           <Tabs value={currentTab} onValueChange={setCurrentTab}>
             <TabsList className="mb-6">
@@ -352,7 +290,7 @@ const Admin = () => {
                     <CardTitle>Gérer les articles</CardTitle>
                     <Button onClick={() => {
                       resetForm();
-                      setCurrentTab("create");
+                      navigate("/admin?tab=create");
                     }}>
                       <Plus className="mr-2 h-4 w-4" />
                       Nouvel article
@@ -463,85 +401,60 @@ const Admin = () => {
                       
                       <div className="grid gap-2">
                         <label htmlFor="description">Description*</label>
-                        <Textarea 
+                        <Input
                           id="description" 
                           value={description}
                           onChange={(e) => setDescription(e.target.value)}
                           placeholder="Brève description de l'article"
                           required
-                          rows={2}
                         />
                       </div>
                       
                       <div className="grid gap-2">
                         <label htmlFor="content">Contenu*</label>
-                        <div className="flex flex-wrap gap-2 mb-2">
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => imageInputRef.current?.click()}
-                            disabled={uploading}
-                          >
-                            <Image className="mr-2 h-4 w-4" />
-                            Ajouter une image
-                          </Button>
-                          <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => videoInputRef.current?.click()}
-                            disabled={uploading}
-                          >
-                            <Video className="mr-2 h-4 w-4" />
-                            Ajouter une vidéo
-                          </Button>
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            ref={imageInputRef}
-                            onChange={handleImageUpload}
-                            className="hidden" 
-                          />
-                          <input 
-                            type="file" 
-                            accept="video/*" 
-                            ref={videoInputRef}
-                            onChange={handleVideoUpload}
-                            className="hidden" 
-                          />
-                          {uploading && <span className="text-sm text-gray-500">Téléchargement en cours...</span>}
-                        </div>
-                        <Textarea 
-                          id="content" 
+                        <RichTextEditor
                           value={content}
-                          onChange={(e) => setContent(e.target.value)}
+                          onChange={setContent}
                           placeholder="Contenu complet de l'article"
-                          required
-                          rows={10}
                         />
                       </div>
                       
                       <div className="grid gap-2">
-                        <label htmlFor="image_url">URL de l'image</label>
-                        <div className="flex gap-2">
-                          <Input 
-                            id="image_url" 
-                            value={imageUrl}
-                            onChange={(e) => setImageUrl(e.target.value)}
-                            placeholder="https://example.com/image.jpg"
-                            className="flex-1"
-                          />
-                          <Button 
-                            type="button"
-                            variant="outline"
-                            onClick={() => imageInputRef.current?.click()}
-                            disabled={uploading}
-                          >
-                            <Upload className="mr-2 h-4 w-4" />
-                            Upload
-                          </Button>
+                        <label htmlFor="image_url">Image principale</label>
+                        <div className="flex flex-col md:flex-row gap-4">
+                          <div className="flex-1">
+                            <Input 
+                              id="image_url" 
+                              value={imageUrl}
+                              onChange={(e) => setImageUrl(e.target.value)}
+                              placeholder="https://example.com/image.jpg"
+                              className="w-full"
+                            />
+                          </div>
+                          
+                          <div className="w-full md:w-72">
+                            <MediaUploader
+                              onSuccess={(url) => handleImageUploadSuccess(url)}
+                              acceptTypes="image/*"
+                              buttonText="Télécharger une image"
+                              folderPath="thumbnails"
+                            />
+                          </div>
                         </div>
+                        
+                        {imageUrl && (
+                          <div className="mt-2 bg-muted/20 p-2 rounded-md">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Image className="h-4 w-4" />
+                              <span className="text-sm font-medium">Aperçu de l'image</span>
+                            </div>
+                            <img 
+                              src={imageUrl} 
+                              alt="Aperçu" 
+                              className="max-h-40 rounded-md object-contain"
+                            />
+                          </div>
+                        )}
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -558,6 +471,8 @@ const Admin = () => {
                               <SelectItem value="mercato">Mercato</SelectItem>
                               <SelectItem value="hommage">Hommage</SelectItem>
                               <SelectItem value="formation">Formation</SelectItem>
+                              <SelectItem value="video">Vidéo</SelectItem>
+                              <SelectItem value="photo">Photo</SelectItem>
                               <SelectItem value="info">Info</SelectItem>
                             </SelectContent>
                           </Select>
@@ -603,7 +518,7 @@ const Admin = () => {
                         variant="outline" 
                         onClick={() => {
                           resetForm();
-                          setCurrentTab("articles");
+                          navigate("/admin?tab=articles");
                         }}
                       >
                         Annuler

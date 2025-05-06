@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { FileText, Video, Camera, Users, Calendar } from "lucide-react";
 
 interface AddContentMenuProps {
@@ -9,6 +9,7 @@ interface AddContentMenuProps {
 
 export function AddContentMenu({ onClose }: AddContentMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   // Ferme le menu lorsqu'on clique en dehors
   useEffect(() => {
@@ -24,6 +25,11 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
     };
   }, [onClose]);
 
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    onClose();
+  };
+
   return (
     <div 
       ref={menuRef}
@@ -34,50 +40,45 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
           Ajouter du contenu
         </h3>
         
-        <Link 
-          to="/admin?tab=articles&mode=create" 
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          onClick={onClose}
+        <button 
+          onClick={() => handleNavigate("/admin?tab=create&type=article")}
+          className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <FileText className="h-4 w-4 text-madrid-blue" />
           <span>Article</span>
-        </Link>
+        </button>
         
-        <Link 
-          to="/admin?tab=videos&mode=create" 
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          onClick={onClose}
+        <button 
+          onClick={() => handleNavigate("/admin?tab=create&type=video")}
+          className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <Video className="h-4 w-4 text-madrid-blue" />
           <span>Vidéo</span>
-        </Link>
+        </button>
         
-        <Link 
-          to="/admin?tab=photos&mode=create" 
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          onClick={onClose}
+        <button 
+          onClick={() => handleNavigate("/admin?tab=create&type=photo")}
+          className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <Camera className="h-4 w-4 text-madrid-blue" />
           <span>Photo</span>
-        </Link>
+        </button>
         
-        <Link 
-          to="/admin?tab=players&mode=create" 
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          onClick={onClose}
+        <button 
+          onClick={() => handleNavigate("/admin?tab=create&type=player")}
+          className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <Users className="h-4 w-4 text-madrid-blue" />
           <span>Joueur</span>
-        </Link>
+        </button>
         
-        <Link 
-          to="/admin?tab=matches&mode=create" 
-          className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          onClick={onClose}
+        <button 
+          onClick={() => handleNavigate("/admin?tab=create&type=match")}
+          className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <Calendar className="h-4 w-4 text-madrid-blue" />
           <span>Match</span>
-        </Link>
+        </button>
       </div>
     </div>
   );
