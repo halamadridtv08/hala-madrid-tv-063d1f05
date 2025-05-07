@@ -2,12 +2,12 @@
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useFileUpload, validateFileSize } from "@/utils/fileUpload";
-import { Upload, Image as ImageIcon, Video, File } from "lucide-react";
+import { useFileUpload, validateFileSize, formatFileSize } from "@/utils/fileUpload";
+import { Upload, Image as ImageIcon, Video, File, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface MediaUploaderProps {
-  onSuccess: (url: string, type: string) => void;
+  onSuccess: (url: string, type?: string) => void;
   acceptTypes?: string;
   maxSizeMB?: number;
   folderPath?: string;
@@ -15,6 +15,7 @@ interface MediaUploaderProps {
   buttonText?: string;
   showPreview?: boolean;
   className?: string;
+  currentValue?: string;
 }
 
 export function MediaUploader({
@@ -25,12 +26,13 @@ export function MediaUploader({
   bucketName = "media",
   buttonText = "Ajouter un média",
   showPreview = true,
-  className = ""
+  className = "",
+  currentValue = ""
 }: MediaUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [fileType, setFileType] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(currentValue);
+  const [fileType, setFileType] = useState<string | null>(currentValue ? (currentValue.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? 'image' : 'video') : null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadFileWithToast } = useFileUpload();
   const { toast } = useToast();
@@ -55,12 +57,13 @@ export function MediaUploader({
     if (!e.target.files || e.target.files.length === 0) return;
     
     const file = e.target.files[0];
+    console.log("Fichier sélectionné:", file.name, file.type, formatFileSize(file.size));
     
     // Validation de la taille du fichier
     if (!validateFileSize(file, maxSizeMB)) {
       toast({
         title: "Fichier trop volumineux",
-        description: `La taille maximale autorisée est de ${maxSizeMB}MB`,
+        description: `La taille maximale autorisée est de ${maxSizeMB}MB. Taille actuelle: ${formatFileSize(file.size)}`,
         variant: "destructive"
       });
       return;
@@ -93,7 +96,7 @@ export function MediaUploader({
       
       if (result && result.url) {
         setProgress(100);
-        onSuccess(result.url, fileType || 'file');
+        onSuccess(result.url, result.fileType);
       }
       
       cleanupProgress();
@@ -118,6 +121,12 @@ export function MediaUploader({
       default:
         return <File className="w-6 h-6" />;
     }
+  };
+
+  const clearPreview = () => {
+    setPreview(null);
+    setFileType(null);
+    onSuccess('');
   };
 
   return (
@@ -152,10 +161,18 @@ export function MediaUploader({
       )}
       
       {showPreview && preview && (
-        <div className="mt-2 border rounded-md p-2 bg-muted/20">
+        <div className="mt-2 border rounded-md p-2 bg-muted/20 relative">
           <div className="flex items-center gap-2 mb-2">
             {getIconByFileType()}
             <span className="text-sm font-medium">Aperçu</span>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="ml-auto h-6 w-6 rounded-full p-0 hover:bg-red-100"
+              onClick={clearPreview}
+            >
+              <X className="h-3 w-3" />
+            </Button>
           </div>
           
           {fileType === 'image' && (

@@ -2,6 +2,25 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+// Création du bucket s'il n'existe pas
+export const ensureBucketExists = async (bucketName: string) => {
+  try {
+    const { data: buckets } = await supabase.storage.listBuckets();
+    if (!buckets?.find(bucket => bucket.name === bucketName)) {
+      const { error } = await supabase.storage.createBucket(bucketName, {
+        public: true,
+        fileSizeLimit: 50 * 1024 * 1024, // 50MB
+      });
+      if (error) throw error;
+      console.log(`Bucket "${bucketName}" créé avec succès.`);
+    }
+    return { success: true };
+  } catch (error: any) {
+    console.error(`Erreur lors de la création du bucket "${bucketName}":`, error);
+    return { error: error.message };
+  }
+};
+
 // Génère un nom de fichier unique
 export const generateUniqueFileName = (file: File) => {
   const fileExt = file.name.split('.').pop();
@@ -12,11 +31,10 @@ export const generateUniqueFileName = (file: File) => {
 // Fonction pour uploader un fichier à Supabase Storage
 export const uploadFile = async (file: File, bucketName: string = 'media', folderPath: string = '') => {
   try {
-    // Vérification que le bucket existe
-    const { data: buckets } = await supabase.storage.listBuckets();
-    if (!buckets?.find(bucket => bucket.name === bucketName)) {
-      console.error(`Le bucket "${bucketName}" n'existe pas.`);
-      return { error: `Le bucket "${bucketName}" n'existe pas.` };
+    // Création du bucket s'il n'existe pas
+    const bucketResult = await ensureBucketExists(bucketName);
+    if (bucketResult.error) {
+      return { error: bucketResult.error };
     }
     
     const fileName = generateUniqueFileName(file);
@@ -45,7 +63,7 @@ export const uploadFile = async (file: File, bucketName: string = 'media', folde
       return { error: "Impossible d'obtenir l'URL du fichier" };
     }
     
-    return { url: urlData.publicUrl, path: filePath, fileName };
+    return { url: urlData.publicUrl, path: filePath, fileName, fileType: getFileType(file) };
   } catch (error: any) {
     console.error('Erreur lors de l\'upload:', error);
     return { error: error.message };
@@ -100,4 +118,14 @@ export const getFileType = (file: File) => {
 export const validateFileSize = (file: File, maxSizeMB: number = 50) => {
   const fileSizeMB = file.size / (1024 * 1024);
   return fileSizeMB <= maxSizeMB;
+};
+
+// Fonction pour formater la taille du fichier en texte lisible
+export const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  
+  return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
 };
