@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, Video, Camera, Users, Calendar, Youtube } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface AddContentMenuProps {
   onClose: () => void;
@@ -10,6 +11,7 @@ interface AddContentMenuProps {
 export function AddContentMenu({ onClose }: AddContentMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Ferme le menu lorsqu'on clique en dehors
   useEffect(() => {
@@ -25,9 +27,14 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
     };
   }, [onClose]);
 
-  const handleNavigate = (path: string) => {
+  const handleNavigate = (path: string, contentType: string) => {
     navigate(path);
     onClose();
+    
+    toast({
+      title: `Création de contenu`,
+      description: `Vous pouvez maintenant créer un nouveau contenu de type: ${contentType}`
+    });
   };
 
   return (
@@ -41,7 +48,7 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
         </h3>
         
         <button 
-          onClick={() => handleNavigate("/admin?tab=create&type=article")}
+          onClick={() => handleNavigate("/admin?tab=create&type=article", "Article")}
           className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <FileText className="h-4 w-4 text-madrid-blue" />
@@ -49,7 +56,7 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
         </button>
         
         <button 
-          onClick={() => handleNavigate("/admin?tab=create&type=video")}
+          onClick={() => handleNavigate("/admin?tab=create&type=video", "Vidéo")}
           className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <Video className="h-4 w-4 text-madrid-blue" />
@@ -57,7 +64,7 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
         </button>
         
         <button 
-          onClick={() => handleNavigate("/admin?tab=create&type=photo")}
+          onClick={() => handleNavigate("/admin?tab=create&type=photo", "Photo")}
           className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <Camera className="h-4 w-4 text-madrid-blue" />
@@ -65,7 +72,7 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
         </button>
         
         <button 
-          onClick={() => handleNavigate("/admin?tab=create&type=player")}
+          onClick={() => handleNavigate("/admin?tab=create&type=player", "Joueur")}
           className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <Users className="h-4 w-4 text-madrid-blue" />
@@ -73,7 +80,7 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
         </button>
         
         <button 
-          onClick={() => handleNavigate("/admin?tab=create&type=match")}
+          onClick={() => handleNavigate("/admin?tab=create&type=match", "Match")}
           className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <Calendar className="h-4 w-4 text-madrid-blue" />
@@ -81,7 +88,7 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
         </button>
         
         <button 
-          onClick={() => handleNavigate("/admin?tab=create&type=youtube")}
+          onClick={() => handleNavigate("/admin?tab=create&type=youtube", "YouTube")}
           className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <Youtube className="h-4 w-4 text-madrid-blue" />

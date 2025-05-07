@@ -23,8 +23,15 @@ export const ensureBucketExists = async (bucketName: string) => {
 
 // Génère un nom de fichier unique
 export const generateUniqueFileName = (file: File) => {
+  const timestamp = new Date().getTime();
+  const random = Math.floor(Math.random() * 1000);
   const fileExt = file.name.split('.').pop();
-  const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+  const sanitizedName = file.name
+    .split('.')[0]
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '-')
+    .slice(0, 20);
+  const fileName = `${sanitizedName}-${timestamp}-${random}.${fileExt}`;
   return fileName;
 };
 

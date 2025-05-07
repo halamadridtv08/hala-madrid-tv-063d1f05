@@ -21,10 +21,24 @@ export function YouTubeEmbed({ onSuccess, currentValue = "" }: YouTubeEmbedProps
   function extractVideoId(youtubeUrl: string): string | null {
     if (!youtubeUrl) return null;
     
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-    const match = youtubeUrl.match(regExp);
+    // Support multiple YouTube URL formats
+    const regExpList = [
+      // Standard watch URLs
+      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/,
+      // Short URLs
+      /^.*(youtu.be\/)([^#\&\?]*).*/,
+      // Playlist URLs (extracts video ID)
+      /^.*(youtube.com\/watch\?v=)([^#\&\?]*)\&list=.*/
+    ];
+
+    for (const regExp of regExpList) {
+      const match = youtubeUrl.match(regExp);
+      if (match && match[2].length === 11) {
+        return match[2];
+      }
+    }
     
-    return (match && match[2].length === 11) ? match[2] : null;
+    return null;
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -97,6 +111,9 @@ export function YouTubeEmbed({ onSuccess, currentValue = "" }: YouTubeEmbedProps
               allowFullScreen
               className="w-full h-full rounded-md"
             ></iframe>
+          </div>
+          <div className="mt-2 text-xs text-muted-foreground">
+            <p>ID de la vidéo: <span className="font-mono bg-gray-100 px-1 rounded">{videoId}</span></p>
           </div>
         </div>
       )}
