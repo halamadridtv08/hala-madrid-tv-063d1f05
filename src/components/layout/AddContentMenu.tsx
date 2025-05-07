@@ -91,7 +91,7 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
           onClick={() => handleNavigate("/admin?tab=create&type=youtube", "YouTube")}
           className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
-          <Youtube className="h-4 w-4 text-madrid-blue" />
+          <Youtube className="h-4 w-4 text-red-600" />
           <span>YouTube</span>
         </button>
       </div>

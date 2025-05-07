@@ -28,7 +28,11 @@ export function YouTubeEmbed({ onSuccess, currentValue = "" }: YouTubeEmbedProps
       // Short URLs
       /^.*(youtu.be\/)([^#\&\?]*).*/,
       // Playlist URLs (extracts video ID)
-      /^.*(youtube.com\/watch\?v=)([^#\&\?]*)\&list=.*/
+      /^.*(youtube.com\/watch\?v=)([^#\&\?]*)\&list=.*/,
+      // Channel URLs
+      /^.*(youtube.com\/channel\/)([^#\&\?]*).*/,
+      // User URLs
+      /^.*(youtube.com\/user\/)([^#\&\?]*).*/
     ];
 
     for (const regExp of regExpList) {
