@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -43,7 +42,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { MoreHorizontal, Plus, Eye, Pencil, Trash2, Image } from "lucide-react";
+import { MoreHorizontal, Plus, Eye, Pencil, Trash2, Image, Video, Camera, Users, Calendar, FileText, Settings } from "lucide-react";
 
 interface Article {
   id: string;
@@ -78,7 +77,7 @@ const Admin = () => {
   const [readTime, setReadTime] = useState("");
   const [isPublished, setIsPublished] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
-  const [currentTab, setCurrentTab] = useState(tabFromUrl === "create" ? "create" : "articles");
+  const [currentTab, setCurrentTab] = useState(tabFromUrl === "create" ? "create" : tabFromUrl);
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   
   // Mettre à jour les onglets lorsque l'URL change
@@ -281,6 +280,14 @@ const Admin = () => {
             <TabsList className="mb-6">
               <TabsTrigger value="articles">Articles</TabsTrigger>
               <TabsTrigger value="create">Créer / Modifier</TabsTrigger>
+              <TabsTrigger value="videos">Vidéos</TabsTrigger>
+              <TabsTrigger value="photos">Photos</TabsTrigger>
+              <TabsTrigger value="players">Joueurs</TabsTrigger>
+              <TabsTrigger value="coaches">Entraîneurs</TabsTrigger>
+              <TabsTrigger value="matches">Matchs</TabsTrigger>
+              <TabsTrigger value="results">Résultats</TabsTrigger>
+              <TabsTrigger value="settings">Paramètres</TabsTrigger>
+              <TabsTrigger value="featured">À la une</TabsTrigger>
             </TabsList>
             
             <TabsContent value="articles">
@@ -528,6 +535,205 @@ const Admin = () => {
                       </Button>
                     </div>
                   </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="videos">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Gestion des vidéos</CardTitle>
+                  <CardDescription>
+                    Gérez vos vidéos et contenus multimédias.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Video className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-lg font-medium">Aucune vidéo</h3>
+                    <p className="mt-1 text-gray-500">Commencez par ajouter votre première vidéo</p>
+                    <Button onClick={() => navigate("/admin?tab=create&type=video")} className="mt-4">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Ajouter une vidéo
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="photos">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Gestion des photos</CardTitle>
+                  <CardDescription>
+                    Gérez votre galerie photo et vos images.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Camera className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-lg font-medium">Aucune photo</h3>
+                    <p className="mt-1 text-gray-500">Commencez par ajouter votre première photo</p>
+                    <Button onClick={() => navigate("/admin?tab=create&type=photo")} className="mt-4">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Ajouter une photo
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="players">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Gestion des joueurs</CardTitle>
+                  <CardDescription>
+                    Gérez les profils et informations des joueurs.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Users className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-lg font-medium">Gestion des joueurs</h3>
+                    <p className="mt-1 text-gray-500">Consultez et modifiez les profils des joueurs</p>
+                    <Button onClick={() => navigate("/players")} className="mt-4">
+                      <Users className="mr-2 h-4 w-4" />
+                      Voir les joueurs
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="coaches">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Gestion des entraîneurs</CardTitle>
+                  <CardDescription>
+                    Gérez les profils et informations du staff technique.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Users className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-lg font-medium">Staff technique</h3>
+                    <p className="mt-1 text-gray-500">Gérez les informations du staff technique</p>
+                    <Button onClick={() => navigate("/admin?tab=create&type=coach")} className="mt-4">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Ajouter un entraîneur
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="matches">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Gestion des matchs</CardTitle>
+                  <CardDescription>
+                    Gérez le calendrier des matchs et les fixtures.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Calendar className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-lg font-medium">Calendrier des matchs</h3>
+                    <p className="mt-1 text-gray-500">Ajoutez et gérez les matchs à venir</p>
+                    <Button onClick={() => navigate("/admin?tab=create&type=match")} className="mt-4">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Ajouter un match
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="results">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Résultats des matchs</CardTitle>
+                  <CardDescription>
+                    Consultez et mettez à jour les résultats des matchs.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Calendar className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-lg font-medium">Résultats</h3>
+                    <p className="mt-1 text-gray-500">Gérez les résultats des matchs passés</p>
+                    <Button onClick={() => navigate("/matches")} className="mt-4">
+                      <Calendar className="mr-2 h-4 w-4" />
+                      Voir les résultats
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="settings">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Paramètres du site</CardTitle>
+                  <CardDescription>
+                    Configurez les paramètres généraux de votre site.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="grid gap-4">
+                      <div className="grid gap-2">
+                        <label htmlFor="site_name">Nom du site</label>
+                        <Input 
+                          id="site_name" 
+                          defaultValue="Hala Madrid TV"
+                          placeholder="Nom de votre site"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <label htmlFor="site_description">Description</label>
+                        <Input
+                          id="site_description" 
+                          defaultValue="Site officiel du Real Madrid"
+                          placeholder="Description de votre site"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <label htmlFor="contact_email">Email de contact</label>
+                        <Input
+                          id="contact_email" 
+                          type="email"
+                          placeholder="contact@example.com"
+                        />
+                      </div>
+                    </div>
+                    <Button>
+                      <Settings className="mr-2 h-4 w-4" />
+                      Sauvegarder les paramètres
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="featured">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Contenu à la une</CardTitle>
+                  <CardDescription>
+                    Gérez le contenu mis en avant sur la page d'accueil.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <FileText className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-lg font-medium">Contenu à la une</h3>
+                    <p className="mt-1 text-gray-500">Sélectionnez les articles et contenus à mettre en avant</p>
+                    <Button onClick={() => navigate("/admin?tab=articles")} className="mt-4">
+                      <FileText className="mr-2 h-4 w-4" />
+                      Gérer les articles
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
