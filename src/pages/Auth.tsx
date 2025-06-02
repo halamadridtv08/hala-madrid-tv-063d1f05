@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -9,14 +10,17 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Twitter, Mail } from "lucide-react";
+import { Twitter, Mail, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { TwoFactorVerification } from "@/components/auth/TwoFactorVerification";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -31,8 +35,6 @@ const Auth = () => {
     const handleHashFragment = async () => {
       const hashFragment = window.location.hash;
       if (hashFragment && hashFragment.includes('access_token')) {
-        // If we have an access token in the URL, Supabase auth is handling it,
-        // but we'll add this redirect for safety
         navigate("/");
       }
     };
@@ -40,30 +42,126 @@ const Auth = () => {
     handleHashFragment();
   }, [user, navigate]);
 
+  const checkAdminRequires2FA = async (userId: string): Promise<boolean> => {
+    try {
+      const { data: adminData, error: adminError } = await supabase
+        .from('admins')
+        .select('requires_2fa')
+        .eq('id', userId)
+        .single();
+
+      if (adminError && adminError.code !== 'PGRST116') {
+        console.error('Error checking admin status:', adminError);
+        return false;
+      }
+
+      if (!adminData) return false; // Not an admin
+
+      // Check if user has 2FA configured
+      const { data: totpData, error: totpError } = await supabase
+        .from('user_totp_secrets')
+        .select('is_verified')
+        .eq('user_id', userId)
+        .single();
+
+      if (totpError && totpError.code !== 'PGRST116') {
+        console.error('Error checking 2FA status:', totpError);
+        return false;
+      }
+
+      return adminData.requires_2fa && totpData?.is_verified;
+    } catch (error) {
+      console.error('Error in 2FA check:', error);
+      return false;
+    }
+  };
+
+  const logLoginAttempt = async (email: string, success: boolean) => {
+    try {
+      const ip = await getClientIP();
+      await supabase.from('login_attempts').insert({
+        email,
+        success,
+        ip_address: ip,
+        user_agent: navigator.userAgent
+      });
+    } catch (error) {
+      console.error('Error logging login attempt:', error);
+    }
+  };
+
+  const getClientIP = async (): Promise<string> => {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip;
+    } catch {
+      return 'unknown';
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      if (error) throw error;
-      
-      toast({
-        title: "Connexion réussie",
-        description: "Vous êtes maintenant connecté."
-      });
-      
-      navigate("/admin");
+      if (error) {
+        await logLoginAttempt(email, false);
+        throw error;
+      }
+
+      if (data.user) {
+        // Check if admin requires 2FA
+        const requires2FA = await checkAdminRequires2FA(data.user.id);
+        
+        if (requires2FA) {
+          setPendingEmail(email);
+          setShowTwoFactor(true);
+          setLoading(false);
+          return;
+        }
+
+        await logLoginAttempt(email, true);
+        toast({
+          title: "Connexion réussie",
+          description: "Vous êtes maintenant connecté."
+        });
+        
+        navigate("/admin");
+      }
     } catch (error: any) {
       setError(error.message || "Erreur de connexion");
     } finally {
-      setLoading(false);
+      if (!showTwoFactor) {
+        setLoading(false);
+      }
     }
+  };
+
+  const handleTwoFactorSuccess = async () => {
+    await logLoginAttempt(pendingEmail, true);
+    setShowTwoFactor(false);
+    setPendingEmail("");
+    
+    toast({
+      title: "Connexion réussie",
+      description: "Authentification à double facteur validée."
+    });
+    
+    navigate("/admin");
+  };
+
+  const handleTwoFactorCancel = async () => {
+    await supabase.auth.signOut();
+    setShowTwoFactor(false);
+    setPendingEmail("");
+    setLoading(false);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -112,6 +210,24 @@ const Auth = () => {
     }
   };
 
+  if (showTwoFactor) {
+    return (
+      <>
+        <Navbar />
+        <main className="min-h-screen py-12 bg-gray-50 dark:bg-gray-900">
+          <div className="madrid-container max-w-md mx-auto">
+            <TwoFactorVerification
+              email={pendingEmail}
+              onVerificationSuccess={handleTwoFactorSuccess}
+              onCancel={handleTwoFactorCancel}
+            />
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
+
   return (
     <>
       <Navbar />
@@ -126,7 +242,10 @@ const Auth = () => {
             <TabsContent value="login">
               <Card>
                 <CardHeader>
-                  <CardTitle>Connexion</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Connexion sécurisée
+                  </CardTitle>
                   <CardDescription>
                     Connectez-vous à votre compte pour gérer vos articles.
                   </CardDescription>

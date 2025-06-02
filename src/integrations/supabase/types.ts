@@ -13,14 +13,17 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          requires_2fa: boolean | null
         }
         Insert: {
           created_at?: string | null
           id: string
+          requires_2fa?: boolean | null
         }
         Update: {
           created_at?: string | null
           id?: string
+          requires_2fa?: boolean | null
         }
         Relationships: []
       }
@@ -66,6 +69,63 @@ export type Database = {
           read_time?: string | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      login_attempts: {
+        Row: {
+          attempted_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          success: boolean | null
+          user_agent: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      user_totp_secrets: {
+        Row: {
+          backup_codes: string[] | null
+          created_at: string
+          id: string
+          is_verified: boolean | null
+          secret: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          backup_codes?: string[] | null
+          created_at?: string
+          id?: string
+          is_verified?: boolean | null
+          secret: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          backup_codes?: string[] | null
+          created_at?: string
+          id?: string
+          is_verified?: boolean | null
+          secret?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

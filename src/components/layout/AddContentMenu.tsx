@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, Video, Camera, Users, Calendar, Youtube } from "lucide-react";
+import { FileText, Video, Camera, Users, Calendar, Youtube, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface AddContentMenuProps {
@@ -93,6 +93,20 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
         >
           <Youtube className="h-4 w-4 text-red-600" />
           <span>YouTube</span>
+        </button>
+
+        <div className="border-t border-gray-200 dark:border-gray-600 my-2"></div>
+        
+        <h3 className="text-sm font-semibold mb-2 px-3 py-1 text-gray-500 dark:text-gray-400">
+          Administration
+        </h3>
+        
+        <button 
+          onClick={() => handleNavigate("/admin/security", "Paramètres de sécurité")}
+          className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+        >
+          <Shield className="h-4 w-4 text-green-600" />
+          <span>Sécurité</span>
         </button>
       </div>
     </div>
