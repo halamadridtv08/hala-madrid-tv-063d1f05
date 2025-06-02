@@ -37,8 +37,8 @@ export function TwoFactorSetup({ onSetupComplete }: TwoFactorSetupProps) {
 
   const generateTOTPSecret = async () => {
     try {
-      // Générer un secret aléatoire de 32 caractères
-      const newSecret = OTPAuth.Secret.fromRandom().base32;
+      // Générer un secret aléatoire de 32 caractères en base32
+      const newSecret = generateRandomSecret();
       setSecret(newSecret);
 
       // Créer l'URI TOTP
@@ -66,6 +66,15 @@ export function TwoFactorSetup({ onSetupComplete }: TwoFactorSetupProps) {
         description: "Impossible de générer le secret 2FA"
       });
     }
+  };
+
+  const generateRandomSecret = (): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let result = '';
+    for (let i = 0; i < 32; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
   };
 
   const generateBackupCodes = (): string[] => {
