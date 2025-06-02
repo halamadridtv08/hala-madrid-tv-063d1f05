@@ -27,6 +27,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Select, 
   SelectContent, 
@@ -57,6 +58,64 @@ interface Article {
   featured: boolean;
 }
 
+interface Player {
+  id: string;
+  name: string;
+  position: string;
+  jersey_number: number | null;
+  age: number | null;
+  nationality: string | null;
+  image_url: string | null;
+  bio: string | null;
+  is_active: boolean;
+}
+
+interface Coach {
+  id: string;
+  name: string;
+  role: string;
+  age: number | null;
+  nationality: string | null;
+  image_url: string | null;
+  bio: string | null;
+  experience_years: number | null;
+  is_active: boolean;
+}
+
+interface Match {
+  id: string;
+  home_team: string;
+  away_team: string;
+  match_date: string;
+  venue: string | null;
+  competition: string | null;
+  status: string;
+  home_score: number | null;
+  away_score: number | null;
+}
+
+interface VideoItem {
+  id: string;
+  title: string;
+  description: string | null;
+  video_url: string;
+  thumbnail_url: string | null;
+  category: string | null;
+  is_published: boolean;
+  published_at: string | null;
+}
+
+interface Photo {
+  id: string;
+  title: string;
+  description: string | null;
+  image_url: string;
+  category: string | null;
+  photographer: string | null;
+  is_published: boolean;
+  published_at: string | null;
+}
+
 const Admin = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -64,11 +123,16 @@ const Admin = () => {
   const typeFromUrl = searchParams.get("type") || "article";
   
   const [articles, setArticles] = useState<Article[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [videos, setVideos] = useState<VideoItem[]>([]);
+  const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
   
-  // New article form state
+  // Form states
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
@@ -78,18 +142,42 @@ const Admin = () => {
   const [isPublished, setIsPublished] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
   const [currentTab, setCurrentTab] = useState(tabFromUrl === "create" ? "create" : tabFromUrl);
-  const [editingArticle, setEditingArticle] = useState<Article | null>(null);
+  const [editingItem, setEditingItem] = useState<any>(null);
   
+  // Form states spécifiques pour les différents types
+  const [name, setName] = useState("");
+  const [position, setPosition] = useState("");
+  const [jerseyNumber, setJerseyNumber] = useState("");
+  const [age, setAge] = useState("");
+  const [nationality, setNationality] = useState("");
+  const [bio, setBio] = useState("");
+  const [role, setRole] = useState("");
+  const [experienceYears, setExperienceYears] = useState("");
+  const [homeTeam, setHomeTeam] = useState("");
+  const [awayTeam, setAwayTeam] = useState("");
+  const [matchDate, setMatchDate] = useState("");
+  const [venue, setVenue] = useState("");
+  const [competition, setCompetition] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [photographer, setPhotographer] = useState("");
+
   // Mettre à jour les onglets lorsque l'URL change
   useEffect(() => {
     if (tabFromUrl === "create") {
       setCurrentTab("create");
       
-      // Si type est spécifié, configurer le formulaire pour ce type
+      // Configurer le formulaire selon le type
       if (typeFromUrl === "video") {
         setCategory("video");
       } else if (typeFromUrl === "photo") {
         setCategory("photo");
+      } else if (typeFromUrl === "player") {
+        setPosition("attaquant");
+      } else if (typeFromUrl === "coach") {
+        setRole("Entraîneur principal");
+      } else if (typeFromUrl === "match") {
+        setHomeTeam("Real Madrid");
       }
     } else {
       setCurrentTab(tabFromUrl || "articles");
@@ -97,70 +185,261 @@ const Admin = () => {
   }, [tabFromUrl, typeFromUrl]);
 
   useEffect(() => {
-    fetchArticles();
+    fetchAllData();
   }, []);
 
-  const fetchArticles = async () => {
+  const fetchAllData = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('articles')
-        .select('*')
-        .order('published_at', { ascending: false });
-      
-      if (error) throw error;
-      setArticles(data || []);
+      await Promise.all([
+        fetchArticles(),
+        fetchPlayers(),
+        fetchCoaches(),
+        fetchMatches(),
+        fetchVideos(),
+        fetchPhotos()
+      ]);
     } catch (error) {
-      console.error('Error fetching articles:', error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de récupérer les articles"
-      });
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchArticles = async () => {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('*')
+      .order('published_at', { ascending: false });
+    
+    if (error) throw error;
+    setArticles(data || []);
+  };
+
+  const fetchPlayers = async () => {
+    const { data, error } = await supabase
+      .from('players')
+      .select('*')
+      .order('jersey_number', { ascending: true });
+    
+    if (error) throw error;
+    setPlayers(data || []);
+  };
+
+  const fetchCoaches = async () => {
+    const { data, error } = await supabase
+      .from('coaches')
+      .select('*')
+      .order('name', { ascending: true });
+    
+    if (error) throw error;
+    setCoaches(data || []);
+  };
+
+  const fetchMatches = async () => {
+    const { data, error } = await supabase
+      .from('matches')
+      .select('*')
+      .order('match_date', { ascending: false });
+    
+    if (error) throw error;
+    setMatches(data || []);
+  };
+
+  const fetchVideos = async () => {
+    const { data, error } = await supabase
+      .from('videos')
+      .select('*')
+      .order('published_at', { ascending: false });
+    
+    if (error) throw error;
+    setVideos(data || []);
+  };
+
+  const fetchPhotos = async () => {
+    const { data, error } = await supabase
+      .from('photos')
+      .select('*')
+      .order('published_at', { ascending: false });
+    
+    if (error) throw error;
+    setPhotos(data || []);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      const articleData = {
-        title,
-        description,
-        content,
-        image_url: imageUrl || null,
-        category,
-        read_time: readTime || null,
-        is_published: isPublished,
-        featured: isFeatured,
-        author_id: user?.id
-      };
-      
       let response;
       
-      if (editingArticle) {
-        response = await supabase
-          .from('articles')
-          .update(articleData)
-          .eq('id', editingArticle.id);
+      // Déterminer le type de contenu à créer basé sur la catégorie ou le type
+      const contentType = typeFromUrl || category;
+      
+      if (contentType === "player") {
+        const playerData = {
+          name,
+          position,
+          jersey_number: jerseyNumber ? parseInt(jerseyNumber) : null,
+          age: age ? parseInt(age) : null,
+          nationality: nationality || null,
+          image_url: imageUrl || null,
+          bio: bio || null,
+          is_active: isPublished
+        };
+        
+        if (editingItem) {
+          response = await supabase
+            .from('players')
+            .update(playerData)
+            .eq('id', editingItem.id);
+        } else {
+          response = await supabase
+            .from('players')
+            .insert([playerData]);
+        }
+        
+        if (response.error) throw response.error;
+        await fetchPlayers();
+        navigate("/admin?tab=players");
+        
+      } else if (contentType === "coach") {
+        const coachData = {
+          name,
+          role,
+          age: age ? parseInt(age) : null,
+          nationality: nationality || null,
+          image_url: imageUrl || null,
+          bio: bio || null,
+          experience_years: experienceYears ? parseInt(experienceYears) : null,
+          is_active: isPublished
+        };
+        
+        if (editingItem) {
+          response = await supabase
+            .from('coaches')
+            .update(coachData)
+            .eq('id', editingItem.id);
+        } else {
+          response = await supabase
+            .from('coaches')
+            .insert([coachData]);
+        }
+        
+        if (response.error) throw response.error;
+        await fetchCoaches();
+        navigate("/admin?tab=coaches");
+        
+      } else if (contentType === "match") {
+        const matchData = {
+          home_team: homeTeam,
+          away_team: awayTeam,
+          match_date: matchDate,
+          venue: venue || null,
+          competition: competition || null,
+          status: isPublished ? 'upcoming' : 'draft'
+        };
+        
+        if (editingItem) {
+          response = await supabase
+            .from('matches')
+            .update(matchData)
+            .eq('id', editingItem.id);
+        } else {
+          response = await supabase
+            .from('matches')
+            .insert([matchData]);
+        }
+        
+        if (response.error) throw response.error;
+        await fetchMatches();
+        navigate("/admin?tab=matches");
+        
+      } else if (contentType === "video") {
+        const videoData = {
+          title,
+          description: description || null,
+          video_url: videoUrl,
+          thumbnail_url: thumbnailUrl || imageUrl || null,
+          category: category || null,
+          is_published: isPublished
+        };
+        
+        if (editingItem) {
+          response = await supabase
+            .from('videos')
+            .update(videoData)
+            .eq('id', editingItem.id);
+        } else {
+          response = await supabase
+            .from('videos')
+            .insert([videoData]);
+        }
+        
+        if (response.error) throw response.error;
+        await fetchVideos();
+        navigate("/admin?tab=videos");
+        
+      } else if (contentType === "photo") {
+        const photoData = {
+          title,
+          description: description || null,
+          image_url: imageUrl,
+          category: category || null,
+          photographer: photographer || null,
+          is_published: isPublished
+        };
+        
+        if (editingItem) {
+          response = await supabase
+            .from('photos')
+            .update(photoData)
+            .eq('id', editingItem.id);
+        } else {
+          response = await supabase
+            .from('photos')
+            .insert([photoData]);
+        }
+        
+        if (response.error) throw response.error;
+        await fetchPhotos();
+        navigate("/admin?tab=photos");
+        
       } else {
-        response = await supabase
-          .from('articles')
-          .insert([articleData]);
+        // Article par défaut
+        const articleData = {
+          title,
+          description,
+          content,
+          image_url: imageUrl || null,
+          category,
+          read_time: readTime || null,
+          is_published: isPublished,
+          featured: isFeatured,
+          author_id: user?.id
+        };
+        
+        if (editingItem) {
+          response = await supabase
+            .from('articles')
+            .update(articleData)
+            .eq('id', editingItem.id);
+        } else {
+          response = await supabase
+            .from('articles')
+            .insert([articleData]);
+        }
+        
+        if (response.error) throw response.error;
+        await fetchArticles();
+        navigate("/admin?tab=articles");
       }
       
-      if (response.error) throw response.error;
-      
       toast({
-        title: editingArticle ? "Article mis à jour" : "Article créé",
-        description: editingArticle ? "L'article a été mis à jour avec succès" : "L'article a été créé avec succès"
+        title: editingItem ? "Contenu mis à jour" : "Contenu créé",
+        description: editingItem ? "Le contenu a été mis à jour avec succès" : "Le contenu a été créé avec succès"
       });
       
       resetForm();
-      fetchArticles();
-      navigate("/admin?tab=articles");
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -179,70 +458,109 @@ const Admin = () => {
     setReadTime("");
     setIsPublished(false);
     setIsFeatured(false);
-    setEditingArticle(null);
+    setName("");
+    setPosition("");
+    setJerseyNumber("");
+    setAge("");
+    setNationality("");
+    setBio("");
+    setRole("");
+    setExperienceYears("");
+    setHomeTeam("");
+    setAwayTeam("");
+    setMatchDate("");
+    setVenue("");
+    setCompetition("");
+    setVideoUrl("");
+    setThumbnailUrl("");
+    setPhotographer("");
+    setEditingItem(null);
   };
 
-  const handleEdit = (article: Article) => {
-    setTitle(article.title);
-    setDescription(article.description);
-    setContent(article.content);
-    setImageUrl(article.image_url || "");
-    setCategory(article.category);
-    setReadTime(article.read_time || "");
-    setIsPublished(article.is_published);
-    setIsFeatured(article.featured);
-    setEditingArticle(article);
-    navigate("/admin?tab=create");
+  const handleEdit = (item: any, type: string) => {
+    if (type === "article") {
+      setTitle(item.title);
+      setDescription(item.description);
+      setContent(item.content);
+      setImageUrl(item.image_url || "");
+      setCategory(item.category);
+      setReadTime(item.read_time || "");
+      setIsPublished(item.is_published);
+      setIsFeatured(item.featured);
+    } else if (type === "player") {
+      setName(item.name);
+      setPosition(item.position);
+      setJerseyNumber(item.jersey_number?.toString() || "");
+      setAge(item.age?.toString() || "");
+      setNationality(item.nationality || "");
+      setImageUrl(item.image_url || "");
+      setBio(item.bio || "");
+      setIsPublished(item.is_active);
+    } else if (type === "coach") {
+      setName(item.name);
+      setRole(item.role);
+      setAge(item.age?.toString() || "");
+      setNationality(item.nationality || "");
+      setImageUrl(item.image_url || "");
+      setBio(item.bio || "");
+      setExperienceYears(item.experience_years?.toString() || "");
+      setIsPublished(item.is_active);
+    } else if (type === "match") {
+      setHomeTeam(item.home_team);
+      setAwayTeam(item.away_team);
+      setMatchDate(item.match_date);
+      setVenue(item.venue || "");
+      setCompetition(item.competition || "");
+      setIsPublished(item.status === 'upcoming');
+    } else if (type === "video") {
+      setTitle(item.title);
+      setDescription(item.description || "");
+      setVideoUrl(item.video_url);
+      setThumbnailUrl(item.thumbnail_url || "");
+      setCategory(item.category || "");
+      setIsPublished(item.is_published);
+    } else if (type === "photo") {
+      setTitle(item.title);
+      setDescription(item.description || "");
+      setImageUrl(item.image_url);
+      setCategory(item.category || "");
+      setPhotographer(item.photographer || "");
+      setIsPublished(item.is_published);
+    }
+    
+    setEditingItem(item);
+    navigate(`/admin?tab=create&type=${type}`);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet article ?")) return;
+  const handleDelete = async (id: string, type: string) => {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet élément ?")) return;
     
     try {
       const { error } = await supabase
-        .from('articles')
+        .from(type === "article" ? "articles" : `${type}s`)
         .delete()
         .eq('id', id);
       
       if (error) throw error;
       
       toast({
-        title: "Article supprimé",
-        description: "L'article a été supprimé avec succès"
+        title: "Élément supprimé",
+        description: "L'élément a été supprimé avec succès"
       });
       
-      fetchArticles();
+      // Actualiser les données appropriées
+      if (type === "article") await fetchArticles();
+      else if (type === "player") await fetchPlayers();
+      else if (type === "coach") await fetchCoaches();
+      else if (type === "match") await fetchMatches();
+      else if (type === "video") await fetchVideos();
+      else if (type === "photo") await fetchPhotos();
+      
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erreur",
         description: error.message || "Une erreur est survenue lors de la suppression"
-      });
-    }
-  };
-
-  const togglePublishStatus = async (id: string, currentStatus: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('articles')
-        .update({ is_published: !currentStatus })
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      toast({
-        title: currentStatus ? "Article dépublié" : "Article publié",
-        description: currentStatus 
-          ? "L'article a été dépublié avec succès" 
-          : "L'article a été publié avec succès"
-      });
-      
-      fetchArticles();
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: error.message || "Une erreur est survenue"
       });
     }
   };
@@ -263,6 +581,385 @@ const Admin = () => {
       title: "Image ajoutée",
       description: "L'image a été ajoutée avec succès."
     });
+  };
+
+  const renderCreateForm = () => {
+    const contentType = typeFromUrl || category;
+    
+    if (contentType === "player") {
+      return (
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <label htmlFor="name">Nom du joueur*</label>
+            <Input 
+              id="name" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nom complet du joueur"
+              required
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <label htmlFor="position">Position*</label>
+              <Select value={position} onValueChange={setPosition} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionnez une position" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="gardien">Gardien</SelectItem>
+                  <SelectItem value="défenseur">Défenseur</SelectItem>
+                  <SelectItem value="milieu">Milieu</SelectItem>
+                  <SelectItem value="attaquant">Attaquant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="jersey_number">Numéro de maillot</label>
+              <Input 
+                id="jersey_number" 
+                type="number"
+                value={jerseyNumber}
+                onChange={(e) => setJerseyNumber(e.target.value)}
+                placeholder="Ex: 10"
+                min="1"
+                max="99"
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <label htmlFor="age">Âge</label>
+              <Input 
+                id="age" 
+                type="number"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                placeholder="Ex: 25"
+                min="16"
+                max="45"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="nationality">Nationalité</label>
+              <Input 
+                id="nationality" 
+                value={nationality}
+                onChange={(e) => setNationality(e.target.value)}
+                placeholder="Ex: Espagne"
+              />
+            </div>
+          </div>
+          
+          <div className="grid gap-2">
+            <label htmlFor="bio">Biographie</label>
+            <Textarea
+              id="bio" 
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Biographie du joueur"
+              rows={3}
+            />
+          </div>
+          
+          <div className="grid gap-2">
+            <label htmlFor="image_url">Photo du joueur</label>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <Input 
+                  id="image_url" 
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+              <div className="w-full md:w-72">
+                <MediaUploader
+                  onSuccess={handleImageUploadSuccess}
+                  acceptTypes="image/*"
+                  buttonText="Télécharger une photo"
+                  folderPath="players"
+                />
+              </div>
+            </div>
+            {imageUrl && (
+              <div className="mt-2">
+                <img src={imageUrl} alt="Aperçu" className="max-h-40 rounded-md object-contain" />
+              </div>
+            )}
+          </div>
+          
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={isPublished}
+                onChange={() => setIsPublished(!isPublished)}
+                className="w-4 h-4"
+              />
+              Joueur actif
+            </label>
+          </div>
+        </div>
+      );
+    }
+    
+    if (contentType === "coach") {
+      return (
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <label htmlFor="name">Nom de l'entraîneur*</label>
+            <Input 
+              id="name" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nom complet de l'entraîneur"
+              required
+            />
+          </div>
+          
+          <div className="grid gap-2">
+            <label htmlFor="role">Rôle*</label>
+            <Select value={role} onValueChange={setRole} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez un rôle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Entraîneur principal">Entraîneur principal</SelectItem>
+                <SelectItem value="Entraîneur adjoint">Entraîneur adjoint</SelectItem>
+                <SelectItem value="Entraîneur des gardiens">Entraîneur des gardiens</SelectItem>
+                <SelectItem value="Préparateur physique">Préparateur physique</SelectItem>
+                <SelectItem value="Analyste vidéo">Analyste vidéo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid gap-2">
+              <label htmlFor="age">Âge</label>
+              <Input 
+                id="age" 
+                type="number"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                placeholder="Ex: 45"
+                min="25"
+                max="80"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="nationality">Nationalité</label>
+              <Input 
+                id="nationality" 
+                value={nationality}
+                onChange={(e) => setNationality(e.target.value)}
+                placeholder="Ex: Espagne"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="experience">Années d'expérience</label>
+              <Input 
+                id="experience" 
+                type="number"
+                value={experienceYears}
+                onChange={(e) => setExperienceYears(e.target.value)}
+                placeholder="Ex: 15"
+                min="0"
+                max="50"
+              />
+            </div>
+          </div>
+          
+          <div className="grid gap-2">
+            <label htmlFor="bio">Biographie</label>
+            <Textarea
+              id="bio" 
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Biographie de l'entraîneur"
+              rows={3}
+            />
+          </div>
+          
+          <div className="grid gap-2">
+            <label htmlFor="image_url">Photo de l'entraîneur</label>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <Input 
+                  id="image_url" 
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+              <div className="w-full md:w-72">
+                <MediaUploader
+                  onSuccess={handleImageUploadSuccess}
+                  acceptTypes="image/*"
+                  buttonText="Télécharger une photo"
+                  folderPath="coaches"
+                />
+              </div>
+            </div>
+            {imageUrl && (
+              <div className="mt-2">
+                <img src={imageUrl} alt="Aperçu" className="max-h-40 rounded-md object-contain" />
+              </div>
+            )}
+          </div>
+          
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={isPublished}
+                onChange={() => setIsPublished(!isPublished)}
+                className="w-4 h-4"
+              />
+              Staff actif
+            </label>
+          </div>
+        </div>
+      );
+    }
+    
+    // Formulaire d'article par défaut pour les autres types
+    return (
+      <div className="grid gap-4">
+        <div className="grid gap-2">
+          <label htmlFor="title">Titre*</label>
+          <Input 
+            id="title" 
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Titre du contenu"
+            required
+          />
+        </div>
+        
+        <div className="grid gap-2">
+          <label htmlFor="description">Description*</label>
+          <Input
+            id="description" 
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Brève description"
+            required
+          />
+        </div>
+        
+        {contentType === "video" && (
+          <div className="grid gap-2">
+            <label htmlFor="video_url">URL de la vidéo*</label>
+            <Input
+              id="video_url" 
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="https://youtube.com/watch?v=..."
+              required
+            />
+          </div>
+        )}
+        
+        {(contentType === "article" || contentType === "match") && (
+          <div className="grid gap-2">
+            <label htmlFor="content">Contenu*</label>
+            <RichTextEditor
+              value={content}
+              onChange={setContent}
+              placeholder="Contenu complet"
+            />
+          </div>
+        )}
+        
+        <div className="grid gap-2">
+          <label htmlFor="image_url">Image principale</label>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <Input 
+                id="image_url" 
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+            <div className="w-full md:w-72">
+              <MediaUploader
+                onSuccess={handleImageUploadSuccess}
+                acceptTypes="image/*"
+                buttonText="Télécharger une image"
+                folderPath="thumbnails"
+              />
+            </div>
+          </div>
+          {imageUrl && (
+            <div className="mt-2">
+              <img src={imageUrl} alt="Aperçu" className="max-h-40 rounded-md object-contain" />
+            </div>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid gap-2">
+            <label htmlFor="category">Catégorie*</label>
+            <Select value={category} onValueChange={setCategory} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez une catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="match">Match</SelectItem>
+                <SelectItem value="joueur">Joueur</SelectItem>
+                <SelectItem value="conférence">Conférence</SelectItem>
+                <SelectItem value="mercato">Mercato</SelectItem>
+                <SelectItem value="hommage">Hommage</SelectItem>
+                <SelectItem value="formation">Formation</SelectItem>
+                <SelectItem value="video">Vidéo</SelectItem>
+                <SelectItem value="photo">Photo</SelectItem>
+                <SelectItem value="info">Info</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="grid gap-2">
+            <label htmlFor="read_time">Temps de lecture</label>
+            <Input 
+              id="read_time" 
+              value={readTime}
+              onChange={(e) => setReadTime(e.target.value)}
+              placeholder="3 min"
+            />
+          </div>
+          
+          <div className="flex items-end gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={isPublished}
+                onChange={() => setIsPublished(!isPublished)}
+                className="w-4 h-4"
+              />
+              Publier
+            </label>
+            
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={isFeatured}
+                onChange={() => setIsFeatured(!isFeatured)}
+                className="w-4 h-4"
+              />
+              À la une
+            </label>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -297,15 +994,12 @@ const Admin = () => {
                     <CardTitle>Gérer les articles</CardTitle>
                     <Button onClick={() => {
                       resetForm();
-                      navigate("/admin?tab=create");
+                      navigate("/admin?tab=create&type=article");
                     }}>
                       <Plus className="mr-2 h-4 w-4" />
                       Nouvel article
                     </Button>
                   </div>
-                  <CardDescription>
-                    Liste de tous vos articles. Vous pouvez les modifier, les supprimer ou changer leur statut de publication.
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Table>
@@ -322,7 +1016,7 @@ const Admin = () => {
                       {articles.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={5} className="text-center py-8">
-                            {loading ? "Chargement des articles..." : "Aucun article trouvé"}
+                            {loading ? "Chargement..." : "Aucun article trouvé"}
                           </TableCell>
                         </TableRow>
                       )}
@@ -330,9 +1024,7 @@ const Admin = () => {
                         <TableRow key={article.id}>
                           <TableCell className="font-medium">{article.title}</TableCell>
                           <TableCell>
-                            <Badge className="capitalize">
-                              {article.category}
-                            </Badge>
+                            <Badge className="capitalize">{article.category}</Badge>
                           </TableCell>
                           <TableCell>{formatDate(article.published_at)}</TableCell>
                           <TableCell>
@@ -340,9 +1032,7 @@ const Admin = () => {
                               {article.is_published ? "Publié" : "Brouillon"}
                             </Badge>
                             {article.featured && (
-                              <Badge variant="secondary" className="ml-2">
-                                À la une
-                              </Badge>
+                              <Badge variant="secondary" className="ml-2">À la une</Badge>
                             )}
                           </TableCell>
                           <TableCell className="text-right">
@@ -350,26 +1040,14 @@ const Admin = () => {
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon">
                                   <MoreHorizontal className="h-4 w-4" />
-                                  <span className="sr-only">Actions</span>
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem 
-                                  onClick={() => togglePublishStatus(article.id, article.is_published)}
-                                >
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  {article.is_published ? "Dépublier" : "Publier"}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleEdit(article)}
-                                >
+                                <DropdownMenuItem onClick={() => handleEdit(article, "article")}>
                                   <Pencil className="mr-2 h-4 w-4" />
                                   Modifier
                                 </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => handleDelete(article.id)}
-                                  className="text-red-600 focus:text-red-600"
-                                >
+                                <DropdownMenuItem onClick={() => handleDelete(article.id, "article")} className="text-red-600">
                                   <Trash2 className="mr-2 h-4 w-4" />
                                   Supprimer
                                 </DropdownMenuItem>
@@ -387,137 +1065,20 @@ const Admin = () => {
             <TabsContent value="create">
               <Card>
                 <CardHeader>
-                  <CardTitle>{editingArticle ? "Modifier l'article" : "Créer un nouvel article"}</CardTitle>
-                  <CardDescription>
-                    Remplissez le formulaire ci-dessous pour {editingArticle ? "modifier" : "créer"} un article.
-                  </CardDescription>
+                  <CardTitle>
+                    {editingItem ? "Modifier" : "Créer"} {
+                      typeFromUrl === "player" ? "un joueur" :
+                      typeFromUrl === "coach" ? "un entraîneur" :
+                      typeFromUrl === "match" ? "un match" :
+                      typeFromUrl === "video" ? "une vidéo" :
+                      typeFromUrl === "photo" ? "une photo" :
+                      "un article"
+                    }
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="grid gap-4">
-                      <div className="grid gap-2">
-                        <label htmlFor="title">Titre*</label>
-                        <Input 
-                          id="title" 
-                          value={title}
-                          onChange={(e) => setTitle(e.target.value)}
-                          placeholder="Titre de l'article"
-                          required
-                        />
-                      </div>
-                      
-                      <div className="grid gap-2">
-                        <label htmlFor="description">Description*</label>
-                        <Input
-                          id="description" 
-                          value={description}
-                          onChange={(e) => setDescription(e.target.value)}
-                          placeholder="Brève description de l'article"
-                          required
-                        />
-                      </div>
-                      
-                      <div className="grid gap-2">
-                        <label htmlFor="content">Contenu*</label>
-                        <RichTextEditor
-                          value={content}
-                          onChange={setContent}
-                          placeholder="Contenu complet de l'article"
-                        />
-                      </div>
-                      
-                      <div className="grid gap-2">
-                        <label htmlFor="image_url">Image principale</label>
-                        <div className="flex flex-col md:flex-row gap-4">
-                          <div className="flex-1">
-                            <Input 
-                              id="image_url" 
-                              value={imageUrl}
-                              onChange={(e) => setImageUrl(e.target.value)}
-                              placeholder="https://example.com/image.jpg"
-                              className="w-full"
-                            />
-                          </div>
-                          
-                          <div className="w-full md:w-72">
-                            <MediaUploader
-                              onSuccess={(url) => handleImageUploadSuccess(url)}
-                              acceptTypes="image/*"
-                              buttonText="Télécharger une image"
-                              folderPath="thumbnails"
-                            />
-                          </div>
-                        </div>
-                        
-                        {imageUrl && (
-                          <div className="mt-2 bg-muted/20 p-2 rounded-md">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Image className="h-4 w-4" />
-                              <span className="text-sm font-medium">Aperçu de l'image</span>
-                            </div>
-                            <img 
-                              src={imageUrl} 
-                              alt="Aperçu" 
-                              className="max-h-40 rounded-md object-contain"
-                            />
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="grid gap-2">
-                          <label htmlFor="category">Catégorie*</label>
-                          <Select value={category} onValueChange={setCategory} required>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionnez une catégorie" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="match">Match</SelectItem>
-                              <SelectItem value="joueur">Joueur</SelectItem>
-                              <SelectItem value="conférence">Conférence</SelectItem>
-                              <SelectItem value="mercato">Mercato</SelectItem>
-                              <SelectItem value="hommage">Hommage</SelectItem>
-                              <SelectItem value="formation">Formation</SelectItem>
-                              <SelectItem value="video">Vidéo</SelectItem>
-                              <SelectItem value="photo">Photo</SelectItem>
-                              <SelectItem value="info">Info</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        
-                        <div className="grid gap-2">
-                          <label htmlFor="read_time">Temps de lecture</label>
-                          <Input 
-                            id="read_time" 
-                            value={readTime}
-                            onChange={(e) => setReadTime(e.target.value)}
-                            placeholder="3 min"
-                          />
-                        </div>
-                        
-                        <div className="flex items-end gap-4">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={isPublished}
-                              onChange={() => setIsPublished(!isPublished)}
-                              className="w-4 h-4"
-                            />
-                            Publier
-                          </label>
-                          
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={isFeatured}
-                              onChange={() => setIsFeatured(!isFeatured)}
-                              className="w-4 h-4"
-                            />
-                            À la une
-                          </label>
-                        </div>
-                      </div>
-                    </div>
+                    {renderCreateForm()}
                     
                     <div className="flex gap-2 justify-end">
                       <Button 
@@ -525,13 +1086,13 @@ const Admin = () => {
                         variant="outline" 
                         onClick={() => {
                           resetForm();
-                          navigate("/admin?tab=articles");
+                          navigate("/admin");
                         }}
                       >
                         Annuler
                       </Button>
                       <Button type="submit">
-                        {editingArticle ? "Mettre à jour" : "Créer"} l'article
+                        {editingItem ? "Mettre à jour" : "Créer"}
                       </Button>
                     </div>
                   </form>
@@ -539,68 +1100,72 @@ const Admin = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="videos">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gestion des vidéos</CardTitle>
-                  <CardDescription>
-                    Gérez vos vidéos et contenus multimédias.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Video className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-lg font-medium">Aucune vidéo</h3>
-                    <p className="mt-1 text-gray-500">Commencez par ajouter votre première vidéo</p>
-                    <Button onClick={() => navigate("/admin?tab=create&type=video")} className="mt-4">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Ajouter une vidéo
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="photos">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gestion des photos</CardTitle>
-                  <CardDescription>
-                    Gérez votre galerie photo et vos images.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Camera className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-lg font-medium">Aucune photo</h3>
-                    <p className="mt-1 text-gray-500">Commencez par ajouter votre première photo</p>
-                    <Button onClick={() => navigate("/admin?tab=create&type=photo")} className="mt-4">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Ajouter une photo
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
             <TabsContent value="players">
               <Card>
                 <CardHeader>
-                  <CardTitle>Gestion des joueurs</CardTitle>
-                  <CardDescription>
-                    Gérez les profils et informations des joueurs.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Users className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-lg font-medium">Gestion des joueurs</h3>
-                    <p className="mt-1 text-gray-500">Consultez et modifiez les profils des joueurs</p>
-                    <Button onClick={() => navigate("/players")} className="mt-4">
-                      <Users className="mr-2 h-4 w-4" />
-                      Voir les joueurs
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Gestion des joueurs</CardTitle>
+                    <Button onClick={() => {
+                      resetForm();
+                      navigate("/admin?tab=create&type=player");
+                    }}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Ajouter un joueur
                     </Button>
                   </div>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nom</TableHead>
+                        <TableHead>Position</TableHead>
+                        <TableHead>Numéro</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {players.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8">
+                            {loading ? "Chargement..." : "Aucun joueur trouvé"}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      {players.map((player) => (
+                        <TableRow key={player.id}>
+                          <TableCell className="font-medium">{player.name}</TableCell>
+                          <TableCell className="capitalize">{player.position}</TableCell>
+                          <TableCell>{player.jersey_number || "-"}</TableCell>
+                          <TableCell>
+                            <Badge variant={player.is_active ? "default" : "outline"}>
+                              {player.is_active ? "Actif" : "Inactif"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEdit(player, "player")}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Modifier
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDelete(player.id, "player")} className="text-red-600">
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Supprimer
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -608,21 +1173,151 @@ const Admin = () => {
             <TabsContent value="coaches">
               <Card>
                 <CardHeader>
-                  <CardTitle>Gestion des entraîneurs</CardTitle>
-                  <CardDescription>
-                    Gérez les profils et informations du staff technique.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Users className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-lg font-medium">Staff technique</h3>
-                    <p className="mt-1 text-gray-500">Gérez les informations du staff technique</p>
-                    <Button onClick={() => navigate("/admin?tab=create&type=coach")} className="mt-4">
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Gestion des entraîneurs</CardTitle>
+                    <Button onClick={() => {
+                      resetForm();
+                      navigate("/admin?tab=create&type=coach");
+                    }}>
                       <Plus className="mr-2 h-4 w-4" />
                       Ajouter un entraîneur
                     </Button>
                   </div>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nom</TableHead>
+                        <TableHead>Rôle</TableHead>
+                        <TableHead>Expérience</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {coaches.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8">
+                            {loading ? "Chargement..." : "Aucun entraîneur trouvé"}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      {coaches.map((coach) => (
+                        <TableRow key={coach.id}>
+                          <TableCell className="font-medium">{coach.name}</TableCell>
+                          <TableCell>{coach.role}</TableCell>
+                          <TableCell>{coach.experience_years ? `${coach.experience_years} ans` : "-"}</TableCell>
+                          <TableCell>
+                            <Badge variant={coach.is_active ? "default" : "outline"}>
+                              {coach.is_active ? "Actif" : "Inactif"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEdit(coach, "coach")}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Modifier
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDelete(coach.id, "coach")} className="text-red-600">
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Supprimer
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="videos">
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Gestion des vidéos</CardTitle>
+                    <Button onClick={() => {
+                      resetForm();
+                      navigate("/admin?tab=create&type=video");
+                    }}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Ajouter une vidéo
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {videos.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Video className="mx-auto h-12 w-12 text-gray-400" />
+                      <h3 className="mt-2 text-lg font-medium">Aucune vidéo</h3>
+                      <p className="mt-1 text-gray-500">Commencez par ajouter votre première vidéo</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {videos.map((video) => (
+                        <Card key={video.id}>
+                          <CardContent className="p-4">
+                            <h3 className="font-medium mb-2">{video.title}</h3>
+                            <p className="text-sm text-gray-600 mb-2">{video.description}</p>
+                            <Badge variant={video.is_published ? "default" : "outline"}>
+                              {video.is_published ? "Publié" : "Brouillon"}
+                            </Badge>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="photos">
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Gestion des photos</CardTitle>
+                    <Button onClick={() => {
+                      resetForm();
+                      navigate("/admin?tab=create&type=photo");
+                    }}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Ajouter une photo
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {photos.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Camera className="mx-auto h-12 w-12 text-gray-400" />
+                      <h3 className="mt-2 text-lg font-medium">Aucune photo</h3>
+                      <p className="mt-1 text-gray-500">Commencez par ajouter votre première photo</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {photos.map((photo) => (
+                        <Card key={photo.id}>
+                          <CardContent className="p-4">
+                            {photo.image_url && (
+                              <img src={photo.image_url} alt={photo.title} className="w-full h-32 object-cover rounded mb-2" />
+                            )}
+                            <h3 className="font-medium mb-2">{photo.title}</h3>
+                            <Badge variant={photo.is_published ? "default" : "outline"}>
+                              {photo.is_published ? "Publié" : "Brouillon"}
+                            </Badge>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -630,21 +1325,69 @@ const Admin = () => {
             <TabsContent value="matches">
               <Card>
                 <CardHeader>
-                  <CardTitle>Gestion des matchs</CardTitle>
-                  <CardDescription>
-                    Gérez le calendrier des matchs et les fixtures.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Calendar className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-2 text-lg font-medium">Calendrier des matchs</h3>
-                    <p className="mt-1 text-gray-500">Ajoutez et gérez les matchs à venir</p>
-                    <Button onClick={() => navigate("/admin?tab=create&type=match")} className="mt-4">
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Gestion des matchs</CardTitle>
+                    <Button onClick={() => {
+                      resetForm();
+                      navigate("/admin?tab=create&type=match");
+                    }}>
                       <Plus className="mr-2 h-4 w-4" />
                       Ajouter un match
                     </Button>
                   </div>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Match</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Compétition</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {matches.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8">
+                            {loading ? "Chargement..." : "Aucun match trouvé"}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      {matches.map((match) => (
+                        <TableRow key={match.id}>
+                          <TableCell className="font-medium">
+                            {match.home_team} vs {match.away_team}
+                          </TableCell>
+                          <TableCell>{formatDate(match.match_date)}</TableCell>
+                          <TableCell>{match.competition || "-"}</TableCell>
+                          <TableCell>
+                            <Badge className="capitalize">{match.status}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEdit(match, "match")}>
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Modifier
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDelete(match.id, "match")} className="text-red-600">
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Supprimer
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -653,9 +1396,6 @@ const Admin = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Résultats des matchs</CardTitle>
-                  <CardDescription>
-                    Consultez et mettez à jour les résultats des matchs.
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-8">

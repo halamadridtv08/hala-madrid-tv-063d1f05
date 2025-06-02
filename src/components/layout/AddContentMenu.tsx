@@ -28,12 +28,13 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
   }, [onClose]);
 
   const handleNavigate = (path: string, contentType: string) => {
+    console.log(`Navigating to: ${path}`);
     navigate(path);
     onClose();
     
     toast({
       title: `Création de contenu`,
-      description: `Vous pouvez maintenant créer un nouveau contenu de type: ${contentType}`
+      description: `Formulaire de création ${contentType} ouvert`
     });
   };
 
@@ -48,7 +49,7 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
         </h3>
         
         <button 
-          onClick={() => handleNavigate("/admin?tab=create&type=article", "Article")}
+          onClick={() => handleNavigate("/admin?tab=create&type=article", "d'article")}
           className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <FileText className="h-4 w-4 text-madrid-blue" />
@@ -56,7 +57,7 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
         </button>
         
         <button 
-          onClick={() => handleNavigate("/admin?tab=create&type=video", "Vidéo")}
+          onClick={() => handleNavigate("/admin?tab=create&type=video", "de vidéo")}
           className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <Video className="h-4 w-4 text-madrid-blue" />
@@ -64,7 +65,7 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
         </button>
         
         <button 
-          onClick={() => handleNavigate("/admin?tab=create&type=photo", "Photo")}
+          onClick={() => handleNavigate("/admin?tab=create&type=photo", "de photo")}
           className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <Camera className="h-4 w-4 text-madrid-blue" />
@@ -72,7 +73,7 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
         </button>
         
         <button 
-          onClick={() => handleNavigate("/admin?tab=create&type=player", "Joueur")}
+          onClick={() => handleNavigate("/admin?tab=create&type=player", "de joueur")}
           className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <Users className="h-4 w-4 text-madrid-blue" />
@@ -80,19 +81,19 @@ export function AddContentMenu({ onClose }: AddContentMenuProps) {
         </button>
         
         <button 
-          onClick={() => handleNavigate("/admin?tab=create&type=match", "Match")}
+          onClick={() => handleNavigate("/admin?tab=create&type=coach", "d'entraîneur")}
+          className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+        >
+          <Users className="h-4 w-4 text-green-600" />
+          <span>Entraîneur</span>
+        </button>
+        
+        <button 
+          onClick={() => handleNavigate("/admin?tab=create&type=match", "de match")}
           className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
         >
           <Calendar className="h-4 w-4 text-madrid-blue" />
           <span>Match</span>
-        </button>
-        
-        <button 
-          onClick={() => handleNavigate("/admin?tab=create&type=youtube", "YouTube")}
-          className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
-        >
-          <Youtube className="h-4 w-4 text-red-600" />
-          <span>YouTube</span>
         </button>
 
         <div className="border-t border-gray-200 dark:border-gray-600 my-2"></div>

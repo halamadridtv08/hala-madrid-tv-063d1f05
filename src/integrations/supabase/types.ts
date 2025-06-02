@@ -72,6 +72,48 @@ export type Database = {
         }
         Relationships: []
       }
+      coaches: {
+        Row: {
+          age: number | null
+          bio: string | null
+          created_at: string
+          experience_years: number | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          nationality: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          bio?: string | null
+          created_at?: string
+          experience_years?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          nationality?: string | null
+          role: string
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          bio?: string | null
+          created_at?: string
+          experience_years?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          nationality?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       login_attempts: {
         Row: {
           attempted_at: string
@@ -96,6 +138,141 @@ export type Database = {
           ip_address?: string | null
           success?: boolean | null
           user_agent?: string | null
+        }
+        Relationships: []
+      }
+      matches: {
+        Row: {
+          away_score: number | null
+          away_team: string
+          competition: string | null
+          created_at: string
+          home_score: number | null
+          home_team: string
+          id: string
+          match_date: string
+          match_details: Json | null
+          status: string | null
+          updated_at: string
+          venue: string | null
+        }
+        Insert: {
+          away_score?: number | null
+          away_team: string
+          competition?: string | null
+          created_at?: string
+          home_score?: number | null
+          home_team: string
+          id?: string
+          match_date: string
+          match_details?: Json | null
+          status?: string | null
+          updated_at?: string
+          venue?: string | null
+        }
+        Update: {
+          away_score?: number | null
+          away_team?: string
+          competition?: string | null
+          created_at?: string
+          home_score?: number | null
+          home_team?: string
+          id?: string
+          match_date?: string
+          match_details?: Json | null
+          status?: string | null
+          updated_at?: string
+          venue?: string | null
+        }
+        Relationships: []
+      }
+      photos: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string
+          is_published: boolean | null
+          photographer: string | null
+          published_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url: string
+          is_published?: boolean | null
+          photographer?: string | null
+          published_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string
+          is_published?: boolean | null
+          photographer?: string | null
+          published_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      players: {
+        Row: {
+          age: number | null
+          bio: string | null
+          created_at: string
+          height: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          jersey_number: number | null
+          name: string
+          nationality: string | null
+          position: string
+          stats: Json | null
+          updated_at: string
+          weight: string | null
+        }
+        Insert: {
+          age?: number | null
+          bio?: string | null
+          created_at?: string
+          height?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          jersey_number?: number | null
+          name: string
+          nationality?: string | null
+          position: string
+          stats?: Json | null
+          updated_at?: string
+          weight?: string | null
+        }
+        Update: {
+          age?: number | null
+          bio?: string | null
+          created_at?: string
+          height?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          jersey_number?: number | null
+          name?: string
+          nationality?: string | null
+          position?: string
+          stats?: Json | null
+          updated_at?: string
+          weight?: string | null
         }
         Relationships: []
       }
@@ -126,6 +303,48 @@ export type Database = {
           secret?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      videos: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          duration: number | null
+          id: string
+          is_published: boolean | null
+          published_at: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_url: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          id?: string
+          is_published?: boolean | null
+          published_at?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_url: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          id?: string
+          is_published?: boolean | null
+          published_at?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_url?: string
         }
         Relationships: []
       }
