@@ -322,7 +322,7 @@ const Admin = () => {
           bio: bio || null,
           is_active: isPublished,
           stats: {
-            secondaryPosition: secondaryPosition || null
+            secondaryPosition: secondaryPosition && secondaryPosition !== "none" ? secondaryPosition : null
           }
         };
         
@@ -530,7 +530,8 @@ const Admin = () => {
     } else if (type === "player") {
       setName(item.name);
       setPosition(item.position);
-      setSecondaryPosition(getSecondaryPosition(item.stats) || "");
+      const secondaryPos = getSecondaryPosition(item.stats);
+      setSecondaryPosition(secondaryPos || "none");
       setJerseyNumber(item.jersey_number?.toString() || "");
       setAge(item.age?.toString() || "");
       setNationality(item.nationality || "");
@@ -690,7 +691,7 @@ const Admin = () => {
                   <SelectValue placeholder="Position secondaire (optionnel)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Aucune</SelectItem>
+                  <SelectItem value="none">Aucune</SelectItem>
                   <SelectItem value="défenseur central">Défenseur central</SelectItem>
                   <SelectItem value="défenseur latéral gauche">Défenseur latéral gauche</SelectItem>
                   <SelectItem value="défenseur latéral droite">Défenseur latéral droite</SelectItem>
