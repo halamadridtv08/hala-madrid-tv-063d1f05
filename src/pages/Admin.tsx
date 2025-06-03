@@ -45,6 +45,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { importRealMadridPlayers } from "@/utils/importPlayers";
 import { MoreHorizontal, Plus, Eye, Pencil, Trash2, Image, Video, Camera, Users, Calendar, FileText, Settings, Download } from "lucide-react";
+import type { Json } from "@/integrations/supabase/types";
 
 interface Article {
   id: string;
@@ -69,9 +70,7 @@ interface Player {
   image_url: string | null;
   bio: string | null;
   is_active: boolean;
-  stats?: {
-    secondaryPosition?: string | null;
-  };
+  stats: Json | null;
 }
 
 interface Coach {
@@ -119,6 +118,13 @@ interface Photo {
   is_published: boolean;
   published_at: string | null;
 }
+
+// Fonction utilitaire pour extraire la position secondaire des stats
+const getSecondaryPosition = (stats: Json | null): string | null => {
+  if (!stats || typeof stats !== 'object' || stats === null) return null;
+  const statsObj = stats as { secondaryPosition?: string };
+  return statsObj.secondaryPosition || null;
+};
 
 const Admin = () => {
   const [searchParams] = useSearchParams();
@@ -524,7 +530,7 @@ const Admin = () => {
     } else if (type === "player") {
       setName(item.name);
       setPosition(item.position);
-      setSecondaryPosition(item.stats?.secondaryPosition || "");
+      setSecondaryPosition(getSecondaryPosition(item.stats) || "");
       setJerseyNumber(item.jersey_number?.toString() || "");
       setAge(item.age?.toString() || "");
       setNationality(item.nationality || "");
@@ -1233,9 +1239,9 @@ const Admin = () => {
                             <Badge className="capitalize">{player.position}</Badge>
                           </TableCell>
                           <TableCell>
-                            {player.stats?.secondaryPosition ? (
+                            {getSecondaryPosition(player.stats) ? (
                               <Badge variant="outline" className="capitalize">
-                                {player.stats.secondaryPosition}
+                                {getSecondaryPosition(player.stats)}
                               </Badge>
                             ) : (
                               "-"
