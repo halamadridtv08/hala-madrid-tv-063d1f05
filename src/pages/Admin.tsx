@@ -536,8 +536,34 @@ const Admin = () => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet élément ?")) return;
     
     try {
+      let tableName: string;
+      
+      // Mapper explicitement le type vers le nom de table correct
+      switch (type) {
+        case "article":
+          tableName = "articles";
+          break;
+        case "player":
+          tableName = "players";
+          break;
+        case "coach":
+          tableName = "coaches";
+          break;
+        case "match":
+          tableName = "matches";
+          break;
+        case "video":
+          tableName = "videos";
+          break;
+        case "photo":
+          tableName = "photos";
+          break;
+        default:
+          throw new Error(`Type non supporté: ${type}`);
+      }
+
       const { error } = await supabase
-        .from(type === "article" ? "articles" : `${type}s`)
+        .from(tableName as any)
         .delete()
         .eq('id', id);
       
