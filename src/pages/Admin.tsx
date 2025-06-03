@@ -43,7 +43,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { MoreHorizontal, Plus, Eye, Pencil, Trash2, Image, Video, Camera, Users, Calendar, FileText, Settings } from "lucide-react";
+import { importRealMadridPlayers } from "@/utils/importPlayers";
+import { MoreHorizontal, Plus, Eye, Pencil, Trash2, Image, Video, Camera, Users, Calendar, FileText, Settings, Download } from "lucide-react";
 
 interface Article {
   id: string;
@@ -68,6 +69,9 @@ interface Player {
   image_url: string | null;
   bio: string | null;
   is_active: boolean;
+  stats?: {
+    secondaryPosition?: string | null;
+  };
 }
 
 interface Coach {
@@ -147,6 +151,7 @@ const Admin = () => {
   // Form states spécifiques pour les différents types
   const [name, setName] = useState("");
   const [position, setPosition] = useState("");
+  const [secondaryPosition, setSecondaryPosition] = useState("");
   const [jerseyNumber, setJerseyNumber] = useState("");
   const [age, setAge] = useState("");
   const [nationality, setNationality] = useState("");
@@ -174,6 +179,7 @@ const Admin = () => {
         setCategory("photo");
       } else if (typeFromUrl === "player") {
         setPosition("attaquant");
+        setSecondaryPosition("");
       } else if (typeFromUrl === "coach") {
         setRole("Entraîneur principal");
       } else if (typeFromUrl === "match") {
@@ -266,6 +272,30 @@ const Admin = () => {
     setPhotos(data || []);
   };
 
+  const handleImportPlayers = async () => {
+    try {
+      const imported = await importRealMadridPlayers();
+      if (imported) {
+        toast({
+          title: "Joueurs importés",
+          description: "L'effectif du Real Madrid a été importé avec succès"
+        });
+        await fetchPlayers();
+      } else {
+        toast({
+          title: "Import annulé",
+          description: "Des joueurs existent déjà dans la base de données"
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Erreur lors de l'importation des joueurs"
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -284,7 +314,10 @@ const Admin = () => {
           nationality: nationality || null,
           image_url: imageUrl || null,
           bio: bio || null,
-          is_active: isPublished
+          is_active: isPublished,
+          stats: {
+            secondaryPosition: secondaryPosition || null
+          }
         };
         
         if (editingItem) {
@@ -460,6 +493,7 @@ const Admin = () => {
     setIsFeatured(false);
     setName("");
     setPosition("");
+    setSecondaryPosition("");
     setJerseyNumber("");
     setAge("");
     setNationality("");
@@ -490,6 +524,7 @@ const Admin = () => {
     } else if (type === "player") {
       setName(item.name);
       setPosition(item.position);
+      setSecondaryPosition(item.stats?.secondaryPosition || "");
       setJerseyNumber(item.jersey_number?.toString() || "");
       setAge(item.age?.toString() || "");
       setNationality(item.nationality || "");
@@ -628,7 +663,7 @@ const Admin = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <label htmlFor="position">Position*</label>
+              <label htmlFor="position">Position principale*</label>
               <Select value={position} onValueChange={setPosition} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionnez une position" />
@@ -643,6 +678,29 @@ const Admin = () => {
             </div>
             
             <div className="grid gap-2">
+              <label htmlFor="secondary_position">Position secondaire</label>
+              <Select value={secondaryPosition} onValueChange={setSecondaryPosition}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Position secondaire (optionnel)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Aucune</SelectItem>
+                  <SelectItem value="défenseur central">Défenseur central</SelectItem>
+                  <SelectItem value="défenseur latéral gauche">Défenseur latéral gauche</SelectItem>
+                  <SelectItem value="défenseur latéral droite">Défenseur latéral droite</SelectItem>
+                  <SelectItem value="milieu défensif">Milieu défensif</SelectItem>
+                  <SelectItem value="milieu de terrain">Milieu de terrain</SelectItem>
+                  <SelectItem value="milieu offensif">Milieu offensif</SelectItem>
+                  <SelectItem value="ailier gauche">Ailier gauche</SelectItem>
+                  <SelectItem value="ailier droit">Ailier droit</SelectItem>
+                  <SelectItem value="attaquant">Attaquant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid gap-2">
               <label htmlFor="jersey_number">Numéro de maillot</label>
               <Input 
                 id="jersey_number" 
@@ -654,9 +712,7 @@ const Admin = () => {
                 max="99"
               />
             </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
             <div className="grid gap-2">
               <label htmlFor="age">Âge</label>
               <Input 
@@ -669,16 +725,16 @@ const Admin = () => {
                 max="45"
               />
             </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="nationality">Nationalité</label>
-              <Input 
-                id="nationality" 
-                value={nationality}
-                onChange={(e) => setNationality(e.target.value)}
-                placeholder="Ex: Espagne"
-              />
-            </div>
+          </div>
+          
+          <div className="grid gap-2">
+            <label htmlFor="nationality">Nationalité</label>
+            <Input 
+              id="nationality" 
+              value={nationality}
+              onChange={(e) => setNationality(e.target.value)}
+              placeholder="Ex: Espagne"
+            />
           </div>
           
           <div className="grid gap-2">
@@ -1131,13 +1187,22 @@ const Admin = () => {
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <CardTitle>Gestion des joueurs</CardTitle>
-                    <Button onClick={() => {
-                      resetForm();
-                      navigate("/admin?tab=create&type=player");
-                    }}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Ajouter un joueur
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={handleImportPlayers}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Importer l'effectif RM
+                      </Button>
+                      <Button onClick={() => {
+                        resetForm();
+                        navigate("/admin?tab=create&type=player");
+                      }}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Ajouter un joueur
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -1146,7 +1211,9 @@ const Admin = () => {
                       <TableRow>
                         <TableHead>Nom</TableHead>
                         <TableHead>Position</TableHead>
+                        <TableHead>Position secondaire</TableHead>
                         <TableHead>Numéro</TableHead>
+                        <TableHead>Nationalité</TableHead>
                         <TableHead>Statut</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
@@ -1154,7 +1221,7 @@ const Admin = () => {
                     <TableBody>
                       {players.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8">
+                          <TableCell colSpan={7} className="text-center py-8">
                             {loading ? "Chargement..." : "Aucun joueur trouvé"}
                           </TableCell>
                         </TableRow>
@@ -1162,8 +1229,20 @@ const Admin = () => {
                       {players.map((player) => (
                         <TableRow key={player.id}>
                           <TableCell className="font-medium">{player.name}</TableCell>
-                          <TableCell className="capitalize">{player.position}</TableCell>
+                          <TableCell>
+                            <Badge className="capitalize">{player.position}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {player.stats?.secondaryPosition ? (
+                              <Badge variant="outline" className="capitalize">
+                                {player.stats.secondaryPosition}
+                              </Badge>
+                            ) : (
+                              "-"
+                            )}
+                          </TableCell>
                           <TableCell>{player.jersey_number || "-"}</TableCell>
+                          <TableCell>{player.nationality || "-"}</TableCell>
                           <TableCell>
                             <Badge variant={player.is_active ? "default" : "outline"}>
                               {player.is_active ? "Actif" : "Inactif"}
