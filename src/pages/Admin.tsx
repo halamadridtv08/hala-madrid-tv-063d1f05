@@ -43,7 +43,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { importRealMadridPlayers } from "@/utils/importPlayers";
+import { importRealMadridPlayers, importRealMadridCoaches } from "@/utils/importPlayers";
 import { MoreHorizontal, Plus, Eye, Pencil, Trash2, Image, Video, Camera, Users, Calendar, FileText, Settings, Download } from "lucide-react";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -298,6 +298,30 @@ const Admin = () => {
         variant: "destructive",
         title: "Erreur",
         description: "Erreur lors de l'importation des joueurs"
+      });
+    }
+  };
+
+  const handleImportCoaches = async () => {
+    try {
+      const imported = await importRealMadridCoaches();
+      if (imported) {
+        toast({
+          title: "Entraîneurs importés",
+          description: "Le staff du Real Madrid a été importé avec succès"
+        });
+        await fetchCoaches();
+      } else {
+        toast({
+          title: "Import annulé",
+          description: "Des entraîneurs existent déjà dans la base de données"
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Erreur lors de l'importation des entraîneurs"
       });
     }
   };
@@ -1287,13 +1311,22 @@ const Admin = () => {
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <CardTitle>Gestion des entraîneurs</CardTitle>
-                    <Button onClick={() => {
-                      resetForm();
-                      navigate("/admin?tab=create&type=coach");
-                    }}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Ajouter un entraîneur
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={handleImportCoaches}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Importer le staff RM
+                      </Button>
+                      <Button onClick={() => {
+                        resetForm();
+                        navigate("/admin?tab=create&type=coach");
+                      }}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Ajouter un entraîneur
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -1302,6 +1335,7 @@ const Admin = () => {
                       <TableRow>
                         <TableHead>Nom</TableHead>
                         <TableHead>Rôle</TableHead>
+                        <TableHead>Nationalité</TableHead>
                         <TableHead>Expérience</TableHead>
                         <TableHead>Statut</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -1310,7 +1344,7 @@ const Admin = () => {
                     <TableBody>
                       {coaches.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8">
+                          <TableCell colSpan={6} className="text-center py-8">
                             {loading ? "Chargement..." : "Aucun entraîneur trouvé"}
                           </TableCell>
                         </TableRow>
@@ -1318,7 +1352,10 @@ const Admin = () => {
                       {coaches.map((coach) => (
                         <TableRow key={coach.id}>
                           <TableCell className="font-medium">{coach.name}</TableCell>
-                          <TableCell>{coach.role}</TableCell>
+                          <TableCell>
+                            <Badge className="capitalize">{coach.role}</Badge>
+                          </TableCell>
+                          <TableCell>{coach.nationality || "-"}</TableCell>
                           <TableCell>{coach.experience_years ? `${coach.experience_years} ans` : "-"}</TableCell>
                           <TableCell>
                             <Badge variant={coach.is_active ? "default" : "outline"}>
