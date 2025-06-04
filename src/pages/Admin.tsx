@@ -173,6 +173,12 @@ const Admin = () => {
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [photographer, setPhotographer] = useState("");
 
+  // Nouveaux états pour les onglets de gestion détaillée
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [selectedCoachId, setSelectedCoachId] = useState<string | null>(null);
+  const [selectedPlayerName, setSelectedPlayerName] = useState<string>("");
+  const [selectedCoachName, setSelectedCoachName] = useState<string>("");
+
   // Mettre à jour les onglets lorsque l'URL change
   useEffect(() => {
     if (tabFromUrl === "create") {
@@ -596,6 +602,19 @@ const Admin = () => {
     
     setEditingItem(item);
     navigate(`/admin?tab=create&type=${type}`);
+  };
+
+  // Nouvelle fonction pour gérer les profils détaillés
+  const handleManageProfile = (item: any, type: "player" | "coach") => {
+    if (type === "player") {
+      setSelectedPlayerId(item.id);
+      setSelectedPlayerName(item.name);
+      setCurrentTab("player-profile");
+    } else if (type === "coach") {
+      setSelectedCoachId(item.id);
+      setSelectedCoachName(item.name);
+      setCurrentTab("coach-profile");
+    }
   };
 
   const handleDelete = async (id: string, type: string) => {
@@ -1098,6 +1117,8 @@ const Admin = () => {
               <TabsTrigger value="results">Résultats</TabsTrigger>
               <TabsTrigger value="settings">Paramètres</TabsTrigger>
               <TabsTrigger value="featured">À la une</TabsTrigger>
+              {selectedPlayerId && <TabsTrigger value="player-profile">Profil Joueur</TabsTrigger>}
+              {selectedCoachId && <TabsTrigger value="coach-profile">Profil Entraîneur</TabsTrigger>}
             </TabsList>
             
             <TabsContent value="articles">
@@ -1287,6 +1308,10 @@ const Admin = () => {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleManageProfile(player, "player")}>
+                                  <Users className="mr-2 h-4 w-4" />
+                                  Gérer le profil
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleEdit(player, "player")}>
                                   <Pencil className="mr-2 h-4 w-4" />
                                   Modifier
@@ -1370,6 +1395,10 @@ const Admin = () => {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleManageProfile(coach, "coach")}>
+                                  <Users className="mr-2 h-4 w-4" />
+                                  Gérer le profil
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleEdit(coach, "coach")}>
                                   <Pencil className="mr-2 h-4 w-4" />
                                   Modifier
@@ -1388,6 +1417,75 @@ const Admin = () => {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Nouveaux onglets pour la gestion des profils */}
+            {selectedPlayerId && (
+              <TabsContent value="player-profile">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4 mb-6">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setSelectedPlayerId(null);
+                        setSelectedPlayerName("");
+                        setCurrentTab("players");
+                      }}
+                    >
+                      ← Retour aux joueurs
+                    </Button>
+                    <h2 className="text-2xl font-bold">Profil de {selectedPlayerName}</h2>
+                  </div>
+
+                  <Tabs defaultValue="stats" className="w-full">
+                    <TabsList>
+                      <TabsTrigger value="stats">Statistiques</TabsTrigger>
+                      <TabsTrigger value="media">Médias</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="stats">
+                      <PlayerStatsManager 
+                        playerId={selectedPlayerId} 
+                        playerName={selectedPlayerName}
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="media">
+                      <MediaManager 
+                        entityType="player"
+                        entityId={selectedPlayerId}
+                        entityName={selectedPlayerName}
+                      />
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </TabsContent>
+            )}
+
+            {selectedCoachId && (
+              <TabsContent value="coach-profile">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4 mb-6">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setSelectedCoachId(null);
+                        setSelectedCoachName("");
+                        setCurrentTab("coaches");
+                      }}
+                    >
+                      ← Retour aux entraîneurs
+                    </Button>
+                    <h2 className="text-2xl font-bold">Profil de {selectedCoachName}</h2>
+                  </div>
+
+                  <MediaManager 
+                    entityType="coach"
+                    entityId={selectedCoachId}
+                    entityName={selectedCoachName}
+                  />
+                </div>
+              </TabsContent>
+            )}
 
             <TabsContent value="videos">
               <Card>

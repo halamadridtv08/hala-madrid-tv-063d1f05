@@ -76,6 +76,7 @@ export type Database = {
         Row: {
           age: number | null
           bio: string | null
+          biography: string | null
           created_at: string
           experience_years: number | null
           id: string
@@ -83,12 +84,15 @@ export type Database = {
           is_active: boolean | null
           name: string
           nationality: string | null
+          profile_image_url: string | null
           role: string
+          social_media: Json | null
           updated_at: string
         }
         Insert: {
           age?: number | null
           bio?: string | null
+          biography?: string | null
           created_at?: string
           experience_years?: number | null
           id?: string
@@ -96,12 +100,15 @@ export type Database = {
           is_active?: boolean | null
           name: string
           nationality?: string | null
+          profile_image_url?: string | null
           role: string
+          social_media?: Json | null
           updated_at?: string
         }
         Update: {
           age?: number | null
           bio?: string | null
+          biography?: string | null
           created_at?: string
           experience_years?: number | null
           id?: string
@@ -109,7 +116,9 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           nationality?: string | null
+          profile_image_url?: string | null
           role?: string
+          social_media?: Json | null
           updated_at?: string
         }
         Relationships: []
@@ -186,6 +195,51 @@ export type Database = {
         }
         Relationships: []
       }
+      media_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          is_featured: boolean | null
+          is_published: boolean | null
+          media_type: string
+          media_url: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          media_type: string
+          media_url: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          media_type?: string
+          media_url?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       photos: {
         Row: {
           category: string | null
@@ -225,10 +279,86 @@ export type Database = {
         }
         Relationships: []
       }
+      player_stats: {
+        Row: {
+          assists: number | null
+          clean_sheets: number | null
+          created_at: string
+          goals: number | null
+          goals_conceded: number | null
+          id: string
+          interceptions: number | null
+          match_id: string | null
+          minutes_played: number | null
+          pass_accuracy: number | null
+          passes_completed: number | null
+          player_id: string
+          red_cards: number | null
+          saves: number | null
+          tackles: number | null
+          updated_at: string
+          yellow_cards: number | null
+        }
+        Insert: {
+          assists?: number | null
+          clean_sheets?: number | null
+          created_at?: string
+          goals?: number | null
+          goals_conceded?: number | null
+          id?: string
+          interceptions?: number | null
+          match_id?: string | null
+          minutes_played?: number | null
+          pass_accuracy?: number | null
+          passes_completed?: number | null
+          player_id: string
+          red_cards?: number | null
+          saves?: number | null
+          tackles?: number | null
+          updated_at?: string
+          yellow_cards?: number | null
+        }
+        Update: {
+          assists?: number | null
+          clean_sheets?: number | null
+          created_at?: string
+          goals?: number | null
+          goals_conceded?: number | null
+          id?: string
+          interceptions?: number | null
+          match_id?: string | null
+          minutes_played?: number | null
+          pass_accuracy?: number | null
+          passes_completed?: number | null
+          player_id?: string
+          red_cards?: number | null
+          saves?: number | null
+          tackles?: number | null
+          updated_at?: string
+          yellow_cards?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_stats_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_stats_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players: {
         Row: {
           age: number | null
           bio: string | null
+          biography: string | null
           created_at: string
           height: string | null
           id: string
@@ -238,6 +368,8 @@ export type Database = {
           name: string
           nationality: string | null
           position: string
+          profile_image_url: string | null
+          social_media: Json | null
           stats: Json | null
           updated_at: string
           weight: string | null
@@ -245,6 +377,7 @@ export type Database = {
         Insert: {
           age?: number | null
           bio?: string | null
+          biography?: string | null
           created_at?: string
           height?: string | null
           id?: string
@@ -254,6 +387,8 @@ export type Database = {
           name: string
           nationality?: string | null
           position: string
+          profile_image_url?: string | null
+          social_media?: Json | null
           stats?: Json | null
           updated_at?: string
           weight?: string | null
@@ -261,6 +396,7 @@ export type Database = {
         Update: {
           age?: number | null
           bio?: string | null
+          biography?: string | null
           created_at?: string
           height?: string | null
           id?: string
@@ -270,6 +406,8 @@ export type Database = {
           name?: string
           nationality?: string | null
           position?: string
+          profile_image_url?: string | null
+          social_media?: Json | null
           stats?: Json | null
           updated_at?: string
           weight?: string | null
