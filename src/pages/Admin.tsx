@@ -73,8 +73,8 @@ export default function Admin() {
   const [submitting, setSubmitting] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [editingCoach, setEditingCoach] = useState<Coach | null>(null);
-  const [playersData, setPlayersData] = useState<Player[]>([]);
-  const [coachesData, setCoachesData] = useState<Coach[]>([]);
+  const [playersData, setPlayersData] = useState<Player[] | null>(null);
+  const [coachesData, setCoachesData] = useState<Coach[] | null>(null);
   const { toast } = useToast();
 
   const [playerForm, setPlayerForm] = useState({
@@ -115,26 +115,9 @@ export default function Admin() {
             description: "Erreur lors de la récupération des joueurs",
             variant: "destructive",
           });
-          return;
         }
 
-        // Transform the data to match our Player interface
-        const transformedPlayers: Player[] = (data || []).map((player) => ({
-          id: player.id,
-          name: player.name,
-          position: player.position,
-          jersey_number: player.jersey_number,
-          age: player.age,
-          nationality: player.nationality,
-          height: player.height,
-          weight: player.weight,
-          image_url: player.image_url,
-          bio: player.bio,
-          stats: typeof player.stats === 'object' && player.stats && !Array.isArray(player.stats) ? 
-            player.stats as { secondaryPosition?: string } : undefined
-        }));
-
-        setPlayersData(transformedPlayers);
+        setPlayersData(data);
       } catch (error) {
         console.error("Unexpected error fetching players:", error);
         toast({
@@ -164,10 +147,9 @@ export default function Admin() {
             description: "Erreur lors de la récupération du staff technique",
             variant: "destructive",
           });
-          return;
         }
 
-        setCoachesData(data || []);
+        setCoachesData(data);
       } catch (error) {
         console.error("Unexpected error fetching coaches:", error);
         toast({
@@ -227,9 +209,9 @@ export default function Admin() {
             description: "Joueur mis à jour avec succès",
           });
           setPlayersData(
-            playersData.map((player) =>
+            playersData?.map((player) =>
               player.id === editingPlayer.id ? { ...player, ...playerForm } : player
-            )
+            ) || null
           );
         }
       } else {
@@ -248,23 +230,7 @@ export default function Admin() {
             title: "Succès",
             description: "Joueur créé avec succès",
           });
-          if (data) {
-            const newPlayers = data.map((player) => ({
-              id: player.id,
-              name: player.name,
-              position: player.position,
-              jersey_number: player.jersey_number,
-              age: player.age,
-              nationality: player.nationality,
-              height: player.height,
-              weight: player.weight,
-              image_url: player.image_url,
-              bio: player.bio,
-              stats: typeof player.stats === 'object' && player.stats && !Array.isArray(player.stats) ? 
-                player.stats as { secondaryPosition?: string } : undefined
-            }));
-            setPlayersData([...playersData, ...newPlayers]);
-          }
+          setPlayersData([...(playersData || []), ...data]);
         }
       }
     } catch (error) {
@@ -317,9 +283,9 @@ export default function Admin() {
             description: "Membre du staff mis à jour avec succès",
           });
           setCoachesData(
-            coachesData.map((coach) =>
+            coachesData?.map((coach) =>
               coach.id === editingCoach.id ? { ...coach, ...coachForm } : coach
-            )
+            ) || null
           );
         }
       } else {
@@ -338,9 +304,7 @@ export default function Admin() {
             title: "Succès",
             description: "Membre du staff créé avec succès",
           });
-          if (data) {
-            setCoachesData([...coachesData, ...data]);
-          }
+          setCoachesData([...(coachesData || []), ...data]);
         }
       }
     } catch (error) {
@@ -382,7 +346,7 @@ export default function Admin() {
           title: "Succès",
           description: "Joueur supprimé avec succès",
         });
-        setPlayersData(playersData.filter((player) => player.id !== playerId));
+        setPlayersData(playersData?.filter((player) => player.id !== playerId) || null);
       }
     } catch (error) {
       console.error("Unexpected error:", error);
@@ -410,7 +374,7 @@ export default function Admin() {
           title: "Succès",
           description: "Membre du staff supprimé avec succès",
         });
-        setCoachesData(coachesData.filter((coach) => coach.id !== coachId));
+        setCoachesData(coachesData?.filter((coach) => coach.id !== coachId) || null);
       }
     } catch (error) {
       console.error("Unexpected error:", error);
@@ -515,16 +479,7 @@ export default function Admin() {
                     Gérez l'effectif complet avec toutes les positions
                   </CardDescription>
                 </div>
-                <div className="flex items-center gap-4">
-                  <ImportPlayersButton />
-                  <Button
-                    onClick={() => setCreationType("player")}
-                    className="flex items-center gap-2"
-                  >
-                    <Users className="h-4 w-4" />
-                    Ajouter un joueur
-                  </Button>
-                </div>
+                <ImportPlayersButton />
               </div>
             </CardHeader>
             <CardContent>
@@ -666,7 +621,7 @@ export default function Admin() {
 
               {/* Liste des joueurs */}
               <div className="grid gap-4">
-                {playersData.map((player) => (
+                {playersData?.map((player) => (
                   <Card key={player.id} className="overflow-hidden">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-4">
@@ -759,13 +714,6 @@ export default function Admin() {
                     Gérez l'ensemble du staff technique et encadrement
                   </CardDescription>
                 </div>
-                <Button
-                  onClick={() => setCreationType("coach")}
-                  className="flex items-center gap-2"
-                >
-                  <UserCheck className="h-4 w-4" />
-                  Ajouter un membre du staff
-                </Button>
               </div>
             </CardHeader>
             <CardContent>
@@ -891,7 +839,7 @@ export default function Admin() {
 
               {/* Liste du staff */}
               <div className="grid gap-4">
-                {coachesData.map((coach) => (
+                {coachesData?.map((coach) => (
                   <Card key={coach.id} className="overflow-hidden">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-4">
