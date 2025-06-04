@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,7 +28,11 @@ import {
   Menu,
   ChevronLeft,
   Activity,
-  TrendingUp
+  TrendingUp,
+  BarChart3,
+  Camera,
+  Trophy,
+  User
 } from "lucide-react";
 import { PlayerStatsManager } from "@/components/admin/PlayerStatsManager";
 import { MediaManager } from "@/components/admin/MediaManager";
