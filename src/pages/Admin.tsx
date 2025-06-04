@@ -130,7 +130,8 @@ export default function Admin() {
           weight: player.weight,
           image_url: player.image_url,
           bio: player.bio,
-          stats: typeof player.stats === 'object' && player.stats ? player.stats as { secondaryPosition?: string } : undefined
+          stats: typeof player.stats === 'object' && player.stats && !Array.isArray(player.stats) ? 
+            player.stats as { secondaryPosition?: string } : undefined
         }));
 
         setPlayersData(transformedPlayers);
@@ -259,7 +260,8 @@ export default function Admin() {
               weight: player.weight,
               image_url: player.image_url,
               bio: player.bio,
-              stats: typeof player.stats === 'object' && player.stats ? player.stats as { secondaryPosition?: string } : undefined
+              stats: typeof player.stats === 'object' && player.stats && !Array.isArray(player.stats) ? 
+                player.stats as { secondaryPosition?: string } : undefined
             }));
             setPlayersData([...playersData, ...newPlayers]);
           }
