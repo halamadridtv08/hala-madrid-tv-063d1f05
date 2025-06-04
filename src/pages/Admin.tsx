@@ -1,21 +1,52 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Upload, User, Trophy, Camera, BarChart3, Menu } from "lucide-react";
+import { 
+  Users, 
+  UserPlus, 
+  FileText, 
+  Video, 
+  Calendar, 
+  Settings, 
+  Edit, 
+  Trash2, 
+  Save, 
+  X, 
+  Plus,
+  Menu,
+  ChevronLeft,
+  Activity,
+  TrendingUp
+} from "lucide-react";
 import { PlayerStatsManager } from "@/components/admin/PlayerStatsManager";
 import { MediaManager } from "@/components/admin/MediaManager";
 import { PlayerEditForm } from "@/components/admin/PlayerEditForm";
 import { CoachEditForm } from "@/components/admin/CoachEditForm";
 import { QuickStatsCard } from "@/components/admin/QuickStatsCard";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 interface Player {
   id: string;
