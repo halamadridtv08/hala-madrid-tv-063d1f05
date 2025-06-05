@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Coach } from "@/types/Coach";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { MediaUploader } from "./MediaUploader";
 
 interface CoachFormProps {
   coach?: Coach;
@@ -61,6 +62,10 @@ export const CoachForm = ({ coach, onSuccess, onCancel }: CoachFormProps) => {
     }
   };
 
+  const handleImageUploadSuccess = (url: string) => {
+    setFormData({ ...formData, image_url: url });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -111,12 +116,23 @@ export const CoachForm = ({ coach, onSuccess, onCancel }: CoachFormProps) => {
           
           <div>
             <Label htmlFor="image_url">URL de l'image</Label>
-            <Input
-              id="image_url"
-              type="url"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-            />
+            <div className="space-y-2">
+              <Input
+                id="image_url"
+                type="url"
+                value={formData.image_url}
+                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                placeholder="https://example.com/image.jpg ou utilisez l'uploader ci-dessous"
+              />
+              <MediaUploader
+                onSuccess={handleImageUploadSuccess}
+                acceptTypes="image/*"
+                buttonText="Télécharger une photo"
+                folderPath="coaches"
+                currentValue={formData.image_url}
+                showPreview={true}
+              />
+            </div>
           </div>
           
           <div>

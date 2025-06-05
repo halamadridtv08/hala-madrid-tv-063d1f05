@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PhotoType } from "@/types/Photo";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { MediaUploader } from "./MediaUploader";
 
 interface PhotoFormProps {
   photo?: PhotoType;
@@ -59,6 +60,10 @@ export const PhotoForm = ({ photo, onSuccess, onCancel }: PhotoFormProps) => {
     }
   };
 
+  const handleMediaUploadSuccess = (url: string) => {
+    setFormData({ ...formData, image_url: url });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -89,13 +94,24 @@ export const PhotoForm = ({ photo, onSuccess, onCancel }: PhotoFormProps) => {
           
           <div>
             <Label htmlFor="image_url">URL de l'image</Label>
-            <Input
-              id="image_url"
-              type="url"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              required
-            />
+            <div className="space-y-2">
+              <Input
+                id="image_url"
+                type="url"
+                value={formData.image_url}
+                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                placeholder="https://example.com/image.jpg ou utilisez l'uploader ci-dessous"
+                required
+              />
+              <MediaUploader
+                onSuccess={handleMediaUploadSuccess}
+                acceptTypes="image/*"
+                buttonText="Télécharger une image"
+                folderPath="photos"
+                currentValue={formData.image_url}
+                showPreview={true}
+              />
+            </div>
           </div>
           
           <div>

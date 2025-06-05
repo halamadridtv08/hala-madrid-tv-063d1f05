@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { VideoType } from "@/types/Video";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { MediaUploader } from "./MediaUploader";
 
 interface VideoFormProps {
   video?: VideoType;
@@ -60,6 +61,14 @@ export const VideoForm = ({ video, onSuccess, onCancel }: VideoFormProps) => {
     }
   };
 
+  const handleVideoUploadSuccess = (url: string) => {
+    setFormData({ ...formData, video_url: url });
+  };
+
+  const handleThumbnailUploadSuccess = (url: string) => {
+    setFormData({ ...formData, thumbnail_url: url });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -90,23 +99,45 @@ export const VideoForm = ({ video, onSuccess, onCancel }: VideoFormProps) => {
           
           <div>
             <Label htmlFor="video_url">URL de la vidéo</Label>
-            <Input
-              id="video_url"
-              type="url"
-              value={formData.video_url}
-              onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-              required
-            />
+            <div className="space-y-2">
+              <Input
+                id="video_url"
+                type="url"
+                value={formData.video_url}
+                onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                placeholder="https://example.com/video.mp4 ou utilisez l'uploader ci-dessous"
+                required
+              />
+              <MediaUploader
+                onSuccess={handleVideoUploadSuccess}
+                acceptTypes="video/*"
+                buttonText="Télécharger une vidéo"
+                folderPath="videos"
+                currentValue={formData.video_url}
+                showPreview={true}
+              />
+            </div>
           </div>
           
           <div>
             <Label htmlFor="thumbnail_url">URL de la miniature</Label>
-            <Input
-              id="thumbnail_url"
-              type="url"
-              value={formData.thumbnail_url}
-              onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
-            />
+            <div className="space-y-2">
+              <Input
+                id="thumbnail_url"
+                type="url"
+                value={formData.thumbnail_url}
+                onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
+                placeholder="https://example.com/thumbnail.jpg ou utilisez l'uploader ci-dessous"
+              />
+              <MediaUploader
+                onSuccess={handleThumbnailUploadSuccess}
+                acceptTypes="image/*"
+                buttonText="Télécharger une miniature"
+                folderPath="videos/thumbnails"
+                currentValue={formData.thumbnail_url}
+                showPreview={true}
+              />
+            </div>
           </div>
           
           <div>
