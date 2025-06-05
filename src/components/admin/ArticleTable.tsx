@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Article } from "@/types/Article";
 import { Plus, Edit, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
+import { ArticleForm } from "./ArticleForm";
 
 interface ArticleTableProps {
   articles: Article[];
@@ -15,6 +16,32 @@ interface ArticleTableProps {
 
 const ArticleTable = ({ articles, setArticles }: ArticleTableProps) => {
   const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingArticle, setEditingArticle] = useState<Article | undefined>();
+
+  const refreshArticles = async () => {
+    const { data, error } = await supabase
+      .from('articles')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Erreur lors du rechargement:', error);
+    } else {
+      setArticles(data || []);
+    }
+  };
+
+  const handleFormSuccess = () => {
+    setShowForm(false);
+    setEditingArticle(undefined);
+    refreshArticles();
+  };
+
+  const handleFormCancel = () => {
+    setShowForm(false);
+    setEditingArticle(undefined);
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cet article ?")) return;
@@ -63,14 +90,24 @@ const ArticleTable = ({ articles, setArticles }: ArticleTableProps) => {
   };
 
   const handleAddArticle = () => {
-    toast.info("Formulaire d'ajout d'article - À implémenter");
-    console.log("Redirection vers le formulaire d'ajout d'article");
+    setEditingArticle(undefined);
+    setShowForm(true);
   };
 
   const handleEditArticle = (article: Article) => {
-    toast.info(`Modification de "${article.title}" - À implémenter`);
-    console.log("Redirection vers le formulaire de modification:", article);
+    setEditingArticle(article);
+    setShowForm(true);
   };
+
+  if (showForm) {
+    return (
+      <ArticleForm
+        article={editingArticle}
+        onSuccess={handleFormSuccess}
+        onCancel={handleFormCancel}
+      />
+    );
+  }
 
   return (
     <Card>

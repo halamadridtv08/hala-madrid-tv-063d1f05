@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { VideoType } from "@/types/Video";
 import { Plus, Edit, Trash2, Play } from "lucide-react";
 import { toast } from "sonner";
+import { VideoForm } from "./VideoForm";
 
 interface VideoTableProps {
   videos: VideoType[];
@@ -15,6 +16,32 @@ interface VideoTableProps {
 
 const VideoTable = ({ videos, setVideos }: VideoTableProps) => {
   const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingVideo, setEditingVideo] = useState<VideoType | undefined>();
+
+  const refreshVideos = async () => {
+    const { data, error } = await supabase
+      .from('videos')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Erreur lors du rechargement:', error);
+    } else {
+      setVideos(data || []);
+    }
+  };
+
+  const handleFormSuccess = () => {
+    setShowForm(false);
+    setEditingVideo(undefined);
+    refreshVideos();
+  };
+
+  const handleFormCancel = () => {
+    setShowForm(false);
+    setEditingVideo(undefined);
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Êtes-vous sûr de vouloir supprimer cette vidéo ?")) return;
@@ -63,14 +90,24 @@ const VideoTable = ({ videos, setVideos }: VideoTableProps) => {
   };
 
   const handleAddVideo = () => {
-    toast.info("Formulaire d'ajout de vidéo - À implémenter");
-    console.log("Redirection vers le formulaire d'ajout de vidéo");
+    setEditingVideo(undefined);
+    setShowForm(true);
   };
 
   const handleEditVideo = (video: VideoType) => {
-    toast.info(`Modification de "${video.title}" - À implémenter`);
-    console.log("Redirection vers le formulaire de modification:", video);
+    setEditingVideo(video);
+    setShowForm(true);
   };
+
+  if (showForm) {
+    return (
+      <VideoForm
+        video={editingVideo}
+        onSuccess={handleFormSuccess}
+        onCancel={handleFormCancel}
+      />
+    );
+  }
 
   return (
     <Card>
