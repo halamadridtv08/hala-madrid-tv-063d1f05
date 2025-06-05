@@ -2,7 +2,7 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 type AuthContextType = {
   session: Session | null;
@@ -27,7 +27,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     // Set up auth state listener first
@@ -41,10 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           checkAdminStatus(session.user.id);
           
           if (event === 'SIGNED_IN') {
-            toast({
-              title: "Connexion réussie",
-              description: "Bienvenue sur Hala Madrid TV!"
-            });
+            toast.success("Connexion réussie - Bienvenue sur Hala Madrid TV!");
           }
         } else {
           setIsAdmin(false);
@@ -93,17 +89,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-      toast({
-        title: "Déconnexion réussie",
-        description: "Vous avez été déconnecté avec succès."
-      });
+      toast.success("Déconnexion réussie");
     } catch (error) {
       console.error('Error signing out:', error);
-      toast({
-        title: "Erreur de déconnexion",
-        description: "Une erreur est survenue lors de la déconnexion.",
-        variant: "destructive"
-      });
+      toast.error("Erreur de déconnexion");
     }
   };
 
