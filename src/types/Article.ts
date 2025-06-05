@@ -1,0 +1,15 @@
+
+export interface Article {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  image_url?: string;
+  category: string;
+  is_published: boolean;
+  featured: boolean;
+  published_at: string;
+  updated_at: string;
+  author_id: string;
+  read_time?: string;
+}
