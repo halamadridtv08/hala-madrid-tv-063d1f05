@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Sync, Database, Users, Calendar } from "lucide-react";
+import { RefreshCw, Database, Users, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { realMadridPlayers } from "@/data/realMadridPlayers";
 import { realMadridCoaches } from "@/data/realMadridCoaches";
@@ -39,12 +39,12 @@ export const DataSynchronizer = () => {
           .insert(newPlayers.map(player => ({
             name: player.name,
             position: player.position,
-            jersey_number: player.jersey_number,
+            jersey_number: player.jerseyNumber,
             age: player.age,
             nationality: player.nationality,
-            height: player.height,
-            weight: player.weight,
-            image_url: player.image_url,
+            height: player.height || null,
+            weight: player.weight || null,
+            image_url: player.imageUrl,
             bio: player.bio,
             is_active: true
           })));
@@ -89,9 +89,9 @@ export const DataSynchronizer = () => {
             role: coach.role,
             age: coach.age,
             nationality: coach.nationality,
-            image_url: coach.image_url,
+            image_url: coach.imageUrl,
             bio: coach.bio,
-            experience_years: coach.experience_years,
+            experience_years: coach.experienceYears,
             is_active: true
           })));
 
@@ -170,7 +170,7 @@ export const DataSynchronizer = () => {
               variant="outline"
               size="sm"
             >
-              <Sync className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4 mr-2" />
               Sync Joueurs
             </Button>
             
@@ -180,7 +180,7 @@ export const DataSynchronizer = () => {
               variant="outline"
               size="sm"
             >
-              <Sync className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4 mr-2" />
               Sync Entraîneurs
             </Button>
             
@@ -189,7 +189,7 @@ export const DataSynchronizer = () => {
               disabled={syncing}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              <Sync className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4 mr-2" />
               Tout synchroniser
             </Button>
           </div>
