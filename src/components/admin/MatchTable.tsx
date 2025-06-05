@@ -51,12 +51,27 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
     }
   };
 
+  const handleAddMatch = () => {
+    toast.info("Formulaire d'ajout de match - À implémenter");
+    console.log("Redirection vers le formulaire d'ajout de match");
+  };
+
+  const handleEditMatch = (match: Match) => {
+    toast.info(`Modification du match ${match.home_team} vs ${match.away_team} - À implémenter`);
+    console.log("Redirection vers le formulaire de modification:", match);
+  };
+
+  const handleViewDetails = (match: Match) => {
+    toast.info(`Détails du match ${match.home_team} vs ${match.away_team}`);
+    console.log("Affichage des détails du match:", match);
+  };
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Matchs ({matches.length})</CardTitle>
-          <Button>
+          <Button onClick={handleAddMatch}>
             <Plus className="h-4 w-4 mr-2" />
             Nouveau match
           </Button>
@@ -93,10 +108,20 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleViewDetails(match)}
+                  title="Voir les détails"
+                >
                   <Calendar className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleEditMatch(match)}
+                  title="Modifier le match"
+                >
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button
@@ -104,6 +129,7 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
                   size="sm"
                   onClick={() => handleDelete(match.id)}
                   disabled={loading}
+                  title="Supprimer le match"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

@@ -62,12 +62,22 @@ const ArticleTable = ({ articles, setArticles }: ArticleTableProps) => {
     }
   };
 
+  const handleAddArticle = () => {
+    toast.info("Formulaire d'ajout d'article - À implémenter");
+    console.log("Redirection vers le formulaire d'ajout d'article");
+  };
+
+  const handleEditArticle = (article: Article) => {
+    toast.info(`Modification de "${article.title}" - À implémenter`);
+    console.log("Redirection vers le formulaire de modification:", article);
+  };
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Articles ({articles.length})</CardTitle>
-          <Button>
+          <Button onClick={handleAddArticle}>
             <Plus className="h-4 w-4 mr-2" />
             Nouvel article
           </Button>
@@ -93,10 +103,16 @@ const ArticleTable = ({ articles, setArticles }: ArticleTableProps) => {
                   size="sm"
                   onClick={() => togglePublished(article.id, article.is_published)}
                   disabled={loading}
+                  title={article.is_published ? "Dépublier" : "Publier"}
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleEditArticle(article)}
+                  title="Modifier l'article"
+                >
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button
@@ -104,6 +120,7 @@ const ArticleTable = ({ articles, setArticles }: ArticleTableProps) => {
                   size="sm"
                   onClick={() => handleDelete(article.id)}
                   disabled={loading}
+                  title="Supprimer l'article"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

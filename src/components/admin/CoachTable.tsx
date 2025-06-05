@@ -62,12 +62,22 @@ const CoachTable = ({ coaches, setCoaches }: CoachTableProps) => {
     }
   };
 
+  const handleAddCoach = () => {
+    toast.info("Formulaire d'ajout d'entraîneur - À implémenter");
+    console.log("Redirection vers le formulaire d'ajout d'entraîneur");
+  };
+
+  const handleEditCoach = (coach: Coach) => {
+    toast.info(`Modification de ${coach.name} - À implémenter`);
+    console.log("Redirection vers le formulaire de modification:", coach);
+  };
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Entraîneurs ({coaches.length})</CardTitle>
-          <Button>
+          <Button onClick={handleAddCoach}>
             <Plus className="h-4 w-4 mr-2" />
             Nouvel entraîneur
           </Button>
@@ -107,10 +117,16 @@ const CoachTable = ({ coaches, setCoaches }: CoachTableProps) => {
                   size="sm"
                   onClick={() => toggleActive(coach.id, coach.is_active)}
                   disabled={loading}
+                  title={coach.is_active ? "Désactiver" : "Activer"}
                 >
                   <Users className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleEditCoach(coach)}
+                  title="Modifier l'entraîneur"
+                >
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button
@@ -118,6 +134,7 @@ const CoachTable = ({ coaches, setCoaches }: CoachTableProps) => {
                   size="sm"
                   onClick={() => handleDelete(coach.id)}
                   disabled={loading}
+                  title="Supprimer l'entraîneur"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

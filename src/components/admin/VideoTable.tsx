@@ -62,12 +62,22 @@ const VideoTable = ({ videos, setVideos }: VideoTableProps) => {
     }
   };
 
+  const handleAddVideo = () => {
+    toast.info("Formulaire d'ajout de vidéo - À implémenter");
+    console.log("Redirection vers le formulaire d'ajout de vidéo");
+  };
+
+  const handleEditVideo = (video: VideoType) => {
+    toast.info(`Modification de "${video.title}" - À implémenter`);
+    console.log("Redirection vers le formulaire de modification:", video);
+  };
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Vidéos ({videos.length})</CardTitle>
-          <Button>
+          <Button onClick={handleAddVideo}>
             <Plus className="h-4 w-4 mr-2" />
             Nouvelle vidéo
           </Button>
@@ -96,10 +106,16 @@ const VideoTable = ({ videos, setVideos }: VideoTableProps) => {
                   size="sm"
                   onClick={() => togglePublished(video.id, video.is_published)}
                   disabled={loading}
+                  title={video.is_published ? "Dépublier" : "Publier"}
                 >
                   <Play className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleEditVideo(video)}
+                  title="Modifier la vidéo"
+                >
                   <Edit className="h-4 w-4" />
                 </Button>
                 <Button
@@ -107,6 +123,7 @@ const VideoTable = ({ videos, setVideos }: VideoTableProps) => {
                   size="sm"
                   onClick={() => handleDelete(video.id)}
                   disabled={loading}
+                  title="Supprimer la vidéo"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
