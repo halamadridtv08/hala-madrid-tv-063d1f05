@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Article } from "@/types/Article";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ArticleFormProps {
   article?: Article;
@@ -16,6 +17,7 @@ interface ArticleFormProps {
 }
 
 export const ArticleForm = ({ article, onSuccess, onCancel }: ArticleFormProps) => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: article?.title || "",
@@ -26,19 +28,30 @@ export const ArticleForm = ({ article, onSuccess, onCancel }: ArticleFormProps) 
     is_published: article?.is_published || false,
     featured: article?.featured || false,
     read_time: article?.read_time || "",
-    author_id: article?.author_id || "00000000-0000-0000-0000-000000000000", // Default UUID
+    author_id: article?.author_id || user?.id || "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user?.id) {
+      toast.error("Vous devez être connecté pour créer un article");
+      return;
+    }
+
     setLoading(true);
 
     try {
+      const dataToSubmit = {
+        ...formData,
+        author_id: user.id // S'assurer que l'author_id est bien l'ID de l'utilisateur connecté
+      };
+
       if (article?.id) {
         // Update existing article
         const { error } = await supabase
           .from('articles')
-          .update(formData)
+          .update(dataToSubmit)
           .eq('id', article.id);
 
         if (error) throw error;
@@ -47,7 +60,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel }: ArticleFormProps) 
         // Create new article
         const { error } = await supabase
           .from('articles')
-          .insert([formData]);
+          .insert([dataToSubmit]);
 
         if (error) throw error;
         toast.success("Article créé avec succès");
