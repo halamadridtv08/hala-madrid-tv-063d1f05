@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,8 +41,8 @@ export const DataSynchronizer = () => {
             jersey_number: player.jerseyNumber,
             age: player.age,
             nationality: player.nationality,
-            height: player.height || null,
-            weight: player.weight || null,
+            height: null, // Not available in data
+            weight: null, // Not available in data
             image_url: player.imageUrl,
             bio: player.bio,
             is_active: true
