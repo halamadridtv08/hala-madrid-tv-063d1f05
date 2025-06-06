@@ -8,111 +8,50 @@ import { Footer } from "@/components/layout/Footer";
 import { PlayerCard } from "@/components/players/PlayerCard";
 import { CoachCard } from "@/components/players/CoachCard";
 import { Search, User, Users, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { Player } from "@/types/Player";
-import { Coach } from "@/types/Coach";
+import playersData, { PlayerData } from "@/data/playerData";
 
 const Players = () => {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [coaches, setCoaches] = useState<Coach[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPlayersAndCoaches = async () => {
-      try {
-        // Récupérer les joueurs actifs
-        const { data: playersData, error: playersError } = await supabase
-          .from('players')
-          .select('*')
-          .eq('is_active', true);
-
-        if (playersError) throw playersError;
-
-        // Récupérer les entraîneurs actifs
-        const { data: coachesData, error: coachesError } = await supabase
-          .from('coaches')
-          .select('*')
-          .eq('is_active', true);
-
-        if (coachesError) throw coachesError;
-
-        setPlayers(playersData || []);
-        setCoaches(coachesData || []);
-      } catch (error) {
-        console.error('Erreur lors du chargement des données:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPlayersAndCoaches();
-  }, []);
-
-  // Convertir les données Supabase au format attendu par PlayerCard
-  const convertedPlayers = players.map(player => ({
-    id: parseInt(player.id.substring(0, 8), 16), // Convertir UUID en nombre pour l'ID
-    name: player.name,
-    number: player.jersey_number || 0,
-    position: player.position,
-    nationality: player.nationality || "",
-    image: player.image_url,
-    stats: player.stats || {}
-  }));
+  const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
+  
+  // Convert playerData object to array
+  const playersList = Object.values(playersData);
 
   // Filter players based on active tab and search term
-  const filteredPlayers = convertedPlayers.filter(player => {
+  const filteredPlayers = playersList.filter(player => {
     const matchesTab = activeTab === "all" || 
-      (activeTab === "goalkeepers" && player.position.toLowerCase().includes("gardien")) ||
-      (activeTab === "defenders" && player.position.toLowerCase().includes("défenseur")) ||
-      (activeTab === "midfielders" && player.position.toLowerCase().includes("milieu")) ||
-      (activeTab === "forwards" && (player.position.toLowerCase().includes("attaquant") || player.position.toLowerCase().includes("ailier")));
+      (activeTab === "goalkeepers" && player.position.includes("Gardien")) ||
+      (activeTab === "defenders" && player.position.includes("Défenseur")) ||
+      (activeTab === "midfielders" && player.position.includes("Milieu")) ||
+      (activeTab === "forwards" && (player.position.includes("Attaquant") || player.position.includes("Ailier")));
     
     const matchesSearch = searchTerm === "" || 
       player.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       player.nationality.toLowerCase().includes(searchTerm.toLowerCase()) ||
       player.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (player.secondaryPosition && player.secondaryPosition.toLowerCase().includes(searchTerm.toLowerCase())) ||
       player.number.toString().includes(searchTerm);
     
     return matchesTab && matchesSearch;
   });
+
+  const togglePlayerSelection = (id: number) => {
+    if (selectedPlayers.includes(id)) {
+      setSelectedPlayers(selectedPlayers.filter(playerId => playerId !== id));
+    } else if (selectedPlayers.length < 2) {
+      setSelectedPlayers([...selectedPlayers, id]);
+    } else {
+      // If already 2 players selected, replace the first one
+      setSelectedPlayers([selectedPlayers[1], id]);
+    }
+  };
 
   // Clear all filters
   const clearFilters = () => {
     setSearchTerm("");
     setActiveTab("all");
   };
-
-  // Trouver l'entraîneur principal
-  const mainCoach = coaches.find(coach => 
-    coach.role.toLowerCase().includes('principal') || 
-    coach.role.toLowerCase().includes('entraîneur')
-  );
-
-  // Autres membres du staff
-  const staffMembers = coaches.filter(coach => 
-    coach.id !== mainCoach?.id
-  );
-
-  if (loading) {
-    return (
-      <>
-        <Navbar />
-        <main className="min-h-screen">
-          <div className="bg-madrid-blue py-10">
-            <div className="madrid-container">
-              <h1 className="text-4xl font-bold text-white mb-4">Effectif</h1>
-            </div>
-          </div>
-          <div className="madrid-container py-8">
-            <div className="text-center">Chargement...</div>
-          </div>
-        </main>
-        <Footer />
-      </>
-    );
-  }
 
   return (
     <>
@@ -151,24 +90,13 @@ const Players = () => {
         <div className="madrid-container py-8">
           <div className="flex flex-col lg:flex-row gap-8 mb-12">
             <div className="lg:w-1/4">
-              {mainCoach ? (
-                <CoachCard 
-                  name={mainCoach.name}
-                  title={mainCoach.role}
-                  image={mainCoach.image_url}
-                  nationality={mainCoach.nationality}
-                  birthDate={mainCoach.age ? `${new Date().getFullYear() - mainCoach.age}` : "Non renseigné"}
-                  atClubSince={mainCoach.experience_years ? `${new Date().getFullYear() - mainCoach.experience_years}` : "Non renseigné"}
-                />
-              ) : (
-                <CoachCard 
-                  name="Carlo Ancelotti" 
-                  title="Entraîneur Principal"
-                  nationality="Italienne"
-                  birthDate="10 juin 1959"
-                  atClubSince="2021"
-                />
-              )}
+              <CoachCard 
+                name="Carlo Ancelotti" 
+                title="Entraîneur Principal"
+                nationality="Italienne"
+                birthDate="10 juin 1959"
+                atClubSince="2021"
+              />
             </div>
             <div className="lg:w-3/4">
               <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg h-full">
@@ -176,37 +104,27 @@ const Players = () => {
                   <h2 className="text-2xl font-bold">Staff Technique</h2>
                   <div className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-madrid-blue" />
-                    <span className="text-sm font-medium">{coaches.length} membres</span>
+                    <span className="text-sm font-medium">4 membres</span>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {staffMembers.map((coach) => (
-                    <div key={coach.id} className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
-                      <h3 className="font-bold">{coach.name}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{coach.role}</p>
-                    </div>
-                  ))}
-                  {staffMembers.length === 0 && (
-                    <>
-                      <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
-                        <h3 className="font-bold">Davide Ancelotti</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Assistant Entraîneur</p>
-                      </div>
-                      <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
-                        <h3 className="font-bold">Francesco Mauri</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Préparateur Physique</p>
-                      </div>
-                      <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
-                        <h3 className="font-bold">Luis Llopis</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Entraîneur des Gardiens</p>
-                      </div>
-                      <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
-                        <h3 className="font-bold">Antonio Pintus</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Responsable Préparation Physique</p>
-                      </div>
-                    </>
-                  )}
+                  <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
+                    <h3 className="font-bold">Davide Ancelotti</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Assistant Entraîneur</p>
+                  </div>
+                  <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
+                    <h3 className="font-bold">Francesco Mauri</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Préparateur Physique</p>
+                  </div>
+                  <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
+                    <h3 className="font-bold">Luis Llopis</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Entraîneur des Gardiens</p>
+                  </div>
+                  <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
+                    <h3 className="font-bold">Antonio Pintus</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Responsable Préparation Physique</p>
+                  </div>
                 </div>
 
                 <div className="mt-6">
