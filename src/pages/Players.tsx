@@ -7,12 +7,14 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { PlayerCard } from "@/components/players/PlayerCard";
 import { CoachCard } from "@/components/players/CoachCard";
-import { Search, User, Users, X } from "lucide-react";
+import { Search, User, Users, X, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
 import { Coach } from "@/types/Coach";
+import { useNavigate } from "react-router-dom";
 
 const Players = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
@@ -122,7 +124,17 @@ const Players = () => {
       <main className="min-h-screen">
         <div className="bg-madrid-blue py-10">
           <div className="madrid-container">
-            <h1 className="text-4xl font-bold text-white mb-4">Effectif</h1>
+            <div className="flex items-center gap-4 mb-4">
+              <Button
+                onClick={() => navigate('/')}
+                variant="outline"
+                className="text-white border-white hover:bg-white hover:text-madrid-blue"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Retour
+              </Button>
+              <h1 className="text-4xl font-bold text-white">Effectif</h1>
+            </div>
             <div className="flex flex-col sm:flex-row gap-4 items-center mt-6">
               <div className="relative flex-grow w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -142,7 +154,7 @@ const Players = () => {
                 )}
               </div>
               {(searchTerm || activeTab !== "all") && (
-                <Button variant="outline" onClick={clearFilters} className="whitespace-nowrap">
+                <Button variant="outline" onClick={clearFilters} className="whitespace-nowrap text-white border-white hover:bg-white hover:text-madrid-blue">
                   Réinitialiser
                 </Button>
               )}
@@ -229,7 +241,7 @@ const Players = () => {
                     return (
                       <PlayerCard 
                         key={player.id} 
-                        id={parseInt(player.id)}
+                        id={player.id}
                         name={player.name}
                         number={player.jersey_number || 0}
                         position={player.position}

@@ -1,13 +1,13 @@
 
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
-import { Flag, Heart, Shield, Star, Award, User } from "lucide-react";
-import { useState, useEffect } from "react";
-import { toast } from "@/components/ui/use-toast";
+import { Award, Flag, Shield, Star, User, Heart } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface PlayerCardProps {
-  id: number;
+  id: string;
   name: string;
   number: number;
   position: string;
@@ -16,35 +16,29 @@ interface PlayerCardProps {
   image?: string;
   stats?: {
     matches: number;
-    goals?: number;
-    assists?: number;
+    goals: number;
+    assists: number;
     cleanSheets?: number;
     goalsConceded?: number;
     minutesPlayed: number;
   };
 }
 
-export const PlayerCard = ({ 
+export function PlayerCard({ 
   id, 
   name, 
   number, 
   position, 
-  secondaryPosition, 
+  secondaryPosition,
   nationality, 
-  image,
+  image, 
   stats 
-}: PlayerCardProps) => {
-  // Retrieve favorites from localStorage
-  const [isFavorite, setIsFavorite] = useState(false);
-  
-  // Fallback image if none is provided
-  const playerImage = image || `https://placehold.co/300x400/1a365d/ffffff/?text=${name.charAt(0)}`;
-  
-  // Load favorite status on component mount
-  useEffect(() => {
-    const favoritePlayers = JSON.parse(localStorage.getItem('favoritePlayers') || '[]');
-    setIsFavorite(favoritePlayers.includes(id));
-  }, [id]);
+}: PlayerCardProps) {
+  const navigate = useNavigate();
+  const [isFavorite, setIsFavorite] = useState(() => {
+    const favorites = JSON.parse(localStorage.getItem('favoritePlayers') || '[]');
+    return favorites.includes(id);
+  });
 
   const getPositionColor = (pos: string) => {
     if (pos.includes("Gardien")) return "bg-yellow-600 hover:bg-yellow-700";
@@ -55,118 +49,130 @@ export const PlayerCard = ({
   };
 
   const getPositionIcon = (pos: string) => {
-    if (pos.includes("Gardien")) return <Star className="h-3.5 w-3.5 mr-1" />;
-    if (pos.includes("Défenseur")) return <Shield className="h-3.5 w-3.5 mr-1" />;
-    if (pos.includes("Milieu")) return <Award className="h-3.5 w-3.5 mr-1" />;
-    if (pos.includes("Ailier") || pos.includes("Attaquant")) return <Flag className="h-3.5 w-3.5 mr-1" />;
-    return <User className="h-3.5 w-3.5 mr-1" />;
+    if (pos.includes("Gardien")) return <Star className="h-5 w-5" />;
+    if (pos.includes("Défenseur")) return <Shield className="h-5 w-5" />;
+    if (pos.includes("Milieu")) return <Award className="h-5 w-5" />;
+    if (pos.includes("Ailier") || pos.includes("Attaquant")) return <Flag className="h-5 w-5" />;
+    return <User className="h-5 w-5" />;
   };
 
   const toggleFavorite = (e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
+    e.preventDefault();
     
-    // Get current favorites from localStorage
-    const favoritePlayers = JSON.parse(localStorage.getItem('favoritePlayers') || '[]');
-    
+    const favorites = JSON.parse(localStorage.getItem('favoritePlayers') || '[]');
     let updatedFavorites;
+    
     if (isFavorite) {
-      // Remove player from favorites
-      updatedFavorites = favoritePlayers.filter((playerId: number) => playerId !== id);
-      toast({
-        description: `${name} a été retiré de vos favoris`,
-        variant: "default",
-      });
+      updatedFavorites = favorites.filter((favId: string) => favId !== id);
     } else {
-      // Add player to favorites
-      updatedFavorites = [...favoritePlayers, id];
-      toast({
-        description: `${name} a été ajouté à vos favoris`,
-        variant: "default",
-      });
+      updatedFavorites = [...favorites, id];
     }
     
-    // Update localStorage
     localStorage.setItem('favoritePlayers', JSON.stringify(updatedFavorites));
     setIsFavorite(!isFavorite);
   };
 
-  // Function to display stat highlights based on position
-  const renderStatHighlight = () => {
-    if (!stats) return null;
-    
-    // If player hasn't played any matches, don't show stats
-    if (stats.matches === 0) return null;
-
-    if (position.includes("Gardien")) {
-      return (
-        <div className="absolute top-0 right-0 bg-black bg-opacity-70 p-1 px-2 rounded-bl-md text-xs text-white">
-          <div className="flex items-center">
-            <Star className="h-3.5 w-3.5 text-yellow-400 mr-1" />
-            <span>{stats.cleanSheets || 0} CS</span>
-          </div>
-        </div>
-      );
-    } else {
-      return (
-        <div className="absolute top-0 right-0 bg-black bg-opacity-70 p-1 px-2 rounded-bl-md text-xs text-white">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center">
-              <Flag className="h-3 w-3 text-red-400 mr-1" />
-              <span>{stats.goals || 0}</span>
-            </div>
-            <div className="flex items-center">
-              <Award className="h-3 w-3 text-blue-400 mr-1" />
-              <span>{stats.assists || 0}</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
+  const handleCardClick = () => {
+    navigate(`/players/${id}`);
   };
 
   return (
-    <Link to={`/players/${id}`}>
-      <Card className="overflow-hidden transition-all transform hover:scale-105 hover:shadow-xl cursor-pointer h-full flex flex-col">
-        <div className="relative bg-gradient-to-b from-madrid-blue to-blue-900 pt-6 pb-2 px-4 text-center">
-          <div className="absolute top-2 left-2 w-10 h-10 rounded-full bg-white text-madrid-blue flex items-center justify-center font-bold text-xl">
+    <Card 
+      className="group hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+      onClick={handleCardClick}
+    >
+      <CardContent className="p-0">
+        <div className="relative">
+          <div className="aspect-[4/5] overflow-hidden rounded-t-lg">
+            <img
+              src={image || `https://placehold.co/300x375/1a365d/ffffff/?text=${name.charAt(0)}`}
+              alt={name}
+              className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+          
+          {/* Number badge */}
+          <div className="absolute top-2 left-2 bg-madrid-gold text-black font-bold text-lg px-3 py-1 rounded-full">
             {number}
           </div>
-          <button 
-            onClick={toggleFavorite} 
-            className="absolute top-2 right-2 text-white hover:text-red-500 transition-colors"
-            aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+          
+          {/* Favorite button */}
+          <Button
+            onClick={toggleFavorite}
+            variant="ghost"
+            size="sm"
+            className="absolute top-2 right-2 bg-white/80 hover:bg-white text-gray-700 p-2 h-8 w-8"
           >
-            <Heart className={`h-5 w-5 ${isFavorite ? "fill-red-500 text-red-500" : "fill-transparent"}`} />
-          </button>
-          <h3 className="text-lg font-bold text-white mt-1">{name}</h3>
-          {nationality && (
-            <div className="flex items-center justify-center gap-1 text-white text-opacity-80 text-sm">
-              <Flag className="h-3.5 w-3.5" />
-              <span>{nationality}</span>
+            <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'fill-transparent'}`} />
+          </Button>
+        </div>
+        
+        <div className="p-4">
+          <h3 className="font-bold text-lg mb-2 group-hover:text-madrid-blue transition-colors">
+            {name}
+          </h3>
+          
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className={`${getPositionColor(position)} text-white text-xs px-2 py-1`}
+              >
+                {getPositionIcon(position)}
+                <span className="ml-1">{position}</span>
+              </Button>
+            </div>
+            
+            {secondaryPosition && (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  {secondaryPosition}
+                </Badge>
+              </div>
+            )}
+            
+            {nationality && (
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <Flag className="h-3 w-3" />
+                {nationality}
+              </div>
+            )}
+          </div>
+          
+          {/* Stats */}
+          {stats && (
+            <div className="mt-3 pt-3 border-t border-gray-200">
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {position.includes("Gardien") ? (
+                  <>
+                    <div className="text-center">
+                      <div className="font-bold text-madrid-blue">{stats.cleanSheets || 0}</div>
+                      <div className="text-gray-500">Clean Sheets</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-madrid-blue">{stats.matches}</div>
+                      <div className="text-gray-500">Matchs</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-center">
+                      <div className="font-bold text-madrid-blue">{stats.goals}</div>
+                      <div className="text-gray-500">Buts</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-madrid-blue">{stats.assists}</div>
+                      <div className="text-gray-500">Passes D.</div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           )}
         </div>
-        
-        <div className="flex-grow relative overflow-hidden">
-          <img src={playerImage} alt={name} className="w-full h-64 object-cover object-top" />
-          {renderStatHighlight()}
-          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 p-2">
-            <div className="flex flex-wrap justify-center gap-1">
-              <Badge className={`${getPositionColor(position)} flex items-center`}>
-                {getPositionIcon(position)}
-                {position}
-              </Badge>
-              {secondaryPosition && (
-                <Badge variant="outline" className="bg-opacity-80 bg-white text-black border-0 flex items-center">
-                  {getPositionIcon(secondaryPosition)}
-                  {secondaryPosition}
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
-      </Card>
-    </Link>
+      </CardContent>
+    </Card>
   );
-};
+}

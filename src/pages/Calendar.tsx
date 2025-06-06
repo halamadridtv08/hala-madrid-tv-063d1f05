@@ -1,20 +1,22 @@
 
 import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Calendar as CalendarIcon, Clock, MapPin, ArrowLeft } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarIcon, Clock } from "lucide-react";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
 import { Match } from "@/types/Match";
-import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
-const Calendar = () => {
-  const [date, setDate] = useState(new Date());
+const CalendarPage = () => {
+  const navigate = useNavigate();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     fetchMatches();
   }, []);
@@ -26,59 +28,47 @@ const Calendar = () => {
         .select('*')
         .order('match_date', { ascending: true });
 
-      if (error) throw error;
-      setMatches(data || []);
+      if (error) {
+        console.error('Error fetching matches:', error);
+      } else {
+        setMatches(data || []);
+      }
     } catch (error) {
-      console.error('Erreur lors du chargement des matchs:', error);
-      toast.error("Erreur lors du chargement des matchs");
+      console.error('Error fetching matches:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const formatMatchDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('fr-FR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    }).format(date);
+  // Filter matches for selected date
+  const matchesForSelectedDate = matches.filter(match => {
+    if (!selectedDate) return false;
+    const matchDate = new Date(match.match_date);
+    return matchDate.toDateString() === selectedDate.toDateString();
+  });
+
+  // Get dates that have matches for calendar highlighting
+  const matchDates = matches.map(match => new Date(match.match_date));
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
-  const formatMatchTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('fr-FR', {
-      hour: 'numeric',
-      minute: 'numeric'
-    }).format(date);
-  };
-
-  // Filtrer les matchs pour le mois actuel
-  const currentMonthMatches = matches.filter(match => 
-    new Date(match.match_date).getMonth() === date.getMonth() && 
-    new Date(match.match_date).getFullYear() === date.getFullYear()
-  );
-
-  // Jours spéciaux avec des matchs pour le calendrier
-  const matchDays = matches.map(match => new Date(match.match_date));
-
-  const getCompetitionColor = (competition: string) => {
-    switch (competition) {
-      case "La Liga": return "bg-green-600";
-      case "Ligue des Champions": return "bg-blue-600";
-      case "Copa del Rey": return "bg-purple-600";
-      default: return "bg-gray-600";
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'upcoming': return 'À venir';
-      case 'live': return 'En cours';
-      case 'finished': return 'Terminé';
-      case 'postponed': return 'Reporté';
-      default: return status;
+      case 'upcoming':
+        return <Badge variant="secondary">À venir</Badge>;
+      case 'live':
+        return <Badge variant="destructive">En cours</Badge>;
+      case 'finished':
+        return <Badge variant="default">Terminé</Badge>;
+      case 'postponed':
+        return <Badge variant="outline">Reporté</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
@@ -86,12 +76,9 @@ const Calendar = () => {
     return (
       <>
         <Navbar />
-        <main>
-          <div className="madrid-container py-8">
-            <h1 className="section-title mb-8">Calendrier des Matchs</h1>
-            <div className="text-center py-8">
-              Chargement des matchs...
-            </div>
+        <main className="madrid-container py-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-madrid-blue"></div>
           </div>
         </main>
         <Footer />
@@ -102,120 +89,157 @@ const Calendar = () => {
   return (
     <>
       <Navbar />
-      <main>
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="madrid-container py-8">
-          <h1 className="section-title mb-8">Calendrier des Matchs</h1>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="md:col-span-1">
-              <Card className="p-4 transform transition-all hover:scale-105 hover:shadow-xl">
-                <CalendarComponent
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  className="rounded-md border"
-                  modifiers={{
-                    matchDay: matchDays
-                  }}
-                  modifiersStyles={{
-                    matchDay: {
-                      fontWeight: 'bold',
-                      color: '#FEBE10',
-                      backgroundColor: '#00529F20'
-                    }
-                  }}
-                />
-                <div className="mt-4">
-                  <h3 className="text-lg font-bold">Prochains matchs</h3>
-                  <div className="space-y-2 mt-2">
-                    {matches
-                      .filter(match => new Date(match.match_date) > new Date())
-                      .slice(0, 3)
-                      .map((match) => (
-                        <div key={match.id} className="flex items-center text-sm p-2 rounded-md bg-gray-50 dark:bg-gray-800">
-                          <span className="w-2 h-2 bg-madrid-gold rounded-full mr-2"></span>
-                          <span>
-                            {new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(match.match_date))} - {match.away_team}
-                          </span>
-                        </div>
-                      ))}
+          <Button
+            onClick={() => navigate(-1)}
+            variant="outline"
+            className="mb-6"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Retour
+          </Button>
+
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Calendrier des Matchs
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              Consultez tous les matchs du Real Madrid
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Calendrier */}
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CalendarIcon className="h-5 w-5" />
+                    Sélectionner une date
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    modifiers={{
+                      hasMatch: matchDates
+                    }}
+                    modifiersStyles={{
+                      hasMatch: { 
+                        backgroundColor: '#1a365d', 
+                        color: 'white',
+                        fontWeight: 'bold'
+                      }
+                    }}
+                    className="rounded-md border w-full"
+                  />
+                  <div className="mt-4 text-sm text-gray-500">
+                    <p>• Les dates en bleu indiquent des matchs programmés</p>
                   </div>
-                </div>
+                </CardContent>
               </Card>
             </div>
-            
-            <div className="md:col-span-2">
-              <h2 className="text-2xl font-bold mb-4">Matchs à venir</h2>
-              
-              {currentMonthMatches.length > 0 ? (
-                <div className="space-y-4">
-                  {currentMonthMatches.map((match) => (
-                    <Card key={match.id} className="overflow-hidden transform transition-all hover:scale-102 hover:shadow-lg">
-                      <CardContent className="p-0">
-                        <div className="bg-gradient-to-r from-madrid-blue to-blue-800 p-4">
-                          <div className="flex justify-between items-center text-white">
-                            <Badge className={`${getCompetitionColor(match.competition || '')} text-white`}>
-                              {match.competition || 'Match amical'}
-                            </Badge>
-                            <span>{getStatusLabel(match.status)}</span>
+
+            {/* Liste des matchs */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    {selectedDate ? (
+                      `Matchs du ${selectedDate.toLocaleDateString('fr-FR', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      })}`
+                    ) : (
+                      'Tous les matchs'
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {selectedDate && matchesForSelectedDate.length > 0 ? (
+                    <div className="space-y-4">
+                      {matchesForSelectedDate.map((match) => (
+                        <div key={match.id} className="p-4 border rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-semibold text-lg">
+                              {match.home_team} vs {match.away_team}
+                            </h3>
+                            {getStatusBadge(match.status)}
                           </div>
-                        </div>
-                        
-                        <div className="p-4">
-                          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                            <div className="flex flex-col items-center transform transition-transform hover:scale-110">
-                              <div className="w-12 h-12 bg-madrid-blue rounded-full flex items-center justify-center text-white font-bold">
-                                {match.home_team.slice(0, 2).toUpperCase()}
-                              </div>
-                              <h3 className="text-lg font-bold mt-2">{match.home_team}</h3>
-                              {match.status === 'finished' && (
-                                <span className="text-xl font-bold text-madrid-gold">
-                                  {match.home_score}
-                                </span>
-                              )}
+                          
+                          <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              {formatTime(match.match_date)}
                             </div>
-                            
-                            <div className="text-center">
-                              <div className="text-3xl font-bold">
-                                {match.status === 'finished' ? '-' : 'VS'}
+                            {match.venue && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="h-4 w-4" />
+                                {match.venue}
                               </div>
-                              <div className="flex items-center justify-center mt-2 space-x-2">
-                                <CalendarIcon className="h-4 w-4 text-gray-500" />
-                                <span className="text-sm">{formatMatchDate(match.match_date)}</span>
-                              </div>
-                              <div className="flex items-center justify-center mt-1 space-x-2">
-                                <Clock className="h-4 w-4 text-gray-500" />
-                                <span className="text-sm">{formatMatchTime(match.match_date)}</span>
-                              </div>
-                              {match.venue && (
-                                <div className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                                  {match.venue}
-                                </div>
-                              )}
-                            </div>
-                            
-                            <div className="flex flex-col items-center transform transition-transform hover:scale-110">
-                              <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center text-white font-bold">
-                                {match.away_team.slice(0, 2).toUpperCase()}
-                              </div>
-                              <h3 className="text-lg font-bold mt-2">{match.away_team}</h3>
-                              {match.status === 'finished' && (
-                                <span className="text-xl font-bold text-madrid-gold">
-                                  {match.away_score}
-                                </span>
-                              )}
-                            </div>
+                            )}
+                            {match.competition && (
+                              <Badge variant="outline">{match.competition}</Badge>
+                            )}
                           </div>
+
+                          {match.status === 'finished' && (
+                            <div className="mt-2 text-lg font-bold">
+                              Score: {match.home_score} - {match.away_score}
+                            </div>
+                          )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <Card className="p-6 text-center">
-                  <p className="text-gray-500">Aucun match programmé pour ce mois.</p>
-                </Card>
-              )}
+                      ))}
+                    </div>
+                  ) : selectedDate ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <CalendarIcon className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                      <p>Aucun match programmé pour cette date</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {matches.slice(0, 10).map((match) => (
+                        <div key={match.id} className="p-4 border rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-semibold text-lg">
+                              {match.home_team} vs {match.away_team}
+                            </h3>
+                            {getStatusBadge(match.status)}
+                          </div>
+                          
+                          <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
+                            <div className="flex items-center gap-1">
+                              <CalendarIcon className="h-4 w-4" />
+                              {new Date(match.match_date).toLocaleDateString('fr-FR')}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              {formatTime(match.match_date)}
+                            </div>
+                            {match.venue && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="h-4 w-4" />
+                                {match.venue}
+                              </div>
+                            )}
+                          </div>
+
+                          {match.status === 'finished' && (
+                            <div className="mt-2 text-lg font-bold">
+                              Score: {match.home_score} - {match.away_score}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
@@ -225,4 +249,4 @@ const Calendar = () => {
   );
 };
 
-export default Calendar;
+export default CalendarPage;

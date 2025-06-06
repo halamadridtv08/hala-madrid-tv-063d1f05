@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useState, useEffect } from "react";
 import { 
@@ -17,10 +18,12 @@ import {
   LayoutDashboard, 
   User, 
   Camera,
-  BarChart3
+  BarChart3,
+  ArrowLeft
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Article } from "@/types/Article";
 import { VideoType } from "@/types/Video";
@@ -36,6 +39,7 @@ import CoachTable from "@/components/admin/CoachTable";
 import MatchTable from "@/components/admin/MatchTable";
 import SettingsDashboard from "@/components/admin/SettingsDashboard";
 import { DataSynchronizer } from "@/components/admin/DataSynchronizer";
+import { useNavigate } from "react-router-dom";
 
 interface StatsData {
   totalPlayers: number;
@@ -47,6 +51,7 @@ interface StatsData {
 }
 
 const Admin = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [articles, setArticles] = useState<Article[]>([]);
   const [videos, setVideos] = useState<VideoType[]>([]);
@@ -331,13 +336,22 @@ const Admin = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="madrid-container py-8">
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Administration HALA MADRID TV
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300 mt-2">
-              Gérez le contenu et les paramètres du site
-            </p>
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={() => navigate('/')}
+              variant="outline"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour au site
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                Administration HALA MADRID TV
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 mt-2">
+                Gérez le contenu et les paramètres du site
+              </p>
+            </div>
           </div>
           <Badge variant="outline" className="px-3 py-1">
             Version 2.0

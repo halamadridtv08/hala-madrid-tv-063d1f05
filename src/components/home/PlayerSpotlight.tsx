@@ -1,194 +1,175 @@
 
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { Flag, CalendarDays, Ruler, Award, Timer, Users, Shield, Star } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Star, TrendingUp, Users, Award } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
+import { useNavigate } from "react-router-dom";
 
 export function PlayerSpotlight() {
+  const navigate = useNavigate();
   const [featuredPlayer, setFeaturedPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchFeaturedPlayer = async () => {
-      try {
-        // Fetch a featured player (you can modify this logic to select specific players)
-        const { data: playersData, error } = await supabase
-          .from('players')
-          .select('*')
-          .eq('is_active', true)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (error) {
-          console.error('Error fetching featured player:', error);
-        } else if (playersData && playersData.length > 0) {
-          setFeaturedPlayer(playersData[0]);
-        }
-      } catch (error) {
-        console.error('Error fetching featured player:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchFeaturedPlayer();
   }, []);
+
+  const fetchFeaturedPlayer = async () => {
+    try {
+      // For now, let's get the first active player or a specific one
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.error('Error fetching featured player:', error);
+        // Fallback to default player data
+        setFeaturedPlayer({
+          id: "1",
+          name: "Kylian Mbappé",
+          position: "Ailier/Attaquant",
+          jersey_number: 9,
+          nationality: "Française",
+          image_url: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=400&h=600&fit=crop",
+          stats: {
+            goals: 8,
+            matches: 15,
+            assists: 2,
+            minutesPlayed: 1350
+          },
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      } else {
+        setFeaturedPlayer(data);
+      }
+    } catch (error) {
+      console.error('Error fetching featured player:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getSeasonStats = (player: Player) => {
+    if (!player.stats) return { goals: 0, matches: 0, assists: 0, minutesPlayed: 0 };
+    
+    return {
+      goals: player.stats.goals || 0,
+      matches: player.stats.matches || 0,
+      assists: player.stats.assists || 0,
+      minutesPlayed: player.stats.minutesPlayed || 0
+    };
+  };
 
   if (loading) {
     return (
       <section className="py-12">
         <div className="madrid-container">
           <h2 className="section-title">Joueur en Vedette</h2>
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-madrid-blue"></div>
-          </div>
+          <div className="text-center py-8">Chargement...</div>
         </div>
       </section>
     );
   }
 
   if (!featuredPlayer) {
-    return null;
+    return (
+      <section className="py-12">
+        <div className="madrid-container">
+          <h2 className="section-title">Joueur en Vedette</h2>
+          <div className="text-center py-8 text-gray-500">
+            Aucun joueur en vedette pour le moment.
+          </div>
+        </div>
+      </section>
+    );
   }
 
-  const getPositionIcon = (pos: string) => {
-    if (pos.includes("Gardien")) return <Star className="h-5 w-5 text-madrid-blue" />;
-    if (pos.includes("Défenseur")) return <Shield className="h-5 w-5 text-madrid-blue" />;
-    if (pos.includes("Milieu")) return <Award className="h-5 w-5 text-madrid-blue" />;
-    return <Flag className="h-5 w-5 text-madrid-blue" />;
-  };
-
-  const playerStats = featuredPlayer.stats || {};
+  const stats = getSeasonStats(featuredPlayer);
 
   return (
     <section className="py-12">
       <div className="madrid-container">
         <h2 className="section-title">Joueur en Vedette</h2>
         
-        <Card className="max-w-4xl mx-auto overflow-hidden">
+        <Card className="max-w-4xl mx-auto overflow-hidden bg-gradient-to-r from-madrid-blue to-blue-800">
           <CardContent className="p-0">
             <div className="grid grid-cols-1 md:grid-cols-2">
-              <div className="h-full relative">
-                <img 
-                  src={featuredPlayer.image_url || `https://placehold.co/400x600/1a365d/ffffff/?text=${featuredPlayer.name.charAt(0)}`} 
+              {/* Image Section */}
+              <div className="relative">
+                <img
+                  src={featuredPlayer.image_url || `https://placehold.co/400x600/1a365d/ffffff/?text=${featuredPlayer.name.charAt(0)}`}
                   alt={featuredPlayer.name}
-                  className="w-full h-full object-cover object-top"
+                  className="w-full h-96 md:h-full object-cover"
                 />
-                <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black to-transparent p-4">
-                  <div className="text-white">
-                    <h3 className="text-3xl font-bold">{featuredPlayer.name}</h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge className="bg-madrid-gold text-black flex items-center gap-1">
-                        {getPositionIcon(featuredPlayer.position)}
-                        {featuredPlayer.position}
-                      </Badge>
-                      <div className="bg-madrid-blue text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
-                        {featuredPlayer.jersey_number || 0}
-                      </div>
-                    </div>
-                  </div>
+                <div className="absolute top-4 left-4">
+                  <Badge className="bg-madrid-gold text-black text-lg px-3 py-1">
+                    #{featuredPlayer.jersey_number}
+                  </Badge>
+                </div>
+                <div className="absolute top-4 right-4">
+                  <Badge variant="secondary" className="bg-white/90 text-madrid-blue">
+                    <Star className="h-4 w-4 mr-1" />
+                    Vedette
+                  </Badge>
                 </div>
               </div>
               
-              <div className="p-6 md:p-8">
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-3">
-                    <Flag className="h-5 w-5 text-madrid-blue" />
-                    <div>
-                      <p className="text-sm text-gray-500">Nationalité</p>
-                      <p className="font-medium">{featuredPlayer.nationality || "Non renseigné"}</p>
+              {/* Content Section */}
+              <div className="p-8 text-white">
+                <h3 className="text-3xl font-bold mb-2">{featuredPlayer.name}</h3>
+                <p className="text-xl text-blue-200 mb-1">{featuredPlayer.position}</p>
+                <p className="text-blue-300 mb-6">{featuredPlayer.nationality}</p>
+                
+                {/* Season Stats */}
+                <div className="mb-6">
+                  <h4 className="text-lg font-semibold mb-4 flex items-center">
+                    <TrendingUp className="h-5 w-5 mr-2" />
+                    Saison 2024/25
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-3 bg-white/10 rounded-lg">
+                      <div className="text-2xl font-bold text-madrid-gold">{stats.goals}</div>
+                      <div className="text-sm">Buts</div>
                     </div>
-                  </div>
-                  
-                  {featuredPlayer.age && (
-                    <div className="flex items-center gap-3">
-                      <CalendarDays className="h-5 w-5 text-madrid-blue" />
-                      <div>
-                        <p className="text-sm text-gray-500">Âge</p>
-                        <p className="font-medium">{featuredPlayer.age} ans</p>
-                      </div>
+                    <div className="text-center p-3 bg-white/10 rounded-lg">
+                      <div className="text-2xl font-bold text-madrid-gold">{stats.assists}</div>
+                      <div className="text-sm">Passes D.</div>
                     </div>
-                  )}
-                  
-                  {(featuredPlayer.height || featuredPlayer.weight) && (
-                    <div className="flex items-center gap-3">
-                      <Ruler className="h-5 w-5 text-madrid-blue" />
-                      <div>
-                        <p className="text-sm text-gray-500">Taille / Poids</p>
-                        <p className="font-medium">
-                          {featuredPlayer.height || "N/A"} / {featuredPlayer.weight || "N/A"}
-                        </p>
-                      </div>
+                    <div className="text-center p-3 bg-white/10 rounded-lg">
+                      <div className="text-2xl font-bold text-madrid-gold">{stats.matches}</div>
+                      <div className="text-sm">Matchs</div>
                     </div>
-                  )}
-                  
-                  {playerStats.secondaryPosition && (
-                    <div className="flex items-center gap-3">
-                      <Shield className="h-5 w-5 text-madrid-blue" />
-                      <div>
-                        <p className="text-sm text-gray-500">Poste secondaire</p>
-                        <p className="font-medium">{playerStats.secondaryPosition}</p>
-                      </div>
+                    <div className="text-center p-3 bg-white/10 rounded-lg">
+                      <div className="text-2xl font-bold text-madrid-gold">{Math.round(stats.minutesPlayed / 60)}</div>
+                      <div className="text-sm">Heures</div>
                     </div>
-                  )}
-                  
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500">Biographie</p>
-                    <p className="mt-1 text-sm line-clamp-4">
-                      {featuredPlayer.bio || featuredPlayer.biography || "Biographie non disponible"}
-                    </p>
                   </div>
                 </div>
                 
-                <div className="mt-6 grid grid-cols-3 gap-3">
-                  {featuredPlayer.position.includes("Gardien") ? (
-                    <>
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
-                        <p className="text-3xl font-bold text-madrid-blue">
-                          {playerStats.cleanSheets || 0}
-                        </p>
-                        <p className="text-sm text-gray-500">Clean Sheets</p>
-                      </div>
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
-                        <p className="text-3xl font-bold text-madrid-blue">
-                          {playerStats.goalsConceded || 0}
-                        </p>
-                        <p className="text-sm text-gray-500">Buts encaissés</p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
-                        <p className="text-3xl font-bold text-madrid-blue">
-                          {playerStats.goals || 0}
-                        </p>
-                        <p className="text-sm text-gray-500">Buts</p>
-                      </div>
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
-                        <p className="text-3xl font-bold text-madrid-blue">
-                          {playerStats.assists || 0}
-                        </p>
-                        <p className="text-sm text-gray-500">Passes décisives</p>
-                      </div>
-                    </>
-                  )}
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
-                    <p className="text-3xl font-bold text-madrid-blue">
-                      {playerStats.matches || 0}
-                    </p>
-                    <p className="text-sm text-gray-500">Matchs</p>
-                  </div>
-                </div>
-                
-                <div className="mt-6">
-                  <Button asChild className="w-full bg-madrid-blue hover:bg-blue-700">
-                    <Link to={`/players/${featuredPlayer.id}`}>
-                      Voir le profil complet
-                    </Link>
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button 
+                    onClick={() => navigate(`/players/${featuredPlayer.id}`)}
+                    className="bg-madrid-gold hover:bg-yellow-500 text-black font-semibold"
+                  >
+                    <Award className="mr-2 h-4 w-4" />
+                    Voir le Profil
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/players')}
+                    variant="outline" 
+                    className="border-white text-white hover:bg-white hover:text-madrid-blue"
+                  >
+                    <Users className="mr-2 h-4 w-4" />
+                    Tout l'Effectif
                   </Button>
                 </div>
               </div>
