@@ -4,16 +4,19 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarIcon, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar as CalendarIcon, Clock, ArrowLeft } from "lucide-react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
 import { Match } from "@/types/Match";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const Calendar = () => {
   const [date, setDate] = useState(new Date());
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   
   useEffect(() => {
     fetchMatches();
@@ -88,6 +91,14 @@ const Calendar = () => {
         <Navbar />
         <main>
           <div className="madrid-container py-8">
+            <Button 
+              onClick={() => navigate('/')} 
+              variant="outline" 
+              className="mb-4 flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Retour à l'accueil
+            </Button>
             <h1 className="section-title mb-8">Calendrier des Matchs</h1>
             <div className="text-center py-8">
               Chargement des matchs...
@@ -104,6 +115,14 @@ const Calendar = () => {
       <Navbar />
       <main>
         <div className="madrid-container py-8">
+          <Button 
+            onClick={() => navigate('/')} 
+            variant="outline" 
+            className="mb-4 flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour à l'accueil
+          </Button>
           <h1 className="section-title mb-8">Calendrier des Matchs</h1>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
