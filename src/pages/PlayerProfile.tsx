@@ -1,9 +1,10 @@
+
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Award, Flag, Shield, Star, User, Heart, ArrowLeft } from "lucide-react";
+import { Award, Flag, Shield, Star, User, Heart } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -113,14 +114,6 @@ const PlayerProfile = () => {
       <>
         <Navbar />
         <main className="madrid-container py-8">
-          <Button 
-            onClick={() => navigate('/players')} 
-            variant="outline" 
-            className="mb-4 flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Retour à l'effectif
-          </Button>
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-madrid-blue"></div>
           </div>
@@ -135,14 +128,6 @@ const PlayerProfile = () => {
       <>
         <Navbar />
         <main className="madrid-container py-8">
-          <Button 
-            onClick={() => navigate('/players')} 
-            variant="outline" 
-            className="mb-4 flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Retour à l'effectif
-          </Button>
           <Card>
             <CardContent className="p-6">
               <div className="text-center py-8">
@@ -170,15 +155,6 @@ const PlayerProfile = () => {
       <Navbar />
       <main>
         <div className="madrid-container py-8">
-          <Button 
-            onClick={() => navigate('/players')} 
-            variant="outline" 
-            className="mb-6 flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Retour à l'effectif
-          </Button>
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Colonne de gauche avec photo et infos */}
             <div className="md:col-span-1">
