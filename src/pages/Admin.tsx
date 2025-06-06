@@ -127,32 +127,13 @@ const Admin = () => {
 
         <div className="madrid-container py-8">
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <QuickStatsCard
-              title="Joueurs"
-              value={players.filter(p => p.is_active).length}
-              subtitle={`${players.length} total`}
-              icon="users"
-            />
-            <QuickStatsCard
-              title="Entraîneurs"
-              value={coaches.filter(c => c.is_active).length}
-              subtitle={`${coaches.length} total`}
-              icon="user"
-            />
-            <QuickStatsCard
-              title="Photos"
-              value={photos.filter(p => p.is_published).length}
-              subtitle={`${photos.length} total`}
-              icon="image"
-            />
-            <QuickStatsCard
-              title="Matchs"
-              value={matches.filter(m => m.status === 'upcoming').length}
-              subtitle={`${matches.length} total`}
-              icon="calendar"
-            />
-          </div>
+          <QuickStatsCard
+            playersCount={players.filter(p => p.is_active).length}
+            coachesCount={coaches.filter(c => c.is_active).length}
+            articlesCount={0}
+            videosCount={0}
+            matchesCount={matches.filter(m => m.status === 'upcoming').length}
+          />
 
           <Tabs defaultValue="players" className="space-y-6">
             <TabsList className="grid w-full grid-cols-4">
