@@ -4,22 +4,56 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Flag, CalendarDays, Ruler, Award, Timer, Users, Shield, Star } from "lucide-react";
-import playersData from "@/data/playerData";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Player } from "@/types/Player";
 
 export function PlayerSpotlight() {
-  // Utilisons Mbappé (ID 26) comme joueur en vedette, puisque nous avons ses données complètes
-  const playerId = "26";
-  const featuredPlayer = playersData[playerId];
+  const [featuredPlayer, setFeaturedPlayer] = useState<Player | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedPlayer = async () => {
+      try {
+        // Fetch a featured player (you can modify this logic to select specific players)
+        const { data: playersData, error } = await supabase
+          .from('players')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (error) {
+          console.error('Error fetching featured player:', error);
+        } else if (playersData && playersData.length > 0) {
+          setFeaturedPlayer(playersData[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching featured player:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedPlayer();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-12">
+        <div className="madrid-container">
+          <h2 className="section-title">Joueur en Vedette</h2>
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-madrid-blue"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   if (!featuredPlayer) {
     return null;
   }
-
-  const formattedBirthDate = new Date(featuredPlayer.birthDate).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'numeric',
-    year: 'numeric'
-  });
 
   const getPositionIcon = (pos: string) => {
     if (pos.includes("Gardien")) return <Star className="h-5 w-5 text-madrid-blue" />;
@@ -27,6 +61,8 @@ export function PlayerSpotlight() {
     if (pos.includes("Milieu")) return <Award className="h-5 w-5 text-madrid-blue" />;
     return <Flag className="h-5 w-5 text-madrid-blue" />;
   };
+
+  const playerStats = featuredPlayer.stats || {};
 
   return (
     <section className="py-12">
@@ -38,7 +74,7 @@ export function PlayerSpotlight() {
             <div className="grid grid-cols-1 md:grid-cols-2">
               <div className="h-full relative">
                 <img 
-                  src={featuredPlayer.image} 
+                  src={featuredPlayer.image_url || `https://placehold.co/400x600/1a365d/ffffff/?text=${featuredPlayer.name.charAt(0)}`} 
                   alt={featuredPlayer.name}
                   className="w-full h-full object-cover object-top"
                 />
@@ -51,7 +87,7 @@ export function PlayerSpotlight() {
                         {featuredPlayer.position}
                       </Badge>
                       <div className="bg-madrid-blue text-white rounded-full w-8 h-8 flex items-center justify-center font-bold">
-                        {featuredPlayer.number}
+                        {featuredPlayer.jersey_number || 0}
                       </div>
                     </div>
                   </div>
@@ -64,58 +100,85 @@ export function PlayerSpotlight() {
                     <Flag className="h-5 w-5 text-madrid-blue" />
                     <div>
                       <p className="text-sm text-gray-500">Nationalité</p>
-                      <p className="font-medium">{featuredPlayer.nationality}</p>
+                      <p className="font-medium">{featuredPlayer.nationality || "Non renseigné"}</p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3">
-                    <CalendarDays className="h-5 w-5 text-madrid-blue" />
-                    <div>
-                      <p className="text-sm text-gray-500">Date de naissance</p>
-                      <p className="font-medium">{formattedBirthDate}</p>
+                  {featuredPlayer.age && (
+                    <div className="flex items-center gap-3">
+                      <CalendarDays className="h-5 w-5 text-madrid-blue" />
+                      <div>
+                        <p className="text-sm text-gray-500">Âge</p>
+                        <p className="font-medium">{featuredPlayer.age} ans</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   
-                  <div className="flex items-center gap-3">
-                    <Ruler className="h-5 w-5 text-madrid-blue" />
-                    <div>
-                      <p className="text-sm text-gray-500">Taille / Poids</p>
-                      <p className="font-medium">{featuredPlayer.height} / {featuredPlayer.weight}</p>
+                  {(featuredPlayer.height || featuredPlayer.weight) && (
+                    <div className="flex items-center gap-3">
+                      <Ruler className="h-5 w-5 text-madrid-blue" />
+                      <div>
+                        <p className="text-sm text-gray-500">Taille / Poids</p>
+                        <p className="font-medium">
+                          {featuredPlayer.height || "N/A"} / {featuredPlayer.weight || "N/A"}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   
-                  {featuredPlayer.secondaryPosition && (
+                  {playerStats.secondaryPosition && (
                     <div className="flex items-center gap-3">
                       <Shield className="h-5 w-5 text-madrid-blue" />
                       <div>
                         <p className="text-sm text-gray-500">Poste secondaire</p>
-                        <p className="font-medium">{featuredPlayer.secondaryPosition}</p>
+                        <p className="font-medium">{playerStats.secondaryPosition}</p>
                       </div>
                     </div>
                   )}
                   
                   <div className="mt-2">
                     <p className="text-sm text-gray-500">Biographie</p>
-                    <p className="mt-1 text-sm line-clamp-4">{featuredPlayer.bio}</p>
+                    <p className="mt-1 text-sm line-clamp-4">
+                      {featuredPlayer.bio || featuredPlayer.biography || "Biographie non disponible"}
+                    </p>
                   </div>
                 </div>
                 
                 <div className="mt-6 grid grid-cols-3 gap-3">
+                  {featuredPlayer.position.includes("Gardien") ? (
+                    <>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
+                        <p className="text-3xl font-bold text-madrid-blue">
+                          {playerStats.cleanSheets || 0}
+                        </p>
+                        <p className="text-sm text-gray-500">Clean Sheets</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
+                        <p className="text-3xl font-bold text-madrid-blue">
+                          {playerStats.goalsConceded || 0}
+                        </p>
+                        <p className="text-sm text-gray-500">Buts encaissés</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
+                        <p className="text-3xl font-bold text-madrid-blue">
+                          {playerStats.goals || 0}
+                        </p>
+                        <p className="text-sm text-gray-500">Buts</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
+                        <p className="text-3xl font-bold text-madrid-blue">
+                          {playerStats.assists || 0}
+                        </p>
+                        <p className="text-sm text-gray-500">Passes décisives</p>
+                      </div>
+                    </>
+                  )}
                   <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
                     <p className="text-3xl font-bold text-madrid-blue">
-                      {featuredPlayer.stats.goals}
-                    </p>
-                    <p className="text-sm text-gray-500">Buts</p>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
-                    <p className="text-3xl font-bold text-madrid-blue">
-                      {featuredPlayer.stats.assists}
-                    </p>
-                    <p className="text-sm text-gray-500">Passes décisives</p>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-center">
-                    <p className="text-3xl font-bold text-madrid-blue">
-                      {featuredPlayer.stats.matches}
+                      {playerStats.matches || 0}
                     </p>
                     <p className="text-sm text-gray-500">Matchs</p>
                   </div>

@@ -222,17 +222,31 @@ const Players = () => {
             <TabsContent value={activeTab} className="mt-0">
               {filteredPlayers.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {filteredPlayers.map(player => (
-                    <PlayerCard 
-                      key={player.id} 
-                      id={parseInt(player.id)}
-                      name={player.name}
-                      number={player.jersey_number || 0}
-                      position={player.position}
-                      nationality={player.nationality}
-                      image={player.image_url}
-                    />
-                  ))}
+                  {filteredPlayers.map(player => {
+                    // Extract secondary position from stats if it exists
+                    const secondaryPosition = player.stats?.secondaryPosition || player.stats?.secondary_position;
+                    
+                    return (
+                      <PlayerCard 
+                        key={player.id} 
+                        id={parseInt(player.id)}
+                        name={player.name}
+                        number={player.jersey_number || 0}
+                        position={player.position}
+                        secondaryPosition={secondaryPosition}
+                        nationality={player.nationality}
+                        image={player.image_url}
+                        stats={{
+                          matches: player.stats?.matches || 0,
+                          goals: player.stats?.goals || 0,
+                          assists: player.stats?.assists || 0,
+                          cleanSheets: player.stats?.cleanSheets || 0,
+                          goalsConceded: player.stats?.goalsConceded || 0,
+                          minutesPlayed: player.stats?.minutesPlayed || 0
+                        }}
+                      />
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-8">
