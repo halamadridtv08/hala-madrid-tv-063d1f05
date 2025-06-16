@@ -9,13 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Trophy, Users } from "lucide-react";
 import { toast } from "sonner";
-
-interface StaffMember {
-  id: string;
-  name: string;
-  role: string;
-  description?: string;
-}
+import { supabase } from "@/integrations/supabase/client";
+import { Coach } from "@/types/Coach";
 
 interface Achievement {
   id: string;
@@ -25,11 +20,7 @@ interface Achievement {
 }
 
 export const StaffAndAchievements = () => {
-  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([
-    { id: "1", name: "Francesco Mauri", role: "Préparateur Physique", description: "Spécialiste en conditionnement physique" },
-    { id: "2", name: "Luis Llopis", role: "Entraîneur des Gardiens", description: "Expert en techniques de gardien de but" }
-  ]);
-
+  const [staffMembers, setStaffMembers] = useState<Coach[]>([]);
   const [achievements, setAchievements] = useState<Achievement[]>([
     { id: "1", title: "Ligue des Champions", year: "2022, 2024", description: "Victoires en Champions League" },
     { id: "2", title: "Liga", year: "2022, 2024", description: "Championnats d'Espagne" },
@@ -40,13 +31,13 @@ export const StaffAndAchievements = () => {
 
   const [isStaffDialogOpen, setIsStaffDialogOpen] = useState(false);
   const [isAchievementDialogOpen, setIsAchievementDialogOpen] = useState(false);
-  const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
+  const [editingStaff, setEditingStaff] = useState<Coach | null>(null);
   const [editingAchievement, setEditingAchievement] = useState<Achievement | null>(null);
 
   const [staffForm, setStaffForm] = useState({
     name: "",
     role: "",
-    description: ""
+    bio: ""
   });
 
   const [achievementForm, setAchievementForm] = useState({
@@ -55,52 +46,110 @@ export const StaffAndAchievements = () => {
     description: ""
   });
 
+  // Charger les entraîneurs depuis Supabase
+  useEffect(() => {
+    const fetchStaffMembers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('coaches')
+          .select('*')
+          .neq('role', 'Entraîneur principal')
+          .order('name', { ascending: true });
+
+        if (error) throw error;
+        setStaffMembers(data || []);
+      } catch (error) {
+        console.error('Erreur lors du chargement du staff:', error);
+        toast.error("Erreur lors du chargement du staff technique");
+      }
+    };
+
+    fetchStaffMembers();
+  }, []);
+
   const handleAddStaff = () => {
     setEditingStaff(null);
-    setStaffForm({ name: "", role: "", description: "" });
+    setStaffForm({ name: "", role: "", bio: "" });
     setIsStaffDialogOpen(true);
   };
 
-  const handleEditStaff = (staff: StaffMember) => {
+  const handleEditStaff = (staff: Coach) => {
     setEditingStaff(staff);
     setStaffForm({
       name: staff.name,
       role: staff.role,
-      description: staff.description || ""
+      bio: staff.bio || ""
     });
     setIsStaffDialogOpen(true);
   };
 
-  const handleSaveStaff = () => {
+  const handleSaveStaff = async () => {
     if (!staffForm.name || !staffForm.role) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
 
-    if (editingStaff) {
-      setStaffMembers(prev => prev.map(staff => 
-        staff.id === editingStaff.id 
-          ? { ...staff, ...staffForm }
-          : staff
-      ));
-      toast.success("Membre du staff modifié avec succès");
-    } else {
-      const newStaff: StaffMember = {
-        id: Date.now().toString(),
-        ...staffForm
-      };
-      setStaffMembers(prev => [...prev, newStaff]);
-      toast.success("Membre du staff ajouté avec succès");
-    }
+    try {
+      if (editingStaff) {
+        const { error } = await supabase
+          .from('coaches')
+          .update({
+            name: staffForm.name,
+            role: staffForm.role,
+            bio: staffForm.bio
+          })
+          .eq('id', editingStaff.id);
 
-    setIsStaffDialogOpen(false);
-    setEditingStaff(null);
+        if (error) throw error;
+
+        setStaffMembers(prev => prev.map(staff => 
+          staff.id === editingStaff.id 
+            ? { ...staff, name: staffForm.name, role: staffForm.role, bio: staffForm.bio }
+            : staff
+        ));
+        toast.success("Membre du staff modifié avec succès");
+      } else {
+        const { data, error } = await supabase
+          .from('coaches')
+          .insert([{
+            name: staffForm.name,
+            role: staffForm.role,
+            bio: staffForm.bio,
+            is_active: true
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        setStaffMembers(prev => [...prev, data]);
+        toast.success("Membre du staff ajouté avec succès");
+      }
+
+      setIsStaffDialogOpen(false);
+      setEditingStaff(null);
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast.error("Erreur lors de la sauvegarde du membre du staff");
+    }
   };
 
-  const handleDeleteStaff = (id: string) => {
-    if (confirm("Êtes-vous sûr de vouloir supprimer ce membre du staff ?")) {
+  const handleDeleteStaff = async (id: string) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer ce membre du staff ?")) return;
+
+    try {
+      const { error } = await supabase
+        .from('coaches')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
       setStaffMembers(prev => prev.filter(staff => staff.id !== id));
       toast.success("Membre du staff supprimé avec succès");
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast.error("Erreur lors de la suppression du membre du staff");
     }
   };
 
@@ -173,12 +222,29 @@ export const StaffAndAchievements = () => {
           <div className="space-y-4">
             {staffMembers.map((staff) => (
               <div key={staff.id} className="flex items-center justify-between p-4 border rounded">
-                <div className="flex-1">
-                  <h3 className="font-semibold">{staff.name}</h3>
-                  <p className="text-sm text-gray-600">{staff.role}</p>
-                  {staff.description && (
-                    <p className="text-xs text-gray-500 mt-1">{staff.description}</p>
+                <div className="flex items-center gap-4 flex-1">
+                  {staff.image_url && (
+                    <img 
+                      src={staff.image_url} 
+                      alt={staff.name}
+                      className="w-12 h-12 object-cover rounded-full"
+                    />
                   )}
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{staff.name}</h3>
+                    <p className="text-sm text-gray-600">{staff.role}</p>
+                    {staff.bio && (
+                      <p className="text-xs text-gray-500 mt-1">{staff.bio}</p>
+                    )}
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge variant={staff.is_active ? "default" : "secondary"}>
+                        {staff.is_active ? "Actif" : "Inactif"}
+                      </Badge>
+                      {staff.nationality && (
+                        <span className="text-xs text-gray-500">{staff.nationality}</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button 
@@ -292,8 +358,8 @@ export const StaffAndAchievements = () => {
               <Label htmlFor="staff-description">Description</Label>
               <Textarea
                 id="staff-description"
-                value={staffForm.description}
-                onChange={(e) => setStaffForm({ ...staffForm, description: e.target.value })}
+                value={staffForm.bio}
+                onChange={(e) => setStaffForm({ ...staffForm, bio: e.target.value })}
                 placeholder="Description optionnelle du rôle"
                 rows={3}
               />
