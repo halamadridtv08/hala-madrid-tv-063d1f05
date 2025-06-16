@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { AdminMenuBar } from "@/components/layout/AdminMenuBar";
+import AdminMenuBar from "@/components/admin/AdminMenuBar";
 import PlayerTable from "@/components/admin/PlayerTable";
 import CoachTable from "@/components/admin/CoachTable";
 import StaffManagement from "@/components/admin/StaffManagement";
