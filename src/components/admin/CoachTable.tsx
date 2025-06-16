@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Coach } from "@/types/Coach";
 import { CoachForm } from "./CoachForm";
 import { StaffAndAchievements } from "./StaffAndAchievements";
+import { MainCoachManager } from "./MainCoachManager";
 import { Plus, Edit, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 
@@ -107,8 +108,9 @@ const CoachTable = ({ coaches, setCoaches }: CoachTableProps) => {
   return (
     <>
       <Tabs defaultValue="coaches" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="coaches">Entraîneurs</TabsTrigger>
+          <TabsTrigger value="main-coach">Entraîneur Principal</TabsTrigger>
           <TabsTrigger value="staff">Staff & Palmarès</TabsTrigger>
         </TabsList>
 
@@ -189,6 +191,10 @@ const CoachTable = ({ coaches, setCoaches }: CoachTableProps) => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="main-coach">
+          <MainCoachManager />
         </TabsContent>
 
         <TabsContent value="staff">
