@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +33,8 @@ const PlayerPositionManager = ({ players, setPlayers }: PlayerPositionManagerPro
   }, [players]);
 
   const organizePlayersByPosition = () => {
+    console.log('Organizing players:', players.map(p => ({ name: p.name, position: p.position })));
+    
     const positions = [
       { id: 'gardien', name: 'Gardiens', color: 'bg-green-100 border-green-300' },
       { id: 'defenseur', name: 'Défenseurs', color: 'bg-blue-100 border-blue-300' },
@@ -41,13 +42,56 @@ const PlayerPositionManager = ({ players, setPlayers }: PlayerPositionManagerPro
       { id: 'attaquant', name: 'Attaquants', color: 'bg-red-100 border-red-300' }
     ];
 
-    const groups = positions.map(pos => ({
-      ...pos,
-      players: players.filter(player => 
-        player.position.toLowerCase().includes(pos.id) ||
-        (pos.id === 'attaquant' && player.position.toLowerCase().includes('ailier'))
-      )
-    }));
+    const groups = positions.map(pos => {
+      let filteredPlayers: Player[] = [];
+      
+      // Logique de filtrage améliorée pour correspondre aux données réelles
+      switch (pos.id) {
+        case 'gardien':
+          filteredPlayers = players.filter(player => 
+            player.position.toLowerCase().includes('gardien') ||
+            player.position.toLowerCase().includes('goalkeeper')
+          );
+          break;
+        case 'defenseur':
+          filteredPlayers = players.filter(player => 
+            player.position.toLowerCase().includes('défenseur') ||
+            player.position.toLowerCase().includes('defenseur') ||
+            player.position.toLowerCase().includes('arrière') ||
+            player.position.toLowerCase().includes('latéral') ||
+            player.position.toLowerCase().includes('lateral') ||
+            player.position.toLowerCase().includes('central') ||
+            player.position.toLowerCase().includes('defender')
+          );
+          break;
+        case 'milieu':
+          filteredPlayers = players.filter(player => 
+            player.position.toLowerCase().includes('milieu') ||
+            player.position.toLowerCase().includes('midfielder') ||
+            player.position.toLowerCase().includes('centre') ||
+            player.position.toLowerCase().includes('médian') ||
+            player.position.toLowerCase().includes('median')
+          );
+          break;
+        case 'attaquant':
+          filteredPlayers = players.filter(player => 
+            player.position.toLowerCase().includes('attaquant') ||
+            player.position.toLowerCase().includes('ailier') ||
+            player.position.toLowerCase().includes('avant') ||
+            player.position.toLowerCase().includes('striker') ||
+            player.position.toLowerCase().includes('forward') ||
+            player.position.toLowerCase().includes('winger')
+          );
+          break;
+      }
+      
+      console.log(`${pos.name}:`, filteredPlayers.map(p => p.name));
+      
+      return {
+        ...pos,
+        players: filteredPlayers
+      };
+    });
 
     setPositionGroups(groups);
   };

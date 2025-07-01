@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -58,13 +57,37 @@ const Players = () => {
     fetchData();
   }, []);
 
-  // Filter players based on active tab and search term
+  // Filter players based on active tab and search term - synchronized with admin logic
   const filteredPlayers = players.filter(player => {
-    const matchesTab = activeTab === "all" || 
-      (activeTab === "goalkeepers" && player.position.toLowerCase().includes("gardien")) ||
-      (activeTab === "defenders" && player.position.toLowerCase().includes("défenseur")) ||
-      (activeTab === "midfielders" && player.position.toLowerCase().includes("milieu")) ||
-      (activeTab === "forwards" && (player.position.toLowerCase().includes("attaquant") || player.position.toLowerCase().includes("ailier")));
+    let matchesTab = false;
+    
+    if (activeTab === "all") {
+      matchesTab = true;
+    } else if (activeTab === "goalkeepers") {
+      matchesTab = player.position.toLowerCase().includes("gardien") ||
+                   player.position.toLowerCase().includes("goalkeeper");
+    } else if (activeTab === "defenders") {
+      matchesTab = player.position.toLowerCase().includes("défenseur") ||
+                   player.position.toLowerCase().includes("defenseur") ||
+                   player.position.toLowerCase().includes("arrière") ||
+                   player.position.toLowerCase().includes("latéral") ||
+                   player.position.toLowerCase().includes("lateral") ||
+                   player.position.toLowerCase().includes("central") ||
+                   player.position.toLowerCase().includes("defender");
+    } else if (activeTab === "midfielders") {
+      matchesTab = player.position.toLowerCase().includes("milieu") ||
+                   player.position.toLowerCase().includes("midfielder") ||
+                   player.position.toLowerCase().includes("centre") ||
+                   player.position.toLowerCase().includes("médian") ||
+                   player.position.toLowerCase().includes("median");
+    } else if (activeTab === "forwards") {
+      matchesTab = player.position.toLowerCase().includes("attaquant") ||
+                   player.position.toLowerCase().includes("ailier") ||
+                   player.position.toLowerCase().includes("avant") ||
+                   player.position.toLowerCase().includes("striker") ||
+                   player.position.toLowerCase().includes("forward") ||
+                   player.position.toLowerCase().includes("winger");
+    }
     
     const matchesSearch = searchTerm === "" || 
       player.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
