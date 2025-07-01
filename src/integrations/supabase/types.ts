@@ -360,6 +360,7 @@ export type Database = {
           bio: string | null
           biography: string | null
           created_at: string
+          "Date de naissance": string | null
           height: string | null
           id: string
           image_url: string | null
@@ -379,6 +380,7 @@ export type Database = {
           bio?: string | null
           biography?: string | null
           created_at?: string
+          "Date de naissance"?: string | null
           height?: string | null
           id?: string
           image_url?: string | null
@@ -398,6 +400,7 @@ export type Database = {
           bio?: string | null
           biography?: string | null
           created_at?: string
+          "Date de naissance"?: string | null
           height?: string | null
           id?: string
           image_url?: string | null
