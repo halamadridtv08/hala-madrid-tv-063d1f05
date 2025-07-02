@@ -361,7 +361,6 @@ export type Database = {
           biography: string | null
           created_at: string
           "Date de naissance": string | null
-          display_order: number | null
           height: string | null
           id: string
           image_url: string | null
@@ -370,7 +369,6 @@ export type Database = {
           name: string
           nationality: string | null
           position: string
-          position_group_order: number | null
           profile_image_url: string | null
           social_media: Json | null
           stats: Json | null
@@ -383,7 +381,6 @@ export type Database = {
           biography?: string | null
           created_at?: string
           "Date de naissance"?: string | null
-          display_order?: number | null
           height?: string | null
           id?: string
           image_url?: string | null
@@ -392,7 +389,6 @@ export type Database = {
           name: string
           nationality?: string | null
           position: string
-          position_group_order?: number | null
           profile_image_url?: string | null
           social_media?: Json | null
           stats?: Json | null
@@ -405,7 +401,6 @@ export type Database = {
           biography?: string | null
           created_at?: string
           "Date de naissance"?: string | null
-          display_order?: number | null
           height?: string | null
           id?: string
           image_url?: string | null
@@ -414,7 +409,6 @@ export type Database = {
           name?: string
           nationality?: string | null
           position?: string
-          position_group_order?: number | null
           profile_image_url?: string | null
           social_media?: Json | null
           stats?: Json | null
