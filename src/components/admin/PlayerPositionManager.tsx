@@ -27,6 +27,7 @@ const PlayerPositionManager = ({ players, setPlayers }: PlayerPositionManagerPro
   const [editingPlayer, setEditingPlayer] = useState<Player | undefined>(undefined);
   const [positionGroups, setPositionGroups] = useState<PositionGroup[]>([]);
   const [draggedGroup, setDraggedGroup] = useState<string | null>(null);
+  const [draggedPlayer, setDraggedPlayer] = useState<Player | null>(null);
 
   useEffect(() => {
     organizePlayersByPosition();
@@ -101,13 +102,31 @@ const PlayerPositionManager = ({ players, setPlayers }: PlayerPositionManagerPro
       const { data, error } = await supabase
         .from('players')
         .select('*')
-        .order('name', { ascending: true });
+        .order('position_group_order', { ascending: true })
+        .order('display_order', { ascending: true });
 
       if (error) throw error;
       setPlayers(data || []);
     } catch (error) {
       console.error('Erreur lors du rechargement des joueurs:', error);
       toast.error("Erreur lors du rechargement des joueurs");
+    }
+  };
+
+  const savePlayerOrder = async (playerId: string, newGroupOrder: number, newDisplayOrder: number) => {
+    try {
+      const { error } = await supabase
+        .from('players')
+        .update({ 
+          position_group_order: newGroupOrder,
+          display_order: newDisplayOrder 
+        })
+        .eq('id', playerId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast.error("Erreur lors de la sauvegarde de l'ordre");
     }
   };
 
@@ -213,6 +232,59 @@ const PlayerPositionManager = ({ players, setPlayers }: PlayerPositionManagerPro
 
   const handleDragEnd = () => {
     setDraggedGroup(null);
+    setDraggedPlayer(null);
+  };
+
+  const handlePlayerDragStart = (e: React.DragEvent, player: Player) => {
+    setDraggedPlayer(player);
+    e.dataTransfer.effectAllowed = 'move';
+    e.stopPropagation();
+  };
+
+  const handlePlayerDrop = async (e: React.DragEvent, targetGroupId: string, targetIndex?: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!draggedPlayer) return;
+
+    const sourceGroupId = getPlayerGroupId(draggedPlayer);
+    const targetGroupIndex = positionGroups.findIndex(g => g.id === targetGroupId);
+    
+    if (targetGroupIndex === -1) return;
+
+    const targetGroup = positionGroups[targetGroupIndex];
+    const newGroupOrder = targetGroupIndex + 1;
+    let newDisplayOrder = targetIndex !== undefined ? targetIndex + 1 : targetGroup.players.length + 1;
+
+    // Si c'est le même groupe, ajuster l'ordre
+    if (sourceGroupId === targetGroupId) {
+      const currentIndex = targetGroup.players.findIndex(p => p.id === draggedPlayer.id);
+      if (currentIndex < newDisplayOrder - 1) {
+        newDisplayOrder--;
+      }
+    }
+
+    // Sauvegarder en base
+    await savePlayerOrder(draggedPlayer.id, newGroupOrder, newDisplayOrder);
+    
+    // Rafraîchir les données
+    await refreshPlayers();
+    
+    setDraggedPlayer(null);
+    toast.success("Ordre du joueur mis à jour");
+  };
+
+  const getPlayerGroupId = (player: Player): string => {
+    const position = player.position.toLowerCase();
+    if (position.includes('gardien') || position.includes('goalkeeper')) return 'gardien';
+    if (position.includes('défenseur') || position.includes('defenseur') || position.includes('arrière') || 
+        position.includes('latéral') || position.includes('lateral') || position.includes('central') || 
+        position.includes('defender')) return 'defenseur';
+    if (position.includes('milieu') || position.includes('midfielder') || position.includes('centre') || 
+        position.includes('médian') || position.includes('median')) return 'milieu';
+    if (position.includes('attaquant') || position.includes('ailier') || position.includes('avant') || 
+        position.includes('striker') || position.includes('forward') || position.includes('winger')) return 'attaquant';
+    return 'other';
   };
 
   return (
@@ -252,10 +324,24 @@ const PlayerPositionManager = ({ players, setPlayers }: PlayerPositionManagerPro
                   <Badge variant="outline">{group.players.length}</Badge>
                 </div>
                 
-                <div className="space-y-3">
-                  {group.players.map((player) => (
-                    <div key={player.id} className="flex items-center justify-between p-3 bg-white rounded border">
+                <div 
+                  className="space-y-3"
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handlePlayerDrop(e, group.id)}
+                >
+                  {group.players.map((player, index) => (
+                    <div 
+                      key={player.id} 
+                      draggable
+                      onDragStart={(e) => handlePlayerDragStart(e, player)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handlePlayerDrop(e, group.id, index)}
+                      className={`flex items-center justify-between p-3 bg-white rounded border cursor-move transition-all duration-200 ${
+                        draggedPlayer?.id === player.id ? 'opacity-50 scale-95' : 'hover:shadow-sm'
+                      }`}
+                    >
                       <div className="flex items-center gap-3 flex-1">
+                        <GripVertical className="h-4 w-4 text-gray-400 flex-shrink-0" />
                         {player.image_url && (
                           <img 
                             src={player.image_url} 
@@ -307,8 +393,12 @@ const PlayerPositionManager = ({ players, setPlayers }: PlayerPositionManagerPro
                     </div>
                   ))}
                   {group.players.length === 0 && (
-                    <div className="text-center py-4 text-gray-500 bg-white rounded border border-dashed">
-                      Aucun joueur dans cette position
+                    <div 
+                      className="text-center py-8 text-gray-500 bg-white rounded border border-dashed"
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handlePlayerDrop(e, group.id)}
+                    >
+                      Aucun joueur dans cette position - Glissez un joueur ici
                     </div>
                   )}
                 </div>
