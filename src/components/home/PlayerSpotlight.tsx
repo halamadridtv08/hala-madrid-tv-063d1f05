@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,43 +14,85 @@ export function PlayerSpotlight() {
 
   useEffect(() => {
     fetchFeaturedPlayer();
+    
+    // Écouter les changements en temps réel
+    const channel = supabase
+      .channel('featured-player-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'players'
+        },
+        (payload) => {
+          console.log('Changement détecté dans les joueurs:', payload);
+          // Recharger le joueur en vedette si nécessaire
+          fetchFeaturedPlayer();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchFeaturedPlayer = async () => {
     try {
-      // For now, let's get the first active player or a specific one
+      // Chercher le joueur marqué comme featured dans ses stats
       const { data, error } = await supabase
         .from('players')
         .select('*')
         .eq('is_active', true)
-        .limit(1)
-        .single();
+        .not('stats', 'is', null);
 
-      if (error) {
-        console.error('Error fetching featured player:', error);
-        // Fallback to default player data
-        setFeaturedPlayer({
-          id: "1",
-          name: "Kylian Mbappé",
-          position: "Ailier/Attaquant",
-          jersey_number: 9,
-          nationality: "Française",
-          image_url: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=400&h=600&fit=crop",
-          stats: {
-            goals: 8,
-            matches: 15,
-            assists: 2,
-            minutesPlayed: 1350
-          },
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
+      if (error) throw error;
+
+      // Trouver le joueur avec isFeatured = true
+      const featured = data?.find(player => 
+        player.stats && 
+        typeof player.stats === 'object' && 
+        player.stats.isFeatured === true
+      );
+
+      if (featured) {
+        setFeaturedPlayer(featured);
       } else {
-        setFeaturedPlayer(data);
+        // Fallback vers le premier joueur actif si aucun n'est marqué comme featured
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('players')
+          .select('*')
+          .eq('is_active', true)
+          .limit(1)
+          .single();
+
+        if (fallbackError) {
+          console.error('Erreur fallback:', fallbackError);
+          // Utiliser des données par défaut
+          setFeaturedPlayer({
+            id: "1",
+            name: "Kylian Mbappé",
+            position: "Ailier/Attaquant",
+            jersey_number: 9,
+            nationality: "Française",
+            image_url: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=400&h=600&fit=crop",
+            stats: {
+              goals: 8,
+              matches: 15,
+              assists: 2,
+              minutesPlayed: 1350
+            },
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        } else {
+          setFeaturedPlayer(fallbackData);
+        }
       }
     } catch (error) {
-      console.error('Error fetching featured player:', error);
+      console.error('Erreur lors du chargement du joueur en vedette:', error);
     } finally {
       setLoading(false);
     }
