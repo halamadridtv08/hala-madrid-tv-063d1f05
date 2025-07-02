@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -7,209 +6,69 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, MapPin, ChevronRight, Activity, Shield, Share2, Flag } from "lucide-react";
+import { Calendar, Clock, MapPin, ChevronRight, Activity, RefreshCw } from "lucide-react";
 import { MatchDetail } from "@/components/matches/MatchDetail";
 import { MatchStats } from "@/components/matches/MatchStats";
+import { useMatches } from "@/hooks/useMatches";
+import { Match } from "@/types/Match";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Matches = () => {
   const [selectedMatch, setSelectedMatch] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  
+  const { upcomingMatches, pastMatches, loading, error, refetch } = useMatches();
 
-  // Simuler des données de matchs passés
-  const pastMatches = [
-    {
-      id: 1,
-      competition: "La Liga",
-      round: "Journée 32",
-      date: "2025-04-20T20:00:00",
-      homeTeam: {
-        name: "Real Madrid",
-        logo: "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png",
-        score: 3
-      },
-      awayTeam: {
-        name: "FC Barcelone",
-        logo: "https://upload.wikimedia.org/wikipedia/en/thumb/4/47/FC_Barcelona_%28crest%29.svg/1200px-FC_Barcelona_%28crest%29.svg.png",
-        score: 0
-      },
-      venue: "Santiago Bernabéu",
-      scorers: ["Mbappé (23', 45', 67')"],
-      stats: {
-        attack: {
-          totalShots: { home: 18, away: 9 },
-          shotsOnTarget: { home: 8, away: 2 },
-          shotsOffTarget: { home: 10, away: 7 }
-        },
-        defense: {
-          saves: { home: 2, away: 5 },
-          tackles: { home: 16, away: 12 }
-        },
-        distribution: {
-          totalPasses: { home: 587, away: 423 },
-          completedPasses: { home: 532, away: 358 }
-        },
-        discipline: {
-          fouls: { home: 8, away: 14 },
-          yellowCards: { home: 1, away: 3 },
-          redCards: { home: 0, away: 0 }
-        }
-      },
-      timeline: [
-        { minute: 23, event: "But", player: "Mbappé", team: "Real Madrid", details: "Frappe du pied gauche après un centre de Vinicius Jr" },
-        { minute: 32, event: "Carton jaune", player: "De Jong", team: "FC Barcelone", details: "Tacle par derrière sur Bellingham" },
-        { minute: 45, event: "But", player: "Mbappé", team: "Real Madrid", details: "Penalty après une faute sur Vinicius Jr" },
-        { minute: 56, event: "Carton jaune", player: "Gavi", team: "FC Barcelone", details: "Contestation" },
-        { minute: 67, event: "But", player: "Mbappé", team: "Real Madrid", details: "Contre-attaque rapide, passe décisive de Bellingham" },
-        { minute: 78, event: "Carton jaune", player: "Yamal", team: "FC Barcelone", details: "Simulation" }
-      ]
-    },
-    {
-      id: 2,
-      competition: "Ligue des Champions",
-      round: "Quart de finale retour",
-      date: "2025-04-16T20:45:00",
-      homeTeam: {
-        name: "Real Madrid",
-        logo: "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png",
-        score: 2
-      },
-      awayTeam: {
-        name: "Bayern Munich",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg/1200px-FC_Bayern_M%C3%BCnchen_logo_%282017%29.svg.png",
-        score: 0
-      },
-      venue: "Santiago Bernabéu",
-      scorers: ["Vinicius Jr (34'), Bellingham (78')"],
-      stats: {
-        attack: {
-          totalShots: { home: 15, away: 12 },
-          shotsOnTarget: { home: 7, away: 4 },
-          shotsOffTarget: { home: 8, away: 8 }
-        },
-        defense: {
-          saves: { home: 4, away: 5 },
-          tackles: { home: 18, away: 14 }
-        },
-        distribution: {
-          totalPasses: { home: 492, away: 508 },
-          completedPasses: { home: 436, away: 458 }
-        },
-        discipline: {
-          fouls: { home: 10, away: 12 },
-          yellowCards: { home: 2, away: 2 },
-          redCards: { home: 0, away: 0 }
-        }
-      },
-      timeline: [
-        { minute: 34, event: "But", player: "Vinicius Jr", team: "Real Madrid", details: "Frappe enroulée depuis l'entrée de la surface" },
-        { minute: 42, event: "Carton jaune", player: "Kimmich", team: "Bayern Munich", details: "Tacle dangereux sur Mbappé" },
-        { minute: 65, event: "Carton jaune", player: "Carvajal", team: "Real Madrid", details: "Tirage de maillot sur Musiala" },
-        { minute: 78, event: "But", player: "Bellingham", team: "Real Madrid", details: "Tête sur corner tiré par Modrić" },
-        { minute: 81, event: "Carton jaune", player: "Mendy", team: "Real Madrid", details: "Gain de temps" },
-        { minute: 85, event: "Carton jaune", player: "Goretzka", team: "Bayern Munich", details: "Faute tactique" }
-      ]
-    },
-    {
-      id: 3,
-      competition: "La Liga",
-      round: "Journée 31",
-      date: "2025-04-13T16:15:00",
-      homeTeam: {
-        name: "Getafe",
-        logo: "https://upload.wikimedia.org/wikipedia/en/thumb/a/ab/Getafe_CF_logo.svg/1200px-Getafe_CF_logo.svg.png",
-        score: 0
-      },
-      awayTeam: {
-        name: "Real Madrid",
-        logo: "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png",
-        score: 2
-      },
-      venue: "Coliseum Alfonso Pérez",
-      scorers: ["Rodrygo (56'), Mbappé (71')"],
-      stats: {
-        attack: {
-          totalShots: { home: 7, away: 16 },
-          shotsOnTarget: { home: 2, away: 9 },
-          shotsOffTarget: { home: 5, away: 7 }
-        },
-        defense: {
-          saves: { home: 7, away: 2 },
-          tackles: { home: 22, away: 8 }
-        },
-        distribution: {
-          totalPasses: { home: 312, away: 621 },
-          completedPasses: { home: 256, away: 568 }
-        },
-        discipline: {
-          fouls: { home: 18, away: 6 },
-          yellowCards: { home: 4, away: 1 },
-          redCards: { home: 1, away: 0 }
-        }
-      },
-      timeline: [
-        { minute: 32, event: "Carton jaune", player: "Djené", team: "Getafe", details: "Faute sur Vinicius Jr" },
-        { minute: 48, event: "Carton jaune", player: "Arambarri", team: "Getafe", details: "Tacle dangereux sur Camavinga" },
-        { minute: 56, event: "But", player: "Rodrygo", team: "Real Madrid", details: "Frappe à l'entrée de la surface" },
-        { minute: 62, event: "Carton rouge", player: "Djené", team: "Getafe", details: "Second carton jaune pour une faute sur Mbappé" },
-        { minute: 71, event: "But", player: "Mbappé", team: "Real Madrid", details: "Contre-attaque, passe décisive de Bellingham" },
-        { minute: 76, event: "Carton jaune", player: "Tchouaméni", team: "Real Madrid", details: "Faute tactique" },
-        { minute: 85, event: "Carton jaune", player: "Mayoral", team: "Getafe", details: "Contestation" }
-      ]
+  // Fonction de synchronisation manuelle
+  const handleSyncMatches = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-matches');
+      
+      if (error) throw error;
+      
+      toast.success('Synchronisation réussie');
+      refetch(); // Recharger les données
+    } catch (error) {
+      console.error('Erreur lors de la synchronisation:', error);
+      toast.error('Erreur lors de la synchronisation');
+    } finally {
+      setSyncing(false);
     }
-  ];
+  };
 
-  // Simuler des données de matchs à venir
-  const upcomingMatches = [
-    {
-      id: 4,
-      competition: "Ligue des Champions",
-      round: "Demi-finale aller",
-      date: "2025-05-02T20:00:00",
-      homeTeam: {
-        name: "Manchester City",
-        logo: "https://upload.wikimedia.org/wikipedia/en/thumb/e/eb/Manchester_City_FC_badge.svg/1200px-Manchester_City_FC_badge.svg.png"
-      },
-      awayTeam: {
-        name: "Real Madrid",
-        logo: "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png"
-      },
-      venue: "Etihad Stadium",
-      tickets: false
+  // Convertir les matchs Supabase au format attendu par les composants
+  const formatMatchForDisplay = (match: Match) => ({
+    id: match.id,
+    competition: match.competition || 'Match amical',
+    round: '', // À ajouter si nécessaire
+    date: match.match_date,
+    homeTeam: {
+      name: match.home_team,
+      logo: match.home_team === 'Real Madrid' 
+        ? "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png"
+        : "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sport_balls.svg/1200px-Sport_balls.svg.png",
+      score: match.home_score
     },
-    {
-      id: 5,
-      competition: "Ligue des Champions",
-      round: "Demi-finale retour",
-      date: "2025-05-06T20:00:00",
-      homeTeam: {
-        name: "Real Madrid",
-        logo: "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png"
-      },
-      awayTeam: {
-        name: "Manchester City",
-        logo: "https://upload.wikimedia.org/wikipedia/en/thumb/e/eb/Manchester_City_FC_badge.svg/1200px-Manchester_City_FC_badge.svg.png"
-      },
-      venue: "Santiago Bernabéu",
-      tickets: true
+    awayTeam: {
+      name: match.away_team,
+      logo: match.away_team === 'Real Madrid'
+        ? "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png"
+        : "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sport_balls.svg/1200px-Sport_balls.svg.png",
+      score: match.away_score
     },
-    {
-      id: 6,
-      competition: "La Liga",
-      round: "Journée 33",
-      date: "2025-05-10T18:30:00",
-      homeTeam: {
-        name: "Real Madrid",
-        logo: "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png"
-      },
-      awayTeam: {
-        name: "Villarreal",
-        logo: "https://upload.wikimedia.org/wikipedia/en/thumb/7/70/Villarreal_CF_logo.svg/1200px-Villarreal_CF_logo.svg.png"
-      },
-      venue: "Santiago Bernabéu",
-      tickets: true
-    }
-  ];
+    venue: match.venue,
+    tickets: match.home_team === 'Real Madrid', // Billets disponibles pour les matchs à domicile
+    scorers: [], // À implémenter si nécessaire
+    stats: {}, // À implémenter si nécessaire
+    timeline: [] // À implémenter si nécessaire
+  });
+
+  const formattedUpcomingMatches = upcomingMatches.map(formatMatchForDisplay);
+  const formattedPastMatches = pastMatches.map(formatMatchForDisplay);
 
   const formatMatchDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -259,15 +118,49 @@ const Matches = () => {
         </div>
 
         <div className="madrid-container py-8">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-4">
+              <h2 className="text-2xl font-bold">Calendrier des matchs</h2>
+              {loading && (
+                <RefreshCw className="h-5 w-5 animate-spin text-madrid-blue" />
+              )}
+            </div>
+            <Button 
+              onClick={handleSyncMatches}
+              disabled={syncing || loading}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Synchronisation...' : 'Synchroniser'}
+            </Button>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+              {error}
+            </div>
+          )}
+          
           <Tabs defaultValue="upcoming" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="upcoming">Prochains matchs</TabsTrigger>
-              <TabsTrigger value="past">Matchs passés</TabsTrigger>
+              <TabsTrigger value="upcoming">Prochains matchs ({formattedUpcomingMatches.length})</TabsTrigger>
+              <TabsTrigger value="past">Matchs passés ({formattedPastMatches.length})</TabsTrigger>
             </TabsList>
             
             <TabsContent value="upcoming">
-              <div className="grid gap-6">
-                {upcomingMatches.map(match => (
+              {loading ? (
+                <div className="flex justify-center py-12">
+                  <RefreshCw className="h-8 w-8 animate-spin text-madrid-blue" />
+                </div>
+              ) : formattedUpcomingMatches.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Aucun match programmé pour le moment</p>
+                </div>
+              ) : (
+                <div className="grid gap-6">
+                  {formattedUpcomingMatches.map(match => (
                   <Card key={match.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleOpenMatchDetail(match)}>
                     <CardContent className="p-0">
                       <div className="bg-gradient-to-r from-madrid-blue to-blue-800 p-4">
@@ -331,13 +224,24 @@ const Matches = () => {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="past">
-              <div className="grid gap-6">
-                {pastMatches.map(match => (
+              {loading ? (
+                <div className="flex justify-center py-12">
+                  <RefreshCw className="h-8 w-8 animate-spin text-madrid-blue" />
+                </div>
+              ) : formattedPastMatches.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>Aucun match passé trouvé</p>
+                </div>
+              ) : (
+                <div className="grid gap-6">
+                  {formattedPastMatches.map(match => (
                   <Card key={match.id} className="overflow-hidden">
                     <CardContent className="p-0">
                       <div className="bg-gradient-to-r from-madrid-blue to-blue-800 p-4">
@@ -378,7 +282,7 @@ const Matches = () => {
                             </div>
                             <div className="mt-4">
                               <h4 className="font-semibold mb-1">Buteurs:</h4>
-                              <p className="text-sm">{match.scorers.join(", ")}</p>
+                              <p className="text-sm">{match.scorers?.length ? match.scorers.join(", ") : "Aucun but marqué"}</p>
                             </div>
                           </div>
                           
@@ -410,8 +314,9 @@ const Matches = () => {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>
