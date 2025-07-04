@@ -9,6 +9,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Player } from "@/types/Player";
 
+// Type helper pour les stats du joueur
+interface PlayerStats {
+  goals?: number;
+  matches?: number;
+  assists?: number;
+  minutesPlayed?: number;
+  isFeatured?: boolean;
+  [key: string]: any;
+}
+
 export function FeaturedPlayerManager() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentFeaturedPlayer, setCurrentFeaturedPlayer] = useState<Player | null>(null);
@@ -34,7 +44,7 @@ export function FeaturedPlayerManager() {
       if (playersError) throw playersError;
       setPlayers(playersData || []);
 
-      // Récupérer le joueur en vedette actuel (utiliser stats.isFeatured)
+      // Récupérer le joueur en vedette actuel
       const { data: featuredData, error: featuredError } = await supabase
         .from('players')
         .select('*')
@@ -45,9 +55,10 @@ export function FeaturedPlayerManager() {
       if (featuredError) throw featuredError;
       
       // Chercher le joueur marqué comme featured dans ses stats
-      const featured = featuredData?.find(player => 
-        player.stats && typeof player.stats === 'object' && player.stats.isFeatured
-      );
+      const featured = featuredData?.find(player => {
+        const stats = player.stats as PlayerStats;
+        return stats && stats.isFeatured === true;
+      });
       
       if (featured) {
         setCurrentFeaturedPlayer(featured);
@@ -71,24 +82,20 @@ export function FeaturedPlayerManager() {
     setSaving(true);
     try {
       // Retirer le statut "featured" de tous les joueurs
-      const { error: unfeaturedError } = await supabase.rpc('remove_featured_status');
-      
-      if (unfeaturedError) {
-        // Si la fonction n'existe pas, faire manuellement
-        const { data: allPlayers } = await supabase
-          .from('players')
-          .select('id, stats')
-          .eq('is_active', true);
+      const { data: allPlayers } = await supabase
+        .from('players')
+        .select('id, stats')
+        .eq('is_active', true);
 
-        if (allPlayers) {
-          for (const player of allPlayers) {
-            if (player.stats && typeof player.stats === 'object' && player.stats.isFeatured) {
-              const updatedStats = { ...player.stats, isFeatured: false };
-              await supabase
-                .from('players')
-                .update({ stats: updatedStats })
-                .eq('id', player.id);
-            }
+      if (allPlayers) {
+        for (const player of allPlayers) {
+          const stats = player.stats as PlayerStats;
+          if (stats && stats.isFeatured) {
+            const updatedStats = { ...stats, isFeatured: false };
+            await supabase
+              .from('players')
+              .update({ stats: updatedStats })
+              .eq('id', player.id);
           }
         }
       }
@@ -96,8 +103,9 @@ export function FeaturedPlayerManager() {
       // Marquer le joueur sélectionné comme featured
       const selectedPlayer = players.find(p => p.id === selectedPlayerId);
       if (selectedPlayer) {
+        const currentStats = (selectedPlayer.stats as PlayerStats) || {};
         const updatedStats = {
-          ...selectedPlayer.stats,
+          ...currentStats,
           isFeatured: true
         };
 

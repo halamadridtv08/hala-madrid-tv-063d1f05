@@ -7,6 +7,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
 import { useNavigate } from "react-router-dom";
 
+// Type helper pour les stats du joueur
+interface PlayerStats {
+  goals?: number;
+  matches?: number;
+  assists?: number;
+  minutesPlayed?: number;
+  isFeatured?: boolean;
+  [key: string]: any;
+}
+
 export function PlayerSpotlight() {
   const navigate = useNavigate();
   const [featuredPlayer, setFeaturedPlayer] = useState<Player | null>(null);
@@ -50,11 +60,10 @@ export function PlayerSpotlight() {
       if (error) throw error;
 
       // Trouver le joueur avec isFeatured = true
-      const featured = data?.find(player => 
-        player.stats && 
-        typeof player.stats === 'object' && 
-        player.stats.isFeatured === true
-      );
+      const featured = data?.find(player => {
+        const stats = player.stats as PlayerStats;
+        return stats && stats.isFeatured === true;
+      });
 
       if (featured) {
         setFeaturedPlayer(featured);
@@ -99,13 +108,14 @@ export function PlayerSpotlight() {
   };
 
   const getSeasonStats = (player: Player) => {
-    if (!player.stats) return { goals: 0, matches: 0, assists: 0, minutesPlayed: 0 };
+    const stats = player.stats as PlayerStats;
+    if (!stats) return { goals: 0, matches: 0, assists: 0, minutesPlayed: 0 };
     
     return {
-      goals: player.stats.goals || 0,
-      matches: player.stats.matches || 0,
-      assists: player.stats.assists || 0,
-      minutesPlayed: player.stats.minutesPlayed || 0
+      goals: stats.goals || 0,
+      matches: stats.matches || 0,
+      assists: stats.assists || 0,
+      minutesPlayed: stats.minutesPlayed || 0
     };
   };
 

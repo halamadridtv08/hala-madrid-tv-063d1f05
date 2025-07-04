@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
@@ -7,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { QuickStatsCard } from "@/components/admin/QuickStatsCard";
-import { PlayerTable } from "@/components/admin/PlayerTable";
-import { CoachTable } from "@/components/admin/CoachTable";
-import { ArticleTable } from "@/components/admin/ArticleTable";
-import { VideoTable } from "@/components/admin/VideoTable";
-import { PhotoTable } from "@/components/admin/PhotoTable";
-import { MatchTable } from "@/components/admin/MatchTable";
+import PlayerTable from "@/components/admin/PlayerTable";
+import CoachTable from "@/components/admin/CoachTable";
+import ArticleTable from "@/components/admin/ArticleTable";
+import VideoTable from "@/components/admin/VideoTable";
+import PhotoTable from "@/components/admin/PhotoTable";
+import MatchTable from "@/components/admin/MatchTable";
 import { FeaturedPlayerManager } from "@/components/admin/FeaturedPlayerManager";
 import { 
   Users, 
