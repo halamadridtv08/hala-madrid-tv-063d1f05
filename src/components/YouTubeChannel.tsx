@@ -51,7 +51,7 @@ export function YouTubeChannel({ channelUrl, className }: YouTubeChannelProps) {
               <iframe 
                 width="100%" 
                 height="100%" 
-                src="https://www.youtube.com/embed?listType=user_uploads&list=HALAMADRIDTV10" 
+                src="https://www.youtube.com/embed?listType=playlist&list=UU5cf7Y1rhQ_XiN9KkjBD0xA&index=1" 
                 title="Dernière vidéo HALA MADRID TV" 
                 frameBorder="0" 
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
