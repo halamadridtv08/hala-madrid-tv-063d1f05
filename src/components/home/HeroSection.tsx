@@ -53,9 +53,13 @@ export function HeroSection() {
         <NewsCarousel />
       </div>
       
-      <div className="madrid-container py-8">
-        <YouTubeChannel channelUrl="https://www.youtube.com/@HALAMADRIDTV10" className="mb-8" />
-      </div>
+      {/* Section YouTube mise en avant */}
+      <section className="py-12 bg-gray-50 dark:bg-gray-900">
+        <div className="madrid-container">
+          <h2 className="section-title mb-8">Dernière Vidéo YouTube</h2>
+          <YouTubeChannel channelUrl="https://www.youtube.com/@HALAMADRIDTV10" />
+        </div>
+      </section>
     </>
   );
 }
