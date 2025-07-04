@@ -48,16 +48,16 @@ const Matches = () => {
     date: match.match_date,
     homeTeam: {
       name: match.home_team,
-      logo: match.home_team === 'Real Madrid' 
+      logo: match.home_team_logo || (match.home_team === 'Real Madrid' 
         ? "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png"
-        : "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sport_balls.svg/1200px-Sport_balls.svg.png",
+        : "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sport_balls.svg/1200px-Sport_balls.svg.png"),
       score: match.home_score
     },
     awayTeam: {
       name: match.away_team,
-      logo: match.away_team === 'Real Madrid'
+      logo: match.away_team_logo || (match.away_team === 'Real Madrid'
         ? "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png"
-        : "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sport_balls.svg/1200px-Sport_balls.svg.png",
+        : "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sport_balls.svg/1200px-Sport_balls.svg.png"),
       score: match.away_score
     },
     venue: match.venue,

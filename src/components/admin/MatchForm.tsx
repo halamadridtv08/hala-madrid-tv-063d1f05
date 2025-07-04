@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Match } from "@/types/Match";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { MediaUploader } from "@/components/admin/MediaUploader";
 
 interface MatchFormProps {
   match?: Match;
@@ -19,6 +20,8 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
   const [formData, setFormData] = useState({
     home_team: match?.home_team || "Real Madrid",
     away_team: match?.away_team || "",
+    home_team_logo: match?.home_team_logo || "",
+    away_team_logo: match?.away_team_logo || "",
     match_date: match?.match_date ? new Date(match.match_date).toISOString().slice(0, 16) : "",
     venue: match?.venue || "",
     competition: match?.competition || "",
@@ -73,25 +76,61 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="home_team">Équipe à domicile</Label>
-            <Input
-              id="home_team"
-              value={formData.home_team}
-              onChange={(e) => setFormData({ ...formData, home_team: e.target.value })}
-              required
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="away_team">Équipe à l'extérieur</Label>
-            <Input
-              id="away_team"
-              value={formData.away_team}
-              onChange={(e) => setFormData({ ...formData, away_team: e.target.value })}
-              required
-            />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Équipe à domicile */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="home_team">Équipe à domicile</Label>
+                <Input
+                  id="home_team"
+                  value={formData.home_team}
+                  onChange={(e) => setFormData({ ...formData, home_team: e.target.value })}
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label>Logo équipe à domicile</Label>
+                <MediaUploader
+                  onSuccess={(url) => setFormData({ ...formData, home_team_logo: url })}
+                  acceptTypes="image/*"
+                  maxSizeMB={5}
+                  folderPath="team-logos"
+                  buttonText="Ajouter logo domicile"
+                  showPreview={true}
+                  currentValue={formData.home_team_logo}
+                  className="mt-2"
+                />
+              </div>
+            </div>
+
+            {/* Équipe à l'extérieur */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="away_team">Équipe à l'extérieur</Label>
+                <Input
+                  id="away_team"
+                  value={formData.away_team}
+                  onChange={(e) => setFormData({ ...formData, away_team: e.target.value })}
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label>Logo équipe à l'extérieur</Label>
+                <MediaUploader
+                  onSuccess={(url) => setFormData({ ...formData, away_team_logo: url })}
+                  acceptTypes="image/*"
+                  maxSizeMB={5}
+                  folderPath="team-logos"
+                  buttonText="Ajouter logo extérieur"
+                  showPreview={true}
+                  currentValue={formData.away_team_logo}
+                  className="mt-2"
+                />
+              </div>
+            </div>
           </div>
           
           <div>
