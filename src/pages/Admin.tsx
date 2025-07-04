@@ -32,7 +32,7 @@ import { Coach } from "@/types/Coach";
 import { Match } from "@/types/Match";
 import { Article } from "@/types/Article";
 import { PhotoType } from "@/types/Photo";
-import { Video as VideoType } from "@/types/Video";
+import { VideoType } from "@/types/Video";
 
 const Admin = () => {
   const navigate = useNavigate();
