@@ -119,7 +119,7 @@ const ArticleDetail = () => {
       <>
         <Navbar />
         <main>
-          <div className="madrid-container py-8">
+          <div className="max-w-4xl mx-auto px-6 py-8">
             <Skeleton className="h-10 w-3/4 mb-4" />
             <Skeleton className="h-6 w-1/2 mb-8" />
             <Skeleton className="h-[400px] w-full mb-8" />
@@ -138,7 +138,7 @@ const ArticleDetail = () => {
       <>
         <Navbar />
         <main>
-          <div className="madrid-container py-20 text-center">
+          <div className="max-w-4xl mx-auto px-6 py-20 text-center">
             <h1 className="text-3xl font-bold mb-4">Article non trouvé</h1>
             <p className="text-gray-500 mb-8">L'article que vous recherchez n'existe pas ou a été supprimé.</p>
           </div>
@@ -174,7 +174,7 @@ const ArticleDetail = () => {
     <>
       <Navbar />
       <main>
-        <div className="madrid-container py-8">
+        <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="mb-8">
             <Badge className={`${getCategoryColor(article.category)} mb-4`}>
               {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
