@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
@@ -26,6 +27,12 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Player } from "@/types/Player";
+import { Coach } from "@/types/Coach";
+import { Match } from "@/types/Match";
+import { Article } from "@/types/Article";
+import { PhotoType } from "@/types/Photo";
+import { Video as VideoType } from "@/types/Video";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -40,9 +47,18 @@ const Admin = () => {
     matchesCount: 0
   });
 
+  // État pour chaque type de données
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [videos, setVideos] = useState<VideoType[]>([]);
+  const [photos, setPhotos] = useState<PhotoType[]>([]);
+
   useEffect(() => {
     checkAdminStatus();
     fetchStats();
+    fetchAllData();
   }, [user]);
 
   const checkAdminStatus = async () => {
@@ -91,6 +107,29 @@ const Admin = () => {
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchAllData = async () => {
+    try {
+      // Récupérer toutes les données
+      const [playersData, coachesData, matchesData, articlesData, videosData, photosData] = await Promise.all([
+        supabase.from('players').select('*').order('name'),
+        supabase.from('coaches').select('*').order('name'),
+        supabase.from('matches').select('*').order('match_date'),
+        supabase.from('articles').select('*').order('created_at', { ascending: false }),
+        supabase.from('videos').select('*').order('created_at', { ascending: false }),
+        supabase.from('photos').select('*').order('created_at', { ascending: false })
+      ]);
+
+      setPlayers(playersData.data || []);
+      setCoaches(coachesData.data || []);
+      setMatches(matchesData.data || []);
+      setArticles(articlesData.data || []);
+      setVideos(videosData.data || []);
+      setPhotos(photosData.data || []);
+    } catch (error) {
+      console.error('Error fetching data:', error);
     }
   };
 
@@ -183,7 +222,7 @@ const Admin = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <PlayerTable />
+                  <PlayerTable players={players} setPlayers={setPlayers} />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -197,7 +236,7 @@ const Admin = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <CoachTable />
+                  <CoachTable coaches={coaches} setCoaches={setCoaches} />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -211,7 +250,7 @@ const Admin = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <MatchTable />
+                  <MatchTable matches={matches} setMatches={setMatches} />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -225,7 +264,7 @@ const Admin = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ArticleTable />
+                  <ArticleTable articles={articles} setArticles={setArticles} />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -239,7 +278,7 @@ const Admin = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <VideoTable />
+                  <VideoTable videos={videos} setVideos={setVideos} />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -253,7 +292,7 @@ const Admin = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <PhotoTable />
+                  <PhotoTable photos={photos} setPhotos={setPhotos} />
                 </CardContent>
               </Card>
             </TabsContent>
