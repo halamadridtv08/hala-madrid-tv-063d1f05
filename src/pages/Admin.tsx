@@ -1,306 +1,417 @@
 
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { QuickStatsCard } from "@/components/admin/QuickStatsCard";
-import PlayerTable from "@/components/admin/PlayerTable";
-import CoachTable from "@/components/admin/CoachTable";
-import ArticleTable from "@/components/admin/ArticleTable";
-import VideoTable from "@/components/admin/VideoTable";
-import PhotoTable from "@/components/admin/PhotoTable";
-import MatchTable from "@/components/admin/MatchTable";
-import { FeaturedPlayerManager } from "@/components/admin/FeaturedPlayerManager";
+import React from "react";
+import { useState, useEffect } from "react";
 import { 
-  Users, 
+  Tabs, 
+  TabsList, 
+  TabsTrigger, 
+  TabsContent 
+} from "@/components/ui/tabs";
+import { QuickStatsCard } from "@/components/admin/QuickStatsCard";
+import { AdminMenuBar } from "@/components/layout/AdminMenuBar";
+import { 
   FileText, 
   Video, 
-  Image, 
+  Users, 
   Calendar, 
-  Settings,
-  ArrowLeft,
-  Shield,
-  Star
+  Settings, 
+  LayoutDashboard, 
+  User, 
+  Camera,
+  BarChart3,
+  ArrowLeft
 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { Article } from "@/types/Article";
+import { VideoType } from "@/types/Video";
+import { PhotoType } from "@/types/Photo";
 import { Player } from "@/types/Player";
 import { Coach } from "@/types/Coach";
 import { Match } from "@/types/Match";
-import { Article } from "@/types/Article";
-import { PhotoType } from "@/types/Photo";
-import { VideoType } from "@/types/Video";
+import ArticleTable from "@/components/admin/ArticleTable";
+import VideoTable from "@/components/admin/VideoTable";
+import PhotoTable from "@/components/admin/PhotoTable";
+import PlayerTable from "@/components/admin/PlayerTable";
+import CoachTable from "@/components/admin/CoachTable";
+import MatchTable from "@/components/admin/MatchTable";
+import SettingsDashboard from "@/components/admin/SettingsDashboard";
+import { DataSynchronizer } from "@/components/admin/DataSynchronizer";
+import { useNavigate } from "react-router-dom";
+
+interface StatsData {
+  totalPlayers: number;
+  activePlayers: number;
+  totalCoaches: number;
+  publishedArticles: number;
+  totalVideos: number;
+  upcomingMatches: number;
+}
 
 const Admin = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    playersCount: 0,
-    coachesCount: 0,
-    articlesCount: 0,
-    videosCount: 0,
-    matchesCount: 0
-  });
-
-  // État pour chaque type de données
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [coaches, setCoaches] = useState<Coach[]>([]);
-  const [matches, setMatches] = useState<Match[]>([]);
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [articles, setArticles] = useState<Article[]>([]);
   const [videos, setVideos] = useState<VideoType[]>([]);
   const [photos, setPhotos] = useState<PhotoType[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [stats, setStats] = useState<StatsData>({
+    totalPlayers: 0,
+    activePlayers: 0,
+    totalCoaches: 0,
+    publishedArticles: 0,
+    totalVideos: 0,
+    upcomingMatches: 0,
+  });
 
   useEffect(() => {
-    checkAdminStatus();
-    fetchStats();
-    fetchAllData();
-  }, [user]);
-
-  const checkAdminStatus = async () => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-
-    try {
+    const fetchArticles = async () => {
       const { data, error } = await supabase
-        .from('admins')
-        .select('id')
-        .eq('id', user.id)
-        .single();
+        .from('articles')
+        .select('*');
 
-      if (error || !data) {
-        navigate('/');
-        return;
+      if (error) {
+        console.error("Error fetching articles:", error);
+      } else {
+        setArticles(data || []);
       }
+    };
 
-      setIsAdmin(true);
-    } catch (error) {
-      console.error('Error checking admin status:', error);
-      navigate('/');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchVideos = async () => {
+      const { data, error } = await supabase
+        .from('videos')
+        .select('*');
 
-  const fetchStats = async () => {
-    try {
-      const [players, coaches, articles, videos, matches] = await Promise.all([
-        supabase.from('players').select('id', { count: 'exact' }),
-        supabase.from('coaches').select('id', { count: 'exact' }),
-        supabase.from('articles').select('id', { count: 'exact' }),
-        supabase.from('videos').select('id', { count: 'exact' }),
-        supabase.from('matches').select('id', { count: 'exact' })
-      ]);
+      if (error) {
+        console.error("Error fetching videos:", error);
+      } else {
+        setVideos(data || []);
+      }
+    };
 
-      setStats({
-        playersCount: players.count || 0,
-        coachesCount: coaches.count || 0,
-        articlesCount: articles.count || 0,
-        videosCount: videos.count || 0,
-        matchesCount: matches.count || 0
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  };
+    const fetchPhotos = async () => {
+      const { data, error } = await supabase
+        .from('photos')
+        .select('*');
 
-  const fetchAllData = async () => {
-    try {
-      // Récupérer toutes les données
-      const [playersData, coachesData, matchesData, articlesData, videosData, photosData] = await Promise.all([
-        supabase.from('players').select('*').order('name'),
-        supabase.from('coaches').select('*').order('name'),
-        supabase.from('matches').select('*').order('match_date'),
-        supabase.from('articles').select('*').order('created_at', { ascending: false }),
-        supabase.from('videos').select('*').order('created_at', { ascending: false }),
-        supabase.from('photos').select('*').order('created_at', { ascending: false })
-      ]);
+      if (error) {
+        console.error("Error fetching photos:", error);
+      } else {
+        setPhotos(data || []);
+      }
+    };
 
-      setPlayers(playersData.data || []);
-      setCoaches(coachesData.data || []);
-      setMatches(matchesData.data || []);
-      setArticles(articlesData.data || []);
-      setVideos(videosData.data || []);
-      setPhotos(photosData.data || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
-  };
+    const fetchPlayers = async () => {
+      const { data, error } = await supabase
+        .from('players')
+        .select('*');
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-madrid-blue mx-auto"></div>
-          <p className="mt-4 text-gray-600">Vérification des permissions...</p>
-        </div>
+      if (error) {
+        console.error("Error fetching players:", error);
+      } else {
+        setPlayers(data || []);
+      }
+    };
+
+    const fetchCoaches = async () => {
+      const { data, error } = await supabase
+        .from('coaches')
+        .select('*');
+
+      if (error) {
+        console.error("Error fetching coaches:", error);
+      } else {
+        setCoaches(data || []);
+      }
+    };
+
+    const fetchMatches = async () => {
+      const { data, error } = await supabase
+        .from('matches')
+        .select('*');
+
+      if (error) {
+        console.error("Error fetching matches:", error);
+      } else {
+        setMatches(data || []);
+      }
+    };
+
+    fetchArticles();
+    fetchVideos();
+    fetchPhotos();
+    fetchPlayers();
+    fetchCoaches();
+    fetchMatches();
+  }, []);
+
+  useEffect(() => {
+    setStats({
+      totalPlayers: players.length,
+      activePlayers: players.filter(p => p.is_active).length,
+      totalCoaches: coaches.length,
+      publishedArticles: articles.filter(a => a.is_published).length,
+      totalVideos: videos.length,
+      upcomingMatches: matches.filter(m => m.status === 'upcoming').length,
+    });
+  }, [players, coaches, articles, videos, matches]);
+
+  const renderDashboard = () => (
+    <div className="space-y-6">
+      <QuickStatsCard 
+        playersCount={players.length}
+        coachesCount={coaches.length}
+        articlesCount={articles.length}
+        videosCount={videos.length}
+        matchesCount={matches.length}
+      />
+      
+      {/* Ajout du synchroniseur de données */}
+      <DataSynchronizer />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Activité récente
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Articles publiés cette semaine</span>
+                <Badge variant="secondary">
+                  {articles.filter(a => a.is_published).length}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Vidéos ajoutées</span>
+                <Badge variant="secondary">{videos.length}</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Photos uploadées</span>
+                <Badge variant="secondary">{photos.length}</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Matchs programmés</span>
+                <Badge variant="secondary">
+                  {matches.filter(m => m.status === 'upcoming').length}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Équipe
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Joueurs actifs</span>
+                <Badge variant="default">
+                  {players.filter(p => p.is_active).length}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Entraîneurs</span>
+                <Badge variant="default">{coaches.length}</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Gardiens</span>
+                <Badge variant="outline">
+                  {players.filter(p => p.position === 'gardien').length}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Attaquants</span>
+                <Badge variant="outline">
+                  {players.filter(p => p.position === 'attaquant').length}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    );
-  }
 
-  if (!isAdmin) {
-    return null;
-  }
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab("articles")}>
+          <CardContent className="p-6 text-center">
+            <FileText className="h-12 w-12 mx-auto mb-4 text-madrid-blue" />
+            <h3 className="text-lg font-semibold mb-2">Gérer les Articles</h3>
+            <p className="text-gray-600 text-sm">Créer et modifier les articles de actualités</p>
+          </CardContent>
+        </Card>
+
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab("videos")}>
+          <CardContent className="p-6 text-center">
+            <Video className="h-12 w-12 mx-auto mb-4 text-madrid-blue" />
+            <h3 className="text-lg font-semibold mb-2">Gérer les Vidéos</h3>
+            <p className="text-gray-600 text-sm">Ajouter et organiser les vidéos</p>
+          </CardContent>
+        </Card>
+
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab("photos")}>
+          <CardContent className="p-6 text-center">
+            <Camera className="h-12 w-12 mx-auto mb-4 text-madrid-blue" />
+            <h3 className="text-lg font-semibold mb-2">Gérer les Photos</h3>
+            <p className="text-gray-600 text-sm">Organiser la galerie photos</p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
+  const renderArticles = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Gestion des Articles</h2>
+      <ArticleTable articles={articles} setArticles={setArticles} />
+    </div>
+  );
+
+  const renderVideos = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Gestion des Vidéos</h2>
+      <VideoTable videos={videos} setVideos={setVideos} />
+    </div>
+  );
+
+  const renderPhotos = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Gestion des Photos</h2>
+      <PhotoTable photos={photos} setPhotos={setPhotos} />
+    </div>
+  );
+
+  const renderPlayers = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Gestion des Joueurs</h2>
+      <PlayerTable players={players} setPlayers={setPlayers} />
+    </div>
+  );
+
+  const renderCoaches = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Gestion des Entraîneurs</h2>
+      <CoachTable coaches={coaches} setCoaches={setCoaches} />
+    </div>
+  );
+
+  const renderMatches = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Gestion des Matchs</h2>
+      <MatchTable matches={matches} setMatches={setMatches} />
+    </div>
+  );
+
+  const renderStats = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Statistiques</h2>
+      <p>Nombre total de joueurs: {stats.totalPlayers}</p>
+      <p>Nombre de joueurs actifs: {stats.activePlayers}</p>
+      <p>Nombre total d'entraîneurs: {stats.totalCoaches}</p>
+      <p>Nombre d'articles publiés: {stats.publishedArticles}</p>
+      <p>Nombre total de vidéos: {stats.totalVideos}</p>
+      <p>Nombre de matchs à venir: {stats.upcomingMatches}</p>
+    </div>
+  );
+
+  const renderSettings = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Paramètres</h2>
+      <SettingsDashboard />
+    </div>
+  );
 
   return (
-    <>
-      <Navbar />
-      <main className="min-h-screen bg-gray-50">
-        <div className="bg-madrid-blue py-10">
-          <div className="madrid-container">
-            <div className="flex items-center gap-4 mb-4">
-              <Button
-                onClick={() => navigate('/')}
-                variant="outline"
-                className="text-white border-white hover:bg-white hover:text-madrid-blue"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Retour au site
-              </Button>
-              <h1 className="text-4xl font-bold text-white flex items-center gap-3">
-                <Shield className="h-8 w-8" />
-                Administration
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="madrid-container py-8">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={() => navigate('/')}
+              variant="outline"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour au site
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                Administration HALA MADRID TV
               </h1>
+              <p className="text-gray-600 dark:text-gray-300 mt-2">
+                Gérez le contenu et les paramètres du site
+              </p>
             </div>
-            <p className="text-blue-200">
-              Gérez le contenu et les paramètres du site HALA MADRID TV
-            </p>
           </div>
+          <Badge variant="outline" className="px-3 py-1">
+            Version 2.0
+          </Badge>
         </div>
 
-        <div className="madrid-container py-8">
-          <QuickStatsCard {...stats} />
-          
-          <Tabs defaultValue="featured" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7 gap-1">
-              <TabsTrigger value="featured" className="flex items-center gap-2">
-                <Star className="h-4 w-4" />
-                <span className="hidden sm:inline">Vedette</span>
-              </TabsTrigger>
-              <TabsTrigger value="players" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Joueurs</span>
-              </TabsTrigger>
-              <TabsTrigger value="coaches" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Staff</span>
-              </TabsTrigger>
-              <TabsTrigger value="matches" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span className="hidden sm:inline">Matchs</span>
-              </TabsTrigger>
-              <TabsTrigger value="articles" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">Articles</span>
-              </TabsTrigger>
-              <TabsTrigger value="videos" className="flex items-center gap-2">
-                <Video className="h-4 w-4" />
-                <span className="hidden sm:inline">Vidéos</span>
-              </TabsTrigger>
-              <TabsTrigger value="photos" className="flex items-center gap-2">
-                <Image className="h-4 w-4" />
-                <span className="hidden sm:inline">Photos</span>
-              </TabsTrigger>
-            </TabsList>
+        <AdminMenuBar />
 
-            <TabsContent value="featured" className="space-y-6">
-              <FeaturedPlayerManager />
-            </TabsContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-9">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <LayoutDashboard className="h-4 w-4" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="articles" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Articles
+            </TabsTrigger>
+            <TabsTrigger value="videos" className="flex items-center gap-2">
+              <Video className="h-4 w-4" />
+              Vidéos
+            </TabsTrigger>
+            <TabsTrigger value="photos" className="flex items-center gap-2">
+              <Camera className="h-4 w-4" />
+              Photos
+            </TabsTrigger>
+            <TabsTrigger value="players" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Joueurs
+            </TabsTrigger>
+            <TabsTrigger value="coaches" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Entraîneurs
+            </TabsTrigger>
+            <TabsTrigger value="matches" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Matchs
+            </TabsTrigger>
+            <TabsTrigger value="stats" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Statistiques
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Paramètres
+            </TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="players" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Gestion des Joueurs
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <PlayerTable players={players} setPlayers={setPlayers} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="coaches" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Gestion du Staff
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CoachTable coaches={coaches} setCoaches={setCoaches} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="matches" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    Gestion des Matchs
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <MatchTable matches={matches} setMatches={setMatches} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="articles" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Gestion des Articles
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ArticleTable articles={articles} setArticles={setArticles} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="videos" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Video className="h-5 w-5" />
-                    Gestion des Vidéos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <VideoTable videos={videos} setVideos={setVideos} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="photos" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Image className="h-5 w-5" />
-                    Gestion des Photos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <PhotoTable photos={photos} setPhotos={setPhotos} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </main>
-      <Footer />
-    </>
+          <TabsContent value="dashboard">{renderDashboard()}</TabsContent>
+          <TabsContent value="articles">{renderArticles()}</TabsContent>
+          <TabsContent value="videos">{renderVideos()}</TabsContent>
+          <TabsContent value="photos">{renderPhotos()}</TabsContent>
+          <TabsContent value="players">{renderPlayers()}</TabsContent>
+          <TabsContent value="coaches">{renderCoaches()}</TabsContent>
+          <TabsContent value="matches">{renderMatches()}</TabsContent>
+          <TabsContent value="stats">{renderStats()}</TabsContent>
+          <TabsContent value="settings">{renderSettings()}</TabsContent>
+        </Tabs>
+      </div>
+    </div>
   );
 };
 

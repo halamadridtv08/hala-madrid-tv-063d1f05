@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,16 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
 import { useNavigate } from "react-router-dom";
 
-// Type helper pour les stats du joueur
-interface PlayerStats {
-  goals?: number;
-  matches?: number;
-  assists?: number;
-  minutesPlayed?: number;
-  isFeatured?: boolean;
-  [key: string]: any;
-}
-
 export function PlayerSpotlight() {
   const navigate = useNavigate();
   const [featuredPlayer, setFeaturedPlayer] = useState<Player | null>(null);
@@ -24,98 +15,56 @@ export function PlayerSpotlight() {
 
   useEffect(() => {
     fetchFeaturedPlayer();
-    
-    // Écouter les changements en temps réel
-    const channel = supabase
-      .channel('featured-player-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'players'
-        },
-        (payload) => {
-          console.log('Changement détecté dans les joueurs:', payload);
-          // Recharger le joueur en vedette si nécessaire
-          fetchFeaturedPlayer();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   const fetchFeaturedPlayer = async () => {
     try {
-      // Chercher le joueur marqué comme featured dans ses stats
+      // For now, let's get the first active player or a specific one
       const { data, error } = await supabase
         .from('players')
         .select('*')
         .eq('is_active', true)
-        .not('stats', 'is', null);
+        .limit(1)
+        .single();
 
-      if (error) throw error;
-
-      // Trouver le joueur avec isFeatured = true
-      const featured = data?.find(player => {
-        const stats = player.stats as PlayerStats;
-        return stats && stats.isFeatured === true;
-      });
-
-      if (featured) {
-        setFeaturedPlayer(featured);
+      if (error) {
+        console.error('Error fetching featured player:', error);
+        // Fallback to default player data
+        setFeaturedPlayer({
+          id: "1",
+          name: "Kylian Mbappé",
+          position: "Ailier/Attaquant",
+          jersey_number: 9,
+          nationality: "Française",
+          image_url: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=400&h=600&fit=crop",
+          stats: {
+            goals: 8,
+            matches: 15,
+            assists: 2,
+            minutesPlayed: 1350
+          },
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
       } else {
-        // Fallback vers le premier joueur actif si aucun n'est marqué comme featured
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('players')
-          .select('*')
-          .eq('is_active', true)
-          .limit(1)
-          .single();
-
-        if (fallbackError) {
-          console.error('Erreur fallback:', fallbackError);
-          // Utiliser des données par défaut
-          setFeaturedPlayer({
-            id: "1",
-            name: "Kylian Mbappé",
-            position: "Ailier/Attaquant",
-            jersey_number: 9,
-            nationality: "Française",
-            image_url: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=400&h=600&fit=crop",
-            stats: {
-              goals: 8,
-              matches: 15,
-              assists: 2,
-              minutesPlayed: 1350
-            },
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-        } else {
-          setFeaturedPlayer(fallbackData);
-        }
+        setFeaturedPlayer(data);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement du joueur en vedette:', error);
+      console.error('Error fetching featured player:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const getSeasonStats = (player: Player) => {
-    const stats = player.stats as PlayerStats;
-    if (!stats) return { goals: 0, matches: 0, assists: 0, minutesPlayed: 0 };
+    if (!player.stats) return { goals: 0, matches: 0, assists: 0, minutesPlayed: 0 };
     
     return {
-      goals: stats.goals || 0,
-      matches: stats.matches || 0,
-      assists: stats.assists || 0,
-      minutesPlayed: stats.minutesPlayed || 0
+      goals: player.stats.goals || 0,
+      matches: player.stats.matches || 0,
+      assists: player.stats.assists || 0,
+      minutesPlayed: player.stats.minutesPlayed || 0
     };
   };
 
