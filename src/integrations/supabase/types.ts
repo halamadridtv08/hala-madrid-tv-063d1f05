@@ -154,10 +154,12 @@ export type Database = {
         Row: {
           away_score: number | null
           away_team: string
+          away_team_logo: string | null
           competition: string | null
           created_at: string
           home_score: number | null
           home_team: string
+          home_team_logo: string | null
           id: string
           match_date: string
           match_details: Json | null
@@ -168,10 +170,12 @@ export type Database = {
         Insert: {
           away_score?: number | null
           away_team: string
+          away_team_logo?: string | null
           competition?: string | null
           created_at?: string
           home_score?: number | null
           home_team: string
+          home_team_logo?: string | null
           id?: string
           match_date: string
           match_details?: Json | null
@@ -182,10 +186,12 @@ export type Database = {
         Update: {
           away_score?: number | null
           away_team?: string
+          away_team_logo?: string | null
           competition?: string | null
           created_at?: string
           home_score?: number | null
           home_team?: string
+          home_team_logo?: string | null
           id?: string
           match_date?: string
           match_details?: Json | null
