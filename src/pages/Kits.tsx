@@ -104,36 +104,40 @@ const Kits = () => {
   return (
     <>
       <Navbar />
-      <main>
-        <div className="madrid-container py-8">
-          <h1 className="section-title mb-8">Maillots 2024/2025</h1>
+      <main className="min-h-screen">
+        <div className="madrid-container py-4 sm:py-6 lg:py-8">
+          <h1 className="section-title mb-6 sm:mb-8 text-center sm:text-left text-2xl sm:text-3xl md:text-4xl">
+            Maillots 2024/2025
+          </h1>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Responsive grid with better breakpoints */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {kits.map((kit) => (
               <motion.div
                 key={kit.id}
                 className="h-full"
                 whileHover={{ 
-                  scale: 1.05,
+                  scale: 1.02,
                   transition: { duration: 0.3 }
                 }}
+                whileTap={{ scale: 0.98 }}
                 onHoverStart={() => setHoveredKit(kit.id)}
                 onHoverEnd={() => setHoveredKit(null)}
                 onClick={() => openGallery(kit)}
               >
                 <Card className="overflow-hidden h-full shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer">
-                  <div className="relative h-96 overflow-hidden bg-gray-50 flex items-center justify-center">
+                  <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden bg-gray-50 flex items-center justify-center">
                     <motion.img 
                       src={kit.image} 
                       alt={kit.title}
-                      className="object-contain max-h-full max-w-full"
+                      className="object-contain max-h-full max-w-full p-2 sm:p-4"
                       initial={{ rotateY: 0 }}
                       animate={{ 
-                        rotateY: hoveredKit === kit.id ? [0, -15, 0, 15, 0] : 0,
-                        y: hoveredKit === kit.id ? [0, -10, 0] : 0
+                        rotateY: hoveredKit === kit.id ? [0, -10, 0, 10, 0] : 0,
+                        y: hoveredKit === kit.id ? [0, -5, 0] : 0
                       }}
                       transition={{ 
-                        duration: hoveredKit === kit.id ? 3 : 0.5,
+                        duration: hoveredKit === kit.id ? 2 : 0.5,
                         ease: "easeInOut",
                         repeat: hoveredKit === kit.id ? Infinity : 0,
                         repeatDelay: 1
@@ -146,23 +150,23 @@ const Kits = () => {
                     
                     {hoveredKit === kit.id && (
                       <motion.div
-                        className="absolute inset-0 z-10 bg-gradient-to-t from-black/20 to-transparent flex items-center justify-center"
+                        className="absolute inset-0 z-10 bg-gradient-to-t from-black/30 to-transparent flex items-center justify-center"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.3 }}
                       >
-                        <span className="text-white bg-black/50 px-4 py-2 rounded-full text-sm font-medium">
+                        <span className="text-white bg-black/60 px-3 py-2 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm">
                           Voir plus d'images
                         </span>
                       </motion.div>
                     )}
                   </div>
 
-                  <CardContent className="p-4 text-center">
-                    <Badge className={`${getKitColor(kit.type)} text-white mb-2`}>
+                  <CardContent className="p-3 sm:p-4 text-center">
+                    <Badge className={`${getKitColor(kit.type)} text-white mb-2 text-xs sm:text-sm`}>
                       {kit.type}
                     </Badge>
-                    <h3 className="text-xl font-bold">{kit.title}</h3>
+                    <h3 className="text-lg sm:text-xl font-bold line-clamp-2">{kit.title}</h3>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -170,76 +174,90 @@ const Kits = () => {
           </div>
         </div>
 
-        {/* Gallery Modal */}
+        {/* Enhanced responsive gallery modal */}
         <Dialog open={selectedKit !== null} onOpenChange={(open) => !open && closeGallery()}>
-          <DialogContent className="max-w-4xl w-[90vw]">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                {selectedKit?.title}
+          <DialogContent className="max-w-[95vw] sm:max-w-4xl w-full h-[90vh] sm:h-auto max-h-[90vh] p-2 sm:p-6">
+            <DialogHeader className="px-2 sm:px-0">
+              <DialogTitle className="flex flex-col sm:flex-row sm:items-center gap-2 text-lg sm:text-xl">
+                <span className="line-clamp-2">{selectedKit?.title}</span>
                 {selectedKit && (
-                  <Badge className={`${getKitColor(selectedKit.type)} text-white ml-2`}>
+                  <Badge className={`${getKitColor(selectedKit.type)} text-white self-start sm:ml-2 text-xs sm:text-sm`}>
                     {selectedKit.type}
                   </Badge>
                 )}
               </DialogTitle>
             </DialogHeader>
-            <div className="relative mt-2 bg-gray-100 rounded-md overflow-hidden">
+            
+            <div className="relative mt-2 bg-gray-100 rounded-md overflow-hidden flex-1">
               {selectedKit && (
                 <div className="aspect-[4/3] w-full relative">
                   <motion.img 
                     key={currentImageIndex}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4 }}
                     src={selectedKit.gallery[currentImageIndex]} 
                     alt={`${selectedKit.title} - Image ${currentImageIndex + 1}`}
-                    className="object-contain w-full h-full"
+                    className="object-contain w-full h-full p-2 sm:p-4"
                   />
                 </div>
               )}
 
-              <div className="absolute top-1/2 left-4 transform -translate-y-1/2">
+              {/* Navigation buttons with better mobile positioning */}
+              <div className="absolute top-1/2 left-2 sm:left-4 transform -translate-y-1/2">
                 <Button 
                   variant="outline" 
                   size="icon"
-                  className="rounded-full bg-white/80 hover:bg-white shadow-md" 
+                  className="rounded-full bg-white/90 hover:bg-white shadow-lg h-8 w-8 sm:h-10 sm:w-10" 
                   onClick={(e) => { e.stopPropagation(); prevImage(); }}
                 >
-                  <ChevronLeft className="h-6 w-6" />
+                  <ChevronLeft className="h-4 w-4 sm:h-6 sm:w-6" />
                 </Button>
               </div>
-              <div className="absolute top-1/2 right-4 transform -translate-y-1/2">
+              
+              <div className="absolute top-1/2 right-2 sm:right-4 transform -translate-y-1/2">
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  className="rounded-full bg-white/80 hover:bg-white shadow-md"
+                  className="rounded-full bg-white/90 hover:bg-white shadow-lg h-8 w-8 sm:h-10 sm:w-10"
                   onClick={(e) => { e.stopPropagation(); nextImage(); }}
                 >
-                  <ChevronRight className="h-6 w-6" />
+                  <ChevronRight className="h-4 w-4 sm:h-6 sm:w-6" />
                 </Button>
               </div>
-              <div className="absolute top-4 right-4">
+              
+              <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  className="rounded-full bg-white/80 hover:bg-white shadow-md"
+                  className="rounded-full bg-white/90 hover:bg-white shadow-lg h-8 w-8 sm:h-10 sm:w-10"
                   onClick={(e) => { e.stopPropagation(); closeGallery(); }}
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
+              </div>
+
+              {/* Image counter for mobile */}
+              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 sm:hidden">
+                <div className="bg-black/60 text-white px-2 py-1 rounded-full text-xs">
+                  {currentImageIndex + 1} / {selectedKit?.gallery.length}
+                </div>
               </div>
             </div>
             
-            {/* Thumbnails */}
+            {/* Enhanced responsive thumbnails */}
             {selectedKit && (
-              <div className="flex gap-2 overflow-x-auto py-2 px-1 mt-4">
+              <div className="flex gap-1 sm:gap-2 overflow-x-auto py-2 px-1 mt-2 sm:mt-4 scrollbar-thin scrollbar-thumb-gray-300">
                 {selectedKit.gallery.map((img, index) => (
                   <motion.div 
                     key={index}
-                    className={`h-16 w-16 rounded-md overflow-hidden cursor-pointer border-2 ${
-                      currentImageIndex === index ? 'border-madrid-blue' : 'border-transparent'
+                    className={`flex-shrink-0 h-12 w-12 sm:h-16 sm:w-16 rounded-md overflow-hidden cursor-pointer border-2 transition-all ${
+                      currentImageIndex === index 
+                        ? 'border-madrid-blue shadow-md' 
+                        : 'border-transparent hover:border-gray-300'
                     }`}
                     whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setCurrentImageIndex(index)}
                   >
                     <img 
