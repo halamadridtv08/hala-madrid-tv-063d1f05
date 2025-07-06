@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useState, useEffect } from "react";
 import { 
@@ -19,7 +18,9 @@ import {
   User, 
   Camera,
   BarChart3,
-  ArrowLeft
+  ArrowLeft,
+  Mic,
+  PlayCircle
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,12 +32,16 @@ import { PhotoType } from "@/types/Photo";
 import { Player } from "@/types/Player";
 import { Coach } from "@/types/Coach";
 import { Match } from "@/types/Match";
+import { PressConference } from "@/types/PressConference";
+import { TrainingSession } from "@/types/TrainingSession";
 import ArticleTable from "@/components/admin/ArticleTable";
 import VideoTable from "@/components/admin/VideoTable";
 import PhotoTable from "@/components/admin/PhotoTable";
 import PlayerTable from "@/components/admin/PlayerTable";
 import CoachTable from "@/components/admin/CoachTable";
 import MatchTable from "@/components/admin/MatchTable";
+import PressConferenceTable from "@/components/admin/PressConferenceTable";
+import TrainingSessionTable from "@/components/admin/TrainingSessionTable";
 import SettingsDashboard from "@/components/admin/SettingsDashboard";
 import { DataSynchronizer } from "@/components/admin/DataSynchronizer";
 import { useNavigate } from "react-router-dom";
@@ -48,6 +53,8 @@ interface StatsData {
   publishedArticles: number;
   totalVideos: number;
   upcomingMatches: number;
+  totalPressConferences: number;
+  totalTrainingSessions: number;
 }
 
 const Admin = () => {
@@ -59,6 +66,8 @@ const Admin = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [coaches, setCoaches] = useState<Coach[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
+  const [pressConferences, setPressConferences] = useState<PressConference[]>([]);
+  const [trainingSessions, setTrainingSessions] = useState<TrainingSession[]>([]);
   const [stats, setStats] = useState<StatsData>({
     totalPlayers: 0,
     activePlayers: 0,
@@ -66,6 +75,8 @@ const Admin = () => {
     publishedArticles: 0,
     totalVideos: 0,
     upcomingMatches: 0,
+    totalPressConferences: 0,
+    totalTrainingSessions: 0,
   });
 
   useEffect(() => {
@@ -141,12 +152,40 @@ const Admin = () => {
       }
     };
 
+    const fetchPressConferences = async () => {
+      const { data, error } = await supabase
+        .from('press_conferences')
+        .select('*')
+        .order('conference_date', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching press conferences:", error);
+      } else {
+        setPressConferences(data || []);
+      }
+    };
+
+    const fetchTrainingSessions = async () => {
+      const { data, error } = await supabase
+        .from('training_sessions')
+        .select('*')
+        .order('training_date', { ascending: false });
+
+      if (error) {
+        console.error("Error fetching training sessions:", error);
+      } else {
+        setTrainingSessions(data || []);
+      }
+    };
+
     fetchArticles();
     fetchVideos();
     fetchPhotos();
     fetchPlayers();
     fetchCoaches();
     fetchMatches();
+    fetchPressConferences();
+    fetchTrainingSessions();
   }, []);
 
   useEffect(() => {
@@ -157,8 +196,10 @@ const Admin = () => {
       publishedArticles: articles.filter(a => a.is_published).length,
       totalVideos: videos.length,
       upcomingMatches: matches.filter(m => m.status === 'upcoming').length,
+      totalPressConferences: pressConferences.length,
+      totalTrainingSessions: trainingSessions.length,
     });
-  }, [players, coaches, articles, videos, matches]);
+  }, [players, coaches, articles, videos, matches, pressConferences, trainingSessions]);
 
   const renderDashboard = () => (
     <div className="space-y-6">
@@ -313,6 +354,26 @@ const Admin = () => {
     </div>
   );
 
+  const renderPressConferences = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Gestion des Conférences de Presse</h2>
+      <PressConferenceTable 
+        pressConferences={pressConferences} 
+        setPressConferences={setPressConferences} 
+      />
+    </div>
+  );
+
+  const renderTrainingSessions = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Gestion des Séances d'Entraînement</h2>
+      <TrainingSessionTable 
+        trainingSessions={trainingSessions} 
+        setTrainingSessions={setTrainingSessions} 
+      />
+    </div>
+  );
+
   const renderStats = () => (
     <div>
       <h2 className="text-2xl font-bold mb-4">Statistiques</h2>
@@ -361,7 +422,7 @@ const Admin = () => {
         <AdminMenuBar />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-9">
+          <TabsList className="grid w-full grid-cols-11">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
@@ -390,6 +451,14 @@ const Admin = () => {
               <Calendar className="h-4 w-4" />
               Matchs
             </TabsTrigger>
+            <TabsTrigger value="press" className="flex items-center gap-2">
+              <Mic className="h-4 w-4" />
+              Conférences
+            </TabsTrigger>
+            <TabsTrigger value="training" className="flex items-center gap-2">
+              <PlayCircle className="h-4 w-4" />
+              Entraînements
+            </TabsTrigger>
             <TabsTrigger value="stats" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Statistiques
@@ -407,6 +476,8 @@ const Admin = () => {
           <TabsContent value="players">{renderPlayers()}</TabsContent>
           <TabsContent value="coaches">{renderCoaches()}</TabsContent>
           <TabsContent value="matches">{renderMatches()}</TabsContent>
+          <TabsContent value="press">{renderPressConferences()}</TabsContent>
+          <TabsContent value="training">{renderTrainingSessions()}</TabsContent>
           <TabsContent value="stats">{renderStats()}</TabsContent>
           <TabsContent value="settings">{renderSettings()}</TabsContent>
         </Tabs>
