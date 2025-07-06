@@ -22,29 +22,59 @@ export function HeroSection() {
         ></div>
         
         <div className="madrid-container py-20 md:py-32 relative z-10">
-          <motion.div 
-            className="max-w-3xl"
-            initial={{ x: -50 }}
-            animate={{ x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6">
-              <span className="text-madrid-gold">Bienvenue sur </span>
-              <br />
-              HALA<span className="text-white">MADRID</span><span className="text-madrid-gold">TV</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-100 mb-8">
-              Votre chaîne officielle d'actualités, de vidéos et d'informations sur le Real Madrid
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Button asChild className="bg-madrid-gold text-black hover:bg-yellow-400 font-bold py-2 px-6 text-lg transform transition hover:scale-105">
-                <Link to="/news">Dernières Actualités</Link>
-              </Button>
-              <Button asChild variant="outline" className="bg-transparent text-white border-white hover:bg-white/10 font-bold py-2 px-6 text-lg transform transition hover:scale-105">
-                <Link to="/videos">Voir les Vidéos</Link>
-              </Button>
-            </div>
-          </motion.div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Contenu textuel à gauche */}
+            <motion.div 
+              className="max-w-3xl lg:max-w-none"
+              initial={{ x: -50 }}
+              animate={{ x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6">
+                <span className="text-madrid-gold">Bienvenue sur </span>
+                <br />
+                HALA<span className="text-white">MADRID</span><span className="text-madrid-gold">TV</span>
+              </h1>
+              <p className="text-xl md:text-2xl text-gray-100 mb-8">
+                Votre chaîne officielle d'actualités, de vidéos et d'informations sur le Real Madrid
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Button asChild className="bg-madrid-gold text-black hover:bg-yellow-400 font-bold py-2 px-6 text-lg transform transition hover:scale-105">
+                  <Link to="/news">Dernières Actualités</Link>
+                </Button>
+                <Button asChild variant="outline" className="bg-transparent text-white border-white hover:bg-white/10 font-bold py-2 px-6 text-lg transform transition hover:scale-105">
+                  <Link to="/videos">Voir les Vidéos</Link>
+                </Button>
+              </div>
+            </motion.div>
+
+            {/* Vidéo de présentation à droite */}
+            <motion.div 
+              className="relative"
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <div className="bg-black/20 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                <h3 className="text-white text-xl font-bold mb-4 text-center">
+                  Découvrez HALA MADRID TV
+                </h3>
+                <div className="aspect-video rounded-lg overflow-hidden shadow-2xl">
+                  <iframe
+                    src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                    title="Présentation HALA MADRID TV"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full"
+                  ></iframe>
+                </div>
+                <p className="text-gray-200 text-sm mt-3 text-center">
+                  Plongez dans l'univers du Real Madrid avec nos contenus exclusifs
+                </p>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </motion.div>
       
