@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { 
@@ -98,6 +97,30 @@ export const AdminStatsOverview = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Nouvel onglet pour la gestion des statistiques */}
+      <Card className="transform transition-all hover:shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-madrid-blue" />
+            Gestion des Statistiques
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4">
+            <Button 
+              onClick={() => window.location.hash = '#stats-manager'}
+              className="w-full md:w-auto"
+            >
+              Modifier les Statistiques des Joueurs
+            </Button>
+          </div>
+          <p className="text-sm text-gray-600">
+            Cliquez ci-dessus pour accéder à la gestion avancée des statistiques des joueurs,
+            matchs et de l'équipe. Vous pourrez ajouter, modifier et supprimer les données statistiques.
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Statistiques détaillées */}
       <Card className="transform transition-all hover:shadow-lg">

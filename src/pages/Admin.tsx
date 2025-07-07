@@ -9,6 +9,7 @@ import {
 import { QuickStatsCard } from "@/components/admin/QuickStatsCard";
 import { AdminMenuBar } from "@/components/layout/AdminMenuBar";
 import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
+import { AdminStatsManager } from "@/components/admin/AdminStatsManager";
 import { 
   FileText, 
   Video, 
@@ -378,7 +379,11 @@ const Admin = () => {
   const renderStats = () => (
     <div>
       <h2 className="text-2xl font-bold mb-6">Statistiques en Temps Réel</h2>
-      <AdminStatsOverview />
+      {window.location.hash === '#stats-manager' ? (
+        <AdminStatsManager />
+      ) : (
+        <AdminStatsOverview />
+      )}
     </div>
   );
 
