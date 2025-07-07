@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/tabs";
 import { QuickStatsCard } from "@/components/admin/QuickStatsCard";
 import { AdminMenuBar } from "@/components/layout/AdminMenuBar";
+import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
 import { 
   FileText, 
   Video, 
@@ -376,13 +377,8 @@ const Admin = () => {
 
   const renderStats = () => (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Statistiques</h2>
-      <p>Nombre total de joueurs: {stats.totalPlayers}</p>
-      <p>Nombre de joueurs actifs: {stats.activePlayers}</p>
-      <p>Nombre total d'entraîneurs: {stats.totalCoaches}</p>
-      <p>Nombre d'articles publiés: {stats.publishedArticles}</p>
-      <p>Nombre total de vidéos: {stats.totalVideos}</p>
-      <p>Nombre de matchs à venir: {stats.upcomingMatches}</p>
+      <h2 className="text-2xl font-bold mb-6">Statistiques en Temps Réel</h2>
+      <AdminStatsOverview />
     </div>
   );
 
