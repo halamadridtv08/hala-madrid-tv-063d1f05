@@ -83,10 +83,10 @@
 
 @layer components {
   .madrid-container {
-    @apply container px-4 mx-auto max-w-7xl;
+    @apply container px-3 sm:px-4 mx-auto max-w-7xl;
   }
   .section-title {
-    @apply text-2xl md:text-3xl lg:text-4xl font-bold mb-4 md:mb-6 pb-2 border-b-2 border-madrid-gold inline-block;
+    @apply text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold mb-3 sm:mb-4 md:mb-6 pb-2 border-b-2 border-madrid-gold inline-block;
   }
   .card-hover {
     @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;

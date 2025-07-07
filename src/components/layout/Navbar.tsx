@@ -50,16 +50,16 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 shadow-sm">
-      <div className="madrid-container py-4 flex justify-between items-center">
-        <Link to="/" className="flex items-center gap-2" onClick={closeMenu}>
+      <div className="madrid-container py-2 md:py-4 flex justify-between items-center">
+        <Link to="/" className="flex items-center gap-1 md:gap-2" onClick={closeMenu}>
           <div className="relative">
             <img 
               src="/lovable-uploads/b475ad56-9770-4b40-a504-a1e193850dc8.png" 
               alt="Hala Madrid Logo" 
-              className="h-12 w-12 object-contain"
+              className="h-8 w-8 md:h-12 md:w-12 object-contain"
             />
           </div>
-          <span className="font-montserrat font-bold text-xl md:text-2xl tracking-tight">
+          <span className="font-montserrat font-bold text-sm sm:text-lg md:text-xl lg:text-2xl tracking-tight">
             <span className="text-madrid-blue">HALA</span>
             <span className="text-black dark:text-white">MADRID</span>
             <span className="text-madrid-gold">TV</span>
@@ -67,12 +67,12 @@ export function Navbar() {
         </Link>
 
         {/* Search Bar for Desktop */}
-        <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center flex-1 mx-8">
+        <form onSubmit={handleSearchSubmit} className="hidden lg:flex items-center flex-1 mx-8">
           <div className="relative w-full max-w-md">
             <input
               type="text"
               placeholder="Rechercher joueurs, matchs, actualités..."
-              className="w-full pl-4 pr-10 py-2 border border-gray-300 dark:border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-madrid-blue dark:bg-gray-800 dark:text-white"
+              className="w-full pl-4 pr-10 py-2 border border-gray-300 dark:border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-madrid-blue dark:bg-gray-800 dark:text-white text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -80,58 +80,60 @@ export function Navbar() {
               type="submit" 
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-madrid-blue"
             >
-              <Search className="h-5 w-5" />
+              <Search className="h-4 w-4" />
             </button>
           </div>
         </form>
 
         {/* Mobile Menu Button */}
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-1 md:gap-2 md:hidden">
           {isAdmin && (
             <div className="relative">
               <Button 
                 variant="ghost" 
-                size="icon" 
+                size="sm"
                 onClick={toggleAddMenu}
-                className="relative text-madrid-blue"
+                className="relative text-madrid-blue p-1"
                 aria-label="Ajouter du contenu"
               >
-                <Plus className="h-5 w-5" />
+                <Plus className="h-4 w-4" />
               </Button>
               {isAddMenuOpen && <AddContentMenu onClose={() => setIsAddMenuOpen(false)} />}
             </div>
           )}
           <ThemeToggle />
-          <AuthButtons />
-          <Button variant="ghost" size="icon" onClick={toggleMenu}>
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          <div className="hidden xs:block">
+            <AuthButtons />
+          </div>
+          <Button variant="ghost" size="sm" onClick={toggleMenu} className="p-1">
+            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
 
         {/* Desktop Menu */}
-        <nav className="hidden md:flex items-center gap-5">
+        <nav className="hidden md:flex items-center gap-3 lg:gap-5">
           <NavigationMenu>
-            <NavigationMenuList>
+            <NavigationMenuList className="gap-1 lg:gap-2">
               <NavigationMenuItem>
-                <Link to="/" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
+                <Link to="/" className="text-foreground hover:text-madrid-blue font-medium transition-colors text-sm lg:text-base px-2 py-1">
                   Accueil
                 </Link>
               </NavigationMenuItem>
               
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Actualités</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-sm lg:text-base px-2 py-1">Actualités</NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <ul className="grid gap-3 p-4 w-[400px] md:grid-cols-2">
+                  <ul className="grid gap-3 p-4 w-[320px] md:w-[400px] md:grid-cols-2">
                     <li className="row-span-3">
                       <NavigationMenuLink asChild>
                         <Link
                           to="/news"
-                          className="flex flex-col h-full w-full justify-between rounded-md bg-gradient-to-b from-madrid-blue/20 to-madrid-gold/20 p-6 no-underline hover:shadow-md"
+                          className="flex flex-col h-full w-full justify-between rounded-md bg-gradient-to-b from-madrid-blue/20 to-madrid-gold/20 p-4 lg:p-6 no-underline hover:shadow-md"
                         >
-                          <div className="mb-2 mt-4 text-lg font-medium">
+                          <div className="mb-2 mt-4 text-base lg:text-lg font-medium">
                             Dernières Actualités
                           </div>
-                          <p className="text-sm leading-tight text-muted-foreground">
+                          <p className="text-xs lg:text-sm leading-tight text-muted-foreground">
                             Découvrez les dernières nouvelles concernant le Real Madrid.
                           </p>
                         </Link>
@@ -143,8 +145,8 @@ export function Navbar() {
                           to="/press"
                           className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                         >
-                          <div className="text-sm font-medium leading-none">Conférences de Presse</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          <div className="text-xs lg:text-sm font-medium leading-none">Conférences de Presse</div>
+                          <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
                             Les déclarations des joueurs et du staff.
                           </p>
                         </Link>
@@ -156,8 +158,8 @@ export function Navbar() {
                           to="/training"
                           className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                         >
-                          <div className="text-sm font-medium leading-none">Entraînements</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          <div className="text-xs lg:text-sm font-medium leading-none">Entraînements</div>
+                          <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
                             Les séances d'entraînement de l'équipe.
                           </p>
                         </Link>
@@ -168,30 +170,30 @@ export function Navbar() {
               </NavigationMenuItem>
               
               <NavigationMenuItem>
-                <Link to="/players" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  Effectif
+                <Link to="/players" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1 text-sm lg:text-base px-2 py-1">
+                  <Users className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden lg:inline">Effectif</span>
                 </Link>
               </NavigationMenuItem>
               
               <NavigationMenuItem>
-                <Link to="/matches" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
+                <Link to="/matches" className="text-foreground hover:text-madrid-blue font-medium transition-colors text-sm lg:text-base px-2 py-1">
                   Matchs
                 </Link>
               </NavigationMenuItem>
               
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Média</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-sm lg:text-base px-2 py-1">Média</NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                  <ul className="grid w-[320px] gap-3 p-4 md:w-[400px] md:grid-cols-2 lg:w-[500px]">
                     <li>
                       <NavigationMenuLink asChild>
                         <Link
                           to="/training"
                           className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                         >
-                          <div className="text-sm font-medium leading-none">Entraînements</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          <div className="text-xs lg:text-sm font-medium leading-none">Entraînements</div>
+                          <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
                             Vidéos des séances d'entraînement
                           </p>
                         </Link>
@@ -203,8 +205,8 @@ export function Navbar() {
                           to="/press"
                           className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                         >
-                          <div className="text-sm font-medium leading-none">Conférences</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          <div className="text-xs lg:text-sm font-medium leading-none">Conférences</div>
+                          <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
                             Conférences de presse du staff et des joueurs
                           </p>
                         </Link>
@@ -216,8 +218,8 @@ export function Navbar() {
                           to="/kits"
                           className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                         >
-                          <div className="text-sm font-medium leading-none">Maillots</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          <div className="text-xs lg:text-sm font-medium leading-none">Maillots</div>
+                          <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
                             Découvrez les maillots du Real Madrid
                           </p>
                         </Link>
@@ -228,14 +230,14 @@ export function Navbar() {
               </NavigationMenuItem>
               
               <NavigationMenuItem>
-                <Link to="/calendar" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  Calendrier
+                <Link to="/calendar" className="text-foreground hover:text-madrid-blue font-medium transition-colors flex items-center gap-1 text-sm lg:text-base px-2 py-1">
+                  <Calendar className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden lg:inline">Calendrier</span>
                 </Link>
               </NavigationMenuItem>
               
               <NavigationMenuItem>
-                <Link to="/stats" className="text-foreground hover:text-madrid-blue font-medium transition-colors">
+                <Link to="/stats" className="text-foreground hover:text-madrid-blue font-medium transition-colors text-sm lg:text-base px-2 py-1">
                   Stats
                 </Link>
               </NavigationMenuItem>
@@ -246,12 +248,12 @@ export function Navbar() {
             <div className="relative">
               <Button 
                 variant="ghost" 
-                size="icon"
+                size="sm"
                 onClick={toggleAddMenu}
-                className="relative text-madrid-blue hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+                className="relative text-madrid-blue hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors p-2"
                 aria-label="Ajouter du contenu"
               >
-                <Plus className="h-5 w-5" />
+                <Plus className="h-4 w-4" />
                 <span className="sr-only">Ajouter du contenu</span>
               </Button>
               {isAddMenuOpen && <AddContentMenu onClose={() => setIsAddMenuOpen(false)} />}
@@ -265,13 +267,13 @@ export function Navbar() {
         {/* Mobile Menu Dropdown */}
         {isMenuOpen && (
           <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-900 shadow-md md:hidden z-50">
-            <div className="p-4">
+            <div className="p-3">
               <form onSubmit={handleSearchSubmit} className="mb-4">
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="Rechercher..."
-                    className="w-full pl-4 pr-10 py-2 border border-gray-300 dark:border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-madrid-blue dark:bg-gray-800 dark:text-white"
+                    className="w-full pl-4 pr-10 py-2 border border-gray-300 dark:border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-madrid-blue dark:bg-gray-800 dark:text-white text-sm"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -279,75 +281,79 @@ export function Navbar() {
                     type="submit" 
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-madrid-blue"
                   >
-                    <Search className="h-5 w-5" />
+                    <Search className="h-4 w-4" />
                   </button>
                 </div>
               </form>
               
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <Link 
                   to="/" 
-                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 text-sm"
                   onClick={closeMenu}
                 >
                   Accueil
                 </Link>
                 <Link 
                   to="/news" 
-                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2 text-sm"
                   onClick={closeMenu}
                 >
                   <FileText className="h-4 w-4" /> Actualités
                 </Link>
                 <Link 
                   to="/players" 
-                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2 text-sm"
                   onClick={closeMenu}
                 >
                   <Users className="h-4 w-4" /> Effectif
                 </Link>
                 <Link 
                   to="/matches" 
-                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 text-sm"
                   onClick={closeMenu}
                 >
                   Matchs
                 </Link>
                 <Link 
                   to="/training" 
-                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2 text-sm"
                   onClick={closeMenu}
                 >
                   <Video className="h-4 w-4" /> Entrainement
                 </Link>
                 <Link 
                   to="/press" 
-                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 text-sm"
                   onClick={closeMenu}
                 >
                   Conférences
                 </Link>
                 <Link 
                   to="/kits" 
-                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2 text-sm"
                   onClick={closeMenu}
                 >
                   <Image className="h-4 w-4" /> Maillots
                 </Link>
                 <Link 
                   to="/calendar" 
-                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2"
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2 text-sm"
                   onClick={closeMenu}
                 >
                   <Calendar className="h-4 w-4" /> Calendrier
                 </Link>
                 <Link 
                   to="/stats" 
-                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2"
+                  className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 text-sm"
                   onClick={closeMenu}
                 >
                   Stats
                 </Link>
+              </div>
+              
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 block xs:hidden">
+                <AuthButtons />
               </div>
             </div>
           </div>
