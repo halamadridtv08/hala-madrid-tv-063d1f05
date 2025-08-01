@@ -47,6 +47,20 @@ const CalendarPage = () => {
     return matchDate.toDateString() === selectedDate.toDateString();
   });
 
+  // Get next upcoming match
+  const nextMatch = matches.find(match => {
+    const matchDate = new Date(match.match_date);
+    return matchDate > new Date() && (match.status === 'upcoming' || match.status === 'live');
+  });
+
+  // Get matches for current month
+  const currentMonth = selectedDate || new Date();
+  const monthMatches = matches.filter(match => {
+    const matchDate = new Date(match.match_date);
+    return matchDate.getMonth() === currentMonth.getMonth() && 
+           matchDate.getFullYear() === currentMonth.getFullYear();
+  });
+
   // Get dates that have matches for calendar highlighting
   const matchDates = matches.map(match => new Date(match.match_date));
 
@@ -109,6 +123,63 @@ const CalendarPage = () => {
             </p>
           </div>
 
+          {/* Section Prochain Match */}
+          {nextMatch && (
+            <div className="mb-8">
+              <Card className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+                <CardHeader>
+                  <CardTitle className="text-xl">Prochain Match</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-2">
+                        {nextMatch.home_team_logo && (
+                          <img 
+                            src={nextMatch.home_team_logo} 
+                            alt={nextMatch.home_team}
+                            className="w-12 h-12 object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        )}
+                        <span className="font-semibold text-lg">{nextMatch.home_team}</span>
+                      </div>
+                      <span className="text-2xl font-bold">VS</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-lg">{nextMatch.away_team}</span>
+                        {nextMatch.away_team_logo && (
+                          <img 
+                            src={nextMatch.away_team_logo} 
+                            alt={nextMatch.away_team}
+                            className="w-12 h-12 object-contain"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-semibold">
+                        {new Date(nextMatch.match_date).toLocaleDateString('fr-FR', {
+                          weekday: 'long',
+                          day: 'numeric',
+                          month: 'long'
+                        })}
+                      </div>
+                      <div className="text-xl font-bold">{formatTime(nextMatch.match_date)}</div>
+                      {nextMatch.venue && (
+                        <div className="text-sm opacity-90">{nextMatch.venue}</div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Calendrier */}
             <div className="lg:col-span-1">
@@ -143,36 +214,60 @@ const CalendarPage = () => {
               </Card>
             </div>
 
-            {/* Liste des matchs */}
+            {/* Liste des matchs du mois */}
             <div className="lg:col-span-2">
               <Card>
                 <CardHeader>
                   <CardTitle>
-                    {selectedDate ? (
-                      `Matchs du ${selectedDate.toLocaleDateString('fr-FR', {
-                        weekday: 'long',
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                      })}`
-                    ) : (
-                      'Tous les matchs'
-                    )}
+                    Matchs du mois de {currentMonth.toLocaleDateString('fr-FR', {
+                      month: 'long',
+                      year: 'numeric'
+                    })}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {selectedDate && matchesForSelectedDate.length > 0 ? (
+                  {monthMatches.length > 0 ? (
                     <div className="space-y-4">
-                      {matchesForSelectedDate.map((match) => (
-                        <div key={match.id} className="p-4 border rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-semibold text-lg">
-                              {match.home_team} vs {match.away_team}
-                            </h3>
+                      {monthMatches.map((match) => (
+                        <div key={match.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-2">
+                                {match.home_team_logo && (
+                                  <img 
+                                    src={match.home_team_logo} 
+                                    alt={match.home_team}
+                                    className="w-8 h-8 object-contain"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                    }}
+                                  />
+                                )}
+                                <span className="font-semibold">{match.home_team}</span>
+                              </div>
+                              <span className="text-gray-500">vs</span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold">{match.away_team}</span>
+                                {match.away_team_logo && (
+                                  <img 
+                                    src={match.away_team_logo} 
+                                    alt={match.away_team}
+                                    className="w-8 h-8 object-contain"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                    }}
+                                  />
+                                )}
+                              </div>
+                            </div>
                             {getStatusBadge(match.status)}
                           </div>
                           
                           <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
+                            <div className="flex items-center gap-1">
+                              <CalendarIcon className="h-4 w-4" />
+                              {new Date(match.match_date).toLocaleDateString('fr-FR')}
+                            </div>
                             <div className="flex items-center gap-1">
                               <Clock className="h-4 w-4" />
                               {formatTime(match.match_date)}
@@ -196,46 +291,10 @@ const CalendarPage = () => {
                         </div>
                       ))}
                     </div>
-                  ) : selectedDate ? (
+                  ) : (
                     <div className="text-center py-8 text-gray-500">
                       <CalendarIcon className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                      <p>Aucun match programmé pour cette date</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {matches.slice(0, 10).map((match) => (
-                        <div key={match.id} className="p-4 border rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-semibold text-lg">
-                              {match.home_team} vs {match.away_team}
-                            </h3>
-                            {getStatusBadge(match.status)}
-                          </div>
-                          
-                          <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
-                            <div className="flex items-center gap-1">
-                              <CalendarIcon className="h-4 w-4" />
-                              {new Date(match.match_date).toLocaleDateString('fr-FR')}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              {formatTime(match.match_date)}
-                            </div>
-                            {match.venue && (
-                              <div className="flex items-center gap-1">
-                                <MapPin className="h-4 w-4" />
-                                {match.venue}
-                              </div>
-                            )}
-                          </div>
-
-                          {match.status === 'finished' && (
-                            <div className="mt-2 text-lg font-bold">
-                              Score: {match.home_score} - {match.away_score}
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                      <p>Aucun match programmé pour ce mois</p>
                     </div>
                   )}
                 </CardContent>
