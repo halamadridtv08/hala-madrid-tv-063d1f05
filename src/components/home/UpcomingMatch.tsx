@@ -101,8 +101,21 @@ export function UpcomingMatch() {
             <div className="p-6 md:p-8">
               <div className="flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0">
                 <div className="flex flex-col items-center">
-                  <div className="w-20 h-20 bg-madrid-blue rounded-full flex items-center justify-center text-white font-bold text-xl">
-                    {upcomingMatch.home_team.slice(0, 2).toUpperCase()}
+                  <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden bg-white">
+                    {upcomingMatch.home_team_logo ? (
+                      <img 
+                        src={upcomingMatch.home_team_logo} 
+                        alt={`Logo ${upcomingMatch.home_team}`}
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-madrid-blue rounded-full flex items-center justify-center text-white font-bold text-xl">
+                        {upcomingMatch.home_team.slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
                   </div>
                   <h3 className="text-xl font-bold mt-2">{upcomingMatch.home_team}</h3>
                 </div>
@@ -126,8 +139,21 @@ export function UpcomingMatch() {
                 </div>
                 
                 <div className="flex flex-col items-center">
-                  <div className="w-20 h-20 bg-gray-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                    {upcomingMatch.away_team.slice(0, 2).toUpperCase()}
+                  <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden bg-white">
+                    {upcomingMatch.away_team_logo ? (
+                      <img 
+                        src={upcomingMatch.away_team_logo} 
+                        alt={`Logo ${upcomingMatch.away_team}`}
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                        {upcomingMatch.away_team.slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
                   </div>
                   <h3 className="text-xl font-bold mt-2">{upcomingMatch.away_team}</h3>
                 </div>
