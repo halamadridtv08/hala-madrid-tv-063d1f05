@@ -11,23 +11,11 @@ import { Edit, Trophy, User, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Coach } from "@/types/Coach";
-
-interface Achievement {
-  id: string;
-  title: string;
-  year: string;
-  description?: string;
-}
+import { Achievement } from "@/types/Achievement";
 
 export const MainCoachManager = () => {
   const [mainCoach, setMainCoach] = useState<Coach | null>(null);
-  const [achievements, setAchievements] = useState<Achievement[]>([
-    { id: "1", title: "Ligue des Champions", year: "2022, 2024", description: "Victoires en Champions League" },
-    { id: "2", title: "Liga", year: "2022, 2024", description: "Championnats d'Espagne" },
-    { id: "3", title: "Supercoupe d'Espagne", year: "2022, 2024", description: "Trophées nationaux" },
-    { id: "4", title: "Supercoupe d'Europe", year: "2022", description: "Victoire européenne" },
-    { id: "5", title: "Coupe du Monde des Clubs FIFA", year: "2022", description: "Championnat du monde des clubs" }
-  ]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
 
   const [isCoachDialogOpen, setIsCoachDialogOpen] = useState(false);
   const [isAchievementDialogOpen, setIsAchievementDialogOpen] = useState(false);
@@ -48,7 +36,7 @@ export const MainCoachManager = () => {
     description: ""
   });
 
-  // Charger l'entraîneur principal depuis Supabase
+  // Charger l'entraîneur principal et ses titres depuis Supabase
   useEffect(() => {
     const fetchMainCoach = async () => {
       try {
@@ -72,6 +60,9 @@ export const MainCoachManager = () => {
             experience_years: data.experience_years?.toString() || "",
             image_url: data.image_url || ""
           });
+          
+          // Charger les titres de cet entraîneur
+          await fetchAchievements(data.id);
         }
       } catch (error) {
         console.error('Erreur lors du chargement de l\'entraîneur principal:', error);
@@ -81,6 +72,28 @@ export const MainCoachManager = () => {
 
     fetchMainCoach();
   }, []);
+
+  const fetchAchievements = async (coachId?: string) => {
+    try {
+      let query = supabase
+        .from('achievements')
+        .select('*')
+        .eq('category', 'club')
+        .order('year', { ascending: false });
+
+      if (coachId) {
+        query = query.eq('coach_id', coachId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setAchievements(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des titres:', error);
+      toast.error("Erreur lors du chargement des titres");
+    }
+  };
 
   const handleEditCoach = () => {
     if (mainCoach) {
@@ -162,36 +175,69 @@ export const MainCoachManager = () => {
     setIsAchievementDialogOpen(true);
   };
 
-  const handleSaveAchievement = () => {
+  const handleSaveAchievement = async () => {
     if (!achievementForm.title || !achievementForm.year) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
 
-    if (editingAchievement) {
-      setAchievements(prev => prev.map(achievement => 
-        achievement.id === editingAchievement.id 
-          ? { ...achievement, ...achievementForm }
-          : achievement
-      ));
-      toast.success("Titre modifié avec succès");
-    } else {
-      const newAchievement: Achievement = {
-        id: Date.now().toString(),
-        ...achievementForm
-      };
-      setAchievements(prev => [...prev, newAchievement]);
-      toast.success("Titre ajouté avec succès");
-    }
+    try {
+      if (editingAchievement) {
+        // Mettre à jour le titre existant
+        const { error } = await supabase
+          .from('achievements')
+          .update({
+            title: achievementForm.title,
+            year: achievementForm.year,
+            description: achievementForm.description || null
+          })
+          .eq('id', editingAchievement.id);
 
-    setIsAchievementDialogOpen(false);
-    setEditingAchievement(null);
+        if (error) throw error;
+        toast.success("Titre modifié avec succès");
+      } else {
+        // Créer un nouveau titre
+        const { error } = await supabase
+          .from('achievements')
+          .insert([{
+            title: achievementForm.title,
+            year: achievementForm.year,
+            description: achievementForm.description || null,
+            coach_id: mainCoach?.id || null,
+            category: 'club'
+          }]);
+
+        if (error) throw error;
+        toast.success("Titre ajouté avec succès");
+      }
+
+      // Recharger les titres
+      await fetchAchievements(mainCoach?.id);
+      setIsAchievementDialogOpen(false);
+      setEditingAchievement(null);
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde du titre:', error);
+      toast.error("Erreur lors de la sauvegarde du titre");
+    }
   };
 
-  const handleDeleteAchievement = (id: string) => {
-    if (confirm("Êtes-vous sûr de vouloir supprimer ce titre ?")) {
-      setAchievements(prev => prev.filter(achievement => achievement.id !== id));
+  const handleDeleteAchievement = async (id: string) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer ce titre ?")) return;
+
+    try {
+      const { error } = await supabase
+        .from('achievements')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Recharger les titres
+      await fetchAchievements(mainCoach?.id);
       toast.success("Titre supprimé avec succès");
+    } catch (error) {
+      console.error('Erreur lors de la suppression du titre:', error);
+      toast.error("Erreur lors de la suppression du titre");
     }
   };
 
