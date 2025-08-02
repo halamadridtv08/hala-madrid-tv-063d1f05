@@ -16,6 +16,7 @@ const CalendarPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
   useEffect(() => {
     fetchMatches();
@@ -54,7 +55,6 @@ const CalendarPage = () => {
   });
 
   // Get matches for current month
-  const currentMonth = selectedDate || new Date();
   const monthMatches = matches.filter(match => {
     const matchDate = new Date(match.match_date);
     return matchDate.getMonth() === currentMonth.getMonth() && 
@@ -195,6 +195,8 @@ const CalendarPage = () => {
                     mode="single"
                     selected={selectedDate}
                     onSelect={setSelectedDate}
+                    month={currentMonth}
+                    onMonthChange={setCurrentMonth}
                     modifiers={{
                       hasMatch: matchDates
                     }}
@@ -214,21 +216,30 @@ const CalendarPage = () => {
               </Card>
             </div>
 
-            {/* Liste des matchs du mois */}
+            {/* Liste des matchs de la date sélectionnée */}
             <div className="lg:col-span-2">
               <Card>
                 <CardHeader>
                   <CardTitle>
-                    Matchs du mois de {currentMonth.toLocaleDateString('fr-FR', {
-                      month: 'long',
-                      year: 'numeric'
-                    })}
+                    {selectedDate ? (
+                      `Matchs du ${selectedDate.toLocaleDateString('fr-FR', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      })}`
+                    ) : (
+                      `Matchs du mois de ${currentMonth.toLocaleDateString('fr-FR', {
+                        month: 'long',
+                        year: 'numeric'
+                      })}`
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {monthMatches.length > 0 ? (
+                  {(selectedDate ? matchesForSelectedDate : monthMatches).length > 0 ? (
                     <div className="space-y-4">
-                      {monthMatches.map((match) => (
+                      {(selectedDate ? matchesForSelectedDate : monthMatches).map((match) => (
                         <div key={match.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-4">
@@ -294,7 +305,12 @@ const CalendarPage = () => {
                   ) : (
                     <div className="text-center py-8 text-gray-500">
                       <CalendarIcon className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                      <p>Aucun match programmé pour ce mois</p>
+                      <p>
+                        {selectedDate 
+                          ? "Aucun match programmé pour cette date" 
+                          : "Aucun match programmé pour ce mois"
+                        }
+                      </p>
                     </div>
                   )}
                 </CardContent>
