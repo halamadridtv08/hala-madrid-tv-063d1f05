@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          category: string | null
+          coach_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          updated_at: string
+          year: string
+        }
+        Insert: {
+          category?: string | null
+          coach_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          year: string
+        }
+        Update: {
+          category?: string | null
+          coach_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          year?: string
+        }
+        Relationships: []
+      }
       admins: {
         Row: {
           created_at: string | null
