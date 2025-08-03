@@ -10,6 +10,7 @@ import { Search, User, Users, X, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
 import { Coach } from "@/types/Coach";
+import { Achievement } from "@/types/Achievement";
 import { useNavigate } from "react-router-dom";
 
 const Players = () => {
@@ -19,6 +20,7 @@ const Players = () => {
   const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [coachAchievements, setCoachAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,6 +48,26 @@ const Players = () => {
           console.error('Error fetching coaches:', coachesError);
         } else {
           setCoaches(coachesData || []);
+          
+          // Find main coach and fetch their achievements
+          const mainCoach = coachesData?.find(coach => 
+            coach.role.toLowerCase().includes('principal') || 
+            coach.role.toLowerCase().includes('entraîneur') ||
+            coach.name.toLowerCase().includes('ancelotti')
+          ) || coachesData?.[0];
+
+          if (mainCoach) {
+            const { data: achievementsData, error: achievementsError } = await supabase
+              .from('achievements')
+              .select('*')
+              .eq('coach_id', mainCoach.id);
+
+            if (achievementsError) {
+              console.error('Error fetching achievements:', achievementsError);
+            } else {
+              setCoachAchievements(achievementsData || []);
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -196,6 +218,7 @@ const Players = () => {
                   birthDate="10 juin 1959"
                   atClubSince="2021"
                   image={mainCoach.image_url}
+                  achievements={coachAchievements}
                 />
               )}
             </div>

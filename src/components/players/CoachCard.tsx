@@ -9,7 +9,7 @@ interface CoachCardProps {
   name: string;
   title: string;
   image?: string;
-  achievements?: string[];
+  achievements?: { title: string; year: string }[];
   nationality?: string;
   birthDate?: string;
   atClubSince?: string;
@@ -26,10 +26,10 @@ export const CoachCard = ({
 }: CoachCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
   
-  // Default coach image and data for Carlo Ancelotti
+  // Default coach image
   const defaultImage = "https://images2.minutemediacdn.com/image/upload/c_fill,w_720,ar_16:9,f_auto,q_auto,g_auto/shape/cover/sport/FBL-ESP-REALMADRID-ANCELOTTI-7eead8584a27073b747c5b33954ea6c1.jpg";
   const coachImage = image || defaultImage;
-  const coachAchievements = achievements || ["Champion d'Europe 2022", "Champion d'Europe 2024", "Champion d'Espagne 2022", "Champion d'Espagne 2024"];
+  const coachAchievements = achievements || [];
   
   const toggleDetails = () => {
     setShowDetails(!showDetails);
@@ -61,7 +61,7 @@ export const CoachCard = ({
               {coachAchievements.slice(0, 2).map((achievement, index) => (
                 <div key={index} className="text-white font-semibold text-center block w-full md:inline md:w-auto md:px-1 flex items-center justify-center gap-1">
                   <Trophy className="h-4 w-4 text-madrid-gold" />
-                  <span>{achievement}</span>
+                  <span>{achievement.title} ({achievement.year})</span>
                 </div>
               ))}
               {coachAchievements.length > 2 && (
@@ -85,16 +85,17 @@ export const CoachCard = ({
             Palmarès avec le Real Madrid
           </h4>
           
-          <ScrollArea className="h-40">
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>Ligue des Champions (2022, 2024)</li>
-              <li>Liga (2022, 2024)</li>
-              <li>Supercoupe d'Espagne (2022, 2024)</li>
-              <li>Supercoupe d'Europe (2022)</li>
-              <li>Coupe du Monde des Clubs FIFA (2022)</li>
-            </ul>
-            <p className="mt-3 text-xs italic">Carlo Ancelotti est le seul entraîneur à avoir remporté quatre Ligues des Champions et à avoir gagné les cinq grands championnats européens.</p>
-          </ScrollArea>
+           <ScrollArea className="h-40">
+             {coachAchievements.length > 0 ? (
+               <ul className="list-disc list-inside space-y-1 text-sm">
+                 {coachAchievements.map((achievement, index) => (
+                   <li key={index}>{achievement.title} ({achievement.year})</li>
+                 ))}
+               </ul>
+             ) : (
+               <p className="text-sm text-gray-500 italic">Aucun titre remporté pour le moment</p>
+             )}
+           </ScrollArea>
         </div>
       )}
     </Card>
