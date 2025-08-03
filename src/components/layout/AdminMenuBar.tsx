@@ -11,7 +11,7 @@ export function AdminMenuBar() {
       
 
       <div className="relative">
-        <Button variant="default" size="sm" onClick={() => setShowAddMenu(!showAddMenu)} className="flex items-center gap-1">
+        <Button variant="default" size="sm" onClick={() => setShowAddMenu(!showAddMenu)} className="flex items-center gap-1 text-right font-extrabold rounded-md my-0 mx-[58px]">
           <Plus className="h-4 w-4" />
           Ajouter
         </Button>
