@@ -230,17 +230,6 @@ const Players = () => {
                   )}
                 </div>
 
-                <div className="mt-6">
-                  <h3 className="text-lg font-semibold mb-2">Palmarès avec le Real Madrid</h3>
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>Ligue des Champions (2022, 2024)</li>
-                    <li>Liga (2022, 2024)</li>
-                    <li>Supercoupe d'Espagne (2022, 2024)</li>
-                    <li>Supercoupe d'Europe (2022)</li>
-                    <li>Coupe du Monde des Clubs FIFA (2022)</li>
-                  </ul>
-                  <p className="mt-4 text-sm">Carlo Ancelotti est le seul entraîneur à avoir remporté quatre Ligues des Champions et à avoir gagné les cinq grands championnats européens (Italie, Angleterre, France, Allemagne et Espagne).</p>
-                </div>
               </div>
             </div>
           </div>
