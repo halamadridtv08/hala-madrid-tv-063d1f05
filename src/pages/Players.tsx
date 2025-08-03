@@ -6,7 +6,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { PlayerCard } from "@/components/players/PlayerCard";
 import { CoachCard } from "@/components/players/CoachCard";
-import { Search, User, Users, X, ArrowLeft } from "lucide-react";
+import { Search, User, Users, X, ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
 import { Coach } from "@/types/Coach";
@@ -22,6 +22,7 @@ const Players = () => {
   const [coaches, setCoaches] = useState<Coach[]>([]);
   const [coachAchievements, setCoachAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAllStaff, setShowAllStaff] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -146,7 +147,9 @@ const Players = () => {
   ) || coaches[0];
 
   // Get other staff members
-  const staffMembers = coaches.filter(coach => coach.id !== mainCoach?.id).slice(0, 4);
+  const allStaffMembers = coaches.filter(coach => coach.id !== mainCoach?.id);
+  const displayedStaffMembers = showAllStaff ? allStaffMembers : allStaffMembers.slice(0, 4);
+  const hasMoreStaff = allStaffMembers.length > 4;
 
   if (loading) {
     return (
@@ -233,13 +236,13 @@ const Players = () => {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {staffMembers.map((coach) => (
+                  {displayedStaffMembers.map((coach) => (
                     <div key={coach.id} className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
                       <h3 className="font-bold">{coach.name}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-300">{coach.role}</p>
                     </div>
                   ))}
-                  {staffMembers.length < 4 && (
+                  {displayedStaffMembers.length < 4 && !showAllStaff && (
                     <>
                       <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
                         <h3 className="font-bold">Francesco Mauri</h3>
@@ -252,6 +255,28 @@ const Players = () => {
                     </>
                   )}
                 </div>
+
+                {hasMoreStaff && (
+                  <div className="mt-4 text-center">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setShowAllStaff(!showAllStaff)}
+                      className="flex items-center gap-2 mx-auto"
+                    >
+                      {showAllStaff ? (
+                        <>
+                          <span>Voir moins</span>
+                          <ChevronUp className="h-4 w-4" />
+                        </>
+                      ) : (
+                        <>
+                          <span>Voir tous les membres ({allStaffMembers.length})</span>
+                          <ChevronDown className="h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
 
               </div>
             </div>
