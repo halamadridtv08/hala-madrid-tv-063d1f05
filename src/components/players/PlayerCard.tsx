@@ -109,7 +109,7 @@ export function PlayerCard({
         </div>
         
         <div className="p-4">
-          <h3 className="font-bold text-lg mb-2 group-hover:text-madrid-blue transition-colors">
+          <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white group-hover:text-madrid-blue transition-colors">
             {name}
           </h3>
           
@@ -134,7 +134,7 @@ export function PlayerCard({
             )}
             
             {nationality && (
-              <div className="flex items-center gap-1 text-xs text-gray-500">
+              <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                 <Flag className="h-3 w-3" />
                 {nationality}
               </div>
@@ -143,28 +143,28 @@ export function PlayerCard({
           
           {/* Stats */}
           {stats && (
-            <div className="mt-3 pt-3 border-t border-gray-200">
+            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
               <div className="grid grid-cols-2 gap-2 text-xs">
                 {position.includes("Gardien") ? (
                   <>
                     <div className="text-center">
                       <div className="font-bold text-madrid-blue">{stats.cleanSheets || 0}</div>
-                      <div className="text-gray-500">Clean Sheets</div>
+                      <div className="text-gray-500 dark:text-gray-400">Clean Sheets</div>
                     </div>
                     <div className="text-center">
                       <div className="font-bold text-madrid-blue">{stats.matches}</div>
-                      <div className="text-gray-500">Matchs</div>
+                      <div className="text-gray-500 dark:text-gray-400">Matchs</div>
                     </div>
                   </>
                 ) : (
                   <>
                     <div className="text-center">
                       <div className="font-bold text-madrid-blue">{stats.goals}</div>
-                      <div className="text-gray-500">Buts</div>
+                      <div className="text-gray-500 dark:text-gray-400">Buts</div>
                     </div>
                     <div className="text-center">
                       <div className="font-bold text-madrid-blue">{stats.assists}</div>
-                      <div className="text-gray-500">Passes D.</div>
+                      <div className="text-gray-500 dark:text-gray-400">Passes D.</div>
                     </div>
                   </>
                 )}
