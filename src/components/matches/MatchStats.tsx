@@ -42,7 +42,57 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
     }
   };
 
-  const stats = match.stats || defaultStats;
+  // Safe access to stats with multiple fallback levels
+  const stats = {
+    attack: {
+      totalShots: { 
+        home: match?.stats?.attack?.totalShots?.home || 0, 
+        away: match?.stats?.attack?.totalShots?.away || 0 
+      },
+      shotsOnTarget: { 
+        home: match?.stats?.attack?.shotsOnTarget?.home || 0, 
+        away: match?.stats?.attack?.shotsOnTarget?.away || 0 
+      },
+      shotsOffTarget: { 
+        home: match?.stats?.attack?.shotsOffTarget?.home || 0, 
+        away: match?.stats?.attack?.shotsOffTarget?.away || 0 
+      }
+    },
+    defense: {
+      saves: { 
+        home: match?.stats?.defense?.saves?.home || 0, 
+        away: match?.stats?.defense?.saves?.away || 0 
+      },
+      tackles: { 
+        home: match?.stats?.defense?.tackles?.home || 0, 
+        away: match?.stats?.defense?.tackles?.away || 0 
+      }
+    },
+    distribution: {
+      totalPasses: { 
+        home: match?.stats?.distribution?.totalPasses?.home || 0, 
+        away: match?.stats?.distribution?.totalPasses?.away || 0 
+      },
+      completedPasses: { 
+        home: match?.stats?.distribution?.completedPasses?.home || 0, 
+        away: match?.stats?.distribution?.completedPasses?.away || 0 
+      }
+    },
+    discipline: {
+      fouls: { 
+        home: match?.stats?.discipline?.fouls?.home || 0, 
+        away: match?.stats?.discipline?.fouls?.away || 0 
+      },
+      yellowCards: { 
+        home: match?.stats?.discipline?.yellowCards?.home || 0, 
+        away: match?.stats?.discipline?.yellowCards?.away || 0 
+      },
+      redCards: { 
+        home: match?.stats?.discipline?.redCards?.home || 0, 
+        away: match?.stats?.discipline?.redCards?.away || 0 
+      }
+    }
+  };
 
   const formatMatchDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -106,15 +156,15 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
         <DialogHeader>
           <DialogTitle className="text-xl">
             <div className="flex items-center gap-2">
-              <Badge className={`${getCompetitionColor(match.competition)}`}>
-                {match.competition}
+              <Badge className={`${getCompetitionColor(match?.competition || "")}`}>
+                {match?.competition || "Match"}
               </Badge>
-              <span>{match.round} - Statistiques</span>
+              <span>{match?.round || ""} - Statistiques</span>
             </div>
           </DialogTitle>
           <DialogDescription>
             <div className="text-center mt-2">
-              {formatMatchDate(match.date)} - {match.venue}
+              {match?.date ? formatMatchDate(match.date) : "Date inconnue"} - {match?.venue || "Lieu inconnu"}
             </div>
           </DialogDescription>
         </DialogHeader>
@@ -122,30 +172,30 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
         <div className="flex items-center justify-between my-6 px-2">
           <div className="flex flex-col items-center">
             <img 
-              src={match.homeTeam.logo} 
-              alt={match.homeTeam.name}
+              src={match?.homeTeam?.logo || '/placeholder.svg'} 
+              alt={match?.homeTeam?.name || 'Home Team'}
               className="w-16 h-16 object-contain"
             />
-            <h3 className="text-lg font-bold mt-2">{match.homeTeam.name}</h3>
+            <h3 className="text-lg font-bold mt-2">{match?.homeTeam?.name || 'Home Team'}</h3>
           </div>
           
           <div className="text-4xl font-bold">
-            <span className={match.homeTeam.score > match.awayTeam.score ? "text-madrid-gold" : ""}>
-              {match.homeTeam.score}
+            <span className={(match?.homeTeam?.score || 0) > (match?.awayTeam?.score || 0) ? "text-madrid-gold" : ""}>
+              {match?.homeTeam?.score || 0}
             </span>
             <span className="mx-2">-</span>
-            <span className={match.awayTeam.score > match.homeTeam.score ? "text-madrid-gold" : ""}>
-              {match.awayTeam.score}
+            <span className={(match?.awayTeam?.score || 0) > (match?.homeTeam?.score || 0) ? "text-madrid-gold" : ""}>
+              {match?.awayTeam?.score || 0}
             </span>
           </div>
           
           <div className="flex flex-col items-center">
             <img 
-              src={match.awayTeam.logo} 
-              alt={match.awayTeam.name}
+              src={match?.awayTeam?.logo || '/placeholder.svg'} 
+              alt={match?.awayTeam?.name || 'Away Team'}
               className="w-16 h-16 object-contain"
             />
-            <h3 className="text-lg font-bold mt-2">{match.awayTeam.name}</h3>
+            <h3 className="text-lg font-bold mt-2">{match?.awayTeam?.name || 'Away Team'}</h3>
           </div>
         </div>
 
@@ -313,24 +363,28 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
                 <div className="relative px-4">
                   <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
                   <div className="space-y-6">
-                    {match.timeline && match.timeline.sort((a, b) => a.minute - b.minute).map((event, index) => (
+                    {match?.timeline && match.timeline.length > 0 ? match.timeline.sort((a, b) => a.minute - b.minute).map((event, index) => (
                       <div key={index} className="flex gap-4 relative">
                         <div className="flex flex-col items-center">
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getEventColor(event.event)}`}>
-                            <span className="text-lg">{getEventIcon(event.event)}</span>
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getEventColor(event?.event || "")}`}>
+                            <span className="text-lg">{getEventIcon(event?.event || "")}</span>
                           </div>
-                          <div className="text-sm font-bold mt-1">{event.minute}'</div>
+                          <div className="text-sm font-bold mt-1">{event?.minute || 0}'</div>
                         </div>
                         <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg flex-1">
-                          <div className="font-bold text-md">{event.event}</div>
+                          <div className="font-bold text-md">{event?.event || "Événement"}</div>
                           <div className="flex justify-between mb-1">
-                            <span>{event.player}</span>
-                            <span className="text-gray-500">{event.team}</span>
+                            <span>{event?.player || "Joueur inconnu"}</span>
+                            <span className="text-gray-500">{event?.team || "Équipe"}</span>
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">{event.details}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">{event?.details || "Aucun détail"}</p>
                         </div>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="text-center text-gray-500 py-8">
+                        Aucun événement disponible pour ce match
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
