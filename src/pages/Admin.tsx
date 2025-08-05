@@ -46,6 +46,7 @@ import PressConferenceTable from "@/components/admin/PressConferenceTable";
 import TrainingSessionTable from "@/components/admin/TrainingSessionTable";
 import SettingsDashboard from "@/components/admin/SettingsDashboard";
 import { DataSynchronizer } from "@/components/admin/DataSynchronizer";
+import { OpposingTeamManager } from "@/components/admin/OpposingTeamManager";
 import { useNavigate } from "react-router-dom";
 
 interface StatsData {
@@ -387,6 +388,13 @@ const Admin = () => {
     </div>
   );
 
+  const renderOpponents = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Gestion des Équipes Adverses</h2>
+      <OpposingTeamManager />
+    </div>
+  );
+
   const renderSettings = () => (
     <div>
       <h2 className="text-2xl font-bold mb-4">Paramètres</h2>
@@ -423,7 +431,7 @@ const Admin = () => {
         <AdminMenuBar />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-11">
+          <TabsList className="grid w-full grid-cols-12">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
@@ -452,6 +460,10 @@ const Admin = () => {
               <Calendar className="h-4 w-4" />
               Matchs
             </TabsTrigger>
+            <TabsTrigger value="opponents" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Équipes Adverses
+            </TabsTrigger>
             <TabsTrigger value="press" className="flex items-center gap-2">
               <Mic className="h-4 w-4" />
               Conférences
@@ -477,6 +489,7 @@ const Admin = () => {
           <TabsContent value="players">{renderPlayers()}</TabsContent>
           <TabsContent value="coaches">{renderCoaches()}</TabsContent>
           <TabsContent value="matches">{renderMatches()}</TabsContent>
+          <TabsContent value="opponents">{renderOpponents()}</TabsContent>
           <TabsContent value="press">{renderPressConferences()}</TabsContent>
           <TabsContent value="training">{renderTrainingSessions()}</TabsContent>
           <TabsContent value="stats">{renderStats()}</TabsContent>
