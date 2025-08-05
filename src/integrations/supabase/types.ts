@@ -188,6 +188,51 @@ export type Database = {
         }
         Relationships: []
       }
+      match_lineups: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          opposing_team_formation: string | null
+          opposing_team_id: string
+          real_madrid_formation: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          opposing_team_formation?: string | null
+          opposing_team_id: string
+          real_madrid_formation?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          opposing_team_formation?: string | null
+          opposing_team_id?: string
+          real_madrid_formation?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_lineups_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_lineups_opposing_team_id_fkey"
+            columns: ["opposing_team_id"]
+            isOneToOne: false
+            referencedRelation: "opposing_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           away_score: number | null
@@ -280,6 +325,71 @@ export type Database = {
           media_type?: string
           media_url?: string
           title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      opposing_players: {
+        Row: {
+          created_at: string
+          id: string
+          is_starter: boolean | null
+          jersey_number: number | null
+          name: string
+          position: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_starter?: boolean | null
+          jersey_number?: number | null
+          name: string
+          position: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_starter?: boolean | null
+          jersey_number?: number | null
+          name?: string
+          position?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opposing_players_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "opposing_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      opposing_teams: {
+        Row: {
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
           updated_at?: string
         }
         Relationships: []
