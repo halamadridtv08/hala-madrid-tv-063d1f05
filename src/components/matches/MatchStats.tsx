@@ -18,7 +18,31 @@ interface MatchStatsProps {
 }
 
 export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
-  if (!match || !match.stats) return null;
+  if (!match) return null;
+
+  // Provide default stats structure if not available
+  const defaultStats = {
+    attack: {
+      totalShots: { home: 0, away: 0 },
+      shotsOnTarget: { home: 0, away: 0 },
+      shotsOffTarget: { home: 0, away: 0 }
+    },
+    defense: {
+      saves: { home: 0, away: 0 },
+      tackles: { home: 0, away: 0 }
+    },
+    distribution: {
+      totalPasses: { home: 0, away: 0 },
+      completedPasses: { home: 0, away: 0 }
+    },
+    discipline: {
+      fouls: { home: 0, away: 0 },
+      yellowCards: { home: 0, away: 0 },
+      redCards: { home: 0, away: 0 }
+    }
+  };
+
+  const stats = match.stats || defaultStats;
 
   const formatMatchDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -144,29 +168,29 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
                     <div className="space-y-4">
                       <div>
                         <div className="flex justify-between text-sm">
-                          <span>{match.stats.attack.totalShots.home}</span>
+                          <span>{stats.attack.totalShots.home}</span>
                           <span className="font-medium">Tirs totaux</span>
-                          <span>{match.stats.attack.totalShots.away}</span>
+                          <span>{stats.attack.totalShots.away}</span>
                         </div>
-                        {renderProgressBar(match.stats.attack.totalShots.home, match.stats.attack.totalShots.away)}
+                        {renderProgressBar(stats.attack.totalShots.home, stats.attack.totalShots.away)}
                       </div>
                       
                       <div>
                         <div className="flex justify-between text-sm">
-                          <span>{match.stats.attack.shotsOnTarget.home}</span>
+                          <span>{stats.attack.shotsOnTarget.home}</span>
                           <span className="font-medium">Tirs cadrés</span>
-                          <span>{match.stats.attack.shotsOnTarget.away}</span>
+                          <span>{stats.attack.shotsOnTarget.away}</span>
                         </div>
-                        {renderProgressBar(match.stats.attack.shotsOnTarget.home, match.stats.attack.shotsOnTarget.away)}
+                        {renderProgressBar(stats.attack.shotsOnTarget.home, stats.attack.shotsOnTarget.away)}
                       </div>
                       
                       <div>
                         <div className="flex justify-between text-sm">
-                          <span>{match.stats.attack.shotsOffTarget.home}</span>
+                          <span>{stats.attack.shotsOffTarget.home}</span>
                           <span className="font-medium">Tirs non cadrés</span>
-                          <span>{match.stats.attack.shotsOffTarget.away}</span>
+                          <span>{stats.attack.shotsOffTarget.away}</span>
                         </div>
-                        {renderProgressBar(match.stats.attack.shotsOffTarget.home, match.stats.attack.shotsOffTarget.away)}
+                        {renderProgressBar(stats.attack.shotsOffTarget.home, stats.attack.shotsOffTarget.away)}
                       </div>
                     </div>
                   </div>
@@ -180,20 +204,20 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
                     <div className="space-y-4">
                       <div>
                         <div className="flex justify-between text-sm">
-                          <span>{match.stats.defense.saves.home}</span>
+                          <span>{stats.defense.saves.home}</span>
                           <span className="font-medium">Arrêts du gardien</span>
-                          <span>{match.stats.defense.saves.away}</span>
+                          <span>{stats.defense.saves.away}</span>
                         </div>
-                        {renderProgressBar(match.stats.defense.saves.home, match.stats.defense.saves.away)}
+                        {renderProgressBar(stats.defense.saves.home, stats.defense.saves.away)}
                       </div>
                       
                       <div>
                         <div className="flex justify-between text-sm">
-                          <span>{match.stats.defense.tackles.home}</span>
+                          <span>{stats.defense.tackles.home}</span>
                           <span className="font-medium">Tacles</span>
-                          <span>{match.stats.defense.tackles.away}</span>
+                          <span>{stats.defense.tackles.away}</span>
                         </div>
-                        {renderProgressBar(match.stats.defense.tackles.home, match.stats.defense.tackles.away)}
+                        {renderProgressBar(stats.defense.tackles.home, stats.defense.tackles.away)}
                       </div>
                     </div>
                   </div>
@@ -207,33 +231,33 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
                     <div className="space-y-4">
                       <div>
                         <div className="flex justify-between text-sm">
-                          <span>{match.stats.distribution.totalPasses.home}</span>
+                          <span>{stats.distribution.totalPasses.home}</span>
                           <span className="font-medium">Passes totales</span>
-                          <span>{match.stats.distribution.totalPasses.away}</span>
+                          <span>{stats.distribution.totalPasses.away}</span>
                         </div>
-                        {renderProgressBar(match.stats.distribution.totalPasses.home, match.stats.distribution.totalPasses.away)}
+                        {renderProgressBar(stats.distribution.totalPasses.home, stats.distribution.totalPasses.away)}
                       </div>
                       
                       <div>
                         <div className="flex justify-between text-sm">
-                          <span>{match.stats.distribution.completedPasses.home}</span>
+                          <span>{stats.distribution.completedPasses.home}</span>
                           <span className="font-medium">Passes réussies</span>
-                          <span>{match.stats.distribution.completedPasses.away}</span>
+                          <span>{stats.distribution.completedPasses.away}</span>
                         </div>
-                        {renderProgressBar(match.stats.distribution.completedPasses.home, match.stats.distribution.completedPasses.away)}
+                        {renderProgressBar(stats.distribution.completedPasses.home, stats.distribution.completedPasses.away)}
                       </div>
                       
                       <div>
                         <div className="flex justify-between text-sm">
                           <span>
-                            {Math.round((match.stats.distribution.completedPasses.home / match.stats.distribution.totalPasses.home) * 100)}%
+                            {Math.round((stats.distribution.completedPasses.home / stats.distribution.totalPasses.home) * 100) || 0}%
                           </span>
                           <span className="font-medium">Précision des passes</span>
                           <span>
-                            {Math.round((match.stats.distribution.completedPasses.away / match.stats.distribution.totalPasses.away) * 100)}%
+                            {Math.round((stats.distribution.completedPasses.away / stats.distribution.totalPasses.away) * 100) || 0}%
                           </span>
                         </div>
-                        {renderProgressBar(match.stats.distribution.completedPasses.home, match.stats.distribution.completedPasses.away)}
+                        {renderProgressBar(stats.distribution.completedPasses.home, stats.distribution.completedPasses.away)}
                       </div>
                     </div>
                   </div>
@@ -247,29 +271,29 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
                     <div className="space-y-4">
                       <div>
                         <div className="flex justify-between text-sm">
-                          <span>{match.stats.discipline.fouls.home}</span>
+                          <span>{stats.discipline.fouls.home}</span>
                           <span className="font-medium">Fautes</span>
-                          <span>{match.stats.discipline.fouls.away}</span>
+                          <span>{stats.discipline.fouls.away}</span>
                         </div>
-                        {renderProgressBar(match.stats.discipline.fouls.home, match.stats.discipline.fouls.away)}
+                        {renderProgressBar(stats.discipline.fouls.home, stats.discipline.fouls.away)}
                       </div>
                       
                       <div>
                         <div className="flex justify-between text-sm">
-                          <span>{match.stats.discipline.yellowCards.home}</span>
+                          <span>{stats.discipline.yellowCards.home}</span>
                           <span className="font-medium">Cartons jaunes</span>
-                          <span>{match.stats.discipline.yellowCards.away}</span>
+                          <span>{stats.discipline.yellowCards.away}</span>
                         </div>
-                        {renderProgressBar(match.stats.discipline.yellowCards.home, match.stats.discipline.yellowCards.away)}
+                        {renderProgressBar(stats.discipline.yellowCards.home, stats.discipline.yellowCards.away)}
                       </div>
                       
                       <div>
                         <div className="flex justify-between text-sm">
-                          <span>{match.stats.discipline.redCards.home}</span>
+                          <span>{stats.discipline.redCards.home}</span>
                           <span className="font-medium">Cartons rouges</span>
-                          <span>{match.stats.discipline.redCards.away}</span>
+                          <span>{stats.discipline.redCards.away}</span>
                         </div>
-                        {renderProgressBar(match.stats.discipline.redCards.home, match.stats.discipline.redCards.away)}
+                        {renderProgressBar(stats.discipline.redCards.home, stats.discipline.redCards.away)}
                       </div>
                     </div>
                   </div>
