@@ -246,6 +246,7 @@ export type Database = {
           id: string
           match_date: string
           match_details: Json | null
+          opposing_team_id: string | null
           status: string | null
           updated_at: string
           venue: string | null
@@ -262,6 +263,7 @@ export type Database = {
           id?: string
           match_date: string
           match_details?: Json | null
+          opposing_team_id?: string | null
           status?: string | null
           updated_at?: string
           venue?: string | null
@@ -278,11 +280,20 @@ export type Database = {
           id?: string
           match_date?: string
           match_details?: Json | null
+          opposing_team_id?: string | null
           status?: string | null
           updated_at?: string
           venue?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "matches_opposing_team_id_fkey"
+            columns: ["opposing_team_id"]
+            isOneToOne: false
+            referencedRelation: "opposing_teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       media_items: {
         Row: {

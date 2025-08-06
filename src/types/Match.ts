@@ -12,6 +12,7 @@ export interface Match {
   home_score?: number;
   away_score?: number;
   match_details?: any;
+  opposing_team_id?: string;
   created_at: string;
   updated_at: string;
 }

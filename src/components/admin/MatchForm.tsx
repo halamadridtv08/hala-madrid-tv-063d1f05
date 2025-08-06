@@ -1,9 +1,10 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Match } from "@/types/Match";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -17,6 +18,7 @@ interface MatchFormProps {
 
 export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
   const [loading, setLoading] = useState(false);
+  const [opposingTeams, setOpposingTeams] = useState<Array<{id: string, name: string, logo_url?: string}>>([]);
   const [formData, setFormData] = useState({
     home_team: match?.home_team || "Real Madrid",
     away_team: match?.away_team || "",
@@ -28,7 +30,38 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
     home_score: match?.home_score || 0,
     away_score: match?.away_score || 0,
     status: match?.status || "upcoming",
+    opposing_team_id: match?.opposing_team_id || "",
   });
+
+  useEffect(() => {
+    fetchOpposingTeams();
+  }, []);
+
+  const fetchOpposingTeams = async () => {
+    const { data, error } = await supabase
+      .from('opposing_teams')
+      .select('id, name, logo_url')
+      .order('name');
+
+    if (error) {
+      toast.error("Erreur lors du chargement des équipes adverses");
+      return;
+    }
+
+    setOpposingTeams(data || []);
+  };
+
+  const handleOpposingTeamChange = (teamId: string) => {
+    const selectedTeam = opposingTeams.find(team => team.id === teamId);
+    if (selectedTeam) {
+      setFormData({
+        ...formData,
+        opposing_team_id: teamId,
+        away_team: selectedTeam.name,
+        away_team_logo: selectedTeam.logo_url || ""
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,12 +141,32 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
             {/* Équipe à l'extérieur */}
             <div className="space-y-4">
               <div>
-                <Label htmlFor="away_team">Équipe à l'extérieur</Label>
+                <Label htmlFor="opposing_team">Équipe adverse</Label>
+                <Select
+                  value={formData.opposing_team_id}
+                  onValueChange={handleOpposingTeamChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner une équipe adverse" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {opposingTeams.map((team) => (
+                      <SelectItem key={team.id} value={team.id}>
+                        {team.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="away_team">Nom de l'équipe (auto-rempli)</Label>
                 <Input
                   id="away_team"
                   value={formData.away_team}
                   onChange={(e) => setFormData({ ...formData, away_team: e.target.value })}
                   required
+                  disabled={!!formData.opposing_team_id}
                 />
               </div>
               

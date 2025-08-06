@@ -33,6 +33,7 @@ interface OpposingPlayer {
 export const OpposingTeamManager = () => {
   const [teams, setTeams] = useState<OpposingTeam[]>([]);
   const [players, setPlayers] = useState<OpposingPlayer[]>([]);
+  const [matches, setMatches] = useState<Array<{id: string, home_team: string, away_team: string, match_date: string, competition: string}>>([]);
   const [selectedTeam, setSelectedTeam] = useState<string>("");
   const [isTeamDialogOpen, setIsTeamDialogOpen] = useState(false);
   const [isPlayerDialogOpen, setIsPlayerDialogOpen] = useState(false);
@@ -64,7 +65,10 @@ export const OpposingTeamManager = () => {
   const fetchTeams = async () => {
     const { data, error } = await supabase
       .from('opposing_teams')
-      .select('*')
+      .select(`
+        *,
+        matches:matches!opposing_team_id(id, home_team, away_team, match_date, competition, status)
+      `)
       .order('name');
 
     if (error) {
@@ -296,6 +300,7 @@ export const OpposingTeamManager = () => {
               <TableRow>
                 <TableHead>Logo</TableHead>
                 <TableHead>Nom</TableHead>
+                <TableHead>Matchs</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -308,6 +313,24 @@ export const OpposingTeamManager = () => {
                     )}
                   </TableCell>
                   <TableCell className="font-medium">{team.name}</TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      {(team as any).matches?.length > 0 ? (
+                        (team as any).matches.slice(0, 2).map((match: any) => (
+                          <div key={match.id} className="text-sm text-gray-600">
+                            {match.competition} - {new Date(match.match_date).toLocaleDateString()}
+                          </div>
+                        ))
+                      ) : (
+                        <span className="text-sm text-gray-400">Aucun match programmé</span>
+                      )}
+                      {(team as any).matches?.length > 2 && (
+                        <div className="text-sm text-gray-500">
+                          +{(team as any).matches.length - 2} autres...
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
