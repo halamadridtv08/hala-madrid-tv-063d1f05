@@ -1,16 +1,12 @@
-
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription
-} from "@/components/ui/dialog";
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, MapPin, Users, AlertCircle, Activity, Shield, Share2, Flag } from "lucide-react";
+import { Calendar, Clock, MapPin, AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface PlayerType {
   name: string;
@@ -24,66 +20,140 @@ interface MatchDetailProps {
   onClose: () => void;
 }
 
+interface OpposingPlayer {
+  id: string;
+  name: string;
+  position: string;
+  jersey_number: number | null;
+  is_starter: boolean;
+}
+
 export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
+  const [opposingPlayers, setOpposingPlayers] = useState<OpposingPlayer[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && match) {
+      fetchOpposingPlayers();
+    }
+  }, [isOpen, match]);
+
+  const fetchOpposingPlayers = async () => {
+    if (!match) return;
+    
+    setLoading(true);
+    try {
+      // D'abord, trouver l'équipe adverse basée sur le nom
+      const opposingTeamName = match.homeTeam.name === 'Real Madrid' ? match.awayTeam.name : match.homeTeam.name;
+      
+      const { data: teamData, error: teamError } = await supabase
+        .from('opposing_teams')
+        .select('id')
+        .eq('name', opposingTeamName)
+        .single();
+
+      if (teamError || !teamData) {
+        console.log("Équipe adverse non trouvée dans la base de données:", opposingTeamName);
+        setOpposingPlayers([]);
+        return;
+      }
+
+      // Ensuite, récupérer les joueurs de cette équipe
+      const { data: playersData, error: playersError } = await supabase
+        .from('opposing_players')
+        .select('*')
+        .eq('team_id', teamData.id)
+        .order('is_starter', { ascending: false })
+        .order('jersey_number', { ascending: true });
+
+      if (playersError) {
+        toast.error("Erreur lors du chargement des joueurs");
+        return;
+      }
+
+      setOpposingPlayers(playersData || []);
+    } catch (error) {
+      console.error("Erreur:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!match) return null;
 
-  // Données simulées pour les compositions probables
-  const homeLineup = [
+  // Données pour Real Madrid (statiques pour l'instant)
+  const realMadridLineup = [
     { name: "Courtois", position: "GK", number: 1 },
     { name: "Carvajal", position: "RB", number: 2 },
     { name: "Militão", position: "CB", number: 3 },
-    { name: "Rüdiger", position: "CB", number: 22 },
+    { name: "Alaba", position: "CB", number: 4 },
     { name: "Mendy", position: "LB", number: 23 },
-    { name: "Valverde", position: "CM", number: 8 },
-    { name: "Tchouameni", position: "CDM", number: 14 },
-    { name: "Camavinga", position: "CM", number: 6 },
-    { name: "Bellingham", position: "CAM", number: 5 },
-    { name: "Vini Jr.", position: "LW", number: 7 },
+    { name: "Modrić", position: "CM", number: 10 },
+    { name: "Tchouaméni", position: "CDM", number: 18 },
+    { name: "Kroos", position: "CM", number: 8 },
+    { name: "Bellingham", position: "AM", number: 5 },
+    { name: "Vinícius Jr.", position: "LW", number: 7 },
     { name: "Mbappé", position: "ST", number: 9 }
   ];
 
-  const awayLineup = [
-    { name: "Ederson", position: "GK", number: 31 },
-    { name: "Walker", position: "RB", number: 2 },
-    { name: "Dias", position: "CB", number: 3 },
-    { name: "Stones", position: "CB", number: 5 },
-    { name: "Gvardiol", position: "LB", number: 24 },
-    { name: "Rodri", position: "CDM", number: 16 },
-    { name: "De Bruyne", position: "CM", number: 17 },
-    { name: "Silva", position: "CM", number: 20 },
-    { name: "Foden", position: "LW", number: 47 },
-    { name: "Grealish", position: "RW", number: 10 },
-    { name: "Haaland", position: "ST", number: 9 }
-  ];
-
-  // Données pour les remplaçants
-  const homeSubs = [
+  const realMadridSubs = [
     { name: "Lunin", position: "GK", number: 13 },
     { name: "Lucas Vázquez", position: "RB", number: 17 },
-    { name: "Alaba", position: "CB", number: 4 },
-    { name: "Modrić", position: "CM", number: 10 },
-    { name: "Ceballos", position: "CM", number: 19 },
+    { name: "Rüdiger", position: "CB", number: 22 },
+    { name: "Camavinga", position: "CM", number: 12 },
+    { name: "Valverde", position: "CM", number: 15 },
     { name: "Rodrygo", position: "RW", number: 11 },
-    { name: "Endrick", position: "ST", number: 16 }
+    { name: "Brahim", position: "AM", number: 21 }
   ];
 
-  const awaySubs = [
-    { name: "Ortega", position: "GK", number: 18 },
-    { name: "Lewis", position: "LB", number: 82 },
-    { name: "Akanji", position: "CB", number: 25 },
-    { name: "Kovačić", position: "CM", number: 8 },
-    { name: "Bernardo", position: "AM", number: 20 },
-    { name: "Doku", position: "LW", number: 11 },
-    { name: "Álvarez", position: "ST", number: 19 }
+  // Convertir les joueurs adverses en format PlayerType
+  const opposingTeamStarters = opposingPlayers
+    .filter(player => player.is_starter)
+    .map(player => ({
+      name: player.name,
+      position: player.position,
+      number: player.jersey_number || 0
+    }));
+
+  const opposingTeamSubs = opposingPlayers
+    .filter(player => !player.is_starter)
+    .map(player => ({
+      name: player.name,
+      position: player.position,
+      number: player.jersey_number || 0
+    }));
+
+  // Données par défaut si aucun joueur n'est trouvé
+  const defaultOpposingLineup = [
+    { name: "Gardien", position: "GK", number: 1 },
+    { name: "Défenseur 1", position: "CB", number: 2 },
+    { name: "Défenseur 2", position: "CB", number: 3 },
+    { name: "Défenseur 3", position: "LB", number: 4 },
+    { name: "Défenseur 4", position: "RB", number: 5 },
+    { name: "Milieu 1", position: "CM", number: 6 },
+    { name: "Milieu 2", position: "CM", number: 7 },
+    { name: "Milieu 3", position: "CM", number: 8 },
+    { name: "Attaquant 1", position: "LW", number: 9 },
+    { name: "Attaquant 2", position: "ST", number: 10 },
+    { name: "Attaquant 3", position: "RW", number: 11 }
   ];
+
+  const defaultOpposingSubs = [
+    { name: "Remplaçant 1", position: "GK", number: 12 },
+    { name: "Remplaçant 2", position: "CB", number: 13 },
+    { name: "Remplaçant 3", position: "CM", number: 14 },
+    { name: "Remplaçant 4", position: "ST", number: 15 }
+  ];
+
+  // Utiliser les vrais joueurs ou les données par défaut
+  const finalOpposingLineup = opposingTeamStarters.length > 0 ? opposingTeamStarters : defaultOpposingLineup;
+  const finalOpposingSubs = opposingTeamSubs.length > 0 ? opposingTeamSubs : defaultOpposingSubs;
 
   // Données simulées pour les joueurs absents
   const absentPlayers = [
     { name: "Alaba", reason: "Blessure (Ligament croisé)", team: "Real Madrid", return: "Septembre 2025" },
     { name: "Ceballos", reason: "Suspension (Cumulation de cartons jaunes)", team: "Real Madrid", return: "Prochain match" },
-    { name: "Rodrygo", reason: "Incertain (Fatigue musculaire)", team: "Real Madrid", return: "Test avant-match" },
-    { name: "Doku", reason: "Blessure (Ischio-jambiers)", team: "Manchester City", return: "2 semaines" },
-    { name: "Aké", reason: "Suspension (Carton rouge direct)", team: "Manchester City", return: "2 matchs" }
+    { name: "Rodrygo", reason: "Incertain (Fatigue musculaire)", team: "Real Madrid", return: "Test avant-match" }
   ];
 
   const formatMatchDate = (dateString: string) => {
@@ -107,6 +177,7 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
   const getCompetitionColor = (competition: string) => {
     switch (competition) {
       case "La Liga": return "bg-green-600";
+      case "LALIGA": return "bg-green-600";
       case "Ligue des Champions": return "bg-blue-600";
       case "Copa del Rey": return "bg-purple-600";
       default: return "bg-gray-600";
@@ -224,9 +295,33 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
           <TabsContent value="lineups">
             <Card>
               <CardContent className="pt-6">
-                {match.homeTeam && renderLineup(homeLineup, homeSubs, match.homeTeam.name)}
-                <hr className="my-4" />
-                {match.awayTeam && renderLineup(awayLineup, awaySubs, match.awayTeam.name)}
+                {loading ? (
+                  <div className="text-center py-8">
+                    Chargement des compositions...
+                  </div>
+                ) : (
+                  <>
+                    {match.homeTeam.name === 'Real Madrid' ? (
+                      <>
+                        {renderLineup(realMadridLineup, realMadridSubs, "Real Madrid")}
+                        <hr className="my-4" />
+                        {renderLineup(finalOpposingLineup, finalOpposingSubs, match.awayTeam.name)}
+                      </>
+                    ) : (
+                      <>
+                        {renderLineup(finalOpposingLineup, finalOpposingSubs, match.homeTeam.name)}
+                        <hr className="my-4" />
+                        {renderLineup(realMadridLineup, realMadridSubs, "Real Madrid")}
+                      </>
+                    )}
+                    {opposingPlayers.length === 0 && (
+                      <div className="text-center text-gray-500 mt-4">
+                        <p>Composition de l'équipe adverse non disponible.</p>
+                        <p className="text-sm">Les joueurs peuvent être ajoutés depuis l'interface d'administration.</p>
+                      </div>
+                    )}
+                  </>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
