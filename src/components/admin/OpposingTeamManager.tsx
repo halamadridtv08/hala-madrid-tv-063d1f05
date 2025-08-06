@@ -124,7 +124,7 @@ export const OpposingTeamManager = () => {
   };
 
   const handleSavePlayer = async () => {
-    if (!teamForm.name.trim() || !playerForm.position.trim()) {
+    if (!playerForm.name.trim() || !playerForm.position.trim()) {
       toast.error("Le nom et la position sont requis");
       return;
     }
