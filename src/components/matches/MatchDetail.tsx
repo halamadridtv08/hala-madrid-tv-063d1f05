@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, MapPin, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { TacticalFormation } from "./TacticalFormation";
 
 interface PlayerType {
   name: string;
@@ -286,12 +287,17 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
           </div>
         </div>
 
-        <Tabs defaultValue="lineups" className="mt-6">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs defaultValue="tactical" className="mt-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="tactical">Compositions officielles</TabsTrigger>
             <TabsTrigger value="lineups">Compositions probables</TabsTrigger>
             <TabsTrigger value="absents">Joueurs absents</TabsTrigger>
           </TabsList>
           
+          <TabsContent value="tactical">
+            <TacticalFormation matchId={match.id} matchData={match} />
+          </TabsContent>
+
           <TabsContent value="lineups">
             <Card>
               <CardContent className="pt-6">

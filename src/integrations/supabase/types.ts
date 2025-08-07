@@ -188,6 +188,95 @@ export type Database = {
         }
         Relationships: []
       }
+      match_formation_players: {
+        Row: {
+          created_at: string
+          formation_id: string
+          id: string
+          is_starter: boolean
+          jersey_number: number | null
+          opposing_player_id: string | null
+          player_id: string | null
+          player_image_url: string | null
+          player_name: string
+          player_position: string
+          player_rating: number | null
+          position_x: number
+          position_y: number
+          substitution_minute: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          formation_id: string
+          id?: string
+          is_starter?: boolean
+          jersey_number?: number | null
+          opposing_player_id?: string | null
+          player_id?: string | null
+          player_image_url?: string | null
+          player_name: string
+          player_position: string
+          player_rating?: number | null
+          position_x?: number
+          position_y?: number
+          substitution_minute?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          formation_id?: string
+          id?: string
+          is_starter?: boolean
+          jersey_number?: number | null
+          opposing_player_id?: string | null
+          player_id?: string | null
+          player_image_url?: string | null
+          player_name?: string
+          player_position?: string
+          player_rating?: number | null
+          position_x?: number
+          position_y?: number
+          substitution_minute?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_formation_players_formation_id_fkey"
+            columns: ["formation_id"]
+            isOneToOne: false
+            referencedRelation: "match_formations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_formations: {
+        Row: {
+          created_at: string
+          formation: string
+          id: string
+          match_id: string
+          team_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          formation?: string
+          id?: string
+          match_id: string
+          team_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          formation?: string
+          id?: string
+          match_id?: string
+          team_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       match_lineups: {
         Row: {
           created_at: string
