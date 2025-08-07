@@ -30,48 +30,68 @@ interface OpposingPlayer {
 
 export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
   const [opposingPlayers, setOpposingPlayers] = useState<OpposingPlayer[]>([]);
+  const [realMadridPlayers, setRealMadridPlayers] = useState<PlayerType[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen && match) {
-      fetchOpposingPlayers();
+      fetchMatchData();
     }
   }, [isOpen, match]);
 
-  const fetchOpposingPlayers = async () => {
+  const fetchMatchData = async () => {
     if (!match) return;
     
     setLoading(true);
     try {
-      // D'abord, trouver l'équipe adverse basée sur le nom
+      // Récupérer les joueurs Real Madrid depuis la base de données
+      const { data: realMadridData, error: realMadridError } = await supabase
+        .from('players')
+        .select('name, position, jersey_number')
+        .eq('is_active', true)
+        .order('jersey_number', { ascending: true });
+
+      if (realMadridError) {
+        console.error("Erreur lors du chargement des joueurs Real Madrid:", realMadridError);
+        toast.error("Erreur lors du chargement des joueurs Real Madrid");
+      } else {
+        const formattedPlayers = realMadridData.map(player => ({
+          name: player.name,
+          position: player.position,
+          number: player.jersey_number || 0
+        }));
+        setRealMadridPlayers(formattedPlayers);
+      }
+
+      // Récupérer les joueurs de l'équipe adverse
       const opposingTeamName = match.homeTeam.name === 'Real Madrid' ? match.awayTeam.name : match.homeTeam.name;
       
       const { data: teamData, error: teamError } = await supabase
         .from('opposing_teams')
         .select('id')
         .eq('name', opposingTeamName)
-        .single();
+        .maybeSingle();
 
-      if (teamError || !teamData) {
+      if (teamError) {
+        console.error("Erreur lors de la recherche de l'équipe adverse:", teamError);
+      } else if (teamData) {
+        const { data: playersData, error: playersError } = await supabase
+          .from('opposing_players')
+          .select('*')
+          .eq('team_id', teamData.id)
+          .order('is_starter', { ascending: false })
+          .order('jersey_number', { ascending: true });
+
+        if (playersError) {
+          console.error("Erreur lors du chargement des joueurs adverses:", playersError);
+          toast.error("Erreur lors du chargement des joueurs");
+        } else {
+          setOpposingPlayers(playersData || []);
+        }
+      } else {
         console.log("Équipe adverse non trouvée dans la base de données:", opposingTeamName);
         setOpposingPlayers([]);
-        return;
       }
-
-      // Ensuite, récupérer les joueurs de cette équipe
-      const { data: playersData, error: playersError } = await supabase
-        .from('opposing_players')
-        .select('*')
-        .eq('team_id', teamData.id)
-        .order('is_starter', { ascending: false })
-        .order('jersey_number', { ascending: true });
-
-      if (playersError) {
-        toast.error("Erreur lors du chargement des joueurs");
-        return;
-      }
-
-      setOpposingPlayers(playersData || []);
     } catch (error) {
       console.error("Erreur:", error);
     } finally {
@@ -81,30 +101,10 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
 
   if (!match) return null;
 
-  // Données pour Real Madrid (statiques pour l'instant)
-  const realMadridLineup = [
-    { name: "Courtois", position: "GK", number: 1 },
-    { name: "Carvajal", position: "RB", number: 2 },
-    { name: "Militão", position: "CB", number: 3 },
-    { name: "Alaba", position: "CB", number: 4 },
-    { name: "Mendy", position: "LB", number: 23 },
-    { name: "Modrić", position: "CM", number: 10 },
-    { name: "Tchouaméni", position: "CDM", number: 18 },
-    { name: "Kroos", position: "CM", number: 8 },
-    { name: "Bellingham", position: "AM", number: 5 },
-    { name: "Vinícius Jr.", position: "LW", number: 7 },
-    { name: "Mbappé", position: "ST", number: 9 }
-  ];
-
-  const realMadridSubs = [
-    { name: "Lunin", position: "GK", number: 13 },
-    { name: "Lucas Vázquez", position: "RB", number: 17 },
-    { name: "Rüdiger", position: "CB", number: 22 },
-    { name: "Camavinga", position: "CM", number: 12 },
-    { name: "Valverde", position: "CM", number: 15 },
-    { name: "Rodrygo", position: "RW", number: 11 },
-    { name: "Brahim", position: "AM", number: 21 }
-  ];
+  // Séparer les joueurs Real Madrid en titulaires et remplaçants
+  // Pour l'instant, on prend les 11 premiers comme titulaires et le reste comme remplaçants
+  const realMadridLineup = realMadridPlayers.slice(0, 11);
+  const realMadridSubs = realMadridPlayers.slice(11);
 
   // Convertir les joueurs adverses en format PlayerType
   const opposingTeamStarters = opposingPlayers
