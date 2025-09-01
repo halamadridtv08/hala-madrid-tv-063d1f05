@@ -439,60 +439,62 @@ const Admin = () => {
         <AdminMenuBar />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-13">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <LayoutDashboard className="h-4 w-4" />
-              Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="articles" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Articles
-            </TabsTrigger>
-            <TabsTrigger value="videos" className="flex items-center gap-2">
-              <Video className="h-4 w-4" />
-              Vidéos
-            </TabsTrigger>
-            <TabsTrigger value="photos" className="flex items-center gap-2">
-              <Camera className="h-4 w-4" />
-              Photos
-            </TabsTrigger>
-            <TabsTrigger value="players" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Joueurs
-            </TabsTrigger>
-            <TabsTrigger value="coaches" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Entraîneurs
-            </TabsTrigger>
-            <TabsTrigger value="matches" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Matchs
-            </TabsTrigger>
-            <TabsTrigger value="opponents" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Équipes Adverses
-            </TabsTrigger>
-            <TabsTrigger value="formations" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Compositions
-            </TabsTrigger>
-            <TabsTrigger value="press" className="flex items-center gap-2">
-              <Mic className="h-4 w-4" />
-              Conférences
-            </TabsTrigger>
-            <TabsTrigger value="training" className="flex items-center gap-2">
-              <PlayCircle className="h-4 w-4" />
-              Entraînements
-            </TabsTrigger>
-            <TabsTrigger value="stats" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Statistiques
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Paramètres
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="inline-flex h-12 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground w-max min-w-full">
+              <TabsTrigger value="dashboard" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="articles" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <FileText className="h-4 w-4" />
+                Articles
+              </TabsTrigger>
+              <TabsTrigger value="videos" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <Video className="h-4 w-4" />
+                Vidéos
+              </TabsTrigger>
+              <TabsTrigger value="photos" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <Camera className="h-4 w-4" />
+                Photos
+              </TabsTrigger>
+              <TabsTrigger value="players" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <User className="h-4 w-4" />
+                Joueurs
+              </TabsTrigger>
+              <TabsTrigger value="coaches" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <Users className="h-4 w-4" />
+                Entraîneurs
+              </TabsTrigger>
+              <TabsTrigger value="matches" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <Calendar className="h-4 w-4" />
+                Matchs
+              </TabsTrigger>
+              <TabsTrigger value="opponents" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <Users className="h-4 w-4" />
+                Équipes Adverses
+              </TabsTrigger>
+              <TabsTrigger value="formations" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <Users className="h-4 w-4" />
+                Compositions
+              </TabsTrigger>
+              <TabsTrigger value="press" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <Mic className="h-4 w-4" />
+                Conférences
+              </TabsTrigger>
+              <TabsTrigger value="training" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <PlayCircle className="h-4 w-4" />
+                Entraînements
+              </TabsTrigger>
+              <TabsTrigger value="stats" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <BarChart3 className="h-4 w-4" />
+                Statistiques
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <Settings className="h-4 w-4" />
+                Paramètres
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="dashboard">{renderDashboard()}</TabsContent>
           <TabsContent value="articles">{renderArticles()}</TabsContent>
