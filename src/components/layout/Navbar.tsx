@@ -39,6 +39,11 @@ export function Navbar() {
     setIsAddMenuOpen(!isAddMenuOpen);
   };
 
+  const handleTabChange = (tab: string) => {
+    navigate(`/admin?tab=${tab}`);
+    setIsAddMenuOpen(false);
+  };
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -98,7 +103,7 @@ export function Navbar() {
               >
                 <Plus className="h-4 w-4" />
               </Button>
-              {isAddMenuOpen && <AddContentMenu onClose={() => setIsAddMenuOpen(false)} />}
+              {isAddMenuOpen && <AddContentMenu onClose={() => setIsAddMenuOpen(false)} onTabChange={handleTabChange} />}
             </div>
           )}
           <ThemeToggle />
@@ -256,7 +261,7 @@ export function Navbar() {
                 <Plus className="h-4 w-4" />
                 <span className="sr-only">Ajouter du contenu</span>
               </Button>
-              {isAddMenuOpen && <AddContentMenu onClose={() => setIsAddMenuOpen(false)} />}
+              {isAddMenuOpen && <AddContentMenu onClose={() => setIsAddMenuOpen(false)} onTabChange={handleTabChange} />}
             </div>
           )}
           
