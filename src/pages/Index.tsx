@@ -3,6 +3,7 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { LatestNews } from "@/components/home/LatestNews";
 import { UpcomingMatch } from "@/components/home/UpcomingMatch";
 import { PlayerSpotlight } from "@/components/home/PlayerSpotlight";
+import FeaturedKits from "@/components/home/FeaturedKits";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ const Index = () => {
         <LatestNews />
         <UpcomingMatch />
         <PlayerSpotlight />
+        <FeaturedKits />
         
         {/* Section pour les liens rapides vers les nouvelles sections */}
         <section className="py-6 sm:py-8 md:py-12 bg-gray-50 dark:bg-gray-900">
