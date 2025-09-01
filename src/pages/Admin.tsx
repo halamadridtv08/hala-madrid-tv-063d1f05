@@ -436,7 +436,7 @@ const Admin = () => {
           </Badge>
         </div>
 
-        <AdminMenuBar />
+        <AdminMenuBar activeTab={activeTab} onTabChange={setActiveTab} />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="overflow-x-auto">
