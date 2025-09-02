@@ -22,7 +22,8 @@ import {
   BarChart3,
   ArrowLeft,
   Mic,
-  PlayCircle
+  PlayCircle,
+  Shirt
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,7 @@ import { Coach } from "@/types/Coach";
 import { Match } from "@/types/Match";
 import { PressConference } from "@/types/PressConference";
 import { TrainingSession } from "@/types/TrainingSession";
+import { Kit } from "@/types/Kit";
 import ArticleTable from "@/components/admin/ArticleTable";
 import VideoTable from "@/components/admin/VideoTable";
 import PhotoTable from "@/components/admin/PhotoTable";
@@ -44,6 +46,7 @@ import CoachTable from "@/components/admin/CoachTable";
 import MatchTable from "@/components/admin/MatchTable";
 import PressConferenceTable from "@/components/admin/PressConferenceTable";
 import TrainingSessionTable from "@/components/admin/TrainingSessionTable";
+import KitTable from "@/components/admin/KitTable";
 import SettingsDashboard from "@/components/admin/SettingsDashboard";
 import { DataSynchronizer } from "@/components/admin/DataSynchronizer";
 import { OpposingTeamManager } from "@/components/admin/OpposingTeamManager";
@@ -72,6 +75,7 @@ const Admin = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [pressConferences, setPressConferences] = useState<PressConference[]>([]);
   const [trainingSessions, setTrainingSessions] = useState<TrainingSession[]>([]);
+  const [kits, setKits] = useState<Kit[]>([]);
   const [stats, setStats] = useState<StatsData>({
     totalPlayers: 0,
     activePlayers: 0,
@@ -182,6 +186,19 @@ const Admin = () => {
       }
     };
 
+    const fetchKits = async () => {
+      const { data, error } = await supabase
+        .from('kits')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (error) {
+        console.error("Error fetching kits:", error);
+      } else {
+        setKits((data || []) as Kit[]);
+      }
+    };
+
     fetchArticles();
     fetchVideos();
     fetchPhotos();
@@ -190,6 +207,7 @@ const Admin = () => {
     fetchMatches();
     fetchPressConferences();
     fetchTrainingSessions();
+    fetchKits();
   }, []);
 
   useEffect(() => {
@@ -396,17 +414,24 @@ const Admin = () => {
     </div>
   );
 
-  const renderFormations = () => (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">Gestion des Compositions</h2>
-      <MatchFormationManager />
-    </div>
-  );
-
   const renderSettings = () => (
     <div>
       <h2 className="text-2xl font-bold mb-4">Paramètres</h2>
       <SettingsDashboard />
+    </div>
+  );
+
+  const renderKits = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Gestion des Maillots</h2>
+      <KitTable kits={kits} setKits={setKits} />
+    </div>
+  );
+
+  const renderFormations = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Gestion des Compositions</h2>
+      <MatchFormationManager />
     </div>
   );
 
@@ -489,6 +514,10 @@ const Admin = () => {
                 <BarChart3 className="h-4 w-4" />
                 Statistiques
               </TabsTrigger>
+              <TabsTrigger value="kits" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <Shirt className="h-4 w-4" />
+                Maillots
+              </TabsTrigger>
               <TabsTrigger value="settings" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
                 <Settings className="h-4 w-4" />
                 Paramètres
@@ -508,6 +537,7 @@ const Admin = () => {
           <TabsContent value="press">{renderPressConferences()}</TabsContent>
           <TabsContent value="training">{renderTrainingSessions()}</TabsContent>
           <TabsContent value="stats">{renderStats()}</TabsContent>
+          <TabsContent value="kits">{renderKits()}</TabsContent>
           <TabsContent value="settings">{renderSettings()}</TabsContent>
         </Tabs>
       </div>
