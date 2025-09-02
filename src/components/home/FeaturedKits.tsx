@@ -2,29 +2,50 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 const FeaturedKits = () => {
-  // Collections en vedette - 3 maillots principaux
-  const featuredKits = [
-    {
-      id: 1,
-      title: "Domicile 25/26",
-      image: "https://images.footballfanatics.com/real-madrid/real-madrid-home-shirt-2023-24_ss4_p-13369593+u-qwaj5h4fejb6c10qmv0g+v-a2ffe158eaf84f48b03382217c591319.jpg?_hv=2&w=900",
-      type: "Domicile"
-    },
-    {
-      id: 2,
-      title: "Tenue extérieur 25/26",
-      image: "https://images.footballfanatics.com/real-madrid/real-madrid-away-shirt-2023-24_ss4_p-13369599+u-9wlae8hv115ibm12y76w+v-3e891a40dc0f4d079a5c5cb41d35cf2a.jpg?_hv=2&w=900",
-      type: "Extérieur"
-    },
-    {
-      id: 3,
-      title: "Troisième kit 25/26",
-      image: "https://shop.adidas.jp/contents/product/GY8597/main/adidas_GY8597_standard-F3F4F6-standard-F3F4F6-standard-E2E2E2-standard-E2E2E2-standard-F3F4F6-standard-F3F4F6.jpg",
-      type: "Third"
-    }
-  ];
+  const [featuredKits, setFeaturedKits] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedKits = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('kits')
+          .select('*')
+          .eq('is_featured', true)
+          .eq('is_published', true)
+          .order('display_order', { ascending: true });
+
+        if (error) {
+          console.error('Error fetching kits:', error);
+          return;
+        }
+
+        setFeaturedKits(data || []);
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedKits();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="py-6 sm:py-8 md:py-12 bg-gradient-to-br from-primary/5 to-primary/10">
+        <div className="madrid-container">
+          <div className="flex justify-center items-center h-40">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-6 sm:py-8 md:py-12 bg-gradient-to-br from-primary/5 to-primary/10">
@@ -41,13 +62,13 @@ const FeaturedKits = () => {
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {featuredKits.map((kit) => (
             <Card key={kit.id} className="group overflow-hidden cursor-pointer hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
               <CardContent className="p-0 relative">
                 <div className="aspect-[3/4] overflow-hidden bg-gradient-to-br from-background to-muted">
                   <img
-                    src={kit.image}
+                    src={kit.image_url || '/placeholder.svg'}
                     alt={kit.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     onError={(e) => {
@@ -63,10 +84,13 @@ const FeaturedKits = () => {
                   </h3>
                   
                   <Button 
+                    asChild
                     className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 rounded-xl transition-all duration-300 transform group-hover:scale-105"
                     size="lg"
                   >
-                    Acheter maintenant
+                    <Link to="/kits">
+                      Voir la collection
+                    </Link>
                   </Button>
                 </div>
               </CardContent>
