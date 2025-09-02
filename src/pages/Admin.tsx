@@ -23,7 +23,8 @@ import {
   ArrowLeft,
   Mic,
   PlayCircle,
-  Shirt
+  Shirt,
+  Target
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +52,7 @@ import SettingsDashboard from "@/components/admin/SettingsDashboard";
 import { DataSynchronizer } from "@/components/admin/DataSynchronizer";
 import { OpposingTeamManager } from "@/components/admin/OpposingTeamManager";
 import { MatchFormationManager } from "@/components/admin/MatchFormationManager";
+import { FormationManager } from "@/components/admin/formation/FormationManager";
 import { useNavigate } from "react-router-dom";
 
 interface StatsData {
@@ -431,7 +433,7 @@ const Admin = () => {
   const renderFormations = () => (
     <div>
       <h2 className="text-2xl font-bold mb-4">Gestion des Compositions</h2>
-      <MatchFormationManager />
+      <FormationManager />
     </div>
   );
 
@@ -499,7 +501,7 @@ const Admin = () => {
                 Équipes Adverses
               </TabsTrigger>
               <TabsTrigger value="formations" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <Users className="h-4 w-4" />
+                <Target className="h-4 w-4" />
                 Compositions
               </TabsTrigger>
               <TabsTrigger value="press" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
