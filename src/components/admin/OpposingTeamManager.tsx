@@ -33,7 +33,7 @@ interface OpposingPlayer {
 export const OpposingTeamManager = () => {
   const [teams, setTeams] = useState<OpposingTeam[]>([]);
   const [players, setPlayers] = useState<OpposingPlayer[]>([]);
-  const [upcomingMatches, setUpcomingMatches] = useState<Array<{id: string, home_team: string, away_team: string, match_date: string, competition: string, opposing_team_id?: string}>>([]);
+  const [upcomingMatches, setUpcomingMatches] = useState<Array<any>>([]);
   const [selectedTeam, setSelectedTeam] = useState<string>("");
   const [isTeamDialogOpen, setIsTeamDialogOpen] = useState(false);
   const [isPlayerDialogOpen, setIsPlayerDialogOpen] = useState(false);
@@ -66,9 +66,13 @@ export const OpposingTeamManager = () => {
   const fetchUpcomingMatches = async () => {
     const { data, error } = await supabase
       .from('matches')
-      .select('*')
+      .select(`
+        *,
+        opposing_team:opposing_teams(id, name, logo_url)
+      `)
       .gte('match_date', new Date().toISOString())
-      .order('match_date', { ascending: true });
+      .order('match_date', { ascending: true })
+      .limit(10);
 
     if (error) {
       toast.error("Erreur lors du chargement des matchs");
@@ -274,36 +278,93 @@ export const OpposingTeamManager = () => {
         <CardContent>
           {upcomingMatches.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {upcomingMatches.slice(0, 6).map((match) => (
-                <div key={match.id} className="border rounded-lg p-4 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">{match.home_team}</span>
-                    <span className="text-sm text-gray-500">vs</span>
-                    <span className="font-semibold">{match.away_team}</span>
+              {upcomingMatches.slice(0, 6).map((match) => {
+                // Déterminer quelle équipe est l'adversaire
+                const isRealMadridHome = match.home_team === "Real Madrid";
+                const opponentName = isRealMadridHome ? match.away_team : match.home_team;
+                const opponentLogo = isRealMadridHome ? match.away_team_logo : match.home_team_logo;
+                const realMadridLogo = isRealMadridHome ? match.home_team_logo : match.away_team_logo;
+                
+                return (
+                  <div key={match.id} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        {(isRealMadridHome ? match.home_team_logo : match.away_team_logo) && (
+                          <img 
+                            src={isRealMadridHome ? match.home_team_logo : match.away_team_logo} 
+                            alt="Real Madrid" 
+                            className="w-6 h-6 object-contain" 
+                          />
+                        )}
+                        <span className="font-semibold text-sm">{isRealMadridHome ? "Real Madrid" : "Real Madrid"}</span>
+                      </div>
+                      <span className="text-xs text-gray-500">vs</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm">{opponentName}</span>
+                        {opponentLogo && (
+                          <img 
+                            src={opponentLogo} 
+                            alt={opponentName} 
+                            className="w-6 h-6 object-contain" 
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-600 text-center">
+                      {new Date(match.match_date).toLocaleDateString('fr-FR', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })} - {match.competition}
+                    </div>
+                    {match.venue && (
+                      <div className="text-xs text-gray-500 text-center">{match.venue}</div>
+                    )}
+                    {match.opposing_team_id ? (
+                      <Badge variant="outline" className="text-green-600 w-full justify-center">
+                        Équipe adverse liée
+                      </Badge>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={async () => {
+                          // Créer automatiquement l'équipe adverse
+                          try {
+                            const { data: newTeam, error } = await supabase
+                              .from('opposing_teams')
+                              .insert([{
+                                name: opponentName,
+                                logo_url: opponentLogo || ""
+                              }])
+                              .select()
+                              .single();
+
+                            if (error) throw error;
+
+                            // Lier le match à la nouvelle équipe
+                            await supabase
+                              .from('matches')
+                              .update({ opposing_team_id: newTeam.id })
+                              .eq('id', match.id);
+
+                            toast.success(`Équipe ${opponentName} créée et liée au match`);
+                            fetchTeams();
+                            fetchUpcomingMatches();
+                          } catch (error) {
+                            toast.error("Erreur lors de la création de l'équipe");
+                          }
+                        }}
+                      >
+                        Créer & lier équipe
+                      </Button>
+                    )}
                   </div>
-                  <div className="text-sm text-gray-600">
-                    {new Date(match.match_date).toLocaleDateString('fr-FR')} - {match.competition}
-                  </div>
-                  {match.opposing_team_id ? (
-                    <Badge variant="outline" className="text-green-600">
-                      Équipe liée
-                    </Badge>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        // Auto-créer l'équipe adverse basée sur le match
-                        const awayTeamName = match.away_team === "Real Madrid" ? match.home_team : match.away_team;
-                        setTeamForm({ name: awayTeamName, logo_url: "" });
-                        setIsTeamDialogOpen(true);
-                      }}
-                    >
-                      Créer équipe adverse
-                    </Button>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-gray-500">Aucun match à venir programmé</p>
@@ -370,8 +431,12 @@ export const OpposingTeamManager = () => {
               {teams.map((team) => (
                 <TableRow key={team.id}>
                   <TableCell>
-                    {team.logo_url && (
-                      <img src={team.logo_url} alt={team.name} className="w-8 h-8 object-contain" />
+                    {team.logo_url ? (
+                      <img src={team.logo_url} alt={team.name} className="w-10 h-10 object-contain rounded" />
+                    ) : (
+                      <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
+                        <span className="text-xs text-gray-500">Logo</span>
+                      </div>
                     )}
                   </TableCell>
                   <TableCell className="font-medium">{team.name}</TableCell>
@@ -379,8 +444,18 @@ export const OpposingTeamManager = () => {
                     <div className="space-y-1">
                       {(team as any).matches?.length > 0 ? (
                         (team as any).matches.slice(0, 2).map((match: any) => (
-                          <div key={match.id} className="text-sm text-gray-600">
-                            {match.competition} - {new Date(match.match_date).toLocaleDateString()}
+                          <div key={match.id} className="text-sm text-gray-600 flex items-center gap-2">
+                            <span className="font-medium">{match.competition}</span>
+                            <span>-</span>
+                            <span>{new Date(match.match_date).toLocaleDateString('fr-FR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}</span>
+                            <Badge variant={match.status === 'upcoming' ? 'default' : 'secondary'} className="text-xs">
+                              {match.status === 'upcoming' ? 'À venir' : match.status === 'live' ? 'En cours' : 'Terminé'}
+                            </Badge>
                           </div>
                         ))
                       ) : (
@@ -388,7 +463,7 @@ export const OpposingTeamManager = () => {
                       )}
                       {(team as any).matches?.length > 2 && (
                         <div className="text-sm text-gray-500">
-                          +{(team as any).matches.length - 2} autres...
+                          +{(team as any).matches.length - 2} autres matchs...
                         </div>
                       )}
                     </div>
