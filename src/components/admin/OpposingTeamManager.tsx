@@ -33,7 +33,7 @@ interface OpposingPlayer {
 export const OpposingTeamManager = () => {
   const [teams, setTeams] = useState<OpposingTeam[]>([]);
   const [players, setPlayers] = useState<OpposingPlayer[]>([]);
-  const [matches, setMatches] = useState<Array<{id: string, home_team: string, away_team: string, match_date: string, competition: string}>>([]);
+  const [upcomingMatches, setUpcomingMatches] = useState<Array<{id: string, home_team: string, away_team: string, match_date: string, competition: string, opposing_team_id?: string}>>([]);
   const [selectedTeam, setSelectedTeam] = useState<string>("");
   const [isTeamDialogOpen, setIsTeamDialogOpen] = useState(false);
   const [isPlayerDialogOpen, setIsPlayerDialogOpen] = useState(false);
@@ -54,6 +54,7 @@ export const OpposingTeamManager = () => {
 
   useEffect(() => {
     fetchTeams();
+    fetchUpcomingMatches();
   }, []);
 
   useEffect(() => {
@@ -61,6 +62,21 @@ export const OpposingTeamManager = () => {
       fetchPlayers(selectedTeam);
     }
   }, [selectedTeam]);
+
+  const fetchUpcomingMatches = async () => {
+    const { data, error } = await supabase
+      .from('matches')
+      .select('*')
+      .gte('match_date', new Date().toISOString())
+      .order('match_date', { ascending: true });
+
+    if (error) {
+      toast.error("Erreur lors du chargement des matchs");
+      return;
+    }
+
+    setUpcomingMatches(data || []);
+  };
 
   const fetchTeams = async () => {
     const { data, error } = await supabase
@@ -122,6 +138,7 @@ export const OpposingTeamManager = () => {
       setEditingTeam(null);
       setTeamForm({ name: "", logo_url: "" });
       fetchTeams();
+      fetchUpcomingMatches(); // Rafraîchir aussi les matchs
     } catch (error) {
       toast.error("Erreur lors de la sauvegarde");
     }
@@ -249,6 +266,51 @@ export const OpposingTeamManager = () => {
 
   return (
     <div className="space-y-6">
+      {/* Section des prochains matchs */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Prochains Matchs à Venir</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {upcomingMatches.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {upcomingMatches.slice(0, 6).map((match) => (
+                <div key={match.id} className="border rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">{match.home_team}</span>
+                    <span className="text-sm text-gray-500">vs</span>
+                    <span className="font-semibold">{match.away_team}</span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {new Date(match.match_date).toLocaleDateString('fr-FR')} - {match.competition}
+                  </div>
+                  {match.opposing_team_id ? (
+                    <Badge variant="outline" className="text-green-600">
+                      Équipe liée
+                    </Badge>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        // Auto-créer l'équipe adverse basée sur le match
+                        const awayTeamName = match.away_team === "Real Madrid" ? match.home_team : match.away_team;
+                        setTeamForm({ name: awayTeamName, logo_url: "" });
+                        setIsTeamDialogOpen(true);
+                      }}
+                    >
+                      Créer équipe adverse
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">Aucun match à venir programmé</p>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
