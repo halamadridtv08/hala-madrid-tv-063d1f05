@@ -497,7 +497,7 @@ const Admin = () => {
                 Matchs
               </TabsTrigger>
               <TabsTrigger value="opponents" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <Users className="h-4 w-4" />
+                <Target className="h-4 w-4" />
                 Équipes Adverses
               </TabsTrigger>
               <TabsTrigger value="formations" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
