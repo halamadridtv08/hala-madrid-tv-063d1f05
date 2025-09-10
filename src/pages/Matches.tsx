@@ -6,9 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, MapPin, ChevronRight, Activity, RefreshCw } from "lucide-react";
+import { Calendar, Clock, MapPin, ChevronRight, Activity, RefreshCw, Users } from "lucide-react";
 import { MatchDetail } from "@/components/matches/MatchDetail";
 import { MatchStats } from "@/components/matches/MatchStats";
+import { TeamFormation } from "@/components/matches/TeamFormation";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMatches } from "@/hooks/useMatches";
 import { Match } from "@/types/Match";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +20,7 @@ const Matches = () => {
   const [selectedMatch, setSelectedMatch] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
+  const [showFormations, setShowFormations] = useState(false);
   const [syncing, setSyncing] = useState(false);
   
   const { upcomingMatches, pastMatches, loading, error, refetch } = useMatches();
@@ -105,6 +108,11 @@ const Matches = () => {
   const handleOpenMatchStats = (match: any) => {
     setSelectedMatch(match);
     setIsStatsOpen(true);
+  };
+
+  const handleOpenFormations = (match: any) => {
+    setSelectedMatch(match);
+    setShowFormations(true);
   };
 
   return (
@@ -211,15 +219,21 @@ const Matches = () => {
                           </div>
                         </div>
                         
-                        <div className="mt-8 text-center flex justify-between items-center">
+                        <div className="mt-8 flex flex-col md:flex-row gap-4 justify-between items-center">
                           {match.tickets && (
                             <Button className="bg-madrid-blue hover:bg-blue-700 text-white">
                               Acheter des billets
                             </Button>
                           )}
-                          <Button variant="outline" className="ml-auto" onClick={(e) => { e.stopPropagation(); handleOpenMatchDetail(match); }}>
-                            Voir détails <ChevronRight className="ml-1 h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button variant="outline" onClick={(e) => { e.stopPropagation(); handleOpenFormations(match); }}>
+                              <Users className="h-4 w-4 mr-2" />
+                              Compositions
+                            </Button>
+                            <Button variant="outline" onClick={(e) => { e.stopPropagation(); handleOpenMatchDetail(match); }}>
+                              Voir détails <ChevronRight className="ml-1 h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -304,6 +318,14 @@ const Matches = () => {
                           </Button>
                           <Button 
                             variant="outline" 
+                            onClick={() => handleOpenFormations(match)}
+                            className="flex items-center gap-2"
+                          >
+                            <Users size={16} />
+                            Compositions
+                          </Button>
+                          <Button 
+                            variant="outline" 
                             onClick={() => handleOpenMatchStats(match)}
                             className="flex items-center gap-2"
                           >
@@ -336,6 +358,18 @@ const Matches = () => {
           onClose={() => setIsStatsOpen(false)}
         />
       )}
+
+      {/* Team Formations Dialog */}
+      <Dialog open={showFormations} onOpenChange={setShowFormations}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Compositions d'équipe</DialogTitle>
+          </DialogHeader>
+          {selectedMatch && (
+            <TeamFormation match={selectedMatch} />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
