@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { FootballPitch } from '@/components/admin/formation/FootballPitch';
+import { DraggablePlayerCard } from '@/components/formation/DraggablePlayerCard';
 import { Users, RotateCcw, Save } from 'lucide-react';
 import { Player } from '@/types/Player';
 import { Match } from '@/types/Match';
@@ -44,73 +45,6 @@ const FORMATIONS = [
   { value: "3-5-2", label: "3-5-2" },
   { value: "4-2-3-1", label: "4-2-3-1" }
 ];
-
-const PlayerCard: React.FC<{
-  player: FormationPlayer;
-  position: { x: number; y: number };
-  onSwapPosition: (playerId: string, targetId: string) => void;
-  isDragOverlay?: boolean;
-}> = ({ player, position, onSwapPosition, isDragOverlay = false }) => {
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
-
-  return (
-    <div
-      className={`absolute w-16 h-20 transform -translate-x-1/2 -translate-y-1/2 cursor-move ${
-        isDragOverlay ? 'opacity-80 scale-110 z-50' : ''
-      }`}
-      style={{
-        left: `${position.x}%`,
-        top: `${position.y}%`,
-      }}
-      draggable
-    >
-      <Card className="w-full h-full bg-white/95 backdrop-blur-sm border-2 border-white shadow-lg">
-        <CardContent className="p-1 h-full flex flex-col items-center justify-between">
-          {/* Jersey number */}
-          <Badge className="bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center p-0">
-            {player.jersey_number}
-          </Badge>
-          
-          {/* Player image or initials */}
-          <div className="w-8 h-8 rounded-full overflow-hidden border border-border flex-shrink-0">
-            {player.player_image_url ? (
-              <img
-                src={player.player_image_url}
-                alt={player.player_name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
-                {player.player_name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-              </div>
-            )}
-          </div>
-          
-          {/* Player name */}
-          <div className="text-[0.6rem] font-medium text-center leading-tight text-foreground">
-            {player.player_name.split(' ').pop()}
-          </div>
-          
-          {/* Position */}
-          <div className="text-[0.5rem] text-muted-foreground uppercase font-medium">
-            {player.player_position}
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Rating badge */}
-      <div className="absolute -bottom-1 -right-1 bg-amber-400 text-amber-900 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
-        {player.player_rating.toFixed(1)}
-      </div>
-    </div>
-  );
-};
 
 export const TeamFormation: React.FC<TeamFormationProps> = ({ match }) => {
   const [formations, setFormations] = useState<any>({});
@@ -314,21 +248,19 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({ match }) => {
           <div className="relative">
             <FootballPitch>
               {starters.map((player: FormationPlayer) => (
-                <PlayerCard
+                <DraggablePlayerCard
                   key={player.id}
                   player={player}
                   position={{ x: player.position_x, y: player.position_y }}
-                  onSwapPosition={handleSwapPlayers}
                 />
               ))}
             </FootballPitch>
 
             <DragOverlay>
               {activeDragPlayer && (
-                <PlayerCard
+                <DraggablePlayerCard
                   player={activeDragPlayer}
                   position={{ x: activeDragPlayer.position_x, y: activeDragPlayer.position_y }}
-                  onSwapPosition={handleSwapPlayers}
                   isDragOverlay
                 />
               )}

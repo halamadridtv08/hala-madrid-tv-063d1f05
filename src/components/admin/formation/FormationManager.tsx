@@ -13,17 +13,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { FootballPitch } from './FootballPitch';
 import { PlayerCard } from './PlayerCard';
 import { FormationSelector } from './FormationSelector';
-import { FormationPlayerData, FORMATIONS, DEFAULT_PLAYERS, FormationPosition } from '@/types/Formation';
+import { FormationPlayerData, FORMATIONS, FormationPosition } from '@/types/Formation';
+import { Player } from '@/types/Player';
 import { RotateCcw, Save, Users } from 'lucide-react';
 
 export const FormationManager: React.FC = () => {
   const [selectedFormation, setSelectedFormation] = useState<string>('4-3-3');
-  const [players, setPlayers] = useState<FormationPlayerData[]>(DEFAULT_PLAYERS);
+  const [players, setPlayers] = useState<FormationPlayerData[]>([]);
   const [playerPositions, setPlayerPositions] = useState<Record<string, FormationPosition>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -32,6 +35,42 @@ export const FormationManager: React.FC = () => {
       },
     })
   );
+
+  // Charger les vrais joueurs depuis la base de données
+  useEffect(() => {
+    fetchPlayers();
+  }, []);
+
+  const fetchPlayers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('players')
+        .select('id, name, position, jersey_number, image_url, profile_image_url')
+        .eq('is_active', true)
+        .order('jersey_number');
+
+      if (error) throw error;
+
+      if (data) {
+        const formationPlayers: FormationPlayerData[] = data.map(player => ({
+          id: player.id,
+          name: player.name,
+          position: player.position,
+          jerseyNumber: player.jersey_number || 0,
+          imageUrl: player.profile_image_url || player.image_url,
+          rating: 8.0, // Note par défaut
+          isStarter: true
+        }));
+
+        setPlayers(formationPlayers);
+      }
+    } catch (error) {
+      console.error('Error fetching players:', error);
+      toast.error('Erreur lors du chargement des joueurs');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Initialiser les positions des joueurs selon la formation
   useEffect(() => {
@@ -57,10 +96,16 @@ export const FormationManager: React.FC = () => {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, delta } = event;
+    const { active, over, delta } = event;
     const playerId = String(active.id);
     
-    if (delta.x !== 0 || delta.y !== 0) {
+    // Si on fait un drop sur un autre joueur, échanger les positions
+    if (over && over.id !== active.id) {
+      const targetPlayerId = String(over.id);
+      handleSwapPlayers(playerId, targetPlayerId);
+    } 
+    // Sinon, déplacer le joueur selon le delta
+    else if (delta.x !== 0 || delta.y !== 0) {
       const currentPosition = playerPositions[playerId];
       if (currentPosition) {
         // Calculer la nouvelle position en pourcentage
@@ -79,6 +124,20 @@ export const FormationManager: React.FC = () => {
     }
     
     setActiveId(null);
+  };
+
+  const handleSwapPlayers = (playerId1: string, playerId2: string) => {
+    const pos1 = playerPositions[playerId1];
+    const pos2 = playerPositions[playerId2];
+    
+    if (pos1 && pos2) {
+      setPlayerPositions(prev => ({
+        ...prev,
+        [playerId1]: pos2,
+        [playerId2]: pos1
+      }));
+      toast.success('Positions échangées');
+    }
   };
 
   const handleUpdatePlayer = (playerId: string, updates: Partial<FormationPlayerData>) => {
@@ -133,6 +192,19 @@ export const FormationManager: React.FC = () => {
 
   const activeDragPlayer = activeId ? players.find(p => p.id === activeId) : null;
   const activeDragPosition = activeId ? playerPositions[activeId] : null;
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Chargement des joueurs...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

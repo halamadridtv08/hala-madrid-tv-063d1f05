@@ -236,16 +236,4 @@ export const FORMATIONS: Record<string, FormationLayout> = {
   }
 };
 
-export const DEFAULT_PLAYERS: FormationPlayerData[] = [
-  { id: "1", name: "Courtois", position: "GK", jerseyNumber: 1, rating: 8.5, isStarter: true },
-  { id: "2", name: "Carvajal", position: "RB", jerseyNumber: 2, rating: 8.2, isStarter: true },
-  { id: "3", name: "Militão", position: "CB", jerseyNumber: 3, rating: 8.0, isStarter: true },
-  { id: "4", name: "Alaba", position: "CB", jerseyNumber: 4, rating: 8.1, isStarter: true },
-  { id: "5", name: "Mendy", position: "LB", jerseyNumber: 23, rating: 7.8, isStarter: true },
-  { id: "6", name: "Tchouaméni", position: "CDM", jerseyNumber: 18, rating: 8.0, isStarter: true },
-  { id: "7", name: "Kroos", position: "CM", jerseyNumber: 8, rating: 8.5, isStarter: true },
-  { id: "8", name: "Modrić", position: "CM", jerseyNumber: 10, rating: 8.3, isStarter: true },
-  { id: "9", name: "Bellingham", position: "CAM", jerseyNumber: 5, rating: 8.4, isStarter: true },
-  { id: "10", name: "Vinícius Jr.", position: "LW", jerseyNumber: 7, rating: 8.6, isStarter: true },
-  { id: "11", name: "Mbappé", position: "ST", jerseyNumber: 9, rating: 9.0, isStarter: true }
-];
+// Supprimé DEFAULT_PLAYERS car on utilise maintenant les vrais joueurs de la base de données
