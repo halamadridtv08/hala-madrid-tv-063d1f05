@@ -19,7 +19,9 @@ import { PlayerCard } from './PlayerCard';
 import { FormationSelector } from './FormationSelector';
 import { FormationPlayerData, FORMATIONS, FormationPosition } from '@/types/Formation';
 import { Player } from '@/types/Player';
-import { RotateCcw, Save, Users } from 'lucide-react';
+import { RotateCcw, Save, Users, Shield } from 'lucide-react';
+import { OpposingTeamFormation } from './OpposingTeamFormation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const FormationManager: React.FC = () => {
   const [selectedFormation, setSelectedFormation] = useState<string>('4-3-3');
@@ -72,16 +74,56 @@ export const FormationManager: React.FC = () => {
     }
   };
 
-  // Initialiser les positions des joueurs selon la formation
+  // Initialiser les positions des joueurs selon la formation et leur poste
   useEffect(() => {
     const formation = FORMATIONS[selectedFormation];
-    if (formation) {
+    if (formation && players.length > 0) {
       const newPositions: Record<string, FormationPosition> = {};
-      players.slice(0, 11).forEach((player, index) => {
-        if (formation.positions[index]) {
-          newPositions[player.id] = formation.positions[index];
+      
+      // Grouper les joueurs par poste
+      const playersByPosition = {
+        GK: players.filter(p => p.position === 'Gardien'),
+        DEF: players.filter(p => ['Défenseur Central', 'Arrière Gauche', 'Arrière Droit'].includes(p.position)),
+        MID: players.filter(p => ['Milieu Central', 'Milieu Défensif', 'Milieu Offensif'].includes(p.position)),
+        FWD: players.filter(p => ['Attaquant', 'Ailier Gauche', 'Ailier Droit'].includes(p.position))
+      };
+
+      // Assigner les positions selon la formation et le poste réel
+      let positionIndex = 0;
+      
+      // Gardien (1 position)
+      if (playersByPosition.GK[0] && formation.positions[positionIndex]) {
+        newPositions[playersByPosition.GK[0].id] = formation.positions[positionIndex];
+        positionIndex++;
+      }
+      
+      // Défenseurs (positions suivantes selon formation)
+      const defCount = formation.name === '4-3-3' ? 4 : formation.name === '3-5-2' ? 3 : 4;
+      for (let i = 0; i < defCount && i < playersByPosition.DEF.length; i++) {
+        if (formation.positions[positionIndex]) {
+          newPositions[playersByPosition.DEF[i].id] = formation.positions[positionIndex];
+          positionIndex++;
         }
-      });
+      }
+      
+      // Milieux
+      const midCount = formation.name === '4-3-3' ? 3 : formation.name === '3-5-2' ? 5 : 3;
+      for (let i = 0; i < midCount && i < playersByPosition.MID.length; i++) {
+        if (formation.positions[positionIndex]) {
+          newPositions[playersByPosition.MID[i].id] = formation.positions[positionIndex];
+          positionIndex++;
+        }
+      }
+      
+      // Attaquants
+      const fwdCount = formation.name === '4-3-3' ? 3 : formation.name === '3-5-2' ? 2 : 3;
+      for (let i = 0; i < fwdCount && i < playersByPosition.FWD.length; i++) {
+        if (formation.positions[positionIndex]) {
+          newPositions[playersByPosition.FWD[i].id] = formation.positions[positionIndex];
+          positionIndex++;
+        }
+      }
+      
       setPlayerPositions(newPositions);
     }
   }, [selectedFormation, players]);
@@ -208,14 +250,27 @@ export const FormationManager: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Gestion des Compositions
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <Tabs defaultValue="real-madrid" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="real-madrid" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Real Madrid
+          </TabsTrigger>
+          <TabsTrigger value="opposing-team" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Équipe Adverse
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="real-madrid">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Composition Real Madrid
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
           {/* Sélecteur de formation */}
           <FormationSelector
             selectedFormation={selectedFormation}
@@ -295,6 +350,12 @@ export const FormationManager: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </TabsContent>
+
+    <TabsContent value="opposing-team">
+      <OpposingTeamFormation />
+    </TabsContent>
+  </Tabs>
+</div>
+);
 };

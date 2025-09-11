@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { FormationPlayerData } from '@/types/Formation';
 import { Edit3, Check, X } from 'lucide-react';
 
@@ -21,9 +18,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
   isDragOverlay = false 
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState(player.name);
-  const [editPosition, setEditPosition] = useState(player.position);
-  const [editJerseyNumber, setEditJerseyNumber] = useState(player.jerseyNumber);
+  const [editRating, setEditRating] = useState(player.rating);
 
   const {
     attributes,
@@ -45,25 +40,17 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 
   const handleSaveEdit = () => {
     onUpdatePlayer(player.id, {
-      name: editName,
-      position: editPosition,
-      jerseyNumber: editJerseyNumber
+      rating: editRating
     });
     setIsEditing(false);
   };
 
   const handleCancelEdit = () => {
-    setEditName(player.name);
-    setEditPosition(player.position);
-    setEditJerseyNumber(player.jerseyNumber);
+    setEditRating(player.rating);
     setIsEditing(false);
   };
 
-  const getRatingColor = (rating: number) => {
-    if (rating >= 8.5) return "bg-green-500";
-    if (rating >= 7.5) return "bg-yellow-500";
-    return "bg-orange-500";
-  };
+  const lastName = player.name.split(' ').pop() || player.name;
 
   return (
     <div
@@ -75,113 +62,84 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
         isDragOverlay ? 'rotate-3 scale-105' : ''
       } ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
     >
-      <Card className="w-16 h-20 sm:w-20 sm:h-24 md:w-24 md:h-28 bg-card/95 backdrop-blur-sm border-2 border-primary/20 hover:border-primary/40 transition-all duration-200 shadow-lg">
-        <div className="relative h-full p-1 sm:p-2 flex flex-col items-center justify-between">
-          {/* Numéro de maillot */}
-          <div className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-primary rounded-full flex items-center justify-center">
-            {isEditing ? (
-              <Input
-                value={editJerseyNumber}
-                onChange={(e) => setEditJerseyNumber(parseInt(e.target.value) || 0)}
-                className="w-8 h-4 text-xs text-center p-0 border-none bg-transparent text-primary-foreground"
-                type="number"
-                min="1"
-                max="99"
-              />
-            ) : (
-              <span className="text-xs font-bold text-primary-foreground">
-                {player.jerseyNumber}
-              </span>
-            )}
-          </div>
-
-          {/* Photo du joueur */}
-          <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+      <div className="relative">
+        {/* Player Card - Similar to reference image */}
+        <div className="w-20 h-24 sm:w-24 sm:h-28 md:w-28 md:h-32 bg-white rounded-t-3xl rounded-b-lg shadow-lg border border-gray-200">
+          {/* Player Photo */}
+          <div className="relative w-full h-16 sm:h-20 md:h-24 rounded-t-3xl overflow-hidden bg-gray-100">
             {player.imageUrl ? (
               <img 
                 src={player.imageUrl} 
                 alt={player.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-top"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <span className="text-xs sm:text-sm font-bold text-primary-foreground">
-                  {player.name.split(' ').map(n => n[0]).join('')}
+              <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center">
+                <span className="text-white text-lg font-bold">
+                  {player.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
                 </span>
               </div>
             )}
-          </div>
-
-          {/* Nom du joueur */}
-          <div className="text-center flex-1 flex flex-col justify-center min-h-0">
-            {isEditing ? (
-              <div className="space-y-1">
-                <Input
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="w-full h-4 text-xs text-center p-1 border"
-                  placeholder="Nom"
-                />
-                <Input
-                  value={editPosition}
-                  onChange={(e) => setEditPosition(e.target.value)}
-                  className="w-full h-4 text-xs text-center p-1 border"
-                  placeholder="Poste"
-                />
-              </div>
-            ) : (
-              <>
-                <p className="text-xs sm:text-sm font-semibold text-foreground truncate leading-tight">
-                  {player.name}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {player.position}
-                </p>
-              </>
-            )}
-          </div>
-
-          {/* Note et actions */}
-          <div className="flex items-center justify-between w-full mt-1">
-            <Badge 
-              variant="secondary" 
-              className={`text-xs px-1 py-0 ${getRatingColor(player.rating)} text-white`}
-            >
-              {player.rating}
-            </Badge>
-
-            {/* Boutons d'édition */}
-            <div className="flex gap-1">
-              {isEditing ? (
-                <>
-                  <button
-                    onClick={handleSaveEdit}
-                    className="w-4 h-4 bg-green-500 text-white rounded flex items-center justify-center hover:bg-green-600 transition-colors"
-                  >
-                    <Check className="w-2 h-2" />
-                  </button>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="w-4 h-4 bg-red-500 text-white rounded flex items-center justify-center hover:bg-red-600 transition-colors"
-                  >
-                    <X className="w-2 h-2" />
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsEditing(true);
-                  }}
-                  className="w-4 h-4 bg-muted text-muted-foreground rounded flex items-center justify-center hover:bg-muted-foreground hover:text-muted transition-colors"
-                >
-                  <Edit3 className="w-2 h-2" />
-                </button>
-              )}
+            
+            {/* Jersey Number */}
+            <div className="absolute top-1 right-1 w-4 h-4 sm:w-5 sm:h-5 bg-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs font-bold">
+                {player.jerseyNumber}
+              </span>
             </div>
           </div>
+          
+          {/* Player Name */}
+          <div className="px-1 py-1 text-center">
+            <p className="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wide truncate">
+              {lastName}
+            </p>
+          </div>
         </div>
-      </Card>
+
+        {/* Rating Badge - Yellow circle like in the image */}
+        <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
+          {isEditing ? (
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                value={editRating}
+                onChange={(e) => setEditRating(parseFloat(e.target.value) || 0)}
+                className="w-8 h-6 text-xs text-center border rounded"
+                min="0"
+                max="10"
+                step="0.1"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <button
+                onClick={handleSaveEdit}
+                className="w-4 h-4 bg-green-500 text-white rounded flex items-center justify-center"
+              >
+                <Check className="w-2 h-2" />
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className="w-4 h-4 bg-red-500 text-white rounded flex items-center justify-center"
+              >
+                <X className="w-2 h-2" />
+              </button>
+            </div>
+          ) : (
+            <div 
+              className="relative w-6 h-6 sm:w-7 sm:h-7 bg-yellow-400 rounded-full flex items-center justify-center shadow-md cursor-pointer hover:bg-yellow-500 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsEditing(true);
+              }}
+            >
+              <span className="text-xs font-bold text-gray-900">
+                {player.rating.toFixed(1)}
+              </span>
+              <Edit3 className="absolute -top-1 -right-1 w-2 h-2 text-gray-600" />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
