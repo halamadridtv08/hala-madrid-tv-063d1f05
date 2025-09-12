@@ -9,17 +9,21 @@ export function HeroSection() {
   return (
     <>
       <motion.div 
-        className="relative bg-madrid-blue overflow-hidden"
+        className="relative overflow-hidden"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
       >
-        <div 
-          className="absolute inset-0 opacity-30 z-0 bg-cover bg-center"
-          style={{ 
-            backgroundImage: `url('https://media.gettyimages.com/id/1664698815/photo/real-madrid-cf-beats-fc-barcelona-3-2-el-clasico-pre-season-friendly.jpg?s=2048x2048&w=gi&k=20&c=o3BYRGQaJdAbjXcH6_D0OjTNq4D9z_CXsH5RG31rz3A=')` 
-          }}
-        ></div>
+        <video 
+          className="absolute inset-0 w-full h-full object-cover z-0"
+          autoPlay 
+          muted 
+          loop 
+          playsInline
+        >
+          <source src="https://qjnppcfbywfazwolfppo.supabase.co/storage/v1/object/sign/media/iPhone-mockups.mp4_1750270490323.mp4?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mZTA2OTUzNy1lYzRmLTRhY2YtYjQ5Mi0zNzk0MWE4YzQ0YmYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJtZWRpYS9pUGhvbmUtbW9ja3Vwcy5tcDRfMTDuu46cAy2TcG12e3qivppEG1i5nSyRkTt3NTc2NDA0ODQsImV4cCI6MTc5NjUyMDQ4NH0.KRUwzPCichVHs59i06iymFSIvSoWXHGEesHj1vZCvpw" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-madrid-blue/40 z-10"></div>
         
         <div className="madrid-container py-8 sm:py-12 md:py-16 lg:py-24 xl:py-32 relative z-10">
           <motion.div 
