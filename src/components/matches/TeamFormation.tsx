@@ -250,7 +250,14 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({ match }) => {
               {starters.map((player: FormationPlayer) => (
                 <DraggablePlayerCard
                   key={player.id}
-                  player={player}
+                  player={{
+                    id: player.id,
+                    player_name: player.player_name,
+                    player_position: player.player_position,
+                    jersey_number: player.jersey_number,
+                    player_image_url: player.player_image_url,
+                    player_rating: player.player_rating
+                  }}
                   position={{ x: player.position_x, y: player.position_y }}
                 />
               ))}
@@ -259,7 +266,14 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({ match }) => {
             <DragOverlay>
               {activeDragPlayer && (
                 <DraggablePlayerCard
-                  player={activeDragPlayer}
+                  player={{
+                    id: activeDragPlayer.id,
+                    player_name: activeDragPlayer.player_name,
+                    player_position: activeDragPlayer.player_position,
+                    jersey_number: activeDragPlayer.jersey_number,
+                    player_image_url: activeDragPlayer.player_image_url,
+                    player_rating: activeDragPlayer.player_rating
+                  }}
                   position={{ x: activeDragPlayer.position_x, y: activeDragPlayer.position_y }}
                   isDragOverlay
                 />
