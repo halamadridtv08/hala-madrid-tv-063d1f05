@@ -255,6 +255,9 @@ export const FormationManager: React.FC = () => {
     if (error) {
       console.error('Erreur:', error);
       toast.error("Erreur lors de la mise à jour");
+    } else {
+      // Rafraîchir les formations après la mise à jour
+      fetchFormations();
     }
   };
 
@@ -280,9 +283,47 @@ export const FormationManager: React.FC = () => {
     }
   };
 
-  const handleFormationChange = (formation: string) => {
+  const handleFormationChange = async (formation: string) => {
     setSelectedFormation(formation);
-    toast.success(`Formation changée vers ${formation}`);
+    
+    // Mettre à jour la formation dans la base de données
+    if (formations[activeTeam]?.id) {
+      const { error } = await supabase
+        .from('match_formations')
+        .update({ formation })
+        .eq('id', formations[activeTeam].id);
+
+      if (error) {
+        console.error('Erreur:', error);
+        toast.error("Erreur lors du changement de formation");
+      } else {
+        // Appliquer les nouvelles positions selon la formation
+        await applyFormationPositions(formation, activeTeam);
+        toast.success(`Formation changée vers ${formation}`);
+        fetchFormations();
+      }
+    }
+  };
+
+  const applyFormationPositions = async (formation: string, teamType: "real_madrid" | "opposing") => {
+    if (!FORMATIONS[formation] || !formations[teamType]?.players) return;
+
+    const formationPositions = FORMATIONS[formation].positions;
+    const players = formations[teamType].players.filter((p: FormationPlayer) => p.is_starter);
+
+    // Mettre à jour les positions des joueurs titulaires
+    const updates = players.slice(0, formationPositions.length).map((player: FormationPlayer, index: number) => ({
+      id: player.id,
+      position_x: formationPositions[index].x,
+      position_y: formationPositions[index].y
+    }));
+
+    for (const update of updates) {
+      await supabase
+        .from('match_formation_players')
+        .update({ position_x: update.position_x, position_y: update.position_y })
+        .eq('id', update.id);
+    }
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -384,7 +425,7 @@ export const FormationManager: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Composition Real Madrid
+            Gestion des Compositions
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -455,7 +496,7 @@ export const FormationManager: React.FC = () => {
                           {formations[teamType].formation}
                         </Badge>
                         <div className="text-sm text-muted-foreground">
-                          Formation classique offensive
+                          {FORMATIONS[formations[teamType].formation]?.description || "Formation classique"}
                         </div>
                       </div>
 
@@ -481,53 +522,49 @@ export const FormationManager: React.FC = () => {
                             <div className="absolute w-24 h-24 border-2 border-white rounded-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
                             <div className="absolute w-2 h-2 bg-white rounded-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
                             
-                            {/* Surface de réparation supérieure */}
-                            <div className="absolute w-32 h-16 border-2 border-white top-0 left-1/2 transform -translate-x-1/2"></div>
-                            <div className="absolute w-16 h-8 border-2 border-white top-0 left-1/2 transform -translate-x-1/2"></div>
-                            
-                            {/* Surface de réparation inférieure */}
-                            <div className="absolute w-32 h-16 border-2 border-white bottom-0 left-1/2 transform -translate-x-1/2"></div>
-                            <div className="absolute w-16 h-8 border-2 border-white bottom-0 left-1/2 transform -translate-x-1/2"></div>
-                            
-                            {/* Buts */}
-                            <div className="absolute w-12 h-2 bg-white top-0 left-1/2 transform -translate-x-1/2"></div>
-                            <div className="absolute w-12 h-2 bg-white bottom-0 left-1/2 transform -translate-x-1/2"></div>
-                            
-                            {/* Coins */}
-                            <div className="absolute w-4 h-4 border-2 border-white rounded-full top-0 left-0"></div>
-                            <div className="absolute w-4 h-4 border-2 border-white rounded-full top-0 right-0"></div>
-                            <div className="absolute w-4 h-4 border-2 border-white rounded-full bottom-0 left-0"></div>
-                            <div className="absolute w-4 h-4 border-2 border-white rounded-full bottom-0 right-0"></div>
+                            {/* Surfaces de réparation */}
+                            <div className="absolute w-32 h-20 border-2 border-white bottom-0 left-1/2 transform -translate-x-1/2"></div>
+                            <div className="absolute w-32 h-20 border-2 border-white top-0 left-1/2 transform -translate-x-1/2"></div>
+                            <div className="absolute w-20 h-12 border-2 border-white bottom-0 left-1/2 transform -translate-x-1/2"></div>
+                            <div className="absolute w-20 h-12 border-2 border-white top-0 left-1/2 transform -translate-x-1/2"></div>
                           </div>
 
-                          {/* Joueurs */}
+                          {/* Joueurs titulaires */}
                           {formations[teamType].players
                             .filter((player: FormationPlayer) => player.is_starter)
                             .map((player: FormationPlayer) => (
-                            <div
-                              key={player.id}
-                              className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-move"
-                              style={{
-                                left: `${player.position_x}%`,
-                                top: `${player.position_y}%`
-                              }}
-                            >
-                              <PlayerCard
-                                player={{
-                                  id: player.id!,
-                                  name: player.player_name,
-                                  position: player.player_position,
-                                  jerseyNumber: player.jersey_number,
-                                  imageUrl: player.player_image_url,
-                                  rating: player.player_rating,
-                                  isStarter: player.is_starter
+                              <div
+                                key={player.id}
+                                className="absolute"
+                                style={{
+                                  left: `${player.position_x}%`,
+                                  top: `${player.position_y}%`,
+                                  transform: 'translate(-50%, -50%)'
                                 }}
-                                position={{ x: player.position_x, y: player.position_y }}
-                                onUpdatePlayer={() => {}}
-                                isDragOverlay={false}
-                              />
-                            </div>
-                          ))}
+                              >
+                                <PlayerCard
+                                  player={{
+                                    id: player.id!,
+                                    name: player.player_name,
+                                    position: player.player_position,
+                                    jerseyNumber: player.jersey_number,
+                                    imageUrl: player.player_image_url,
+                                    rating: player.player_rating,
+                                    isStarter: player.is_starter
+                                  }}
+                                  position={{ x: player.position_x, y: player.position_y }}
+                                  onUpdatePlayer={(playerId, updates) => {
+                                    if (updates.rating !== undefined) {
+                                      supabase
+                                        .from('match_formation_players')
+                                        .update({ player_rating: updates.rating })
+                                        .eq('id', playerId)
+                                        .then(() => fetchFormations());
+                                    }
+                                  }}
+                                />
+                              </div>
+                            ))}
                         </div>
 
                         <DragOverlay>
@@ -544,34 +581,56 @@ export const FormationManager: React.FC = () => {
                               }}
                               position={{ x: activeDragPlayer.position_x, y: activeDragPlayer.position_y }}
                               onUpdatePlayer={() => {}}
-                              isDragOverlay={true}
+                              isDragOverlay
                             />
                           )}
                         </DragOverlay>
                       </DndContext>
 
-                      {/* Instructions */}
-                      <div className="text-sm text-muted-foreground bg-muted/50 p-4 rounded-lg">
-                        <h4 className="font-medium mb-2">Instructions :</h4>
-                        <ul className="space-y-1 text-xs">
-                          <li>• Glissez-déposez les joueurs pour modifier leur position</li>
-                          <li>• Faites glisser un joueur sur un autre pour échanger leurs positions</li>
-                          <li>• Utilisez le sélecteur pour changer de formation</li>
-                          <li>• Sauvegardez vos compositions personnalisées par match</li>
-                        </ul>
-                      </div>
+                      {/* Remplaçants - Affichage horizontal en bas */}
+                      {formations[teamType].players?.filter((player: FormationPlayer) => !player.is_starter).length > 0 && (
+                        <div className="mt-6 space-y-3">
+                          <h4 className="font-semibold text-sm text-muted-foreground flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            Remplaçants ({formations[teamType].players.filter((player: FormationPlayer) => !player.is_starter).length})
+                          </h4>
+                          <div className="flex flex-wrap gap-3 p-4 bg-muted/50 rounded-lg">
+                            {formations[teamType].players
+                              .filter((player: FormationPlayer) => !player.is_starter)
+                              .map((player: FormationPlayer) => (
+                                <div key={player.id} className="flex items-center gap-2 bg-background p-2 rounded-lg border min-w-0">
+                                  <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span className="text-xs font-bold text-white">
+                                      {player.jersey_number}
+                                    </span>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{player.player_name}</p>
+                                    <p className="text-xs text-muted-foreground">{player.player_position}</p>
+                                  </div>
+                                  <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span className="text-xs font-bold text-gray-900">
+                                      {player.player_rating.toFixed(1)}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground mb-4">
-                        Aucune composition configurée pour {teamType === "real_madrid" ? "Real Madrid" : "l'équipe adverse"}
+                    <div className="text-center py-8 space-y-4">
+                      <p className="text-muted-foreground">
+                        Aucune formation disponible pour {teamType === "real_madrid" ? "Real Madrid" : "l'équipe adverse"}
                       </p>
-                      <Button
+                      <Button 
                         onClick={() => createDefaultFormation(teamType as "real_madrid" | "opposing")}
                         disabled={loading}
+                        className="flex items-center gap-2"
                       >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Créer une composition par défaut
+                        <Plus className="h-4 w-4" />
+                        Créer une formation
                       </Button>
                     </div>
                   )}

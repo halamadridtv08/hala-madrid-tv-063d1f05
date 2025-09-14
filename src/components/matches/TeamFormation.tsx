@@ -282,26 +282,31 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({ match }) => {
           </div>
         </DndContext>
 
-        {/* Substitutes */}
+        {/* Remplaçants - Affichage horizontal */}
         {substitutes.length > 0 && (
           <div className="space-y-3">
-            <h4 className="font-semibold text-muted-foreground">Remplaçants</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <h4 className="font-semibold text-muted-foreground flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Remplaçants ({substitutes.length})
+            </h4>
+            <div className="flex flex-wrap gap-3 p-4 bg-muted/50 rounded-lg">
               {substitutes.map((player: FormationPlayer) => (
-                <Card key={player.id} className="p-3">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="font-bold">
+                <div key={player.id} className="flex items-center gap-2 bg-background p-2 rounded-lg border min-w-0">
+                  <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-white">
                       {player.jersey_number}
-                    </Badge>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{player.player_name}</p>
-                      <p className="text-xs text-muted-foreground">{player.player_position}</p>
-                    </div>
-                    <Badge variant="secondary" className="text-xs">
-                      {player.player_rating.toFixed(1)}
-                    </Badge>
+                    </span>
                   </div>
-                </Card>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{player.player_name}</p>
+                    <p className="text-xs text-muted-foreground">{player.player_position}</p>
+                  </div>
+                  <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-gray-900">
+                      {player.player_rating.toFixed(1)}
+                    </span>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -338,7 +343,9 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({ match }) => {
         <Tabs value={activeTeam} onValueChange={(value) => setActiveTeam(value as "real_madrid" | "opposing")}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="real_madrid">Real Madrid</TabsTrigger>
-            <TabsTrigger value="opposing">{match.away_team}</TabsTrigger>
+            <TabsTrigger value="opposing">
+              {match.home_team === 'Real Madrid' ? match.away_team : match.home_team}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="real_madrid" className="mt-6">
