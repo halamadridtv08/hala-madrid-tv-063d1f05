@@ -143,7 +143,7 @@ export function PlayerSpotlight() {
                     <Award className="mr-2 h-4 w-4" />
                     Voir le Profil
                   </Button>
-                  <Button onClick={() => navigate('/players')} variant="outline" className="border-white text-white hover:text-madrid-blue bg-indigo-500 hover:bg-indigo-400">
+                  <Button onClick={() => navigate('/players')} variant="outline" className="border-white bg-indigo-500 hover:bg-indigo-400 text-base text-gray-950">
                     <Users className="mr-2 h-4 w-4" />
                     Tout l'Effectif
                   </Button>
