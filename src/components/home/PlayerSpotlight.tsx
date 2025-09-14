@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,26 +6,20 @@ import { Star, TrendingUp, Users, Award } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
 import { useNavigate } from "react-router-dom";
-
 export function PlayerSpotlight() {
   const navigate = useNavigate();
   const [featuredPlayer, setFeaturedPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     fetchFeaturedPlayer();
   }, []);
-
   const fetchFeaturedPlayer = async () => {
     try {
       // For now, let's get the first active player or a specific one
-      const { data, error } = await supabase
-        .from('players')
-        .select('*')
-        .eq('is_active', true)
-        .limit(1)
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from('players').select('*').eq('is_active', true).limit(1).single();
       if (error) {
         console.error('Error fetching featured player:', error);
         // Fallback to default player data
@@ -56,10 +49,13 @@ export function PlayerSpotlight() {
       setLoading(false);
     }
   };
-
   const getSeasonStats = (player: Player) => {
-    if (!player.stats) return { goals: 0, matches: 0, assists: 0, minutesPlayed: 0 };
-    
+    if (!player.stats) return {
+      goals: 0,
+      matches: 0,
+      assists: 0,
+      minutesPlayed: 0
+    };
     return {
       goals: player.stats.goals || 0,
       matches: player.stats.matches || 0,
@@ -67,35 +63,26 @@ export function PlayerSpotlight() {
       minutesPlayed: player.stats.minutesPlayed || 0
     };
   };
-
   if (loading) {
-    return (
-      <section className="py-12">
+    return <section className="py-12">
         <div className="madrid-container">
           <h2 className="section-title">Joueur en Vedette</h2>
           <div className="text-center py-8">Chargement...</div>
         </div>
-      </section>
-    );
+      </section>;
   }
-
   if (!featuredPlayer) {
-    return (
-      <section className="py-12">
+    return <section className="py-12">
         <div className="madrid-container">
           <h2 className="section-title">Joueur en Vedette</h2>
           <div className="text-center py-8 text-gray-500">
             Aucun joueur en vedette pour le moment.
           </div>
         </div>
-      </section>
-    );
+      </section>;
   }
-
   const stats = getSeasonStats(featuredPlayer);
-
-  return (
-    <section className="py-12">
+  return <section className="py-12">
       <div className="madrid-container">
         <h2 className="section-title">Joueur en Vedette</h2>
         
@@ -104,11 +91,7 @@ export function PlayerSpotlight() {
             <div className="grid grid-cols-1 md:grid-cols-2">
               {/* Image Section */}
               <div className="relative">
-                <img
-                  src={featuredPlayer.image_url || `https://placehold.co/400x600/1a365d/ffffff/?text=${featuredPlayer.name.charAt(0)}`}
-                  alt={featuredPlayer.name}
-                  className="w-full h-96 md:h-full object-cover"
-                />
+                <img src={featuredPlayer.image_url || `https://placehold.co/400x600/1a365d/ffffff/?text=${featuredPlayer.name.charAt(0)}`} alt={featuredPlayer.name} className="w-full h-96 md:h-full object-cover" />
                 <div className="absolute top-4 left-4">
                   <Badge className="bg-madrid-gold text-black text-lg px-3 py-1">
                     #{featuredPlayer.jersey_number}
@@ -156,18 +139,11 @@ export function PlayerSpotlight() {
                 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <Button 
-                    onClick={() => navigate(`/players/${featuredPlayer.id}`)}
-                    className="bg-madrid-gold hover:bg-yellow-500 text-black font-semibold"
-                  >
+                  <Button onClick={() => navigate(`/players/${featuredPlayer.id}`)} className="bg-madrid-gold hover:bg-yellow-500 text-black font-semibold">
                     <Award className="mr-2 h-4 w-4" />
                     Voir le Profil
                   </Button>
-                  <Button 
-                    onClick={() => navigate('/players')}
-                    variant="outline" 
-                    className="border-white text-white hover:bg-white hover:text-madrid-blue"
-                  >
+                  <Button onClick={() => navigate('/players')} variant="outline" className="border-white text-white hover:text-madrid-blue bg-indigo-500 hover:bg-indigo-400">
                     <Users className="mr-2 h-4 w-4" />
                     Tout l'Effectif
                   </Button>
@@ -177,6 +153,5 @@ export function PlayerSpotlight() {
           </CardContent>
         </Card>
       </div>
-    </section>
-  );
+    </section>;
 }
