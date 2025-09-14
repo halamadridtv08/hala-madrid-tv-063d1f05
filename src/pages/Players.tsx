@@ -12,7 +12,6 @@ import { Player } from "@/types/Player";
 import { Coach } from "@/types/Coach";
 import { Achievement } from "@/types/Achievement";
 import { useNavigate } from "react-router-dom";
-
 const Players = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -27,73 +26,54 @@ const Players = () => {
 
   // Organiser les joueurs par position comme dans l'admin
   const organizePlayersByPosition = () => {
-    const positions = [
-      { id: 'gardien', name: 'Gardiens', players: [] },
-      { id: 'defenseur', name: 'Défenseurs', players: [] },
-      { id: 'milieu', name: 'Milieux', players: [] },
-      { id: 'attaquant', name: 'Attaquants', players: [] }
-    ];
-
+    const positions = [{
+      id: 'gardien',
+      name: 'Gardiens',
+      players: []
+    }, {
+      id: 'defenseur',
+      name: 'Défenseurs',
+      players: []
+    }, {
+      id: 'milieu',
+      name: 'Milieux',
+      players: []
+    }, {
+      id: 'attaquant',
+      name: 'Attaquants',
+      players: []
+    }];
     const groups = positions.map(pos => {
       let filteredPlayers: Player[] = [];
-      
       switch (pos.id) {
         case 'gardien':
-          filteredPlayers = players.filter(player => 
-            player.position.toLowerCase().includes('gardien') ||
-            player.position.toLowerCase().includes('goalkeeper')
-          );
+          filteredPlayers = players.filter(player => player.position.toLowerCase().includes('gardien') || player.position.toLowerCase().includes('goalkeeper'));
           break;
         case 'defenseur':
-          filteredPlayers = players.filter(player => 
-            player.position.toLowerCase().includes('défenseur') ||
-            player.position.toLowerCase().includes('defenseur') ||
-            player.position.toLowerCase().includes('arrière') ||
-            player.position.toLowerCase().includes('latéral') ||
-            player.position.toLowerCase().includes('lateral') ||
-            player.position.toLowerCase().includes('central') ||
-            player.position.toLowerCase().includes('defender')
-          );
+          filteredPlayers = players.filter(player => player.position.toLowerCase().includes('défenseur') || player.position.toLowerCase().includes('defenseur') || player.position.toLowerCase().includes('arrière') || player.position.toLowerCase().includes('latéral') || player.position.toLowerCase().includes('lateral') || player.position.toLowerCase().includes('central') || player.position.toLowerCase().includes('defender'));
           break;
         case 'milieu':
-          filteredPlayers = players.filter(player => 
-            player.position.toLowerCase().includes('milieu') ||
-            player.position.toLowerCase().includes('midfielder') ||
-            player.position.toLowerCase().includes('centre') ||
-            player.position.toLowerCase().includes('médian') ||
-            player.position.toLowerCase().includes('median')
-          );
+          filteredPlayers = players.filter(player => player.position.toLowerCase().includes('milieu') || player.position.toLowerCase().includes('midfielder') || player.position.toLowerCase().includes('centre') || player.position.toLowerCase().includes('médian') || player.position.toLowerCase().includes('median'));
           break;
         case 'attaquant':
-          filteredPlayers = players.filter(player => 
-            player.position.toLowerCase().includes('attaquant') ||
-            player.position.toLowerCase().includes('ailier') ||
-            player.position.toLowerCase().includes('avant') ||
-            player.position.toLowerCase().includes('striker') ||
-            player.position.toLowerCase().includes('forward') ||
-            player.position.toLowerCase().includes('winger')
-          );
+          filteredPlayers = players.filter(player => player.position.toLowerCase().includes('attaquant') || player.position.toLowerCase().includes('ailier') || player.position.toLowerCase().includes('avant') || player.position.toLowerCase().includes('striker') || player.position.toLowerCase().includes('forward') || player.position.toLowerCase().includes('winger'));
           break;
       }
-      
       return {
         ...pos,
         players: filteredPlayers
       };
     });
-
     setPositionGroups(groups);
   };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Fetch players
-        const { data: playersData, error: playersError } = await supabase
-          .from('players')
-          .select('*')
-          .eq('is_active', true);
-
+        const {
+          data: playersData,
+          error: playersError
+        } = await supabase.from('players').select('*').eq('is_active', true);
         if (playersError) {
           console.error('Error fetching players:', playersError);
         } else {
@@ -101,29 +81,22 @@ const Players = () => {
         }
 
         // Fetch coaches
-        const { data: coachesData, error: coachesError } = await supabase
-          .from('coaches')
-          .select('*')
-          .eq('is_active', true);
-
+        const {
+          data: coachesData,
+          error: coachesError
+        } = await supabase.from('coaches').select('*').eq('is_active', true);
         if (coachesError) {
           console.error('Error fetching coaches:', coachesError);
         } else {
           setCoaches(coachesData || []);
-          
+
           // Find main coach and fetch their achievements
-          const mainCoach = coachesData?.find(coach => 
-            coach.role.toLowerCase().includes('principal') || 
-            coach.role.toLowerCase().includes('entraîneur') ||
-            coach.name.toLowerCase().includes('ancelotti')
-          ) || coachesData?.[0];
-
+          const mainCoach = coachesData?.find(coach => coach.role.toLowerCase().includes('principal') || coach.role.toLowerCase().includes('entraîneur') || coach.name.toLowerCase().includes('ancelotti')) || coachesData?.[0];
           if (mainCoach) {
-            const { data: achievementsData, error: achievementsError } = await supabase
-              .from('achievements')
-              .select('*')
-              .eq('coach_id', mainCoach.id);
-
+            const {
+              data: achievementsData,
+              error: achievementsError
+            } = await supabase.from('achievements').select('*').eq('coach_id', mainCoach.id);
             if (achievementsError) {
               console.error('Error fetching achievements:', achievementsError);
             } else {
@@ -137,7 +110,6 @@ const Players = () => {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
@@ -151,44 +123,20 @@ const Players = () => {
   // Filter players based on active tab and search term - synchronized with admin logic
   const filteredPlayers = players.filter(player => {
     let matchesTab = false;
-    
     if (activeTab === "all") {
       matchesTab = true;
     } else if (activeTab === "goalkeepers") {
-      matchesTab = player.position.toLowerCase().includes("gardien") ||
-                   player.position.toLowerCase().includes("goalkeeper");
+      matchesTab = player.position.toLowerCase().includes("gardien") || player.position.toLowerCase().includes("goalkeeper");
     } else if (activeTab === "defenders") {
-      matchesTab = player.position.toLowerCase().includes("défenseur") ||
-                   player.position.toLowerCase().includes("defenseur") ||
-                   player.position.toLowerCase().includes("arrière") ||
-                   player.position.toLowerCase().includes("latéral") ||
-                   player.position.toLowerCase().includes("lateral") ||
-                   player.position.toLowerCase().includes("central") ||
-                   player.position.toLowerCase().includes("defender");
+      matchesTab = player.position.toLowerCase().includes("défenseur") || player.position.toLowerCase().includes("defenseur") || player.position.toLowerCase().includes("arrière") || player.position.toLowerCase().includes("latéral") || player.position.toLowerCase().includes("lateral") || player.position.toLowerCase().includes("central") || player.position.toLowerCase().includes("defender");
     } else if (activeTab === "midfielders") {
-      matchesTab = player.position.toLowerCase().includes("milieu") ||
-                   player.position.toLowerCase().includes("midfielder") ||
-                   player.position.toLowerCase().includes("centre") ||
-                   player.position.toLowerCase().includes("médian") ||
-                   player.position.toLowerCase().includes("median");
+      matchesTab = player.position.toLowerCase().includes("milieu") || player.position.toLowerCase().includes("midfielder") || player.position.toLowerCase().includes("centre") || player.position.toLowerCase().includes("médian") || player.position.toLowerCase().includes("median");
     } else if (activeTab === "forwards") {
-      matchesTab = player.position.toLowerCase().includes("attaquant") ||
-                   player.position.toLowerCase().includes("ailier") ||
-                   player.position.toLowerCase().includes("avant") ||
-                   player.position.toLowerCase().includes("striker") ||
-                   player.position.toLowerCase().includes("forward") ||
-                   player.position.toLowerCase().includes("winger");
+      matchesTab = player.position.toLowerCase().includes("attaquant") || player.position.toLowerCase().includes("ailier") || player.position.toLowerCase().includes("avant") || player.position.toLowerCase().includes("striker") || player.position.toLowerCase().includes("forward") || player.position.toLowerCase().includes("winger");
     }
-    
-    const matchesSearch = searchTerm === "" || 
-      player.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (player.nationality && player.nationality.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      player.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (player.jersey_number && player.jersey_number.toString().includes(searchTerm));
-    
+    const matchesSearch = searchTerm === "" || player.name.toLowerCase().includes(searchTerm.toLowerCase()) || player.nationality && player.nationality.toLowerCase().includes(searchTerm.toLowerCase()) || player.position.toLowerCase().includes(searchTerm.toLowerCase()) || player.jersey_number && player.jersey_number.toString().includes(searchTerm);
     return matchesTab && matchesSearch;
   });
-
   const togglePlayerSelection = (id: string) => {
     const numericId = parseInt(id);
     if (selectedPlayers.includes(numericId)) {
@@ -208,20 +156,14 @@ const Players = () => {
   };
 
   // Find main coach (Entraîneur Principal)
-  const mainCoach = coaches.find(coach => 
-    coach.role.toLowerCase().includes('principal') || 
-    coach.role.toLowerCase().includes('entraîneur') ||
-    coach.name.toLowerCase().includes('ancelotti')
-  ) || coaches[0];
+  const mainCoach = coaches.find(coach => coach.role.toLowerCase().includes('principal') || coach.role.toLowerCase().includes('entraîneur') || coach.name.toLowerCase().includes('ancelotti')) || coaches[0];
 
   // Get other staff members
   const allStaffMembers = coaches.filter(coach => coach.id !== mainCoach?.id);
   const displayedStaffMembers = showAllStaff ? allStaffMembers : allStaffMembers.slice(0, 4);
   const hasMoreStaff = allStaffMembers.length > 4;
-
   if (loading) {
-    return (
-      <>
+    return <>
         <Navbar />
         <main className="min-h-screen flex items-center justify-center">
           <div className="text-center">
@@ -230,22 +172,15 @@ const Players = () => {
           </div>
         </main>
         <Footer />
-      </>
-    );
+      </>;
   }
-
-  return (
-    <>
+  return <>
       <Navbar />
       <main className="min-h-screen">
         <div className="bg-madrid-blue py-10">
           <div className="madrid-container">
             <div className="flex items-center gap-4 mb-4">
-              <Button
-                onClick={() => navigate('/')}
-                variant="outline"
-                className="text-white border-white hover:bg-white hover:text-madrid-blue"
-              >
+              <Button onClick={() => navigate('/')} variant="outline" className="border-white bg-transparent text-slate-50">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Retour
               </Button>
@@ -254,26 +189,14 @@ const Players = () => {
             <div className="flex flex-col sm:flex-row gap-4 items-center mt-6">
               <div className="relative flex-grow w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <Input
-                  placeholder="Rechercher par nom, nationalité, poste..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-full"
-                />
-                {searchTerm && (
-                  <button 
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    onClick={() => setSearchTerm("")}
-                  >
+                <Input placeholder="Rechercher par nom, nationalité, poste..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 w-full" />
+                {searchTerm && <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600" onClick={() => setSearchTerm("")}>
                     <X size={16} />
-                  </button>
-                )}
+                  </button>}
               </div>
-              {(searchTerm || activeTab !== "all") && (
-                <Button variant="outline" onClick={clearFilters} className="whitespace-nowrap text-white border-white hover:bg-white hover:text-madrid-blue">
+              {(searchTerm || activeTab !== "all") && <Button variant="outline" onClick={clearFilters} className="whitespace-nowrap text-white border-white hover:bg-white hover:text-madrid-blue">
                   Réinitialiser
-                </Button>
-              )}
+                </Button>}
             </div>
           </div>
         </div>
@@ -281,17 +204,7 @@ const Players = () => {
         <div className="madrid-container py-8">
           <div className="flex flex-col lg:flex-row gap-8 mb-12">
             <div className="lg:w-1/4">
-              {mainCoach && (
-                <CoachCard 
-                  name={mainCoach.name} 
-                  title={mainCoach.role}
-                  nationality={mainCoach.nationality || "Italienne"}
-                  birthDate="10 juin 1959"
-                  atClubSince="2021"
-                  image={mainCoach.image_url}
-                  achievements={coachAchievements}
-                />
-              )}
+              {mainCoach && <CoachCard name={mainCoach.name} title={mainCoach.role} nationality={mainCoach.nationality || "Italienne"} birthDate="10 juin 1959" atClubSince="2021" image={mainCoach.image_url} achievements={coachAchievements} />}
             </div>
             <div className="lg:w-3/4">
               <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg h-full">
@@ -304,14 +217,11 @@ const Players = () => {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {displayedStaffMembers.map((coach) => (
-                    <div key={coach.id} className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
+                  {displayedStaffMembers.map(coach => <div key={coach.id} className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
                       <h3 className="font-bold text-gray-900 dark:text-white">{coach.name}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-300">{coach.role}</p>
-                    </div>
-                  ))}
-                  {displayedStaffMembers.length < 4 && !showAllStaff && (
-                    <>
+                    </div>)}
+                  {displayedStaffMembers.length < 4 && !showAllStaff && <>
                       <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
                         <h3 className="font-bold text-gray-900 dark:text-white">Francesco Mauri</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-300">Préparateur Physique</p>
@@ -320,31 +230,20 @@ const Players = () => {
                         <h3 className="font-bold text-gray-900 dark:text-white">Luis Llopis</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-300">Entraîneur des Gardiens</p>
                       </div>
-                    </>
-                  )}
+                    </>}
                 </div>
 
-                {hasMoreStaff && (
-                  <div className="mt-4 text-center">
-                    <Button
-                      variant="ghost"
-                      onClick={() => setShowAllStaff(!showAllStaff)}
-                      className="flex items-center gap-2 mx-auto"
-                    >
-                      {showAllStaff ? (
-                        <>
+                {hasMoreStaff && <div className="mt-4 text-center">
+                    <Button variant="ghost" onClick={() => setShowAllStaff(!showAllStaff)} className="flex items-center gap-2 mx-auto">
+                      {showAllStaff ? <>
                           <span>Voir moins</span>
                           <ChevronUp className="h-4 w-4" />
-                        </>
-                      ) : (
-                        <>
+                        </> : <>
                           <span>Voir tous les membres ({allStaffMembers.length})</span>
                           <ChevronDown className="h-4 w-4" />
-                        </>
-                      )}
+                        </>}
                     </Button>
-                  </div>
-                )}
+                  </div>}
 
               </div>
             </div>
@@ -362,106 +261,67 @@ const Players = () => {
             <TabsContent value={activeTab} className="mt-0">
               {/* Organisation par position automatique */}
               <div className="space-y-8">
-                {positionGroups
-                  .filter(group => {
-                    // Filtrer les groupes selon l'onglet actif
-                    if (activeTab === "all") return true;
-                    if (activeTab === "goalkeepers") return group.id === "gardien";
-                    if (activeTab === "defenders") return group.id === "defenseur";
-                    if (activeTab === "midfielders") return group.id === "milieu";
-                    if (activeTab === "forwards") return group.id === "attaquant";
-                    return false;
-                  })
-                  .filter(group => {
-                    // Filtrer selon la recherche
-                    if (!searchTerm) return group.players.length > 0;
-                    return group.players.some(player => 
-                      player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      (player.nationality && player.nationality.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                      player.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      (player.jersey_number && player.jersey_number.toString().includes(searchTerm))
-                    );
-                  })
-                  .map((group) => {
-                    // Filtrer les joueurs du groupe selon la recherche
-                    const filteredGroupPlayers = group.players.filter(player => {
-                      if (!searchTerm) return true;
-                      return player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        (player.nationality && player.nationality.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                        player.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        (player.jersey_number && player.jersey_number.toString().includes(searchTerm));
-                    });
-
-                    if (filteredGroupPlayers.length === 0) return null;
-
-                    return (
-                      <div key={group.id} className="space-y-4">
+                {positionGroups.filter(group => {
+                // Filtrer les groupes selon l'onglet actif
+                if (activeTab === "all") return true;
+                if (activeTab === "goalkeepers") return group.id === "gardien";
+                if (activeTab === "defenders") return group.id === "defenseur";
+                if (activeTab === "midfielders") return group.id === "milieu";
+                if (activeTab === "forwards") return group.id === "attaquant";
+                return false;
+              }).filter(group => {
+                // Filtrer selon la recherche
+                if (!searchTerm) return group.players.length > 0;
+                return group.players.some(player => player.name.toLowerCase().includes(searchTerm.toLowerCase()) || player.nationality && player.nationality.toLowerCase().includes(searchTerm.toLowerCase()) || player.position.toLowerCase().includes(searchTerm.toLowerCase()) || player.jersey_number && player.jersey_number.toString().includes(searchTerm));
+              }).map(group => {
+                // Filtrer les joueurs du groupe selon la recherche
+                const filteredGroupPlayers = group.players.filter(player => {
+                  if (!searchTerm) return true;
+                  return player.name.toLowerCase().includes(searchTerm.toLowerCase()) || player.nationality && player.nationality.toLowerCase().includes(searchTerm.toLowerCase()) || player.position.toLowerCase().includes(searchTerm.toLowerCase()) || player.jersey_number && player.jersey_number.toString().includes(searchTerm);
+                });
+                if (filteredGroupPlayers.length === 0) return null;
+                return <div key={group.id} className="space-y-4">
                         <h3 className="text-2xl font-bold text-gray-800 dark:text-white border-b-2 border-madrid-blue pb-2">
                           {group.name} ({filteredGroupPlayers.length})
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                          {filteredGroupPlayers.map((player) => {
-                            const secondaryPosition = player.stats?.secondaryPosition || player.stats?.secondary_position;
-                            
-                            return (
-                              <PlayerCard 
-                                key={player.id} 
-                                id={player.id}
-                                name={player.name}
-                                number={player.jersey_number || 0}
-                                position={player.position}
-                                secondaryPosition={secondaryPosition}
-                                nationality={player.nationality}
-                                image={player.image_url}
-                                stats={{
-                                  matches: player.stats?.matches || 0,
-                                  goals: player.stats?.goals || 0,
-                                  assists: player.stats?.assists || 0,
-                                  cleanSheets: player.stats?.cleanSheets || 0,
-                                  goalsConceded: player.stats?.goalsConceded || 0,
-                                  minutesPlayed: player.stats?.minutesPlayed || 0
-                                }}
-                              />
-                            );
-                          })}
+                          {filteredGroupPlayers.map(player => {
+                      const secondaryPosition = player.stats?.secondaryPosition || player.stats?.secondary_position;
+                      return <PlayerCard key={player.id} id={player.id} name={player.name} number={player.jersey_number || 0} position={player.position} secondaryPosition={secondaryPosition} nationality={player.nationality} image={player.image_url} stats={{
+                        matches: player.stats?.matches || 0,
+                        goals: player.stats?.goals || 0,
+                        assists: player.stats?.assists || 0,
+                        cleanSheets: player.stats?.cleanSheets || 0,
+                        goalsConceded: player.stats?.goalsConceded || 0,
+                        minutesPlayed: player.stats?.minutesPlayed || 0
+                      }} />;
+                    })}
                         </div>
-                      </div>
-                    );
-                  })}
+                      </div>;
+              })}
                 
                 {/* Message si aucun joueur trouvé */}
-                {positionGroups.every(group => 
-                  group.players.filter(player => {
-                    if (!searchTerm) return true;
-                    return player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      (player.nationality && player.nationality.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                      player.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      (player.jersey_number && player.jersey_number.toString().includes(searchTerm));
-                  }).length === 0
-                ) && (
-                  <div className="text-center py-8">
+                {positionGroups.every(group => group.players.filter(player => {
+                if (!searchTerm) return true;
+                return player.name.toLowerCase().includes(searchTerm.toLowerCase()) || player.nationality && player.nationality.toLowerCase().includes(searchTerm.toLowerCase()) || player.position.toLowerCase().includes(searchTerm.toLowerCase()) || player.jersey_number && player.jersey_number.toString().includes(searchTerm);
+              }).length === 0) && <div className="text-center py-8">
                     <User className="mx-auto h-12 w-12 text-gray-400" />
                     <h3 className="mt-2 text-lg font-medium text-gray-800 dark:text-white">Aucun joueur trouvé</h3>
                     <p className="mt-1 text-gray-500 dark:text-gray-400">Essayez de modifier vos critères de recherche</p>
                     <Button onClick={clearFilters} variant="outline" className="mt-4">
                       Réinitialiser les filtres
                     </Button>
-                  </div>
-                )}
+                  </div>}
               </div>
             </TabsContent>
           </Tabs>
           
-          {searchTerm && filteredPlayers.length > 0 && (
-            <div className="mt-8 text-center text-gray-500">
+          {searchTerm && filteredPlayers.length > 0 && <div className="mt-8 text-center text-gray-500">
               {filteredPlayers.length} joueur{filteredPlayers.length > 1 ? 's' : ''} trouvé{filteredPlayers.length > 1 ? 's' : ''}
-            </div>
-          )}
+            </div>}
         </div>
       </main>
       <Footer />
-    </>
-  );
+    </>;
 };
-
 export default Players;
