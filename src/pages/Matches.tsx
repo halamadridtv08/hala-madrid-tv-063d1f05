@@ -15,24 +15,29 @@ import { useMatches } from "@/hooks/useMatches";
 import { Match } from "@/types/Match";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
 const Matches = () => {
   const [selectedMatch, setSelectedMatch] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [showFormations, setShowFormations] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  
-  const { upcomingMatches, pastMatches, loading, error, refetch } = useMatches();
+  const {
+    upcomingMatches,
+    pastMatches,
+    loading,
+    error,
+    refetch
+  } = useMatches();
 
   // Fonction de synchronisation manuelle
   const handleSyncMatches = async () => {
     setSyncing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('sync-matches');
-      
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('sync-matches');
       if (error) throw error;
-      
       toast.success('Synchronisation réussie');
       refetch(); // Recharger les données
     } catch (error) {
@@ -47,32 +52,30 @@ const Matches = () => {
   const formatMatchForDisplay = (match: Match) => ({
     id: match.id,
     competition: match.competition || 'Match amical',
-    round: '', // À ajouter si nécessaire
+    round: '',
+    // À ajouter si nécessaire
     date: match.match_date,
     homeTeam: {
       name: match.home_team,
-      logo: match.home_team_logo || (match.home_team === 'Real Madrid' 
-        ? "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png"
-        : "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sport_balls.svg/1200px-Sport_balls.svg.png"),
+      logo: match.home_team_logo || (match.home_team === 'Real Madrid' ? "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png" : "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sport_balls.svg/1200px-Sport_balls.svg.png"),
       score: match.home_score
     },
     awayTeam: {
       name: match.away_team,
-      logo: match.away_team_logo || (match.away_team === 'Real Madrid'
-        ? "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png"
-        : "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sport_balls.svg/1200px-Sport_balls.svg.png"),
+      logo: match.away_team_logo || (match.away_team === 'Real Madrid' ? "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png" : "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sport_balls.svg/1200px-Sport_balls.svg.png"),
       score: match.away_score
     },
     venue: match.venue,
-    tickets: match.home_team === 'Real Madrid', // Billets disponibles pour les matchs à domicile
-    scorers: [], // À implémenter si nécessaire
-    stats: {}, // À implémenter si nécessaire
+    tickets: match.home_team === 'Real Madrid',
+    // Billets disponibles pour les matchs à domicile
+    scorers: [],
+    // À implémenter si nécessaire
+    stats: {},
+    // À implémenter si nécessaire
     timeline: [] // À implémenter si nécessaire
   });
-
   const formattedUpcomingMatches = upcomingMatches.map(formatMatchForDisplay);
   const formattedPastMatches = pastMatches.map(formatMatchForDisplay);
-
   const formatMatchDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('fr-FR', {
@@ -82,7 +85,6 @@ const Matches = () => {
       year: 'numeric'
     }).format(date);
   };
-
   const formatMatchTime = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('fr-FR', {
@@ -90,33 +92,31 @@ const Matches = () => {
       minute: 'numeric'
     }).format(date);
   };
-
   const getCompetitionColor = (competition: string) => {
     switch (competition) {
-      case "La Liga": return "bg-green-600";
-      case "Ligue des Champions": return "bg-blue-600";
-      case "Copa del Rey": return "bg-purple-600";
-      default: return "bg-gray-600";
+      case "La Liga":
+        return "bg-green-600";
+      case "Ligue des Champions":
+        return "bg-blue-600";
+      case "Copa del Rey":
+        return "bg-purple-600";
+      default:
+        return "bg-gray-600";
     }
   };
-
   const handleOpenMatchDetail = (match: any) => {
     setSelectedMatch(match);
     setIsDetailOpen(true);
   };
-
   const handleOpenMatchStats = (match: any) => {
     setSelectedMatch(match);
     setIsStatsOpen(true);
   };
-
   const handleOpenFormations = (match: any) => {
     setSelectedMatch(match);
     setShowFormations(true);
   };
-
-  return (
-    <>
+  return <>
       <Navbar />
       <main className="min-h-screen">
         <div className="bg-madrid-blue py-10">
@@ -129,26 +129,17 @@ const Matches = () => {
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-4">
               <h2 className="text-2xl font-bold">Calendrier des matchs</h2>
-              {loading && (
-                <RefreshCw className="h-5 w-5 animate-spin text-madrid-blue" />
-              )}
+              {loading && <RefreshCw className="h-5 w-5 animate-spin text-madrid-blue" />}
             </div>
-            <Button 
-              onClick={handleSyncMatches}
-              disabled={syncing || loading}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
+            <Button onClick={handleSyncMatches} disabled={syncing || loading} variant="outline" className="flex items-center gap-2">
               <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
               {syncing ? 'Synchronisation...' : 'Synchroniser'}
             </Button>
           </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+          {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
               {error}
-            </div>
-          )}
+            </div>}
           
           <Tabs defaultValue="upcoming" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
@@ -157,19 +148,13 @@ const Matches = () => {
             </TabsList>
             
             <TabsContent value="upcoming">
-              {loading ? (
-                <div className="flex justify-center py-12">
+              {loading ? <div className="flex justify-center py-12">
                   <RefreshCw className="h-8 w-8 animate-spin text-madrid-blue" />
-                </div>
-              ) : formattedUpcomingMatches.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
+                </div> : formattedUpcomingMatches.length === 0 ? <div className="text-center py-12 text-gray-500">
                   <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Aucun match programmé pour le moment</p>
-                </div>
-              ) : (
-                <div className="grid gap-6">
-                  {formattedUpcomingMatches.map(match => (
-                  <Card key={match.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleOpenMatchDetail(match)}>
+                </div> : <div className="grid gap-6">
+                  {formattedUpcomingMatches.map(match => <Card key={match.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleOpenMatchDetail(match)}>
                     <CardContent className="p-0">
                       <div className="bg-gradient-to-r from-madrid-blue to-blue-800 p-4">
                         <div className="flex justify-between items-center text-white">
@@ -183,11 +168,7 @@ const Matches = () => {
                       <div className="p-6 md:p-8">
                         <div className="flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0">
                           <div className="flex flex-col items-center">
-                            <img 
-                              src={match.homeTeam.logo} 
-                              alt={match.homeTeam.name}
-                              className="w-16 h-16 object-contain"
-                            />
+                            <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="w-16 h-16 object-contain" />
                             <h3 className="text-lg font-bold mt-2">{match.homeTeam.name}</h3>
                           </div>
                           
@@ -210,53 +191,43 @@ const Matches = () => {
                           </div>
                           
                           <div className="flex flex-col items-center">
-                            <img 
-                              src={match.awayTeam.logo} 
-                              alt={match.awayTeam.name}
-                              className="w-16 h-16 object-contain"
-                            />
+                            <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="w-16 h-16 object-contain" />
                             <h3 className="text-lg font-bold mt-2">{match.awayTeam.name}</h3>
                           </div>
                         </div>
                         
                         <div className="mt-8 flex flex-col md:flex-row gap-4 justify-between items-center">
-                          {match.tickets && (
-                            <Button className="bg-madrid-blue hover:bg-blue-700 text-white">
-                              Acheter des billets
-                            </Button>
-                          )}
+                          {match.tickets}
                           <div className="flex gap-2">
-                            <Button variant="outline" onClick={(e) => { e.stopPropagation(); handleOpenFormations(match); }}>
+                            <Button variant="outline" onClick={e => {
+                          e.stopPropagation();
+                          handleOpenFormations(match);
+                        }}>
                               <Users className="h-4 w-4 mr-2" />
                               Compositions
                             </Button>
-                            <Button variant="outline" onClick={(e) => { e.stopPropagation(); handleOpenMatchDetail(match); }}>
+                            <Button variant="outline" onClick={e => {
+                          e.stopPropagation();
+                          handleOpenMatchDetail(match);
+                        }}>
                               Voir détails <ChevronRight className="ml-1 h-4 w-4" />
                             </Button>
                           </div>
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                  ))}
-                </div>
-              )}
+                  </Card>)}
+                </div>}
             </TabsContent>
             
             <TabsContent value="past">
-              {loading ? (
-                <div className="flex justify-center py-12">
+              {loading ? <div className="flex justify-center py-12">
                   <RefreshCw className="h-8 w-8 animate-spin text-madrid-blue" />
-                </div>
-              ) : formattedPastMatches.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
+                </div> : formattedPastMatches.length === 0 ? <div className="text-center py-12 text-gray-500">
                   <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Aucun match passé trouvé</p>
-                </div>
-              ) : (
-                <div className="grid gap-6">
-                  {formattedPastMatches.map(match => (
-                  <Card key={match.id} className="overflow-hidden">
+                </div> : <div className="grid gap-6">
+                  {formattedPastMatches.map(match => <Card key={match.id} className="overflow-hidden">
                     <CardContent className="p-0">
                       <div className="bg-gradient-to-r from-madrid-blue to-blue-800 p-4">
                         <div className="flex justify-between items-center text-white">
@@ -270,11 +241,7 @@ const Matches = () => {
                       <div className="p-6 md:p-8">
                         <div className="flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0">
                           <div className="flex flex-col items-center">
-                            <img 
-                              src={match.homeTeam.logo} 
-                              alt={match.homeTeam.name}
-                              className="w-16 h-16 object-contain"
-                            />
+                            <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="w-16 h-16 object-contain" />
                             <h3 className="text-lg font-bold mt-2">{match.homeTeam.name}</h3>
                           </div>
                           
@@ -301,11 +268,7 @@ const Matches = () => {
                           </div>
                           
                           <div className="flex flex-col items-center">
-                            <img 
-                              src={match.awayTeam.logo} 
-                              alt={match.awayTeam.name}
-                              className="w-16 h-16 object-contain"
-                            />
+                            <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="w-16 h-16 object-contain" />
                             <h3 className="text-lg font-bold mt-2">{match.awayTeam.name}</h3>
                           </div>
                         </div>
@@ -316,48 +279,28 @@ const Matches = () => {
                               Voir le résumé du match
                             </Link>
                           </Button>
-                          <Button 
-                            variant="outline" 
-                            onClick={() => handleOpenFormations(match)}
-                            className="flex items-center gap-2"
-                          >
+                          <Button variant="outline" onClick={() => handleOpenFormations(match)} className="flex items-center gap-2">
                             <Users size={16} />
                             Compositions
                           </Button>
-                          <Button 
-                            variant="outline" 
-                            onClick={() => handleOpenMatchStats(match)}
-                            className="flex items-center gap-2"
-                          >
+                          <Button variant="outline" onClick={() => handleOpenMatchStats(match)} className="flex items-center gap-2">
                             <Activity size={16} />
                             Statistiques du match
                           </Button>
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                  ))}
-                </div>
-              )}
+                  </Card>)}
+                </div>}
             </TabsContent>
           </Tabs>
         </div>
       </main>
       <Footer />
       
-      <MatchDetail 
-        match={selectedMatch} 
-        isOpen={isDetailOpen} 
-        onClose={() => setIsDetailOpen(false)} 
-      />
+      <MatchDetail match={selectedMatch} isOpen={isDetailOpen} onClose={() => setIsDetailOpen(false)} />
       
-      {selectedMatch && (
-        <MatchStats
-          match={selectedMatch}
-          isOpen={isStatsOpen}
-          onClose={() => setIsStatsOpen(false)}
-        />
-      )}
+      {selectedMatch && <MatchStats match={selectedMatch} isOpen={isStatsOpen} onClose={() => setIsStatsOpen(false)} />}
 
       {/* Team Formations Dialog */}
       <Dialog open={showFormations} onOpenChange={setShowFormations}>
@@ -365,13 +308,9 @@ const Matches = () => {
           <DialogHeader>
             <DialogTitle>Compositions d'équipe</DialogTitle>
           </DialogHeader>
-          {selectedMatch && (
-            <TeamFormation match={selectedMatch} />
-          )}
+          {selectedMatch && <TeamFormation match={selectedMatch} />}
         </DialogContent>
       </Dialog>
-    </>
-  );
+    </>;
 };
-
 export default Matches;
