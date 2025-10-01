@@ -4,8 +4,12 @@ import { Link } from "react-router-dom";
 import { YouTubeChannel } from "@/components/YouTubeChannel";
 import { NewsCarousel } from "@/components/home/NewsCarousel";
 import { motion } from "framer-motion";
+import { useHeroVideo } from "@/hooks/useHeroVideo";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function HeroSection() {
+  const { videoUrl, isLoading } = useHeroVideo();
+
   return (
     <>
       <motion.div 
@@ -45,16 +49,25 @@ export function HeroSection() {
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
-              <video 
-                className="w-full h-full rounded-xl object-cover shadow-2xl"
-                autoPlay 
-                muted 
-                loop 
-                playsInline
-              >
-                <source src="https://qjnppcfbywfazwolfppo.supabase.co/storage/v1/object/public/media/iPhone-mockups.mp4_1750270490323.mp4" type="video/mp4" />
-                Votre navigateur ne supporte pas la lecture vidéo.
-              </video>
+              {isLoading ? (
+                <Skeleton className="w-full h-full rounded-xl" />
+              ) : videoUrl ? (
+                <video 
+                  className="w-full h-full rounded-xl object-cover shadow-2xl"
+                  autoPlay 
+                  muted 
+                  loop 
+                  playsInline
+                  key={videoUrl}
+                >
+                  <source src={videoUrl} type="video/mp4" />
+                  Votre navigateur ne supporte pas la lecture vidéo.
+                </video>
+              ) : (
+                <div className="w-full h-full rounded-xl bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                  <p className="text-gray-500">Vidéo non disponible</p>
+                </div>
+              )}
             </motion.div>
           </div>
         </div>
