@@ -14,6 +14,7 @@ export interface Player {
   biography?: string;
   stats?: any;
   is_active: boolean;
+  is_featured?: boolean;
   created_at: string;
   updated_at: string;
   social_media?: any;

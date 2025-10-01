@@ -28,6 +28,7 @@ export const PlayerForm = ({ player, onSuccess, onCancel }: PlayerFormProps) => 
     image_url: player?.image_url || "",
     bio: player?.bio || "",
     is_active: player?.is_active !== false,
+    is_featured: player?.is_featured || false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -166,6 +167,16 @@ export const PlayerForm = ({ player, onSuccess, onCancel }: PlayerFormProps) => 
               onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
             />
             <Label htmlFor="is_active">Actif</Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="is_featured"
+              checked={formData.is_featured}
+              onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+            />
+            <Label htmlFor="is_featured">Joueur Vedette</Label>
           </div>
           
           <div className="flex space-x-2">

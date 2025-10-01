@@ -15,11 +15,11 @@ export function PlayerSpotlight() {
   }, []);
   const fetchFeaturedPlayer = async () => {
     try {
-      // For now, let's get the first active player or a specific one
+      // Récupérer le joueur marqué comme vedette
       const {
         data,
         error
-      } = await supabase.from('players').select('*').eq('is_active', true).limit(1).single();
+      } = await supabase.from('players').select('*').eq('is_featured', true).eq('is_active', true).limit(1).maybeSingle();
       if (error) {
         console.error('Error fetching featured player:', error);
         // Fallback to default player data

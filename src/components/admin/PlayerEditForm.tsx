@@ -25,6 +25,7 @@ interface Player {
   biography: string | null;
   social_media: any;
   is_active: boolean;
+  is_featured?: boolean;
 }
 
 interface PlayerEditFormProps {
@@ -48,7 +49,8 @@ export function PlayerEditForm({ player, onPlayerUpdated }: PlayerEditFormProps)
     profile_image_url: player.profile_image_url || "",
     biography: player.biography || "",
     social_media: player.social_media || { twitter: "", instagram: "", facebook: "" },
-    is_active: player.is_active
+    is_active: player.is_active,
+    is_featured: player.is_featured || false
   });
 
   const { toast } = useToast();
@@ -210,6 +212,17 @@ export function PlayerEditForm({ player, onPlayerUpdated }: PlayerEditFormProps)
                 className="w-4 h-4"
               />
               <Label htmlFor="edit-active">Joueur actif</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="edit-featured"
+                checked={formData.is_featured}
+                onChange={(e) => setFormData(prev => ({ ...prev, is_featured: e.target.checked }))}
+                className="w-4 h-4"
+              />
+              <Label htmlFor="edit-featured">Joueur Vedette</Label>
             </div>
           </div>
 

@@ -276,6 +276,9 @@ const PlayerPositionManager = ({ players, setPlayers }: PlayerPositionManagerPro
                             {player.nationality && (
                               <span className="text-xs text-gray-500">{player.nationality}</span>
                             )}
+                            {player.is_featured && (
+                              <Badge className="bg-madrid-gold text-black">⭐ Vedette</Badge>
+                            )}
                           </div>
                         </div>
                       </div>

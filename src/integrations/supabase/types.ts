@@ -665,6 +665,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          is_featured: boolean | null
           jersey_number: number | null
           name: string
           nationality: string | null
@@ -687,6 +688,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_featured?: boolean | null
           jersey_number?: number | null
           name: string
           nationality?: string | null
@@ -709,6 +711,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_featured?: boolean | null
           jersey_number?: number | null
           name?: string
           nationality?: string | null
