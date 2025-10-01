@@ -15,34 +15,44 @@ export function PlayerSpotlight() {
   }, []);
   const fetchFeaturedPlayer = async () => {
     try {
-      // Récupérer le joueur marqué comme vedette
-      const {
-        data,
-        error
-      } = await supabase.from('players').select('*').eq('is_featured', true).eq('is_active', true).limit(1).maybeSingle();
-      if (error) {
-        console.error('Error fetching featured player:', error);
-        // Fallback to default player data
-        setFeaturedPlayer({
-          id: "1",
-          name: "Kylian Mbappé",
-          position: "Ailier/Attaquant",
-          jersey_number: 9,
-          nationality: "Française",
-          image_url: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=400&h=600&fit=crop",
-          stats: {
-            goals: 8,
-            matches: 15,
-            assists: 2,
-            minutesPlayed: 1350
-          },
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-      } else {
-        setFeaturedPlayer(data);
+      // Récupérer le joueur marqué comme vedette avec ses stats
+      const { data: playerData, error: playerError } = await supabase
+        .from('players')
+        .select('*')
+        .eq('is_featured', true)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+
+      if (playerError) {
+        console.error('Error fetching featured player:', playerError);
+        return;
       }
+
+      if (!playerData) {
+        setFeaturedPlayer(null);
+        return;
+      }
+
+      // Récupérer les stats réelles du joueur depuis player_stats
+      const { data: statsData } = await supabase
+        .from('player_stats')
+        .select('goals, assists, minutes_played, match_id')
+        .eq('player_id', playerData.id);
+
+      // Calculer les stats totales
+      const totalStats = {
+        goals: statsData?.reduce((sum, stat) => sum + (stat.goals || 0), 0) || 0,
+        assists: statsData?.reduce((sum, stat) => sum + (stat.assists || 0), 0) || 0,
+        matches: statsData?.filter(stat => stat.match_id).length || 0,
+        minutesPlayed: statsData?.reduce((sum, stat) => sum + (stat.minutes_played || 0), 0) || 0
+      };
+
+      // Ajouter les stats calculées au joueur
+      setFeaturedPlayer({
+        ...playerData,
+        stats: totalStats
+      });
     } catch (error) {
       console.error('Error fetching featured player:', error);
     } finally {
