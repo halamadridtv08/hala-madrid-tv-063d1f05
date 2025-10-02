@@ -203,26 +203,33 @@ export function PlayerEditForm({ player, onPlayerUpdated }: PlayerEditFormProps)
               />
             </div>
 
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="edit-active"
-                checked={formData.is_active}
-                onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
-                className="w-4 h-4"
-              />
-              <Label htmlFor="edit-active">Joueur actif</Label>
-            </div>
+            <div className="md:col-span-2 space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="edit-active"
+                  checked={formData.is_active}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
+                  className="w-4 h-4"
+                />
+                <Label htmlFor="edit-active">Joueur actif</Label>
+              </div>
 
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="edit-featured"
-                checked={formData.is_featured}
-                onChange={(e) => setFormData(prev => ({ ...prev, is_featured: e.target.checked }))}
-                className="w-4 h-4"
-              />
-              <Label htmlFor="edit-featured">Joueur Vedette</Label>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="edit-featured"
+                    checked={formData.is_featured}
+                    onChange={(e) => setFormData(prev => ({ ...prev, is_featured: e.target.checked }))}
+                    className="w-4 h-4"
+                  />
+                  <Label htmlFor="edit-featured">Joueur Vedette (plusieurs joueurs peuvent être vedettes)</Label>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 ml-6">
+                  Les joueurs vedettes apparaîtront dans le carrousel sur la page d'accueil
+                </p>
+              </div>
             </div>
           </div>
 

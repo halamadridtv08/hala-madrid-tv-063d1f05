@@ -169,14 +169,20 @@ export const PlayerForm = ({ player, onSuccess, onCancel }: PlayerFormProps) => 
             <Label htmlFor="is_active">Actif</Label>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="is_featured"
-              checked={formData.is_featured}
-              onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-            />
-            <Label htmlFor="is_featured">Joueur Vedette</Label>
+          <div className="space-y-2">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="is_featured"
+                checked={formData.is_featured}
+                onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                className="rounded"
+              />
+              <Label htmlFor="is_featured">Joueur Vedette (plusieurs joueurs peuvent être vedettes)</Label>
+            </label>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Les joueurs vedettes apparaîtront dans le carrousel sur la page d'accueil
+            </p>
           </div>
           
           <div className="flex space-x-2">
