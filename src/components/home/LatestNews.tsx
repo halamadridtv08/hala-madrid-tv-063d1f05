@@ -87,7 +87,14 @@ export function LatestNews() {
           </div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {articles.map(article => <Card key={article.id} className="overflow-hidden card-hover">
                 <div className="relative h-48 overflow-hidden">
-                  <img src={article.image_url || "https://via.placeholder.com/400x200?text=Real+Madrid"} alt={article.title} className="w-full h-full object-cover object-center transition-transform duration-500 hover:scale-105" />
+                  <img 
+                    src={article.image_url || "https://via.placeholder.com/400x200?text=Real+Madrid"} 
+                    alt={article.title} 
+                    className="w-full h-full object-cover object-center transition-transform duration-500 hover:scale-105"
+                    width="400"
+                    height="192"
+                    loading="lazy"
+                  />
                   {article.read_time && <div className="absolute top-2 right-2">
                       <Badge className="bg-white text-gray-800 font-medium">
                         {article.read_time} de lecture

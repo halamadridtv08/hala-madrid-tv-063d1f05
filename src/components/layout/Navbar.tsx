@@ -62,6 +62,9 @@ export function Navbar() {
               src="/lovable-uploads/b475ad56-9770-4b40-a504-a1e193850dc8.png" 
               alt="Hala Madrid Logo" 
               className="h-8 w-8 md:h-12 md:w-12 object-contain"
+              width="48"
+              height="48"
+              fetchPriority="high"
             />
           </div>
           <span className="font-montserrat font-bold text-sm sm:text-lg md:text-xl lg:text-2xl tracking-tight">

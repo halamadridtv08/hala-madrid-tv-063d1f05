@@ -168,7 +168,14 @@ const Matches = () => {
                       <div className="p-6 md:p-8">
                         <div className="flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0">
                           <div className="flex flex-col items-center">
-                            <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="w-16 h-16 object-contain" />
+                            <img 
+                              src={match.homeTeam.logo} 
+                              alt={match.homeTeam.name} 
+                              className="w-16 h-16 object-contain"
+                              width="64"
+                              height="64"
+                              loading="lazy"
+                            />
                             <h3 className="text-lg font-bold mt-2">{match.homeTeam.name}</h3>
                           </div>
                           
@@ -191,7 +198,14 @@ const Matches = () => {
                           </div>
                           
                           <div className="flex flex-col items-center">
-                            <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="w-16 h-16 object-contain" />
+                            <img 
+                              src={match.awayTeam.logo} 
+                              alt={match.awayTeam.name} 
+                              className="w-16 h-16 object-contain"
+                              width="64"
+                              height="64"
+                              loading="lazy"
+                            />
                             <h3 className="text-lg font-bold mt-2">{match.awayTeam.name}</h3>
                           </div>
                         </div>
@@ -241,7 +255,14 @@ const Matches = () => {
                       <div className="p-6 md:p-8">
                         <div className="flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0">
                           <div className="flex flex-col items-center">
-                            <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="w-16 h-16 object-contain" />
+                            <img 
+                              src={match.homeTeam.logo} 
+                              alt={match.homeTeam.name} 
+                              className="w-16 h-16 object-contain"
+                              width="64"
+                              height="64"
+                              loading="lazy"
+                            />
                             <h3 className="text-lg font-bold mt-2">{match.homeTeam.name}</h3>
                           </div>
                           
@@ -268,7 +289,14 @@ const Matches = () => {
                           </div>
                           
                           <div className="flex flex-col items-center">
-                            <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="w-16 h-16 object-contain" />
+                            <img 
+                              src={match.awayTeam.logo} 
+                              alt={match.awayTeam.name} 
+                              className="w-16 h-16 object-contain"
+                              width="64"
+                              height="64"
+                              loading="lazy"
+                            />
                             <h3 className="text-lg font-bold mt-2">{match.awayTeam.name}</h3>
                           </div>
                         </div>

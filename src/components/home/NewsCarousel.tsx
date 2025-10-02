@@ -129,6 +129,9 @@ export function NewsCarousel() {
                         src={slide.image_url || "https://via.placeholder.com/1200x500?text=Real+Madrid"}
                         alt={slide.title}
                         className="w-full h-full object-cover object-center"
+                        width="1200"
+                        height="500"
+                        fetchPriority="high"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
                       <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
