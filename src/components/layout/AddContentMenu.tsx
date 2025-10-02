@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, Video, Camera, Users, Calendar, Youtube, Shield, Mic, PlayCircle } from "lucide-react";
+import { FileText, Video, Camera, Users, Calendar, Youtube, Shield, Mic, PlayCircle, Shirt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface AddContentMenuProps {
@@ -112,6 +112,14 @@ export function AddContentMenu({ onClose, onTabChange }: AddContentMenuProps) {
         >
           <PlayCircle className="h-4 w-4 text-madrid-blue" />
           <span>Séance d'entraînement</span>
+        </button>
+
+        <button 
+          onClick={() => handleNavigate("kits", "de maillot")}
+          className="flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+        >
+          <Shirt className="h-4 w-4 text-madrid-gold" />
+          <span>Maillot</span>
         </button>
 
         <div className="border-t border-gray-200 dark:border-gray-600 my-2"></div>

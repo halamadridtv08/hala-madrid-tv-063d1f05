@@ -67,14 +67,28 @@ const FeaturedKits = () => {
             <Card key={kit.id} className="group overflow-hidden cursor-pointer hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
               <CardContent className="p-0 relative">
                 <div className="aspect-[3/4] overflow-hidden bg-gradient-to-br from-background to-muted">
-                  <img
-                    src={kit.image_url || '/placeholder.svg'}
-                    alt={kit.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    onError={(e) => {
-                      e.currentTarget.src = '/placeholder.svg';
-                    }}
-                  />
+                  {kit.image_url ? (
+                    <img
+                      src={kit.image_url}
+                      alt={kit.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const parent = e.currentTarget.parentElement;
+                        if (parent) {
+                          const placeholder = document.createElement('div');
+                          placeholder.className = 'flex flex-col items-center justify-center h-full text-muted-foreground bg-muted';
+                          placeholder.innerHTML = '<div class="text-6xl mb-4">👕</div><div class="text-lg font-semibold">IMAGE COMING SOON</div>';
+                          parent.appendChild(placeholder);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground bg-muted">
+                      <div className="text-6xl mb-4">👕</div>
+                      <div className="text-lg font-semibold">IMAGE COMING SOON</div>
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
                 
