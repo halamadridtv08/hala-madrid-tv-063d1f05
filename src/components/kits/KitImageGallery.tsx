@@ -18,7 +18,8 @@ export const KitImageGallery = ({ images, kitTitle }: KitImageGalleryProps) => {
     containScroll: "keepSnaps",
     dragFree: true,
   });
-  const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const [zoomViewportRef, emblaZoomApi] = useEmblaCarousel({ loop: true });
 
   const onThumbClick = useCallback((index: number) => {
     if (!emblaMainApi || !emblaThumbsApi) return;
@@ -30,6 +31,21 @@ export const KitImageGallery = ({ images, kitTitle }: KitImageGalleryProps) => {
     setSelectedIndex(emblaMainApi.selectedScrollSnap());
     emblaThumbsApi.scrollTo(emblaMainApi.selectedScrollSnap());
   }, [emblaMainApi, emblaThumbsApi, setSelectedIndex]);
+
+  const scrollZoomPrev = useCallback(() => {
+    emblaZoomApi?.scrollPrev();
+  }, [emblaZoomApi]);
+
+  const scrollZoomNext = useCallback(() => {
+    emblaZoomApi?.scrollNext();
+  }, [emblaZoomApi]);
+
+  const openZoom = useCallback((index: number) => {
+    setZoomOpen(true);
+    setTimeout(() => {
+      emblaZoomApi?.scrollTo(index);
+    }, 0);
+  }, [emblaZoomApi]);
 
   useEffect(() => {
     if (!emblaMainApi) return;
@@ -96,7 +112,7 @@ export const KitImageGallery = ({ images, kitTitle }: KitImageGalleryProps) => {
                   size="icon"
                   variant="secondary"
                   className="absolute top-4 right-4 h-10 w-10 rounded-full bg-background/80 hover:bg-background"
-                  onClick={() => setZoomImage(image.image_url)}
+                  onClick={() => openZoom(index)}
                 >
                   <ZoomIn className="h-5 w-5" />
                 </Button>
@@ -166,15 +182,52 @@ export const KitImageGallery = ({ images, kitTitle }: KitImageGalleryProps) => {
         </div>
       )}
 
-      {/* Zoom Dialog */}
-      <Dialog open={zoomImage !== null} onOpenChange={() => setZoomImage(null)}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0">
-          <div className="relative w-full h-[95vh] flex items-center justify-center bg-black">
-            <img
-              src={zoomImage || ""}
-              alt={kitTitle}
-              className="max-w-full max-h-full object-contain"
-            />
+      {/* Zoom Dialog with Carousel */}
+      <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0">
+          <div className="relative w-full h-[95vh] bg-black/95">
+            {/* Carousel Container */}
+            <div className="overflow-hidden h-full" ref={zoomViewportRef}>
+              <div className="flex h-full">
+                {sortedImages.map((image, index) => (
+                  <div
+                    key={image.id}
+                    className="relative flex-[0_0_100%] min-w-0 h-full flex items-center justify-center p-8"
+                  >
+                    <img
+                      src={image.image_url}
+                      alt={`${kitTitle} - Image ${index + 1}`}
+                      className="max-w-full max-h-[80vh] object-contain"
+                      onError={(e) => {
+                        e.currentTarget.src = '/placeholder.svg';
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Navigation Arrows */}
+            {sortedImages.length > 1 && (
+              <>
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-background/90 hover:bg-background z-10"
+                  onClick={scrollZoomPrev}
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 h-12 w-12 rounded-full bg-background/90 hover:bg-background z-10"
+                  onClick={scrollZoomNext}
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </Button>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
