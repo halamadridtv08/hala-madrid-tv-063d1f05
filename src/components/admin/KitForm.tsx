@@ -10,6 +10,8 @@ import { Kit } from "@/types/Kit";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MediaUploader } from "./MediaUploader";
+import { KitImageManager } from "./KitImageManager";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface KitFormProps {
   kit?: Kit;
@@ -153,16 +155,48 @@ export const KitForm = ({ kit, onSuccess, onCancel }: KitFormProps) => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Image du maillot</Label>
-            <MediaUploader
-              onSuccess={handleImageUpload}
-              acceptTypes="image/*"
-              currentValue={formData.image_url}
-              buttonText="Ajouter une image"
-              showPreview={true}
-            />
-          </div>
+          {kit?.id && (
+            <Tabs defaultValue="gallery" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="gallery">Galerie d'images</TabsTrigger>
+                <TabsTrigger value="single">Image unique (legacy)</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="gallery" className="space-y-4">
+                <KitImageManager kitId={kit.id} onImagesChange={onSuccess} />
+              </TabsContent>
+              
+              <TabsContent value="single" className="space-y-2">
+                <Label>Image du maillot (legacy)</Label>
+                <MediaUploader
+                  onSuccess={handleImageUpload}
+                  acceptTypes="image/*"
+                  currentValue={formData.image_url}
+                  buttonText="Ajouter une image"
+                  showPreview={true}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Note: Utilisez la galerie d'images pour ajouter plusieurs photos.
+                </p>
+              </TabsContent>
+            </Tabs>
+          )}
+          
+          {!kit?.id && (
+            <div className="space-y-2">
+              <Label>Image du maillot</Label>
+              <MediaUploader
+                onSuccess={handleImageUpload}
+                acceptTypes="image/*"
+                currentValue={formData.image_url}
+                buttonText="Ajouter une image"
+                showPreview={true}
+              />
+              <p className="text-xs text-muted-foreground">
+                Note: Créez d'abord le maillot, puis vous pourrez ajouter plus d'images via la galerie.
+              </p>
+            </div>
+          )}
 
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">

@@ -161,6 +161,44 @@ export type Database = {
         }
         Relationships: []
       }
+      kit_images: {
+        Row: {
+          created_at: string
+          display_order: number | null
+          id: string
+          image_url: string
+          is_primary: boolean | null
+          kit_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url: string
+          is_primary?: boolean | null
+          kit_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          is_primary?: boolean | null
+          kit_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kit_images_kit_id_fkey"
+            columns: ["kit_id"]
+            isOneToOne: false
+            referencedRelation: "kits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kits: {
         Row: {
           created_at: string

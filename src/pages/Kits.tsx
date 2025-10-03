@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Kit } from "@/types/Kit";
+import { KitImageGallery } from "@/components/kits/KitImageGallery";
 
 const Kits = () => {
   const [kits, setKits] = useState<Kit[]>([]);
@@ -18,18 +19,36 @@ const Kits = () => {
   useEffect(() => {
     const fetchKits = async () => {
       try {
-        const { data, error } = await supabase
+        const { data: kitsData, error: kitsError } = await supabase
           .from('kits')
           .select('*')
           .eq('is_published', true)
           .order('display_order', { ascending: true });
 
-        if (error) {
-          console.error('Error fetching kits:', error);
+        if (kitsError) {
+          console.error('Error fetching kits:', kitsError);
           return;
         }
 
-        setKits((data as Kit[]) || []);
+        // Fetch images for each kit
+        const kitsWithImages = await Promise.all(
+          (kitsData || []).map(async (kit) => {
+            const { data: imagesData, error: imagesError } = await supabase
+              .from('kit_images')
+              .select('*')
+              .eq('kit_id', kit.id)
+              .order('display_order', { ascending: true });
+
+            if (imagesError) {
+              console.error('Error fetching kit images:', imagesError);
+              return { ...kit, kit_images: [] };
+            }
+
+            return { ...kit, kit_images: imagesData || [] };
+          })
+        );
+
+        setKits(kitsWithImages as Kit[]);
       } catch (error) {
         console.error('Error:', error);
       } finally {
@@ -131,7 +150,45 @@ const Kits = () => {
                 >
                   <Card className="overflow-hidden h-full shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer">
                     <div className="relative h-64 sm:h-80 lg:h-96 overflow-hidden bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
-                      {kit.image_url ? (
+                      {kit.kit_images && kit.kit_images.length > 0 ? (
+                        <>
+                          <motion.img 
+                            src={kit.kit_images.find(img => img.is_primary)?.image_url || kit.kit_images[0].image_url} 
+                            alt={kit.title}
+                            className="object-contain max-h-full max-w-full p-2 sm:p-4"
+                            initial={{ rotateY: 0 }}
+                            animate={{ 
+                              rotateY: hoveredKit === kit.id ? [0, -10, 0, 10, 0] : 0,
+                              y: hoveredKit === kit.id ? [0, -5, 0] : 0
+                            }}
+                            transition={{ 
+                              duration: hoveredKit === kit.id ? 2 : 0.5,
+                              ease: "easeInOut",
+                              repeat: hoveredKit === kit.id ? Infinity : 0,
+                              repeatDelay: 1
+                            }}
+                            style={{ 
+                              transformStyle: "preserve-3d",
+                              transformOrigin: "center"
+                            }}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const parent = e.currentTarget.parentElement;
+                              if (parent) {
+                                const placeholder = document.createElement('div');
+                                placeholder.className = 'flex flex-col items-center justify-center h-full text-muted-foreground';
+                                placeholder.innerHTML = '<div class="text-6xl mb-4">👕</div><div class="text-lg font-semibold">IMAGE COMING SOON</div>';
+                                parent.appendChild(placeholder);
+                              }
+                            }}
+                          />
+                          {kit.kit_images.length > 1 && (
+                            <div className="absolute bottom-2 right-2 bg-black/60 text-white px-2 py-1 rounded-full text-xs backdrop-blur-sm">
+                              +{kit.kit_images.length - 1} photos
+                            </div>
+                          )}
+                        </>
+                      ) : kit.image_url ? (
                         <motion.img 
                           src={kit.image_url} 
                           alt={kit.title}
@@ -177,7 +234,7 @@ const Kits = () => {
                         transition={{ duration: 0.3 }}
                       >
                         <span className="text-white bg-black/60 px-3 py-2 rounded-full text-xs sm:text-sm font-medium backdrop-blur-sm">
-                          Voir plus d'images
+                          {kit.kit_images && kit.kit_images.length > 1 ? 'Voir la galerie' : 'Voir plus d\'images'}
                         </span>
                       </motion.div>
                     )}
@@ -214,53 +271,20 @@ const Kits = () => {
               </DialogTitle>
             </DialogHeader>
             
-            <div className="relative mt-2 bg-gray-100 dark:bg-gray-800 rounded-md overflow-hidden flex-1">
+            <div className="mt-2">
               {selectedKit && (
-                <div className="aspect-[4/3] w-full relative">
-                  {selectedKit.image_url ? (
-                    <motion.img 
-                      key={currentImageIndex}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.4 }}
-                      src={selectedKit.image_url} 
-                      alt={`${selectedKit.title}`}
-                      className="object-contain w-full h-full p-2 sm:p-4"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        const parent = e.currentTarget.parentElement;
-                        if (parent) {
-                          const placeholder = document.createElement('div');
-                          placeholder.className = 'flex flex-col items-center justify-center h-full text-muted-foreground';
-                          placeholder.innerHTML = '<div class="text-8xl mb-4">👕</div><div class="text-2xl font-semibold">IMAGE COMING SOON</div>';
-                          parent.appendChild(placeholder);
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                      <div className="text-8xl mb-4">👕</div>
-                      <div className="text-2xl font-semibold">IMAGE COMING SOON</div>
-                    </div>
-                  )}
+                <div className="w-full">
+                  <KitImageGallery 
+                    images={selectedKit.kit_images || []} 
+                    kitTitle={selectedKit.title}
+                  />
                   {selectedKit.description && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white p-4 backdrop-blur-sm">
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
                       <p className="text-sm">{selectedKit.description}</p>
                     </div>
                   )}
                 </div>
               )}
-
-              <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="rounded-full bg-white/90 hover:bg-white shadow-lg h-8 w-8 sm:h-10 sm:w-10"
-                  onClick={(e) => { e.stopPropagation(); closeGallery(); }}
-                >
-                  <X className="h-3 w-3 sm:h-4 sm:w-4" />
-                </Button>
-              </div>
             </div>
           </DialogContent>
         </Dialog>

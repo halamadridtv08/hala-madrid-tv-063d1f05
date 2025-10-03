@@ -12,19 +12,37 @@ const FeaturedKits = () => {
   useEffect(() => {
     const fetchFeaturedKits = async () => {
       try {
-        const { data, error } = await supabase
+        const { data: kitsData, error: kitsError } = await supabase
           .from('kits')
           .select('*')
           .eq('is_featured', true)
           .eq('is_published', true)
           .order('display_order', { ascending: true });
 
-        if (error) {
-          console.error('Error fetching kits:', error);
+        if (kitsError) {
+          console.error('Error fetching kits:', kitsError);
           return;
         }
 
-        setFeaturedKits(data || []);
+        // Fetch primary image for each kit
+        const kitsWithImages = await Promise.all(
+          (kitsData || []).map(async (kit) => {
+            const { data: imagesData } = await supabase
+              .from('kit_images')
+              .select('*')
+              .eq('kit_id', kit.id)
+              .order('is_primary', { ascending: false })
+              .order('display_order', { ascending: true })
+              .limit(1);
+
+            return { 
+              ...kit, 
+              image_url: imagesData?.[0]?.image_url || kit.image_url 
+            };
+          })
+        );
+
+        setFeaturedKits(kitsWithImages || []);
       } catch (error) {
         console.error('Error:', error);
       } finally {
