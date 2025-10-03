@@ -184,20 +184,21 @@ export const KitImageGallery = ({ images, kitTitle }: KitImageGalleryProps) => {
 
       {/* Zoom Dialog with Carousel */}
       <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
-        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 border-0">
-          <div className="relative w-full h-[95vh] bg-black/95">
+        <DialogContent className="max-w-[98vw] max-h-[98vh] p-0 border-0 bg-transparent">
+          <div className="relative w-full h-[98vh] bg-black/95 rounded-lg overflow-hidden">
             {/* Carousel Container */}
-            <div className="overflow-hidden h-full" ref={zoomViewportRef}>
-              <div className="flex h-full">
+            <div className="overflow-hidden h-full w-full" ref={zoomViewportRef}>
+              <div className="flex h-full w-full">
                 {sortedImages.map((image, index) => (
                   <div
                     key={image.id}
-                    className="relative flex-[0_0_100%] min-w-0 h-full flex items-center justify-center p-8"
+                    className="relative flex-[0_0_100%] min-w-0 h-full flex items-center justify-center px-16 py-12"
                   >
                     <img
                       src={image.image_url}
                       alt={`${kitTitle} - Image ${index + 1}`}
-                      className="max-w-full max-h-[80vh] object-contain"
+                      className="max-w-full max-h-full w-auto h-auto object-contain"
+                      style={{ maxHeight: 'calc(98vh - 6rem)' }}
                       onError={(e) => {
                         e.currentTarget.src = '/placeholder.svg';
                       }}
