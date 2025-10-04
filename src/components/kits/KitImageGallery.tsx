@@ -79,21 +79,22 @@ export const KitImageGallery = ({ images, kitTitle }: KitImageGalleryProps) => {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 h-full flex flex-col">
       {/* Main Image Carousel */}
-      <div className="relative">
-        <div className="overflow-hidden rounded-lg" ref={mainViewportRef}>
-          <div className="flex">
+      <div className="relative flex-1 min-h-0">
+        <div className="overflow-hidden rounded-lg h-full" ref={mainViewportRef}>
+          <div className="flex h-full">
             {sortedImages.map((image, index) => (
               <div
                 key={image.id}
-                className="relative flex-[0_0_100%] min-w-0"
+                className="relative flex-[0_0_100%] min-w-0 h-full"
               >
-                <div className="aspect-[3/4] bg-muted/20 flex items-center justify-center">
+                <div className="h-full w-full bg-muted/20 flex items-center justify-center" style={{ maxHeight: '60vh' }}>
                   <img
                     src={image.image_url}
                     alt={`${kitTitle} - Image ${index + 1}`}
-                    className="max-h-full max-w-full object-contain p-4"
+                    className="max-h-full max-w-full w-auto h-auto object-contain p-4"
+                    style={{ maxHeight: 'calc(60vh - 2rem)' }}
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                       const parent = e.currentTarget.parentElement;
@@ -153,17 +154,17 @@ export const KitImageGallery = ({ images, kitTitle }: KitImageGalleryProps) => {
 
       {/* Thumbnails */}
       {sortedImages.length > 1 && (
-        <div className="overflow-hidden" ref={thumbViewportRef}>
-          <div className="flex gap-2">
+        <div className="overflow-hidden shrink-0" ref={thumbViewportRef}>
+          <div className="flex gap-2 py-2">
             {sortedImages.map((image, index) => (
               <button
                 key={image.id}
                 onClick={() => onThumbClick(index)}
                 className={cn(
-                  "relative flex-[0_0_80px] min-w-0 rounded-lg overflow-hidden border-2 transition-all",
+                  "relative flex-[0_0_80px] min-w-0 rounded-lg overflow-hidden border-2 transition-all shrink-0",
                   index === selectedIndex
-                    ? "border-primary opacity-100"
-                    : "border-transparent opacity-60 hover:opacity-100"
+                    ? "border-primary opacity-100 scale-105"
+                    : "border-transparent opacity-60 hover:opacity-100 hover:scale-105"
                 )}
               >
                 <div className="aspect-square">
