@@ -259,36 +259,34 @@ const Kits = () => {
 
         {/* Enhanced responsive gallery modal */}
         <Dialog open={selectedKit !== null} onOpenChange={(open) => !open && closeGallery()}>
-          <DialogContent className="max-w-[95vw] sm:max-w-5xl w-full max-h-[95vh] p-0 overflow-hidden">
-            <div className="flex flex-col h-full max-h-[95vh]">
-              <DialogHeader className="px-4 pt-4 pb-2 shrink-0">
-                <DialogTitle className="flex flex-col sm:flex-row sm:items-center gap-2 text-lg sm:text-xl">
-                  <span className="line-clamp-2">{selectedKit?.title}</span>
-                  {selectedKit && (
-                    <Badge className={`${getKitColor(selectedKit.type)} text-white self-start sm:ml-2 text-xs sm:text-sm`}>
-                      {getKitLabel(selectedKit.type)}
-                    </Badge>
-                  )}
-                </DialogTitle>
-              </DialogHeader>
-              
-              <div className="flex-1 overflow-y-auto px-4 pb-4">
+          <DialogContent className="max-w-[95vw] lg:max-w-6xl w-full h-[95vh] p-0 overflow-hidden flex flex-col">
+            <DialogHeader className="px-4 sm:px-6 pt-4 pb-3 shrink-0 border-b">
+              <DialogTitle className="flex flex-col sm:flex-row sm:items-center gap-2 text-lg sm:text-xl">
+                <span className="line-clamp-2">{selectedKit?.title}</span>
                 {selectedKit && (
-                  <div className="w-full h-full flex flex-col">
-                    <div className="flex-1 min-h-0">
-                      <KitImageGallery 
-                        images={selectedKit.kit_images || []} 
-                        kitTitle={selectedKit.title}
-                      />
-                    </div>
-                    {selectedKit.description && (
-                      <div className="mt-4 p-4 bg-muted/50 rounded-lg shrink-0">
-                        <p className="text-sm">{selectedKit.description}</p>
-                      </div>
-                    )}
-                  </div>
+                  <Badge className={`${getKitColor(selectedKit.type)} text-white self-start sm:ml-2 text-xs sm:text-sm`}>
+                    {getKitLabel(selectedKit.type)}
+                  </Badge>
                 )}
-              </div>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="flex-1 min-h-0 overflow-hidden px-4 sm:px-6 pb-4 sm:pb-6 flex flex-col">
+              {selectedKit && (
+                <>
+                  <div className="flex-1 min-h-0 mb-4">
+                    <KitImageGallery 
+                      images={selectedKit.kit_images || []} 
+                      kitTitle={selectedKit.title}
+                    />
+                  </div>
+                  {selectedKit.description && (
+                    <div className="p-3 sm:p-4 bg-muted/50 rounded-lg shrink-0">
+                      <p className="text-sm text-center sm:text-left">{selectedKit.description}</p>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </DialogContent>
         </Dialog>
