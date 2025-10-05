@@ -65,6 +65,41 @@ export type Database = {
         }
         Relationships: []
       }
+      article_images: {
+        Row: {
+          article_id: string
+          created_at: string
+          display_order: number | null
+          id: string
+          image_url: string
+          updated_at: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url: string
+          updated_at?: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_images_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       articles: {
         Row: {
           author_id: string
@@ -79,6 +114,7 @@ export type Database = {
           read_time: string | null
           title: string
           updated_at: string | null
+          video_url: string | null
         }
         Insert: {
           author_id: string
@@ -93,6 +129,7 @@ export type Database = {
           read_time?: string | null
           title: string
           updated_at?: string | null
+          video_url?: string | null
         }
         Update: {
           author_id?: string
@@ -107,6 +144,7 @@ export type Database = {
           read_time?: string | null
           title?: string
           updated_at?: string | null
+          video_url?: string | null
         }
         Relationships: []
       }
