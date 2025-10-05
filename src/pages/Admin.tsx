@@ -39,6 +39,7 @@ import { Match } from "@/types/Match";
 import { PressConference } from "@/types/PressConference";
 import { TrainingSession } from "@/types/TrainingSession";
 import { Kit } from "@/types/Kit";
+import { YouTubeVideo } from "@/types/YouTubeVideo";
 import ArticleTable from "@/components/admin/ArticleTable";
 import VideoTable from "@/components/admin/VideoTable";
 import PhotoTable from "@/components/admin/PhotoTable";
@@ -48,6 +49,7 @@ import MatchTable from "@/components/admin/MatchTable";
 import PressConferenceTable from "@/components/admin/PressConferenceTable";
 import TrainingSessionTable from "@/components/admin/TrainingSessionTable";
 import KitTable from "@/components/admin/KitTable";
+import YouTubeVideoTable from "@/components/admin/YouTubeVideoTable";
 import SettingsDashboard from "@/components/admin/SettingsDashboard";
 import { DataSynchronizer } from "@/components/admin/DataSynchronizer";
 import { OpposingTeamManager } from "@/components/admin/OpposingTeamManager";
@@ -78,6 +80,7 @@ const Admin = () => {
   const [pressConferences, setPressConferences] = useState<PressConference[]>([]);
   const [trainingSessions, setTrainingSessions] = useState<TrainingSession[]>([]);
   const [kits, setKits] = useState<Kit[]>([]);
+  const [youtubeVideos, setYoutubeVideos] = useState<YouTubeVideo[]>([]);
   const [stats, setStats] = useState<StatsData>({
     totalPlayers: 0,
     activePlayers: 0,
@@ -437,6 +440,13 @@ const Admin = () => {
     </div>
   );
 
+  const renderYouTubeVideos = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Gestion des Vidéos YouTube</h2>
+      <YouTubeVideoTable videos={youtubeVideos} setVideos={setYoutubeVideos} />
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="madrid-container py-8">
@@ -520,6 +530,10 @@ const Admin = () => {
                 <Shirt className="h-4 w-4" />
                 Maillots
               </TabsTrigger>
+              <TabsTrigger value="youtube" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <PlayCircle className="h-4 w-4" />
+                YouTube
+              </TabsTrigger>
               <TabsTrigger value="settings" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
                 <Settings className="h-4 w-4" />
                 Paramètres
@@ -540,6 +554,7 @@ const Admin = () => {
           <TabsContent value="training">{renderTrainingSessions()}</TabsContent>
           <TabsContent value="stats">{renderStats()}</TabsContent>
           <TabsContent value="kits">{renderKits()}</TabsContent>
+          <TabsContent value="youtube">{renderYouTubeVideos()}</TabsContent>
           <TabsContent value="settings">{renderSettings()}</TabsContent>
         </Tabs>
       </div>
