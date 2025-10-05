@@ -9,7 +9,6 @@ import { Article } from "@/types/Article";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { RichTextEditor } from "./RichTextEditor";
 
 interface ArticleFormProps {
   article?: Article;
@@ -25,7 +24,6 @@ export const ArticleForm = ({ article, onSuccess, onCancel }: ArticleFormProps) 
     description: article?.description || "",
     content: article?.content || "",
     image_url: article?.image_url || "",
-    video_url: article?.video_url || "",
     category: article?.category || "",
     is_published: article?.is_published || false,
     featured: article?.featured || false,
@@ -108,35 +106,22 @@ export const ArticleForm = ({ article, onSuccess, onCancel }: ArticleFormProps) 
           
           <div>
             <Label htmlFor="content">Contenu</Label>
-            <RichTextEditor
+            <Textarea
+              id="content"
               value={formData.content}
-              onChange={(value) => setFormData({ ...formData, content: value })}
-              placeholder="Écrivez le contenu de votre article ici... Utilisez ** pour le gras, _ pour l'italique, ## pour les titres, etc."
-              minRows={10}
+              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              className="min-h-[200px]"
+              required
             />
-            <p className="text-xs text-muted-foreground mt-2">
-              Formatage : **gras**, _italique_, ## Titre H2, ### Titre H3, - Liste à puces
-            </p>
           </div>
           
           <div>
-            <Label htmlFor="image_url">URL de l'image principale</Label>
+            <Label htmlFor="image_url">URL de l'image</Label>
             <Input
               id="image_url"
               type="url"
               value={formData.image_url}
               onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="video_url">URL de la vidéo (YouTube ou Supabase)</Label>
-            <Input
-              id="video_url"
-              type="url"
-              value={formData.video_url}
-              onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-              placeholder="https://www.youtube.com/watch?v=... ou URL Supabase"
             />
           </div>
           

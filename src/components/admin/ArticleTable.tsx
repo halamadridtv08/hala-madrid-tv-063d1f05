@@ -3,13 +3,11 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { Article } from "@/types/Article";
-import { Plus, Edit, Trash2, Eye, Image } from "lucide-react";
+import { Plus, Edit, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { ArticleForm } from "./ArticleForm";
-import { ArticleImageManager } from "./ArticleImageManager";
 
 interface ArticleTableProps {
   articles: Article[];
@@ -103,20 +101,11 @@ const ArticleTable = ({ articles, setArticles }: ArticleTableProps) => {
 
   if (showForm) {
     return (
-      <div className="space-y-6">
-        <ArticleForm
-          article={editingArticle}
-          onSuccess={handleFormSuccess}
-          onCancel={handleFormCancel}
-        />
-        
-        {editingArticle && (
-          <>
-            <Separator />
-            <ArticleImageManager articleId={editingArticle.id} />
-          </>
-        )}
-      </div>
+      <ArticleForm
+        article={editingArticle}
+        onSuccess={handleFormSuccess}
+        onCancel={handleFormCancel}
+      />
     );
   }
 
