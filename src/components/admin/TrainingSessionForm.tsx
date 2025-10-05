@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { TrainingSession } from "@/types/TrainingSession";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ interface FormData {
 }
 
 export function TrainingSessionForm({ session, onSuccess, onCancel }: TrainingSessionFormProps) {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<FormData>({
     defaultValues: {
       title: session?.title || '',
       description: session?.description || '',
@@ -136,9 +136,16 @@ export function TrainingSessionForm({ session, onSuccess, onCancel }: TrainingSe
       </div>
       
       <div className="flex items-center space-x-2">
-        <Switch
-          id="is_published"
-          {...register('is_published')}
+        <Controller
+          name="is_published"
+          control={control}
+          render={({ field }) => (
+            <Switch
+              id="is_published"
+              checked={field.value}
+              onCheckedChange={field.onChange}
+            />
+          )}
         />
         <Label htmlFor="is_published">Publier</Label>
       </div>
