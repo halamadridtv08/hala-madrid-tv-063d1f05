@@ -194,7 +194,7 @@ const Players = () => {
                     <X size={16} />
                   </button>}
               </div>
-              {(searchTerm || activeTab !== "all") && <Button variant="outline" onClick={clearFilters} className="whitespace-nowrap text-white border-white hover:bg-white hover:text-madrid-blue">
+              {(searchTerm || activeTab !== "all") && <Button variant="outline" onClick={clearFilters} className="whitespace-nowrap text-white border-white hover:text-madrid-blue bg-rose-50">
                   Réinitialiser
                 </Button>}
             </div>
