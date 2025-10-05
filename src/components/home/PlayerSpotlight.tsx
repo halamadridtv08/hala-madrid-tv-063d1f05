@@ -169,7 +169,7 @@ export function PlayerSpotlight() {
               Voir le Profil
             </Link>
           </Button>
-          <Button asChild variant="outline" className="flex-1 border-white/30 text-white hover:bg-white/10">
+          <Button asChild variant="outline" className="flex-1 bg-transparent border-white/30 text-white hover:bg-white/10">
             <Link to="/players">
               Tout l'Effectif
             </Link>
