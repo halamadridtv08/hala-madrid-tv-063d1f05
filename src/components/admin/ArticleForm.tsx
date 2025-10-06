@@ -5,10 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Article } from "@/types/Article";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { RichTextEditor } from "./RichTextEditor";
+import { ArticleImageManager } from "./ArticleImageManager";
 
 interface ArticleFormProps {
   article?: Article;
@@ -24,6 +27,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel }: ArticleFormProps) 
     description: article?.description || "",
     content: article?.content || "",
     image_url: article?.image_url || "",
+    video_url: article?.video_url || "",
     category: article?.category || "",
     is_published: article?.is_published || false,
     featured: article?.featured || false,
@@ -83,7 +87,15 @@ export const ArticleForm = ({ article, onSuccess, onCancel }: ArticleFormProps) 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <Tabs defaultValue="content" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="content">Contenu</TabsTrigger>
+            <TabsTrigger value="media">Médias</TabsTrigger>
+            {article?.id && <TabsTrigger value="gallery">Galerie</TabsTrigger>}
+          </TabsList>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <TabsContent value="content" className="space-y-4">
           <div>
             <Label htmlFor="title">Titre</Label>
             <Input
@@ -104,78 +116,98 @@ export const ArticleForm = ({ article, onSuccess, onCancel }: ArticleFormProps) 
             />
           </div>
           
-          <div>
-            <Label htmlFor="content">Contenu</Label>
-            <Textarea
-              id="content"
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              className="min-h-[200px]"
-              required
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="image_url">URL de l'image</Label>
-            <Input
-              id="image_url"
-              type="url"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="category">Catégorie</Label>
-            <Input
-              id="category"
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              required
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="read_time">Temps de lecture</Label>
-            <Input
-              id="read_time"
-              value={formData.read_time}
-              onChange={(e) => setFormData({ ...formData, read_time: e.target.value })}
-              placeholder="Ex: 5 min"
-            />
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="is_published"
-                checked={formData.is_published}
-                onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
+              <RichTextEditor
+                value={formData.content}
+                onChange={(content) => setFormData({ ...formData, content })}
+                description="Utilisez le formatage Markdown pour structurer votre article"
               />
-              <Label htmlFor="is_published">Publié</Label>
-            </div>
+          
+              <div>
+                <Label htmlFor="category">Catégorie</Label>
+                <Input
+                  id="category"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="read_time">Temps de lecture</Label>
+                <Input
+                  id="read_time"
+                  value={formData.read_time}
+                  onChange={(e) => setFormData({ ...formData, read_time: e.target.value })}
+                  placeholder="Ex: 5 min"
+                />
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="is_published"
+                    checked={formData.is_published}
+                    onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
+                  />
+                  <Label htmlFor="is_published">Publié</Label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="featured"
+                    checked={formData.featured}
+                    onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                  />
+                  <Label htmlFor="featured">À la une</Label>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="media" className="space-y-4">
+              <div>
+                <Label htmlFor="image_url">Image principale</Label>
+                <Input
+                  id="image_url"
+                  type="url"
+                  value={formData.image_url}
+                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                  placeholder="https://exemple.com/image.jpg"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="video_url">URL de la vidéo (YouTube ou Supabase)</Label>
+                <Input
+                  id="video_url"
+                  type="url"
+                  value={formData.video_url}
+                  onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                  placeholder="https://youtube.com/watch?v=... ou URL Supabase"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  La vidéo sera affichée après le texte de l'article
+                </p>
+              </div>
+            </TabsContent>
+
+            {article?.id && (
+              <TabsContent value="gallery">
+                <ArticleImageManager articleId={article.id} />
+              </TabsContent>
+            )}
             
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="featured"
-                checked={formData.featured}
-                onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-              />
-              <Label htmlFor="featured">À la une</Label>
+            <div className="flex space-x-2">
+              <Button type="submit" disabled={loading}>
+                {loading ? "Enregistrement..." : "Enregistrer"}
+              </Button>
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Annuler
+              </Button>
             </div>
-          </div>
-          
-          <div className="flex space-x-2">
-            <Button type="submit" disabled={loading}>
-              {loading ? "Enregistrement..." : "Enregistrer"}
-            </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Annuler
-            </Button>
-          </div>
-        </form>
+          </form>
+        </Tabs>
       </CardContent>
     </Card>
   );

@@ -1,204 +1,65 @@
-
-import React, { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { MediaUploader } from "./MediaUploader";
-import { Bold, Italic, AlignLeft, AlignCenter, AlignRight, Link, Video, Image as ImageIcon } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Bold, Italic, List, Heading2, Heading3 } from "lucide-react";
 
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
-  placeholder?: string;
-  minRows?: number;
+  label?: string;
+  description?: string;
 }
 
-export function RichTextEditor({
-  value,
-  onChange,
-  placeholder = "Contenu de l'article...",
-  minRows = 10
-}: RichTextEditorProps) {
-  const [showMediaUploader, setShowMediaUploader] = useState(false);
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-  
-  const insertAtCursor = (textToInsert: string) => {
-    if (!textareaRef.current) return;
-    
-    const textarea = textareaRef.current;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    
-    const textBefore = value.substring(0, start);
-    const textAfter = value.substring(end);
-    
-    onChange(textBefore + textToInsert + textAfter);
-    
-    // Reposition cursor after the inserted text
-    setTimeout(() => {
-      textarea.focus();
-      textarea.selectionStart = start + textToInsert.length;
-      textarea.selectionEnd = start + textToInsert.length;
-    }, 0);
-  };
-  
-  const insertTag = (openTag: string, closeTag: string) => {
-    if (!textareaRef.current) return;
-    
-    const textarea = textareaRef.current;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    
-    if (start === end) {
-      // No selection, just insert the tags
-      insertAtCursor(openTag + closeTag);
-    } else {
-      // Wrap the selection with tags
-      const selectedText = value.substring(start, end);
-      const textBefore = value.substring(0, start);
-      const textAfter = value.substring(end);
-      
-      onChange(textBefore + openTag + selectedText + closeTag + textAfter);
-    }
-  };
-  
-  const insertBold = () => insertTag("<strong>", "</strong>");
-  const insertItalic = () => insertTag("<em>", "</em>");
-  const insertParagraph = () => insertTag("<p>", "</p>");
-  const insertCenterAlign = () => insertTag('<div style="text-align: center;">', '</div>');
-  const insertLeftAlign = () => insertTag('<div style="text-align: left;">', '</div>');
-  const insertRightAlign = () => insertTag('<div style="text-align: right;">', '</div>');
-  
-  const insertLink = () => {
-    const url = prompt("Entrez l'URL du lien:", "https://");
-    if (url) {
-      if (textareaRef.current) {
-        const textarea = textareaRef.current;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        
-        if (start === end) {
-          // No text selected
-          insertAtCursor(`<a href="${url}" target="_blank">lien</a>`);
-        } else {
-          // Use selected text as link text
-          const selectedText = value.substring(start, end);
-          insertTag(`<a href="${url}" target="_blank">`, `</a>`);
-        }
-      }
-    }
-  };
-  
-  const handleMediaUploadSuccess = (url: string, type: string) => {
-    if (type === 'image') {
-      insertAtCursor(`\n<img src="${url}" alt="Image" style="max-width: 100%; height: auto;" />\n`);
-    } else if (type === 'video') {
-      insertAtCursor(`\n<video controls src="${url}" style="max-width: 100%;"></video>\n`);
-    }
-    setShowMediaUploader(false);
-  };
-  
+export const RichTextEditor = ({ value, onChange, label = "Contenu", description }: RichTextEditorProps) => {
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-1 p-1 border rounded-md bg-muted/30">
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={insertBold}
-          className="h-8 px-2"
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={insertItalic}
-          className="h-8 px-2"
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
-        
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={insertLeftAlign}
-          className="h-8 px-2"
-        >
-          <AlignLeft className="h-4 w-4" />
-        </Button>
-        
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={insertCenterAlign}
-          className="h-8 px-2"
-        >
-          <AlignCenter className="h-4 w-4" />
-        </Button>
-        
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={insertRightAlign}
-          className="h-8 px-2"
-        >
-          <AlignRight className="h-4 w-4" />
-        </Button>
-        
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={insertLink}
-          className="h-8 px-2"
-        >
-          <Link className="h-4 w-4" />
-        </Button>
-        
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => setShowMediaUploader(prev => !prev)}
-          className="h-8 px-2"
-        >
-          <ImageIcon className="h-4 w-4" />
-        </Button>
-        
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => setShowMediaUploader(prev => !prev)}
-          className="h-8 px-2"
-        >
-          <Video className="h-4 w-4" />
-        </Button>
-      </div>
+      <Label htmlFor="content">{label}</Label>
+      {description && <p className="text-sm text-muted-foreground">{description}</p>}
       
-      {showMediaUploader && (
-        <div className="p-4 border rounded-md bg-muted/10">
-          <MediaUploader 
-            onSuccess={handleMediaUploadSuccess} 
-            acceptTypes="image/*,video/*" 
-            buttonText="Télécharger un média"
-          />
-        </div>
-      )}
-      
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Aide au formatage</CardTitle>
+          <CardDescription className="text-xs space-y-1">
+            <div className="flex items-center gap-2">
+              <Bold className="h-3 w-3" />
+              <span>**texte** pour le gras</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Italic className="h-3 w-3" />
+              <span>*texte* pour l'italique</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Heading2 className="h-3 w-3" />
+              <span>## pour les titres H2</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Heading3 className="h-3 w-3" />
+              <span>### pour les titres H3</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <List className="h-3 w-3" />
+              <span>- pour les listes à puces</span>
+            </div>
+          </CardDescription>
+        </CardHeader>
+      </Card>
+
       <Textarea
-        ref={textareaRef}
+        id="content"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        rows={minRows}
-        className="font-mono"
+        className="min-h-[300px] font-mono text-sm"
+        placeholder="Écrivez votre contenu ici...
+
+Exemple:
+## Titre de section
+
+**Texte en gras** et *texte en italique*.
+
+- Point 1
+- Point 2
+- Point 3"
       />
     </div>
   );
-}
+};
