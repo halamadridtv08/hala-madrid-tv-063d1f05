@@ -44,32 +44,35 @@ const Auth = () => {
 
   const checkAdminRequires2FA = async (userId: string): Promise<boolean> => {
     try {
-      const { data: adminData, error: adminError } = await supabase
-        .from('admins')
-        .select('requires_2fa')
-        .eq('id', userId)
-        .single();
+      // Check if user is admin using the new user_roles table
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .maybeSingle();
 
-      if (adminError && adminError.code !== 'PGRST116') {
-        console.error('Error checking admin status:', adminError);
+      if (roleError) {
+        console.error('Error checking admin role:', roleError);
         return false;
       }
 
-      if (!adminData) return false; // Not an admin
+      if (!roleData) return false; // Not an admin
 
-      // Check if user has 2FA configured
+      // If user is admin, check if 2FA is set up (all admins require 2FA)
       const { data: totpData, error: totpError } = await supabase
         .from('user_totp_secrets')
         .select('is_verified')
         .eq('user_id', userId)
-        .single();
+        .eq('is_verified', true)
+        .maybeSingle();
 
-      if (totpError && totpError.code !== 'PGRST116') {
+      if (totpError) {
         console.error('Error checking 2FA status:', totpError);
         return false;
       }
 
-      return adminData.requires_2fa && totpData?.is_verified;
+      return !!totpData;
     } catch (error) {
       console.error('Error in 2FA check:', error);
       return false;

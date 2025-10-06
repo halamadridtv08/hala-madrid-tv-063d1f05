@@ -65,6 +65,41 @@ export type Database = {
         }
         Relationships: []
       }
+      article_images: {
+        Row: {
+          article_id: string
+          created_at: string
+          display_order: number | null
+          id: string
+          image_url: string
+          updated_at: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url: string
+          updated_at?: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_images_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       articles: {
         Row: {
           author_id: string
@@ -79,6 +114,7 @@ export type Database = {
           read_time: string | null
           title: string
           updated_at: string | null
+          video_url: string | null
         }
         Insert: {
           author_id: string
@@ -93,6 +129,7 @@ export type Database = {
           read_time?: string | null
           title: string
           updated_at?: string | null
+          video_url?: string | null
         }
         Update: {
           author_id?: string
@@ -107,6 +144,7 @@ export type Database = {
           read_time?: string | null
           title?: string
           updated_at?: string | null
+          video_url?: string | null
         }
         Relationships: []
       }
@@ -847,6 +885,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_totp_secrets: {
         Row: {
           backup_codes: string[] | null
@@ -954,13 +1013,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       update_all_players_ages: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1087,6 +1153,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
