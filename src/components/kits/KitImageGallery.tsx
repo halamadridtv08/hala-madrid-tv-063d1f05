@@ -100,10 +100,10 @@ export const KitImageGallery = ({
 
         {/* Navigation Arrows */}
         {sortedImages.length > 1 && <>
-            <Button size="icon" variant="secondary" onClick={scrollPrev} className="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/80 hover:bg-background text-madrid-white">
+            <Button size="icon" variant="secondary" onClick={scrollPrev} className="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/80 hover:bg-background text-madrid-white mx-[15px]">
               <ChevronLeft className="h-5 w-5" />
             </Button>
-            <Button size="icon" variant="secondary" onClick={scrollNext} className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/80 hover:bg-background text-madrid-white">
+            <Button size="icon" variant="secondary" onClick={scrollNext} className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-background/80 hover:bg-background text-madrid-white mx-[15px]">
               <ChevronRight className="h-5 w-5" />
             </Button>
           </>}
