@@ -91,7 +91,7 @@ export const KitImageGallery = ({
                 </div>
                 
                 {/* Zoom Button */}
-                <Button size="icon" variant="secondary" onClick={() => openZoom(index)} className="absolute top-4 right-4 h-10 w-10 rounded-full bg-background/80 hover:bg-background text-madrid-white">
+                <Button size="icon" variant="secondary" onClick={() => openZoom(index)} className="absolute top-4 right-4 h-10 w-10 rounded-full bg-background/80 hover:bg-background text-madrid-white mx-[15px]">
                   <ZoomIn className="h-5 w-5" />
                 </Button>
               </div>)}
