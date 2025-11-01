@@ -7,11 +7,14 @@ import { Card } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Link } from "react-router-dom";
 import type { CarouselApi } from "@/components/ui/carousel";
+
 export const TrophiesShowcase = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [api, setApi] = useState<CarouselApi>();
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   useEffect(() => {
     fetchSpecialArticles();
   }, []);
@@ -20,6 +23,7 @@ export const TrophiesShowcase = () => {
     const updateScrollButtons = () => {
       setCanScrollPrev(api.canScrollPrev());
       setCanScrollNext(api.canScrollNext());
+      setCurrentIndex(api.selectedScrollSnap());
     };
     updateScrollButtons();
     api.on("select", updateScrollButtons);
@@ -29,6 +33,18 @@ export const TrophiesShowcase = () => {
       api.off("reInit", updateScrollButtons);
     };
   }, [api]);
+
+  const handlePrevious = () => {
+    setIsTransitioning(true);
+    api?.scrollPrev();
+    setTimeout(() => setIsTransitioning(false), 1000);
+  };
+
+  const handleNext = () => {
+    setIsTransitioning(true);
+    api?.scrollNext();
+    setTimeout(() => setIsTransitioning(false), 1000);
+  };
   const fetchSpecialArticles = async () => {
     try {
       // Essayer d'abord les articles "special", sinon prendre les articles featured, sinon les plus récents
@@ -70,15 +86,23 @@ export const TrophiesShowcase = () => {
     }
   };
   if (articles.length === 0) return null;
-  const mainArticle = articles[0];
-  return <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#2b003e] via-[#1a0033] to-[#00001a] py-12 md:py-16">
+  const mainArticle = articles[currentIndex] || articles[0];
+  
+  return <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#2b003e] via-[#1a0033] to-[#00001a] py-12 md:py-16 animate-fade-in">
       <div className="container mx-auto px-4 h-full">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[80vh]">
           {/* Left side - Hero Image */}
           <div className="relative h-[500px] lg:h-[700px] rounded-2xl overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#2b003e]/40 z-10" />
             
-            <img src={mainArticle.image_url || "/placeholder.svg"} alt={mainArticle.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
+            <img 
+              key={mainArticle.id} 
+              src={mainArticle.image_url || "/placeholder.svg"} 
+              alt={mainArticle.title} 
+              className={`w-full h-full object-cover transform group-hover:scale-105 transition-all duration-1000 ${
+                isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+              }`} 
+            />
 
             {/* Vertical Text */}
             <div className="absolute left-8 top-1/4 z-20">
@@ -115,9 +139,9 @@ export const TrophiesShowcase = () => {
             loop: true
           }} className="w-full">
               <CarouselContent className="-ml-4">
-                {articles.map(article => <CarouselItem key={article.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                {articles.map((article, index) => <CarouselItem key={article.id} className="pl-4 md:basis-1/2 lg:basis-1/3 animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
                     <Link to={`/news/${article.id}`}>
-                      <Card className="group relative h-[400px] overflow-hidden bg-black/40 backdrop-blur-sm border-white/10 rounded-2xl hover:shadow-2xl hover:shadow-[#FFD700]/20 transition-all duration-500 hover:-translate-y-2">
+                      <Card className="group relative h-[400px] overflow-hidden bg-black/40 backdrop-blur-sm border-white/10 rounded-2xl hover:shadow-2xl hover:shadow-[#FFD700]/20 transition-all duration-500 hover:-translate-y-2 hover:border-[#FFD700]/30">
                         <div className="absolute inset-0">
                           <img src={article.image_url || "/placeholder.svg"} alt={article.title} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
@@ -142,10 +166,22 @@ export const TrophiesShowcase = () => {
 
             {/* Navigation Buttons */}
             <div className="flex gap-3 mt-6">
-              <Button variant="outline" size="icon" onClick={() => api?.scrollPrev()} disabled={!canScrollPrev} className="rounded-full w-12 h-12 bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 hover:border-white/30 disabled:opacity-30 transition-all">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={handlePrevious} 
+                disabled={!canScrollPrev || isTransitioning} 
+                className="rounded-full w-12 h-12 bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 hover:border-white/30 hover:scale-110 disabled:opacity-30 transition-all duration-300"
+              >
                 <ChevronLeft className="h-5 w-5 text-white" />
               </Button>
-              <Button variant="outline" size="icon" onClick={() => api?.scrollNext()} disabled={!canScrollNext} className="rounded-full w-12 h-12 bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 hover:border-white/30 disabled:opacity-30 transition-all">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={handleNext} 
+                disabled={!canScrollNext || isTransitioning} 
+                className="rounded-full w-12 h-12 bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 hover:border-white/30 hover:scale-110 disabled:opacity-30 transition-all duration-300"
+              >
                 <ChevronRight className="h-5 w-5 text-white" />
               </Button>
             </div>
