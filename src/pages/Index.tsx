@@ -6,6 +6,7 @@ import { PlayerSpotlight } from "@/components/home/PlayerSpotlight";
 import FeaturedKits from "@/components/home/FeaturedKits";
 import { VideoSection } from "@/components/home/VideoSection";
 import YouTubeVideos from "@/components/home/YouTubeVideos";
+import { TrophiesShowcase } from "@/components/home/TrophiesShowcase";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ const Index = () => {
       <LatestNews />
       <VideoSection />
       <YouTubeVideos />
+      <TrophiesShowcase />
       <UpcomingMatch />
       <PlayerSpotlight />
       <FeaturedKits />

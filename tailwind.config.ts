@@ -83,7 +83,8 @@ export default {
       },
       fontFamily: {
         montserrat: ["Montserrat", "sans-serif"],
-        roboto: ["Roboto", "sans-serif"]
+        roboto: ["Roboto", "sans-serif"],
+        playfair: ["Playfair Display", "serif"]
       }
     }
   },
