@@ -151,7 +151,7 @@ export const TrophiesShowcase = () => {
                           {article.category && <span className="inline-block px-3 py-1 bg-[#FFD700]/20 text-[#FFD700] text-xs font-semibold rounded-full mb-3 backdrop-blur-sm border border-[#FFD700]/30">
                               #{article.category}
                             </span>}
-                          <h3 className="text-white font-['Playfair_Display'] text-xl md:text-2xl mb-2 leading-tight">
+                          <h3 className="text-white font-['Playfair_Display'] text-sm md:text-base mb-2 leading-tight line-clamp-2">
                             {article.title}
                           </h3>
                           <p className="text-white/70 text-sm line-clamp-2">
