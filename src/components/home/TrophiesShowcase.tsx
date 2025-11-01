@@ -42,11 +42,42 @@ export const TrophiesShowcase = () => {
 
   const fetchSpecialArticles = async () => {
     try {
+      // Essayer d'abord les articles "special", sinon prendre les articles featured, sinon les plus récents
+      let query = supabase
+        .from("articles")
+        .select("*")
+        .eq("is_published", true);
+      
+      // Essayer d'abord avec category "special"
+      let { data: specialData } = await query
+        .eq("category", "special")
+        .order("published_at", { ascending: false })
+        .limit(8);
+
+      if (specialData && specialData.length > 0) {
+        setArticles(specialData);
+        return;
+      }
+
+      // Si pas de "special", prendre les featured
+      let { data: featuredData } = await supabase
+        .from("articles")
+        .select("*")
+        .eq("is_published", true)
+        .eq("featured", true)
+        .order("published_at", { ascending: false })
+        .limit(8);
+
+      if (featuredData && featuredData.length > 0) {
+        setArticles(featuredData);
+        return;
+      }
+
+      // Si pas de featured, prendre les plus récents
       const { data, error } = await supabase
         .from("articles")
         .select("*")
         .eq("is_published", true)
-        .eq("category", "special")
         .order("published_at", { ascending: false })
         .limit(8);
 
