@@ -14,9 +14,10 @@ interface ArticleFormProps {
   article?: Article;
   onSuccess: () => void;
   onCancel: () => void;
+  defaultCategory?: string;
 }
 
-export const ArticleForm = ({ article, onSuccess, onCancel }: ArticleFormProps) => {
+export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: ArticleFormProps) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -24,7 +25,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel }: ArticleFormProps) 
     description: article?.description || "",
     content: article?.content || "",
     image_url: article?.image_url || "",
-    category: article?.category || "",
+    category: article?.category || defaultCategory || "",
     is_published: article?.is_published || false,
     featured: article?.featured || false,
     read_time: article?.read_time || "",

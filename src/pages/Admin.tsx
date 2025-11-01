@@ -24,7 +24,8 @@ import {
   Mic,
   PlayCircle,
   Shirt,
-  Target
+  Target,
+  Trophy
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +56,7 @@ import { DataSynchronizer } from "@/components/admin/DataSynchronizer";
 import { OpposingTeamManager } from "@/components/admin/OpposingTeamManager";
 import { MatchFormationManager } from "@/components/admin/MatchFormationManager";
 import { FormationManager } from "@/components/admin/formation/FormationManager";
+import { SpecialArticlesManager } from "@/components/admin/SpecialArticlesManager";
 import { useNavigate } from "react-router-dom";
 
 interface StatsData {
@@ -447,6 +449,10 @@ const Admin = () => {
     </div>
   );
 
+  const renderSpecialArticles = () => (
+    <SpecialArticlesManager />
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="madrid-container py-8">
@@ -485,6 +491,10 @@ const Admin = () => {
               <TabsTrigger value="articles" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
                 <FileText className="h-4 w-4" />
                 Articles
+              </TabsTrigger>
+              <TabsTrigger value="special-articles" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <Trophy className="h-4 w-4" />
+                Articles Spéciaux
               </TabsTrigger>
               <TabsTrigger value="videos" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
                 <Video className="h-4 w-4" />
@@ -543,6 +553,7 @@ const Admin = () => {
 
           <TabsContent value="dashboard">{renderDashboard()}</TabsContent>
           <TabsContent value="articles">{renderArticles()}</TabsContent>
+          <TabsContent value="special-articles">{renderSpecialArticles()}</TabsContent>
           <TabsContent value="videos">{renderVideos()}</TabsContent>
           <TabsContent value="photos">{renderPhotos()}</TabsContent>
           <TabsContent value="players">{renderPlayers()}</TabsContent>
