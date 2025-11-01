@@ -89,7 +89,7 @@ export const TrophiesShowcase = () => {
             <div className="absolute bottom-8 left-8 z-20 max-w-md">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-1 h-16 bg-gradient-to-b from-[#FFD700] to-transparent" />
-                <h3 className="text-white font-['Playfair_Display'] text-3xl md:text-4xl lg:text-5xl leading-tight">
+                <h3 className="font-['Playfair_Display'] text-3xl md:text-4xl lg:text-5xl leading-tight text-madrid-gold">
                   Trophées & Moments Légendaires
                 </h3>
               </div>
