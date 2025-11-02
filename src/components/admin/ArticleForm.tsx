@@ -1,14 +1,15 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Article } from "@/types/Article";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { ArticleImageManager } from "./ArticleImageManager";
 
 interface ArticleFormProps {
   article?: Article;
@@ -25,6 +26,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
     description: article?.description || "",
     content: article?.content || "",
     image_url: article?.image_url || "",
+    video_url: article?.video_url || "",
     category: article?.category || defaultCategory || "",
     is_published: article?.is_published || false,
     featured: article?.featured || false,
@@ -84,9 +86,16 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="title">Titre</Label>
+        <Tabs defaultValue="content" className="w-full">
+          <TabsList>
+            <TabsTrigger value="content">Contenu</TabsTrigger>
+            {article && <TabsTrigger value="gallery">Galerie</TabsTrigger>}
+          </TabsList>
+
+          <TabsContent value="content">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="title">Titre</Label>
             <Input
               id="title"
               value={formData.title}
@@ -117,12 +126,23 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
           </div>
           
           <div>
-            <Label htmlFor="image_url">URL de l'image</Label>
+            <Label htmlFor="image_url">URL de l'image de couverture</Label>
             <Input
               id="image_url"
               type="url"
               value={formData.image_url}
               onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="video_url">URL de la vidéo (YouTube ou autre)</Label>
+            <Input
+              id="video_url"
+              type="url"
+              value={formData.video_url}
+              onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+              placeholder="https://www.youtube.com/watch?v=..."
             />
           </div>
           
@@ -176,7 +196,15 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
               Annuler
             </Button>
           </div>
-        </form>
+            </form>
+          </TabsContent>
+
+          {article && (
+            <TabsContent value="gallery">
+              <ArticleImageManager articleId={article.id} />
+            </TabsContent>
+          )}
+        </Tabs>
       </CardContent>
     </Card>
   );

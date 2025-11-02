@@ -5,6 +5,7 @@ export interface Article {
   description: string;
   content: string;
   image_url?: string;
+  video_url?: string;
   category: string;
   is_published: boolean;
   featured: boolean;

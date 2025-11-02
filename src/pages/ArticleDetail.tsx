@@ -11,15 +11,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PhotoType } from "@/types/Photo";
 import { VideoType } from "@/types/Video";
+import { ArticleVideoPlayer } from "@/components/articles/ArticleVideoPlayer";
+import { ArticleImageGallery } from "@/components/articles/ArticleImageGallery";
+
 interface Article {
   id: string;
   title: string;
   description: string;
   content: string;
   image_url: string | null;
+  video_url: string | null;
   category: string;
   published_at: string;
   read_time: string | null;
+}
+
+interface ArticleImage {
+  id: string;
+  image_url: string;
+  display_order: number;
 }
 const ArticleDetail = () => {
   const {
@@ -28,10 +38,8 @@ const ArticleDetail = () => {
     id: string;
   }>();
   const [article, setArticle] = useState<Article | null>(null);
-  const [photos, setPhotos] = useState<PhotoType[]>([]);
-  const [videos, setVideos] = useState<VideoType[]>([]);
+  const [articleImages, setArticleImages] = useState<ArticleImage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mediaLoading, setMediaLoading] = useState(true);
   const {
     toast
   } = useToast();
@@ -56,35 +64,25 @@ const ArticleDetail = () => {
         setLoading(false);
       }
     };
-    const fetchMedia = async () => {
-      try {
-        // Récupérer les photos publiées
-        const {
-          data: photosData,
-          error: photosError
-        } = await supabase.from('photos').select('*').eq('is_published', true).order('published_at', {
-          ascending: false
-        }).limit(8);
-        if (photosError) throw photosError;
-        setPhotos(photosData || []);
 
-        // Récupérer les vidéos publiées
-        const {
-          data: videosData,
-          error: videosError
-        } = await supabase.from('videos').select('*').eq('is_published', true).order('published_at', {
-          ascending: false
-        }).limit(4);
-        if (videosError) throw videosError;
-        setVideos(videosData || []);
+    const fetchArticleImages = async () => {
+      try {
+        if (!id) return;
+        const { data, error } = await supabase
+          .from('article_images')
+          .select('*')
+          .eq('article_id', id)
+          .order('display_order', { ascending: true });
+        
+        if (error) throw error;
+        setArticleImages(data || []);
       } catch (error: any) {
-        console.error('Error fetching media:', error);
-      } finally {
-        setMediaLoading(false);
+        console.error('Error fetching article images:', error);
       }
     };
+
     fetchArticle();
-    fetchMedia();
+    fetchArticleImages();
   }, [id, toast]);
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -148,7 +146,7 @@ const ArticleDetail = () => {
     // Fonction pour convertir les sauts de ligne en paragraphes, tout en conservant les balises HTML
     const formatContent = (content: string) => {
       // Si le contenu contient déjà des balises HTML (comme des vidéos ou des images), ne pas les modifier
-      if (content.includes('<video') || content.includes('<img')) {
+      if (content.includes('<video') || content.includes('<img') || content.includes('<iframe')) {
         return {
           __html: content
         };
@@ -156,10 +154,10 @@ const ArticleDetail = () => {
 
       // Sinon, convertir les sauts de ligne en paragraphes
       return {
-        __html: content.split('\n').filter(paragraph => paragraph.trim() !== '').map(paragraph => `<p>${paragraph}</p>`).join('')
+        __html: content.split('\n\n').filter(paragraph => paragraph.trim() !== '').map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`).join('')
       };
     };
-    return <div dangerouslySetInnerHTML={formatContent(article.content)} />;
+    return <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={formatContent(article.content)} />;
   };
   return <>
       <Navbar />
@@ -193,11 +191,17 @@ const ArticleDetail = () => {
           
           <Card className="mb-12">
             <CardContent className="p-6 sm:p-8">
-              <div className="prose dark:prose-invert max-w-none">
-                {renderContent()}
-              </div>
+              {renderContent()}
             </CardContent>
           </Card>
+
+          {article.video_url && (
+            <ArticleVideoPlayer videoUrl={article.video_url} />
+          )}
+
+          {articleImages.length > 0 && (
+            <ArticleImageGallery images={articleImages} />
+          )}
 
           {/* Galerie d'actualités */}
           
