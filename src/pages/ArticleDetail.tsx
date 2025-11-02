@@ -189,11 +189,9 @@ const ArticleDetail = () => {
               <img src={article.image_url} alt={article.title} className="w-full h-auto max-h-[500px] object-cover object-center rounded-lg" />
             </div>}
           
-          <Card className="mb-12">
-            <CardContent className="p-6 sm:p-8">
-              {renderContent()}
-            </CardContent>
-          </Card>
+          <div className="mb-12">
+            {renderContent()}
+          </div>
 
           {article.video_url && (
             <ArticleVideoPlayer videoUrl={article.video_url} />
