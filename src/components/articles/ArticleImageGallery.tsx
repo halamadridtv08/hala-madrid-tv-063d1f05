@@ -40,25 +40,43 @@ export const ArticleImageGallery = ({ images }: ArticleImageGalleryProps) => {
 
   if (images.length === 0) return null;
 
+  const MAX_VISIBLE_IMAGES = 12;
+  const visibleImages = sortedImages.slice(0, MAX_VISIBLE_IMAGES);
+  const remainingCount = sortedImages.length - MAX_VISIBLE_IMAGES;
+
   return (
     <>
       <div className="w-full py-8">
         <h2 className="text-2xl font-bold mb-6">Galerie Photos</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sortedImages.map((image, index) => (
-            <div
-              key={image.id}
-              className="relative aspect-video rounded-lg overflow-hidden shadow-md cursor-pointer group"
-              onClick={() => openImage(index)}
-            >
-              <img
-                src={image.image_url}
-                alt={`Photo ${index + 1}`}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
-            </div>
-          ))}
+          {visibleImages.map((image, index) => {
+            const isLastImage = index === visibleImages.length - 1 && remainingCount > 0;
+            
+            return (
+              <div
+                key={image.id}
+                className="relative aspect-video rounded-2xl overflow-hidden shadow-lg cursor-pointer group"
+                onClick={() => openImage(index)}
+              >
+                <img
+                  src={image.image_url}
+                  alt={`Photo ${index + 1}`}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                
+                {isLastImage && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <div className="bg-white rounded-full px-4 py-2 shadow-lg">
+                      <span className="text-foreground font-semibold text-lg">
+                        +{remainingCount}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
