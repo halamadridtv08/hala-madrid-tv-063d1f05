@@ -46,30 +46,59 @@ export const ArticleImageManager = ({ articleId }: ArticleImageManagerProps) => 
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setUploading(true);
+    let successCount = 0;
+    let errorCount = 0;
+
     try {
-      const result = await uploadFile(file, "media");
-      if ('url' in result) {
-        setNewImageUrl(result.url);
-      } else {
-        throw new Error(result.error);
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+          const result = await uploadFile(file, "media");
+          if ('url' in result) {
+            // Ajouter directement l'image à la galerie
+            const maxOrder = images.length + successCount;
+            const { error } = await supabase
+              .from("article_images")
+              .insert({
+                article_id: articleId,
+                image_url: result.url,
+                display_order: maxOrder,
+              });
+
+            if (error) throw error;
+            successCount++;
+          } else {
+            throw new Error(result.error);
+          }
+        } catch (error) {
+          console.error("Error uploading file:", error);
+          errorCount++;
+        }
       }
-      toast({
-        title: "Image téléchargée",
-        description: "Vous pouvez maintenant l'ajouter à la galerie.",
-      });
-    } catch (error) {
-      console.error("Error uploading file:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de télécharger l'image.",
-        variant: "destructive",
-      });
+
+      if (successCount > 0) {
+        fetchImages();
+        toast({
+          title: "Images ajoutées",
+          description: `${successCount} image(s) ajoutée(s) à la galerie.`,
+        });
+      }
+
+      if (errorCount > 0) {
+        toast({
+          title: "Erreur partielle",
+          description: `${errorCount} image(s) n'ont pas pu être téléchargées.`,
+          variant: "destructive",
+        });
+      }
     } finally {
       setUploading(false);
+      // Reset le input
+      e.target.value = '';
     }
   };
 
@@ -139,19 +168,31 @@ export const ArticleImageManager = ({ articleId }: ArticleImageManagerProps) => 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Galerie d'images</CardTitle>
+        <CardTitle>Galerie d'images - Album Photos</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="image-upload">Télécharger une image</Label>
+            <Label htmlFor="image-upload" className="text-base font-semibold">
+              📸 Télécharger plusieurs images
+            </Label>
+            <p className="text-sm text-muted-foreground mb-2">
+              Sélectionnez plusieurs fichiers pour créer un album photo
+            </p>
             <Input
               id="image-upload"
               type="file"
               accept="image/*"
+              multiple
               onChange={handleFileUpload}
               disabled={uploading}
+              className="cursor-pointer"
             />
+            {uploading && (
+              <p className="text-sm text-muted-foreground">
+                Téléchargement en cours...
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -171,33 +212,45 @@ export const ArticleImageManager = ({ articleId }: ArticleImageManagerProps) => 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
-            {images.map((image) => (
-              <div key={image.id} className="relative group">
-                <img
-                  src={image.image_url}
-                  alt="Gallery"
-                  className="w-full h-32 object-cover rounded-lg"
-                />
-                <div className="absolute top-2 left-2">
-                  <GripVertical className="h-4 w-4 text-white drop-shadow-lg" />
-                </div>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => deleteImage(image.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+          {images.length > 0 && (
+            <div>
+              <Label className="text-base font-semibold mb-3 block">
+                🖼️ Album actuel ({images.length} {images.length > 1 ? 'images' : 'image'})
+              </Label>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {images.map((image) => (
+                  <div key={image.id} className="relative group">
+                    <img
+                      src={image.image_url}
+                      alt="Gallery"
+                      className="w-full h-40 object-cover rounded-lg border-2 border-border"
+                    />
+                    <div className="absolute top-2 left-2 bg-black/50 rounded px-2 py-1">
+                      <GripVertical className="h-4 w-4 text-white" />
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                      onClick={() => deleteImage(image.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
 
           {images.length === 0 && (
-            <p className="text-center text-gray-500 py-8">
-              Aucune image dans la galerie. Ajoutez-en une pour commencer.
-            </p>
+            <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
+              <p className="text-muted-foreground text-lg mb-2">
+                📷 Aucune image dans l'album
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Téléchargez plusieurs images pour créer une belle galerie photo
+              </p>
+            </div>
           )}
         </div>
       </CardContent>
