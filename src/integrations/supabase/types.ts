@@ -982,6 +982,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_featured: boolean | null
           is_published: boolean | null
           thumbnail_url: string
           title: string
@@ -991,6 +992,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_featured?: boolean | null
           is_published?: boolean | null
           thumbnail_url: string
           title: string
@@ -1000,6 +1002,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_featured?: boolean | null
           is_published?: boolean | null
           thumbnail_url?: string
           title?: string
@@ -1020,10 +1023,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      update_all_players_ages: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      update_all_players_ages: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"

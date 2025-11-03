@@ -140,6 +140,7 @@ const YouTubeVideoTable = ({ videos, setVideos }: YouTubeVideoTableProps) => {
                 <TableHead>Miniature</TableHead>
                 <TableHead>Titre</TableHead>
                 <TableHead>Statut</TableHead>
+                <TableHead>Featured</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -161,6 +162,11 @@ const YouTubeVideoTable = ({ videos, setVideos }: YouTubeVideoTableProps) => {
                     <Badge variant={video.is_published ? "default" : "secondary"}>
                       {video.is_published ? "Publiée" : "Brouillon"}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {video.is_featured && (
+                      <Badge variant="destructive">Mise en avant</Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     {new Date(video.created_at).toLocaleDateString()}

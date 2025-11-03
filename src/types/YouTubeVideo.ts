@@ -6,4 +6,5 @@ export interface YouTubeVideo {
   created_at: string;
   updated_at: string;
   is_published: boolean;
+  is_featured?: boolean;
 }

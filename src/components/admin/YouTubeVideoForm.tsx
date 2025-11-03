@@ -21,6 +21,7 @@ const YouTubeVideoForm = ({ video, onSuccess, onCancel }: YouTubeVideoFormProps)
     thumbnail_url: video?.thumbnail_url || "",
     youtube_url: video?.youtube_url || "",
     is_published: video?.is_published ?? true,
+    is_featured: video?.is_featured ?? false,
   });
 
   useEffect(() => {
@@ -30,6 +31,7 @@ const YouTubeVideoForm = ({ video, onSuccess, onCancel }: YouTubeVideoFormProps)
         thumbnail_url: video.thumbnail_url,
         youtube_url: video.youtube_url,
         is_published: video.is_published,
+        is_featured: video.is_featured ?? false,
       });
     }
   }, [video]);
@@ -122,6 +124,17 @@ const YouTubeVideoForm = ({ video, onSuccess, onCancel }: YouTubeVideoFormProps)
               }
             />
             <Label htmlFor="is_published">Publiée</Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="is_featured"
+              checked={formData.is_featured}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, is_featured: checked })
+              }
+            />
+            <Label htmlFor="is_featured">Mise en avant sur l'accueil</Label>
           </div>
 
           <div className="flex gap-2">
