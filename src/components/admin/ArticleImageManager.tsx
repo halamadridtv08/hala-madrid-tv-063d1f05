@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, Upload, GripVertical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { uploadFile } from "@/utils/fileUpload";
 
 interface ArticleImage {
   id: string;
@@ -57,23 +56,47 @@ export const ArticleImageManager = ({ articleId }: ArticleImageManagerProps) => 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         try {
-          const result = await uploadFile(file, "media");
-          if ('url' in result) {
-            // Ajouter directement l'image à la galerie
-            const maxOrder = images.length + successCount;
-            const { error } = await supabase
-              .from("article_images")
-              .insert({
-                article_id: articleId,
-                image_url: result.url,
-                display_order: maxOrder,
-              });
-
-            if (error) throw error;
-            successCount++;
-          } else {
-            throw new Error(result.error);
+          // Générer un nom de fichier unique
+          const timestamp = new Date().getTime();
+          const random = Math.floor(Math.random() * 1000);
+          const fileExt = file.name.split('.').pop();
+          const fileName = `article-${articleId}-${timestamp}-${random}.${fileExt}`;
+          
+          // Upload direct vers le bucket media
+          const { error: uploadError, data } = await supabase.storage
+            .from('media')
+            .upload(fileName, file);
+            
+          if (uploadError) {
+            console.error("Storage upload error:", uploadError);
+            throw uploadError;
           }
+          
+          // Récupérer l'URL publique
+          const { data: urlData } = supabase.storage
+            .from('media')
+            .getPublicUrl(fileName);
+          
+          if (!urlData.publicUrl) {
+            throw new Error("Impossible d'obtenir l'URL du fichier");
+          }
+          
+          // Ajouter l'image à la galerie
+          const maxOrder = images.length + successCount;
+          const { error: dbError } = await supabase
+            .from("article_images")
+            .insert({
+              article_id: articleId,
+              image_url: urlData.publicUrl,
+              display_order: maxOrder,
+            });
+
+          if (dbError) {
+            console.error("Database error:", dbError);
+            throw dbError;
+          }
+          
+          successCount++;
         } catch (error) {
           console.error("Error uploading file:", error);
           errorCount++;
@@ -97,7 +120,6 @@ export const ArticleImageManager = ({ articleId }: ArticleImageManagerProps) => 
       }
     } finally {
       setUploading(false);
-      // Reset le input
       e.target.value = '';
     }
   };
