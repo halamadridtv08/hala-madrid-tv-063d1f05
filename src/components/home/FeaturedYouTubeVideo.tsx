@@ -17,7 +17,7 @@ const FeaturedYouTubeVideo = () => {
 
   if (loading) {
     return (
-      <section className="py-12 bg-gradient-to-b from-background to-muted/20">
+      <section className="pb-12 bg-gradient-to-b from-background to-muted/20">
         <div className="madrid-container">
           <div className="flex items-center gap-2 mb-6">
             <Youtube className="h-6 w-6 text-primary" />
@@ -34,7 +34,7 @@ const FeaturedYouTubeVideo = () => {
   }
 
   return (
-    <section className="py-12 bg-gradient-to-b from-background to-muted/20">
+    <section className="pb-12 bg-gradient-to-b from-background to-muted/20">
       <div className="madrid-container">
         <div className="flex items-center gap-2 mb-6">
           <Youtube className="h-6 w-6 text-primary" />
