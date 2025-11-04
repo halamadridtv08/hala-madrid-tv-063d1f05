@@ -1,4 +1,3 @@
-
 import { HeroSection } from "@/components/home/HeroSection";
 import { LatestNews } from "@/components/home/LatestNews";
 import { UpcomingMatch } from "@/components/home/UpcomingMatch";
@@ -14,13 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, FileText, Video, Users, Image } from "lucide-react";
 import { Link } from "react-router-dom";
-
 const Index = () => {
-  return (
-    <>
+  return <>
       <Navbar />
       <main>
-      <HeroSection />
+      
       <LatestNews />
       <VideoSection />
       <FeaturedYouTubeVideo />
@@ -92,8 +89,6 @@ const Index = () => {
         </section>
       </main>
       <Footer />
-    </>
-  );
+    </>;
 };
-
 export default Index;
