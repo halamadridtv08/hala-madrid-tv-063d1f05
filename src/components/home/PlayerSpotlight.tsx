@@ -6,84 +6,66 @@ import { Link } from "react-router-dom";
 import { Trophy, TrendingUp, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext
-} from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import useEmblaCarousel from 'embla-carousel-react';
-
 export function PlayerSpotlight() {
   const [featuredPlayers, setFeaturedPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [api, setApi] = useState<any>(null);
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
-
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: true
+  });
   useEffect(() => {
     fetchFeaturedPlayers();
   }, []);
-
   useEffect(() => {
     if (emblaApi) {
       setApi(emblaApi);
     }
   }, [emblaApi]);
-
   useEffect(() => {
     if (!api || featuredPlayers.length <= 1) return;
-
     const intervalId = setInterval(() => {
       api.scrollNext();
     }, 5000);
-
     return () => clearInterval(intervalId);
   }, [api, featuredPlayers.length]);
-
   const fetchFeaturedPlayers = async () => {
     try {
       // Récupérer tous les joueurs marqués comme vedettes
-      const { data: playersData, error: playersError } = await supabase
-        .from('players')
-        .select('*')
-        .eq('is_featured', true)
-        .eq('is_active', true)
-        .order('name', { ascending: true });
-
+      const {
+        data: playersData,
+        error: playersError
+      } = await supabase.from('players').select('*').eq('is_featured', true).eq('is_active', true).order('name', {
+        ascending: true
+      });
       if (playersError) {
         console.error('Error fetching featured players:', playersError);
         return;
       }
-
       if (!playersData || playersData.length === 0) {
         setFeaturedPlayers([]);
         return;
       }
 
       // Pour chaque joueur, récupérer ses stats réelles
-      const playersWithStats = await Promise.all(
-        playersData.map(async (player) => {
-          const { data: statsData } = await supabase
-            .from('player_stats')
-            .select('goals, assists, minutes_played, match_id')
-            .eq('player_id', player.id);
+      const playersWithStats = await Promise.all(playersData.map(async player => {
+        const {
+          data: statsData
+        } = await supabase.from('player_stats').select('goals, assists, minutes_played, match_id').eq('player_id', player.id);
 
-          // Calculer les stats totales
-          const totalStats = {
-            goals: statsData?.reduce((sum, stat) => sum + (stat.goals || 0), 0) || 0,
-            assists: statsData?.reduce((sum, stat) => sum + (stat.assists || 0), 0) || 0,
-            matches: statsData?.filter(stat => stat.match_id).length || 0,
-            minutesPlayed: statsData?.reduce((sum, stat) => sum + (stat.minutes_played || 0), 0) || 0
-          };
-
-          return {
-            ...player,
-            stats: totalStats
-          };
-        })
-      );
-
+        // Calculer les stats totales
+        const totalStats = {
+          goals: statsData?.reduce((sum, stat) => sum + (stat.goals || 0), 0) || 0,
+          assists: statsData?.reduce((sum, stat) => sum + (stat.assists || 0), 0) || 0,
+          matches: statsData?.filter(stat => stat.match_id).length || 0,
+          minutesPlayed: statsData?.reduce((sum, stat) => sum + (stat.minutes_played || 0), 0) || 0
+        };
+        return {
+          ...player,
+          stats: totalStats
+        };
+      }));
       setFeaturedPlayers(playersWithStats);
     } catch (error) {
       console.error('Error fetching featured players:', error);
@@ -91,34 +73,21 @@ export function PlayerSpotlight() {
       setLoading(false);
     }
   };
-
   if (loading) {
-    return (
-      <section className="py-12 bg-gradient-to-br from-madrid-blue to-blue-900 dark:from-gray-900 dark:to-gray-800">
+    return <section className="py-12 bg-gradient-to-br from-madrid-blue to-blue-900 dark:from-gray-900 dark:to-gray-800">
         <div className="madrid-container">
           <h2 className="section-title text-white mb-8">Joueur en Vedette</h2>
           <Skeleton className="h-[500px] w-full" />
         </div>
-      </section>
-    );
+      </section>;
   }
-
   if (featuredPlayers.length === 0) {
     return null;
   }
-
-  const renderPlayerCard = (player: Player) => (
-    <div className="grid md:grid-cols-2 gap-0">
+  const renderPlayerCard = (player: Player) => <div className="grid md:grid-cols-2 gap-0">
       {/* Player Image */}
       <div className="relative h-[500px] bg-gradient-to-br from-blue-600 to-blue-800 dark:from-gray-700 dark:to-gray-900">
-        <img
-          src={player.image_url || "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=400&h=600&fit=crop"}
-          alt={player.name}
-          className="w-full h-full object-cover object-top"
-          loading="lazy"
-          width="400"
-          height="500"
-        />
+        <img src={player.image_url || "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=400&h=600&fit=crop"} alt={player.name} className="w-full h-full object-cover object-top" loading="lazy" width="400" height="500" />
         <div className="absolute top-4 left-4 bg-madrid-gold text-black px-4 py-2 rounded-full font-bold text-lg">
           #{player.jersey_number || "10"}
         </div>
@@ -138,7 +107,7 @@ export function PlayerSpotlight() {
           <div className="mt-8">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp className="h-5 w-5 text-madrid-gold" />
-              <h4 className="text-xl font-semibold">Saison 2024/25</h4>
+              <h4 className="text-xl font-semibold">Saison 2025/26</h4>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
@@ -176,39 +145,29 @@ export function PlayerSpotlight() {
           </Button>
         </div>
       </div>
-    </div>
-  );
-
-  return (
-    <section className="py-12 bg-gradient-to-br from-madrid-blue to-blue-900 dark:from-gray-900 dark:to-gray-800">
+    </div>;
+  return <section className="py-12 bg-gradient-to-br from-madrid-blue to-blue-900 dark:from-gray-900 dark:to-gray-800">
       <div className="madrid-container">
         <h2 className="section-title text-white mb-8">
           {featuredPlayers.length > 1 ? "Joueurs en Vedette" : "Joueur en Vedette"}
         </h2>
         
-        {featuredPlayers.length === 1 ? (
-          <Card className="overflow-hidden bg-white/10 backdrop-blur border-white/20">
+        {featuredPlayers.length === 1 ? <Card className="overflow-hidden bg-white/10 backdrop-blur border-white/20">
             <CardContent className="p-0">
               {renderPlayerCard(featuredPlayers[0])}
             </CardContent>
-          </Card>
-        ) : (
-          <div className="relative">
-            <Carousel 
-              setApi={setApi}
-              className="w-full"
-              opts={{ loop: true }}
-            >
+          </Card> : <div className="relative">
+            <Carousel setApi={setApi} className="w-full" opts={{
+          loop: true
+        }}>
               <CarouselContent ref={emblaRef}>
-                {featuredPlayers.map((player) => (
-                  <CarouselItem key={player.id}>
+                {featuredPlayers.map(player => <CarouselItem key={player.id}>
                     <Card className="overflow-hidden bg-white/10 backdrop-blur border-white/20">
                       <CardContent className="p-0">
                         {renderPlayerCard(player)}
                       </CardContent>
                     </Card>
-                  </CarouselItem>
-                ))}
+                  </CarouselItem>)}
               </CarouselContent>
               <div className="absolute bottom-4 right-4 flex gap-2 z-10">
                 <CarouselPrevious className="h-10 w-10 rounded-full bg-white/20 hover:bg-white/30 border-white/30 text-white -translate-y-0 static" />
@@ -217,21 +176,10 @@ export function PlayerSpotlight() {
             </Carousel>
             
             {/* Indicator dots */}
-            {featuredPlayers.length > 1 && (
-              <div className="flex justify-center gap-2 mt-4">
-                {featuredPlayers.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => api?.scrollTo(index)}
-                    className="w-2 h-2 rounded-full bg-white/30 hover:bg-white/50 transition-colors"
-                    aria-label={`Aller au joueur ${index + 1}`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+            {featuredPlayers.length > 1 && <div className="flex justify-center gap-2 mt-4">
+                {featuredPlayers.map((_, index) => <button key={index} onClick={() => api?.scrollTo(index)} className="w-2 h-2 rounded-full bg-white/30 hover:bg-white/50 transition-colors" aria-label={`Aller au joueur ${index + 1}`} />)}
+              </div>}
+          </div>}
       </div>
-    </section>
-  );
+    </section>;
 }
