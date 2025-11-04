@@ -88,11 +88,11 @@ export const TrophiesShowcase = () => {
   if (articles.length === 0) return null;
   const mainArticle = articles[currentIndex] || articles[0];
   
-  return <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#2b003e] via-[#1a0033] to-[#00001a] py-12 md:py-16 animate-fade-in">
+  return <section className="relative overflow-hidden bg-gradient-to-br from-[#2b003e] via-[#1a0033] to-[#00001a] py-8 md:py-16 animate-fade-in">
       <div className="container mx-auto px-4 h-full">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[80vh]">
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 lg:gap-12 items-start lg:items-center lg:min-h-[80vh]">
           {/* Left side - Hero Image */}
-          <div className="relative h-[500px] lg:h-[700px] rounded-2xl overflow-hidden group">
+          <div className="relative w-full h-[300px] md:h-[500px] lg:h-[700px] rounded-2xl overflow-hidden group order-1 lg:order-1">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#2b003e]/40 z-10" />
             
             <img 
@@ -110,10 +110,10 @@ export const TrophiesShowcase = () => {
             </div>
 
             {/* Title at Bottom */}
-            <div className="absolute bottom-8 left-8 z-20 max-w-md">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-1 h-16 bg-gradient-to-b from-[#FFD700] to-transparent" />
-                <h3 className="font-['Playfair_Display'] text-3xl md:text-4xl lg:text-5xl leading-tight text-madrid-gold">
+            <div className="absolute bottom-4 md:bottom-8 left-4 md:left-8 z-20 max-w-md">
+              <div className="flex items-center gap-2 md:gap-4 mb-2 md:mb-4">
+                <div className="w-1 h-8 md:h-16 bg-gradient-to-b from-[#FFD700] to-transparent" />
+                <h3 className="font-['Playfair_Display'] text-xl md:text-3xl lg:text-5xl leading-tight text-madrid-gold">
                   Trophées & Moments Légendaires
                 </h3>
               </div>
@@ -126,22 +126,22 @@ export const TrophiesShowcase = () => {
           </div>
 
           {/* Right side - Carousel */}
-          <div className="relative">
-            <div className="mb-6">
-              <h2 className="text-white font-['Playfair_Display'] text-4xl md:text-5xl lg:text-6xl mb-2">
+          <div className="relative w-full order-2 lg:order-2">
+            <div className="mb-4 md:mb-6">
+              <h2 className="text-white font-['Playfair_Display'] text-2xl md:text-4xl lg:text-6xl mb-2">
                 {mainArticle.title}
               </h2>
-              <p className="text-white/70 text-lg">{mainArticle.description}</p>
+              <p className="text-white/70 text-sm md:text-lg">{mainArticle.description}</p>
             </div>
 
             <Carousel setApi={setApi} opts={{
             align: "start",
             loop: true
           }} className="w-full">
-              <CarouselContent className="-ml-4">
-                {articles.map((article, index) => <CarouselItem key={article.id} className="pl-4 md:basis-1/2 lg:basis-1/3 animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {articles.map((article, index) => <CarouselItem key={article.id} className="pl-2 md:pl-4 basis-4/5 md:basis-1/2 lg:basis-1/3 animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
                     <Link to={`/news/${article.id}`}>
-                      <Card className="group relative h-[400px] overflow-hidden bg-black/40 backdrop-blur-sm border-white/10 rounded-2xl hover:shadow-2xl hover:shadow-[#FFD700]/20 transition-all duration-500 hover:-translate-y-2 hover:border-[#FFD700]/30">
+                      <Card className="group relative h-[300px] md:h-[400px] overflow-hidden bg-black/40 backdrop-blur-sm border-white/10 rounded-2xl hover:shadow-2xl hover:shadow-[#FFD700]/20 transition-all duration-500 hover:-translate-y-2 hover:border-[#FFD700]/30">
                         <div className="absolute inset-0">
                           <img src={article.image_url || "/placeholder.svg"} alt={article.title} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
@@ -165,7 +165,7 @@ export const TrophiesShowcase = () => {
             </Carousel>
 
             {/* Navigation Buttons */}
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-2 md:gap-3 mt-4 md:mt-6">
               <Button 
                 variant="outline" 
                 size="icon" 
