@@ -21,6 +21,7 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import ArticleDetail from "./pages/ArticleDetail";
+import Videos from "./pages/Videos";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/kits" element={<Kits />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/stats" element={<Stats />} />
+            <Route path="/videos" element={<Videos />} />
             <Route path="/auth" element={<Auth />} />
             <Route 
               path="/admin" 
