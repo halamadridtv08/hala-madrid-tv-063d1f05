@@ -22,8 +22,8 @@ const Index = () => {
       <main>
       <HeroSection />
       <LatestNews />
-      <VideoSection />
       <FeaturedYouTubeVideo />
+      <VideoSection />
       <YouTubeVideos />
       <TrophiesShowcase />
       <UpcomingMatch />
