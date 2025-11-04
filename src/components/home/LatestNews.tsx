@@ -63,7 +63,7 @@ export function LatestNews() {
       year: 'numeric'
     }).format(date);
   };
-  return <section className="py-12">
+  return <section className="pt-12 pb-0">
       <div className="madrid-container">
         <div className="flex justify-between items-center mb-8">
           <h2 className="section-title">Dernières Actualités</h2>
