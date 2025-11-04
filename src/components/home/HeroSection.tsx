@@ -71,10 +71,5 @@ export function HeroSection() {
       <div className="w-full">
         <NewsCarousel />
       </div>
-      
-      {/* Section YouTube mise en avant */}
-      <section className="py-6 sm:py-8 md:py-12 bg-gray-50 dark:bg-gray-900">
-        
-      </section>
     </>;
 }
