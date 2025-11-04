@@ -21,8 +21,8 @@ const Index = () => {
       <Navbar />
       <main>
       <HeroSection />
-      <LatestNews />
       <FeaturedYouTubeVideo />
+      <LatestNews />
       <VideoSection />
       <YouTubeVideos />
       <TrophiesShowcase />
