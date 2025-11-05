@@ -20,79 +20,123 @@ interface MatchStatsProps {
 export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
   if (!match) return null;
 
-  // Provide default stats structure if not available
-  const defaultStats = {
-    attack: {
-      totalShots: { home: 0, away: 0 },
-      shotsOnTarget: { home: 0, away: 0 },
-      shotsOffTarget: { home: 0, away: 0 }
-    },
-    defense: {
-      saves: { home: 0, away: 0 },
-      tackles: { home: 0, away: 0 }
-    },
-    distribution: {
-      totalPasses: { home: 0, away: 0 },
-      completedPasses: { home: 0, away: 0 }
-    },
-    discipline: {
-      fouls: { home: 0, away: 0 },
-      yellowCards: { home: 0, away: 0 },
-      redCards: { home: 0, away: 0 }
-    }
+  // Extract match_details from the database
+  const matchDetails = match?.match_details?.match || {};
+  const events = match?.match_details?.événements || {};
+  
+  // Parse possession percentages
+  const parsePossession = (possessionStr: string) => {
+    return parseInt(possessionStr?.replace('%', '')?.trim() || '0');
   };
 
-  // Safe access to stats with multiple fallback levels
+  const homePossession = parsePossession(matchDetails.possession?.[matchDetails.équipes?.home] || '0');
+  const awayPossession = parsePossession(matchDetails.possession?.[matchDetails.équipes?.away] || '0');
+
+  // Get yellow and red cards
+  const yellowCards = events?.cartes?.jaune?.[0] || {};
+  const redCards = events?.cartes?.rouge?.[0] || {};
+
+  // Safe access to stats from match_details
   const stats = {
     attack: {
       totalShots: { 
-        home: match?.stats?.attack?.totalShots?.home || 0, 
-        away: match?.stats?.attack?.totalShots?.away || 0 
+        home: matchDetails?.tirs_totaux?.[matchDetails.équipes?.home] || 0, 
+        away: matchDetails?.tirs_totaux?.[matchDetails.équipes?.away] || 0 
       },
       shotsOnTarget: { 
-        home: match?.stats?.attack?.shotsOnTarget?.home || 0, 
-        away: match?.stats?.attack?.shotsOnTarget?.away || 0 
+        home: matchDetails?.tirs_cadrés?.[matchDetails.équipes?.home] || 0, 
+        away: matchDetails?.tirs_cadrés?.[matchDetails.équipes?.away] || 0 
       },
       shotsOffTarget: { 
-        home: match?.stats?.attack?.shotsOffTarget?.home || 0, 
-        away: match?.stats?.attack?.shotsOffTarget?.away || 0 
+        home: matchDetails?.tirs_non_cadrés?.[matchDetails.équipes?.home] || 0, 
+        away: matchDetails?.tirs_non_cadrés?.[matchDetails.équipes?.away] || 0 
       }
     },
     defense: {
       saves: { 
-        home: match?.stats?.defense?.saves?.home || 0, 
-        away: match?.stats?.defense?.saves?.away || 0 
+        home: matchDetails?.arrêts_gardien?.[matchDetails.équipes?.home] || 0, 
+        away: matchDetails?.arrêts_gardien?.[matchDetails.équipes?.away] || 0 
       },
       tackles: { 
-        home: match?.stats?.defense?.tackles?.home || 0, 
-        away: match?.stats?.defense?.tackles?.away || 0 
+        home: matchDetails?.tacles?.[matchDetails.équipes?.home] || 0, 
+        away: matchDetails?.tacles?.[matchDetails.équipes?.away] || 0 
       }
     },
     distribution: {
       totalPasses: { 
-        home: match?.stats?.distribution?.totalPasses?.home || 0, 
-        away: match?.stats?.distribution?.totalPasses?.away || 0 
+        home: matchDetails?.passes_totales?.[matchDetails.équipes?.home] || 0, 
+        away: matchDetails?.passes_totales?.[matchDetails.équipes?.away] || 0 
       },
       completedPasses: { 
-        home: match?.stats?.distribution?.completedPasses?.home || 0, 
-        away: match?.stats?.distribution?.completedPasses?.away || 0 
+        home: matchDetails?.passes_réussies?.[matchDetails.équipes?.home] || 0, 
+        away: matchDetails?.passes_réussies?.[matchDetails.équipes?.away] || 0 
+      },
+      possession: {
+        home: homePossession,
+        away: awayPossession
       }
     },
     discipline: {
       fouls: { 
-        home: match?.stats?.discipline?.fouls?.home || 0, 
-        away: match?.stats?.discipline?.fouls?.away || 0 
+        home: events?.fautes?.filter(f => f.team === matchDetails.équipes?.home)?.length || 0, 
+        away: events?.fautes?.filter(f => f.team === matchDetails.équipes?.away)?.length || 0 
       },
       yellowCards: { 
-        home: match?.stats?.discipline?.yellowCards?.home || 0, 
-        away: match?.stats?.discipline?.yellowCards?.away || 0 
+        home: yellowCards[matchDetails.équipes?.home] || 0, 
+        away: yellowCards[matchDetails.équipes?.away] || 0 
       },
       redCards: { 
-        home: match?.stats?.discipline?.redCards?.home || 0, 
-        away: match?.stats?.discipline?.redCards?.away || 0 
+        home: redCards[matchDetails.équipes?.home] || 0, 
+        away: redCards[matchDetails.équipes?.away] || 0 
       }
     }
   };
+
+  // Build timeline from events
+  const timeline = [];
+  
+  // Add fouls/fautes
+  if (events?.fautes) {
+    events.fautes.forEach(faute => {
+      timeline.push({
+        minute: faute.minute,
+        event: "Faute",
+        player: faute.player,
+        team: faute.team,
+        details: ""
+      });
+    });
+  }
+
+  // Add yellow cards from events
+  if (events?.cartes?.jaune && events.cartes.jaune.length > 1) {
+    events.cartes.jaune.slice(1).forEach(card => {
+      if (card.team && card.player) {
+        timeline.push({
+          minute: card.minute || 0,
+          event: "Carton jaune",
+          player: card.player,
+          team: card.team,
+          details: ""
+        });
+      }
+    });
+  }
+
+  // Add red cards from events
+  if (events?.cartes?.rouge && events.cartes.rouge.length > 1) {
+    events.cartes.rouge.slice(1).forEach(card => {
+      if (card.team && card.player) {
+        timeline.push({
+          minute: card.minute || 0,
+          event: "Carton rouge",
+          player: card.player,
+          team: card.team,
+          details: ""
+        });
+      }
+    });
+  }
 
   const formatMatchDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -137,6 +181,7 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
       case "But": return "bg-green-500 text-white";
       case "Carton jaune": return "bg-yellow-500 text-black";
       case "Carton rouge": return "bg-red-500 text-white";
+      case "Faute": return "bg-orange-500 text-white";
       default: return "bg-gray-500 text-white";
     }
   };
@@ -146,6 +191,7 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
       case "But": return "⚽";
       case "Carton jaune": return "🟨";
       case "Carton rouge": return "🟥";
+      case "Faute": return "⚠️";
       default: return "•";
     }
   };
@@ -309,6 +355,15 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
                         </div>
                         {renderProgressBar(stats.distribution.completedPasses.home, stats.distribution.completedPasses.away)}
                       </div>
+
+                      <div>
+                        <div className="flex justify-between text-sm">
+                          <span>{stats.distribution.possession.home}%</span>
+                          <span className="font-medium">Possession</span>
+                          <span>{stats.distribution.possession.away}%</span>
+                        </div>
+                        {renderProgressBar(stats.distribution.possession.home, stats.distribution.possession.away)}
+                      </div>
                     </div>
                   </div>
                   
@@ -363,7 +418,7 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
                 <div className="relative px-4">
                   <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
                   <div className="space-y-6">
-                    {match?.timeline && match.timeline.length > 0 ? match.timeline.sort((a, b) => a.minute - b.minute).map((event, index) => (
+                    {timeline && timeline.length > 0 ? timeline.sort((a, b) => a.minute - b.minute).map((event, index) => (
                       <div key={index} className="flex gap-4 relative">
                         <div className="flex flex-col items-center">
                           <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getEventColor(event?.event || "")}`}>
