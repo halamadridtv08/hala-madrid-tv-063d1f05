@@ -53,7 +53,6 @@ const Matches = () => {
     id: match.id,
     competition: match.competition || 'Match amical',
     round: '',
-    // À ajouter si nécessaire
     date: match.match_date,
     homeTeam: {
       name: match.home_team,
@@ -67,12 +66,10 @@ const Matches = () => {
     },
     venue: match.venue,
     tickets: match.home_team === 'Real Madrid',
-    // Billets disponibles pour les matchs à domicile
     scorers: [],
-    // À implémenter si nécessaire
+    match_details: match.match_details,
     stats: {},
-    // À implémenter si nécessaire
-    timeline: [] // À implémenter si nécessaire
+    timeline: []
   });
   const formattedUpcomingMatches = upcomingMatches.map(formatMatchForDisplay);
   const formattedPastMatches = pastMatches.map(formatMatchForDisplay);
@@ -302,10 +299,8 @@ const Matches = () => {
                         </div>
                         
                         <div className="mt-8 flex flex-wrap justify-center gap-4">
-                          <Button asChild variant="outline">
-                            <Link to={`/news/${match.id}`}>
-                              Voir le résumé du match
-                            </Link>
+                          <Button variant="outline" onClick={() => handleOpenMatchDetail(match)}>
+                            Voir le résumé du match
                           </Button>
                           <Button variant="outline" onClick={() => handleOpenFormations(match)} className="flex items-center gap-2">
                             <Users size={16} />
