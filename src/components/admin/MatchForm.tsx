@@ -71,6 +71,7 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
       const matchData = {
         ...formData,
         match_date: new Date(formData.match_date).toISOString(),
+        opposing_team_id: formData.opposing_team_id || null,
       };
 
       if (match?.id) {
