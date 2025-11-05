@@ -213,8 +213,48 @@ export const FormationManager: React.FC = () => {
       // Créer les positions par défaut
       const defaultPositions = DEFAULT_POSITIONS_433[teamType];
       
+      // Fonction pour matcher un joueur à une position selon son poste
+      const matchPlayerToPosition = (targetPosition: string) => {
+        const positionMap: Record<string, string[]> = {
+          'GK': ['Gardien de but', 'GK', 'Goalkeeper'],
+          'LB': ['Arrière gauche', 'LB', 'Left Back', 'Lateral gauche'],
+          'CB': ['Défenseur central', 'CB', 'Central Defender', 'Centrale'],
+          'RB': ['Arrière droit', 'RB', 'Right Back', 'Lateral droit'],
+          'CDM': ['Milieu défensif', 'CDM', 'Defensive Midfielder', 'Sentinelle'],
+          'CM': ['Milieu central', 'CM', 'Central Midfielder', 'Milieu'],
+          'CAM': ['Milieu offensif', 'CAM', 'Attacking Midfielder'],
+          'LW': ['Ailier gauche', 'LW', 'Left Winger', 'Ailier G'],
+          'RW': ['Ailier droit', 'RW', 'Right Winger', 'Ailier D'],
+          'ST': ['Attaquant', 'ST', 'Striker', 'Avant-centre']
+        };
+
+        const targetPositionVariants = positionMap[targetPosition] || [targetPosition];
+        
+        return availablePlayers.find(player => 
+          targetPositionVariants.some(variant => 
+            player?.position?.toLowerCase().includes(variant.toLowerCase())
+          )
+        );
+      };
+      
       const formationPlayers = defaultPositions.map((pos, index) => {
-        const player = availablePlayers[index];
+        // Essayer de trouver un joueur correspondant à cette position
+        const matchedPlayer = matchPlayerToPosition(pos.position);
+        
+        // Si trouvé, retirer le joueur de la liste disponible
+        if (matchedPlayer) {
+          const playerIndex = availablePlayers.indexOf(matchedPlayer);
+          if (playerIndex > -1) {
+            availablePlayers.splice(playerIndex, 1);
+          }
+        }
+        
+        // Utiliser le joueur matché ou prendre le premier disponible
+        const player = matchedPlayer || availablePlayers[0];
+        if (!matchedPlayer && availablePlayers.length > 0) {
+          availablePlayers.shift();
+        }
+        
         return {
           formation_id: formationData.id,
           player_id: teamType === "real_madrid" ? player?.id : null,
@@ -224,7 +264,7 @@ export const FormationManager: React.FC = () => {
           is_starter: index < 11,
           jersey_number: player?.jersey_number || index + 1,
           player_name: player?.name || `Joueur ${index + 1}`,
-          player_position: pos.position,
+          player_position: player?.position || pos.position,
           player_image_url: teamType === "real_madrid" ? (player?.profile_image_url || player?.image_url) : null,
           player_rating: 8.0
         };
