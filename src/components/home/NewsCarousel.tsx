@@ -133,19 +133,19 @@ export function NewsCarousel() {
                         height="500"
                         fetchPriority="high"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent" />
-                      <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                        <div className="flex justify-between items-center mb-2">
-                          <Badge className={`${getCategoryColor(slide.category)} mb-2`}>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                        <div className="flex justify-between items-center mb-1">
+                          <Badge className={`${getCategoryColor(slide.category)} text-xs`}>
                             {slide.category.charAt(0).toUpperCase() + slide.category.slice(1)}
                           </Badge>
-                          <span className="text-sm opacity-80">
+                          <span className="text-xs opacity-80">
                             {formatDate(slide.published_at)} {slide.read_time && `| ${slide.read_time} de lecture`}
                           </span>
                         </div>
-                        <h2 className="text-3xl md:text-4xl font-bold mb-2">{slide.title}</h2>
-                        <p className="text-lg mb-4 opacity-90">{slide.description}</p>
-                        <Button asChild className="bg-madrid-gold text-black hover:bg-yellow-400">
+                        <h2 className="text-xl md:text-2xl font-bold mb-1 line-clamp-2">{slide.title}</h2>
+                        <p className="text-sm mb-3 opacity-90 line-clamp-2">{slide.description}</p>
+                        <Button asChild className="bg-madrid-gold text-black hover:bg-yellow-400 text-sm py-1 h-8">
                           <Link to={`/news/${slide.id}`}>Lire l'article</Link>
                         </Button>
                       </div>

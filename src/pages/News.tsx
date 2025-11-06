@@ -154,17 +154,17 @@ const News = () => {
                       className="w-full h-full object-cover object-center"
                     />
                   </div>
-                  <CardHeader>
-                    <div className="flex justify-between items-start mb-2">
-                      <Badge className={`${getCategoryColor(article.category)} text-white`}>
+                  <CardHeader className="p-3">
+                    <div className="flex justify-between items-start mb-1">
+                      <Badge className={`${getCategoryColor(article.category)} text-white text-xs`}>
                         {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
                       </Badge>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         {formatDate(article.published_at)}
                       </span>
                     </div>
-                    <CardTitle className="line-clamp-2">{article.title}</CardTitle>
-                    <CardDescription className="line-clamp-2">{article.description}</CardDescription>
+                    <CardTitle className="line-clamp-2 text-base">{article.title}</CardTitle>
+                    <CardDescription className="line-clamp-1 text-sm">{article.description}</CardDescription>
                   </CardHeader>
                   <CardFooter className="flex justify-between items-center">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
