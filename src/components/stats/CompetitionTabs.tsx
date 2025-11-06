@@ -27,14 +27,16 @@ export const CompetitionTabs = ({
 
   return (
     <Tabs defaultValue="laliga" value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-6 mb-8">
-        <TabsTrigger value="global">Global</TabsTrigger>
-        <TabsTrigger value="laliga">La Liga</TabsTrigger>
-        <TabsTrigger value="cl">Champions League</TabsTrigger>
-        <TabsTrigger value="copaDelRey">Copa del Rey</TabsTrigger>
-        <TabsTrigger value="supercoupeEurope">Supercoupe d'Europe</TabsTrigger>
-        <TabsTrigger value="supercoupeEspagne">Supercoupe d'Espagne</TabsTrigger>
-      </TabsList>
+      <div className="w-full overflow-x-auto mb-8">
+        <TabsList className="inline-flex w-full md:w-auto min-w-full md:min-w-0">
+          <TabsTrigger value="global" className="text-xs sm:text-sm whitespace-nowrap">Global</TabsTrigger>
+          <TabsTrigger value="laliga" className="text-xs sm:text-sm whitespace-nowrap">La Liga</TabsTrigger>
+          <TabsTrigger value="cl" className="text-xs sm:text-sm whitespace-nowrap">Champions League</TabsTrigger>
+          <TabsTrigger value="copaDelRey" className="text-xs sm:text-sm whitespace-nowrap">Copa del Rey</TabsTrigger>
+          <TabsTrigger value="supercoupeEurope" className="text-xs sm:text-sm whitespace-nowrap">Supercoupe d'Europe</TabsTrigger>
+          <TabsTrigger value="supercoupeEspagne" className="text-xs sm:text-sm whitespace-nowrap">Supercoupe d'Espagne</TabsTrigger>
+        </TabsList>
+      </div>
 
       <TabsContent value="global" className="space-y-8">
         <StatsGlobalOverview />

@@ -131,29 +131,29 @@ const CalendarPage = () => {
                   <CardTitle className="text-xl">Prochain Match</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-6">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full md:w-auto">
                       <div className="flex items-center gap-2">
                         {nextMatch.home_team_logo && (
                           <img 
                             src={nextMatch.home_team_logo} 
                             alt={nextMatch.home_team}
-                            className="w-12 h-12 object-contain"
+                            className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                             }}
                           />
                         )}
-                        <span className="font-semibold text-lg">{nextMatch.home_team}</span>
+                        <span className="font-semibold text-base sm:text-lg">{nextMatch.home_team}</span>
                       </div>
-                      <span className="text-2xl font-bold">VS</span>
+                      <span className="text-xl sm:text-2xl font-bold">VS</span>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-lg">{nextMatch.away_team}</span>
+                        <span className="font-semibold text-base sm:text-lg">{nextMatch.away_team}</span>
                         {nextMatch.away_team_logo && (
                           <img 
                             src={nextMatch.away_team_logo} 
                             alt={nextMatch.away_team}
-                            className="w-12 h-12 object-contain"
+                            className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                             }}
@@ -161,15 +161,15 @@ const CalendarPage = () => {
                         )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-lg font-semibold">
+                    <div className="text-center md:text-right w-full md:w-auto">
+                      <div className="text-base sm:text-lg font-semibold">
                         {new Date(nextMatch.match_date).toLocaleDateString('fr-FR', {
                           weekday: 'long',
                           day: 'numeric',
                           month: 'long'
                         })}
                       </div>
-                      <div className="text-xl font-bold">{formatTime(nextMatch.match_date)}</div>
+                      <div className="text-lg sm:text-xl font-bold">{formatTime(nextMatch.match_date)}</div>
                       {nextMatch.venue && (
                         <div className="text-sm opacity-90">{nextMatch.venue}</div>
                       )}
@@ -180,9 +180,9 @@ const CalendarPage = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Calendrier */}
-            <div className="lg:col-span-1">
+            <div className="md:col-span-2 lg:col-span-1">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -217,7 +217,7 @@ const CalendarPage = () => {
             </div>
 
             {/* Liste des matchs de la date sélectionnée */}
-            <div className="lg:col-span-2">
+            <div className="md:col-span-2 lg:col-span-2">
               <Card>
                 <CardHeader>
                   <CardTitle>
@@ -241,29 +241,29 @@ const CalendarPage = () => {
                     <div className="space-y-4">
                       {(selectedDate ? matchesForSelectedDate : monthMatches).map((match) => (
                         <div key={match.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-4">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3">
+                            <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-4 w-full sm:w-auto">
                               <div className="flex items-center gap-2">
                                 {match.home_team_logo && (
                                   <img 
                                     src={match.home_team_logo} 
                                     alt={match.home_team}
-                                    className="w-8 h-8 object-contain"
+                                    className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
                                     onError={(e) => {
                                       e.currentTarget.style.display = 'none';
                                     }}
                                   />
                                 )}
-                                <span className="font-semibold">{match.home_team}</span>
+                                <span className="font-semibold text-sm sm:text-base">{match.home_team}</span>
                               </div>
-                              <span className="text-gray-500">vs</span>
+                              <span className="text-gray-500 text-xs sm:text-sm">vs</span>
                               <div className="flex items-center gap-2">
-                                <span className="font-semibold">{match.away_team}</span>
+                                <span className="font-semibold text-sm sm:text-base">{match.away_team}</span>
                                 {match.away_team_logo && (
                                   <img 
                                     src={match.away_team_logo} 
                                     alt={match.away_team}
-                                    className="w-8 h-8 object-contain"
+                                    className="w-6 h-6 sm:w-8 sm:h-8 object-contain"
                                     onError={(e) => {
                                       e.currentTarget.style.display = 'none';
                                     }}
@@ -274,7 +274,7 @@ const CalendarPage = () => {
                             {getStatusBadge(match.status)}
                           </div>
                           
-                          <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                             <div className="flex items-center gap-1">
                               <CalendarIcon className="h-4 w-4" />
                               {new Date(match.match_date).toLocaleDateString('fr-FR')}
