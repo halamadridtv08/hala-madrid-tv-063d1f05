@@ -39,7 +39,7 @@ export function YouTubeChannel({ channelUrl, className }: YouTubeChannelProps) {
                 variant="secondary" 
                 className="bg-white text-red-600 hover:bg-gray-100 font-bold text-sm px-3 py-1 h-auto"
               >
-                <a href={channelUrl} target="_blank" rel="noopener noreferrer">
+                <a href="https://www.youtube.com/@HALAMADRIDTV10" target="_blank" rel="noopener noreferrer">
                   <Youtube className="mr-2 h-3 w-3" /> S'abonner
                 </a>
               </Button>
@@ -76,7 +76,7 @@ export function YouTubeChannel({ channelUrl, className }: YouTubeChannelProps) {
                   variant="secondary" 
                   className="bg-red-600 text-white hover:bg-red-700 font-bold"
                 >
-                  <a href={channelUrl} target="_blank" rel="noopener noreferrer">
+                  <a href="https://www.youtube.com/@HALAMADRIDTV10" target="_blank" rel="noopener noreferrer">
                     <Youtube className="mr-2 h-4 w-4" /> S'abonner maintenant
                   </a>
                 </Button>

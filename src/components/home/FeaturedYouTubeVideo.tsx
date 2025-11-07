@@ -59,7 +59,7 @@ const FeaturedYouTubeVideo = () => {
               className="bg-white hover:bg-white/90 text-destructive font-semibold"
             >
               <a 
-                href="https://youtube.com/@halamadridtv" 
+                href="https://www.youtube.com/@HALAMADRIDTV10" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"

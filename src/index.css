@@ -73,8 +73,14 @@
   * {
     @apply border-border;
   }
+  html {
+    @apply overflow-x-hidden;
+  }
   body {
-    @apply bg-background text-foreground font-roboto;
+    @apply bg-background text-foreground font-roboto overflow-x-hidden;
+  }
+  #root {
+    @apply overflow-x-hidden;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-montserrat font-bold;

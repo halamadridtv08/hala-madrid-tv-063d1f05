@@ -22,7 +22,7 @@ const Stats = () => {
     return (
       <>
         <Navbar />
-        <main>
+        <main className="overflow-x-hidden">
           <div className="madrid-container py-8">
             <h1 className="section-title mb-8">Statistiques</h1>
             <div className="space-y-4">
@@ -42,7 +42,7 @@ const Stats = () => {
     return (
       <>
         <Navbar />
-        <main>
+        <main className="overflow-x-hidden">
           <div className="madrid-container py-8">
             <h1 className="section-title mb-8">Statistiques</h1>
             <Card>
@@ -69,7 +69,7 @@ const Stats = () => {
   return (
     <>
       <Navbar />
-      <main>
+      <main className="overflow-x-hidden">
         <div className="madrid-container py-8">
           <h1 className="section-title mb-8">Statistiques</h1>
           

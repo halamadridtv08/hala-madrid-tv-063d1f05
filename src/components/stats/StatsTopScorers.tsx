@@ -21,12 +21,12 @@ export const StatsTopScorers = ({ topScorers }: StatsTopScorersProps) => {
       <CardContent>
         {topScorers ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
+            <div className="overflow-x-auto">
               <ChartContainer
                 config={{
                   goals: { color: "#00529F" }
                 }}
-                className="h-72"
+                className="h-72 min-w-[300px]"
               >
                 <BarChart data={topScorers}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -37,7 +37,7 @@ export const StatsTopScorers = ({ topScorers }: StatsTopScorersProps) => {
                 </BarChart>
               </ChartContainer>
             </div>
-            <div>
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -49,11 +49,13 @@ export const StatsTopScorers = ({ topScorers }: StatsTopScorersProps) => {
                 <TableBody>
                   {topScorers.map((player) => (
                     <TableRow key={player.name} className="hover:bg-muted/50 transition-colors">
-                      <TableCell className="font-medium flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full overflow-hidden">
-                          <img src={player.image} alt={player.name} className="w-full h-full object-cover" />
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                            <img src={player.image} alt={player.name} className="w-full h-full object-cover" />
+                          </div>
+                          <span className="truncate">{player.name}</span>
                         </div>
-                        {player.name}
                       </TableCell>
                       <TableCell className="text-right">{player.goals}</TableCell>
                       <TableCell className="text-right">{player.matches}</TableCell>

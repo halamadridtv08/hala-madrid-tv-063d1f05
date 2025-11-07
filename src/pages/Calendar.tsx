@@ -90,7 +90,7 @@ const CalendarPage = () => {
     return (
       <>
         <Navbar />
-        <main className="madrid-container py-8">
+        <main className="madrid-container py-8 overflow-x-hidden">
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-madrid-blue"></div>
           </div>
@@ -103,7 +103,7 @@ const CalendarPage = () => {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
         <div className="madrid-container py-8">
           <Button
             onClick={() => navigate(-1)}
