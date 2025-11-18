@@ -80,14 +80,17 @@ const StyledWrapper = styled.div`
   }
 
   .icon {
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 28px;
     height: 28px;
   }
 
   .icon .svg {
     fill: rgba(255, 255, 255, 0.797);
-    width: 100%;
+    width: 28px;
+    height: 28px;
     transition: all 0.5s ease-in-out;
   }
 
