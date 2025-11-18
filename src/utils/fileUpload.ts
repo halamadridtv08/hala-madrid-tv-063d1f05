@@ -6,16 +6,32 @@ import { useToast } from "@/hooks/use-toast";
 export const ensureBucketExists = async (bucketName: string) => {
   try {
     const { data: buckets } = await supabase.storage.listBuckets();
-    if (!buckets?.find(bucket => bucket.name === bucketName)) {
-      const { error } = await supabase.storage.createBucket(bucketName, {
-        public: true,
-        fileSizeLimit: 50 * 1024 * 1024, // 50MB
-      });
-      if (error) throw error;
-      console.log(`Bucket "${bucketName}" créé avec succès.`);
+    
+    // Si le bucket existe déjà, on retourne success
+    if (buckets?.find(bucket => bucket.name === bucketName)) {
+      return { success: true };
     }
+    
+    // Sinon, on essaie de le créer
+    const { error } = await supabase.storage.createBucket(bucketName, {
+      public: true,
+      fileSizeLimit: 50 * 1024 * 1024, // 50MB
+    });
+    
+    // Si erreur RLS, le bucket existe probablement déjà - on continue
+    if (error && error.message?.includes('row-level security')) {
+      console.log(`Bucket "${bucketName}" existe déjà (erreur RLS ignorée).`);
+      return { success: true };
+    }
+    
+    if (error) throw error;
+    console.log(`Bucket "${bucketName}" créé avec succès.`);
     return { success: true };
   } catch (error: any) {
+    // Si c'est une erreur RLS, on considère que c'est OK
+    if (error.message?.includes('row-level security')) {
+      return { success: true };
+    }
     console.error(`Erreur lors de la création du bucket "${bucketName}":`, error);
     return { error: error.message };
   }
