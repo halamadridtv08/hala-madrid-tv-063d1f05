@@ -77,18 +77,18 @@ const StyledWrapper = styled.div`
   }
 
   .logo .text-hala {
-    font-size: 18px;
-    letter-spacing: 1px;
+    font-size: 24px;
+    letter-spacing: 1.5px;
   }
 
   .logo .text-madrid {
-    font-size: 18px;
-    letter-spacing: 1px;
+    font-size: 24px;
+    letter-spacing: 1.5px;
   }
 
   .logo .text-tv {
-    font-size: 14px;
-    letter-spacing: 2px;
+    font-size: 18px;
+    letter-spacing: 2.5px;
     margin-top: 2px;
   }
 
