@@ -76,7 +76,7 @@ export function Footer() {
             <p className="text-gray-300 mb-4">
               Inscrivez-vous pour recevoir les dernières actualités
             </p>
-            <form className="flex flex-col md:flex-row gap-2">
+            <form className="flex flex-col lg:flex-row gap-2">
               <input
                 type="email"
                 placeholder="Votre email"
