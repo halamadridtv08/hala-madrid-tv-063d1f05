@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Mail, Eye, EyeOff, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { TwoFactorVerification } from "@/components/auth/TwoFactorVerification";
+import { useAuthHeroImage } from "@/hooks/useAuthHeroImage";
 import authHeroImage from "@/assets/auth-hero.jpg";
 import logoImage from "/lovable-uploads/b475ad56-9770-4b40-a504-a1e193850dc8.png";
 
@@ -25,6 +26,10 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { imageUrl: heroImageFromDb, isLoading: isLoadingHeroImage } = useAuthHeroImage();
+  
+  // Use Supabase image if available, otherwise fallback to local image
+  const heroImage = heroImageFromDb || authHeroImage;
 
   useEffect(() => {
     if (user) {
@@ -230,7 +235,7 @@ const Auth = () => {
               {/* Left side - Hero Image */}
               <div className="relative hidden md:block">
                 <img 
-                  src={authHeroImage} 
+                  src={heroImage} 
                   alt="Real Madrid Player" 
                   className="w-full h-full object-cover"
                 />

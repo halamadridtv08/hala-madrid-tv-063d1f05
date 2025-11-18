@@ -57,6 +57,7 @@ import { OpposingTeamManager } from "@/components/admin/OpposingTeamManager";
 import { MatchFormationManager } from "@/components/admin/MatchFormationManager";
 import { FormationManager } from "@/components/admin/formation/FormationManager";
 import { SpecialArticlesManager } from "@/components/admin/SpecialArticlesManager";
+import { AuthImageManager } from "@/components/admin/AuthImageManager";
 import { useNavigate } from "react-router-dom";
 
 interface StatsData {
@@ -422,8 +423,9 @@ const Admin = () => {
   );
 
   const renderSettings = () => (
-    <div>
+    <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-4">Paramètres</h2>
+      <AuthImageManager />
       <SettingsDashboard />
     </div>
   );
