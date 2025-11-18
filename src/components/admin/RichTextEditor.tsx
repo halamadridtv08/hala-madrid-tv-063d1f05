@@ -68,9 +68,23 @@ export function RichTextEditor({
   const insertLeftAlign = () => insertTag('<div style="text-align: left;">', '</div>');
   const insertRightAlign = () => insertTag('<div style="text-align: right;">', '</div>');
   
+  const validateUrl = (url: string): boolean => {
+    // Only allow http:// and https:// protocols
+    const urlPattern = /^https?:\/\/.+/i;
+    return urlPattern.test(url.trim());
+  };
+  
   const insertLink = () => {
     const url = prompt("Entrez l'URL du lien:", "https://");
     if (url) {
+      const trimmedUrl = url.trim();
+      
+      // Validate URL to prevent XSS attacks
+      if (!validateUrl(trimmedUrl)) {
+        alert("URL invalide. Veuillez utiliser une URL commençant par http:// ou https://");
+        return;
+      }
+      
       if (textareaRef.current) {
         const textarea = textareaRef.current;
         const start = textarea.selectionStart;
@@ -78,11 +92,11 @@ export function RichTextEditor({
         
         if (start === end) {
           // No text selected
-          insertAtCursor(`<a href="${url}" target="_blank">lien</a>`);
+          insertAtCursor(`<a href="${trimmedUrl}" target="_blank">lien</a>`);
         } else {
           // Use selected text as link text
           const selectedText = value.substring(start, end);
-          insertTag(`<a href="${url}" target="_blank">`, `</a>`);
+          insertTag(`<a href="${trimmedUrl}" target="_blank">`, `</a>`);
         }
       }
     }
