@@ -50,10 +50,10 @@ const SocialMediaCard = () => {
 const StyledWrapper = styled.div`
   .card {
     position: relative;
-    width: 50px;
-    height: 50px;
+    width: 80px;
+    height: 80px;
     background: lightgrey;
-    border-radius: 10px;
+    border-radius: 15px;
     overflow: hidden;
     box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
     transition: all 1s ease-in-out;
@@ -75,14 +75,14 @@ const StyledWrapper = styled.div`
 
   .logo .logo-svg {
     fill: white;
-    width: 15px;
-    height: 15px;
+    width: 20px;
+    height: 20px;
   }
 
   .icon {
     display: inline-block;
-    width: 12px;
-    height: 12px;
+    width: 16px;
+    height: 16px;
   }
 
   .icon .svg {
@@ -93,7 +93,7 @@ const StyledWrapper = styled.div`
 
   .box {
     position: absolute;
-    padding: 5px;
+    padding: 8px;
     text-align: right;
     background: rgba(255, 255, 255, 0.389);
     border-top: 2px solid rgb(255, 255, 255);
@@ -201,8 +201,8 @@ const StyledWrapper = styled.div`
 
   .card:hover .logo {
     transform: translate(0, 0);
-    bottom: 10px;
-    right: 10px;
+    bottom: 15px;
+    right: 15px;
   }
 `;
 
