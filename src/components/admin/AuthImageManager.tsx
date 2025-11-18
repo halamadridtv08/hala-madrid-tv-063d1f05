@@ -52,8 +52,12 @@ export function AuthImageManager() {
     try {
       const { error } = await supabase
         .from('site_settings')
-        .update({ setting_value: imageUrl })
-        .eq('setting_key', 'auth_hero_image');
+        .upsert({ 
+          setting_key: 'auth_hero_image',
+          setting_value: imageUrl 
+        }, {
+          onConflict: 'setting_key'
+        });
 
       if (error) throw error;
 
