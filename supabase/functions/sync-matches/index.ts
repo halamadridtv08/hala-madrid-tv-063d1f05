@@ -114,12 +114,64 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('Match sync attempted without authorization header');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized - Authorization header required' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // Get user from token
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error('Match sync attempted with invalid token:', authError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication token' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Check admin role
+    const { data: roleData, error: roleError } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .single();
+
+    if (roleError || !roleData) {
+      console.warn(`Match sync denied for user ${user.id} - admin role required`);
+      return new Response(
+        JSON.stringify({ error: 'Admin access required' }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Log successful sync attempt
+    console.log(`Match sync initiated by admin user ${user.id} (${user.email})`);
+
     const result = await syncMatches(supabaseClient);
+    
+    console.log(`Match sync completed successfully by user ${user.id}: ${result.processed} matches processed`);
     
     return new Response(
       JSON.stringify({
@@ -132,6 +184,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    console.error('Match sync error:', error);
     return new Response(
       JSON.stringify({
         error: 'Erreur lors de la synchronisation',
