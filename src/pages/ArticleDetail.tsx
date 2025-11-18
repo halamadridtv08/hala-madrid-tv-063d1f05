@@ -13,6 +13,7 @@ import { PhotoType } from "@/types/Photo";
 import { VideoType } from "@/types/Video";
 import { ArticleVideoPlayer } from "@/components/articles/ArticleVideoPlayer";
 import { ArticleImageGallery } from "@/components/articles/ArticleImageGallery";
+import DOMPurify from "dompurify";
 
 interface Article {
   id: string;
@@ -145,16 +146,27 @@ const ArticleDetail = () => {
   const renderContent = () => {
     // Fonction pour convertir les sauts de ligne en paragraphes, tout en conservant les balises HTML
     const formatContent = (content: string) => {
+      let formattedContent: string;
+      
       // Si le contenu contient déjà des balises HTML (comme des vidéos ou des images), ne pas les modifier
       if (content.includes('<video') || content.includes('<img') || content.includes('<iframe')) {
-        return {
-          __html: content
-        };
+        formattedContent = content;
+      } else {
+        // Sinon, convertir les sauts de ligne en paragraphes
+        formattedContent = content.split('\n\n')
+          .filter(paragraph => paragraph.trim() !== '')
+          .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
+          .join('');
       }
 
-      // Sinon, convertir les sauts de ligne en paragraphes
+      // Sanitize the HTML to prevent XSS attacks
+      const sanitized = DOMPurify.sanitize(formattedContent, {
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'iframe', 'blockquote'],
+        ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'width', 'height', 'controls', 'class', 'target', 'rel']
+      });
+      
       return {
-        __html: content.split('\n\n').filter(paragraph => paragraph.trim() !== '').map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`).join('')
+        __html: sanitized
       };
     };
     return <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={formatContent(article.content)} />;
