@@ -250,7 +250,7 @@ const Auth = () => {
                     Connexion sécurisée
                   </CardTitle>
                   <CardDescription>
-                    Connectez-vous à votre compte pour gérer vos articles.
+                    Accédez à votre compte Hala Madrid TV.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -328,7 +328,7 @@ const Auth = () => {
                 <CardHeader>
                   <CardTitle>Créer un compte</CardTitle>
                   <CardDescription>
-                    Inscrivez-vous pour pouvoir publier des articles.
+                    Rejoignez la communauté Hala Madrid TV.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
