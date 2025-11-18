@@ -1,9 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-
 const SocialMediaCard = () => {
-  return (
-    <StyledWrapper>
+  return <StyledWrapper>
       <div className="card">
         <div className="background">
         </div>
@@ -32,7 +30,7 @@ const SocialMediaCard = () => {
             </span>
           </a>
         </div>
-        <div className="box box3">
+        <div className="box box3 mx-[5px]">
           <a href="https://www.youtube.com/@realmadrid" target="_blank" rel="noopener noreferrer">
             <span className="icon">
               <svg viewBox="0 0 576 512" xmlns="http://www.w3.org/2000/svg" className="svg">
@@ -43,10 +41,8 @@ const SocialMediaCard = () => {
         </div>
         <div className="box box4" />
       </div>
-    </StyledWrapper>
-  );
-}
-
+    </StyledWrapper>;
+};
 const StyledWrapper = styled.div`
   .card {
     position: relative;
@@ -222,5 +218,4 @@ const StyledWrapper = styled.div`
     right: 25px;
   }
 `;
-
 export default SocialMediaCard;
