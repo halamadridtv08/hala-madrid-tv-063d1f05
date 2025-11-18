@@ -8,6 +8,7 @@ import { Menu, X, Calendar, Users, Video, FileText, Image, Search, Plus } from "
 import { AuthButtons } from "./AuthButtons";
 import { useAuth } from "@/contexts/AuthContext";
 import { AddContentMenu } from "./AddContentMenu";
+import SocialMediaCard from "./SocialMediaCard";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -268,6 +269,7 @@ export function Navbar() {
             </div>
           )}
           
+          <SocialMediaCard />
           <ThemeToggle />
           <AuthButtons />
         </nav>
