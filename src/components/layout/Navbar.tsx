@@ -8,6 +8,7 @@ import { Menu, X, Calendar, Users, Video, FileText, Image, Search, Plus } from "
 import { AuthButtons } from "./AuthButtons";
 import { useAuth } from "@/contexts/AuthContext";
 import { AddContentMenu } from "./AddContentMenu";
+import { AnimatedSearchBar } from "./AnimatedSearchBar";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -75,23 +76,13 @@ export function Navbar() {
         </Link>
 
         {/* Search Bar for Desktop */}
-        <form onSubmit={handleSearchSubmit} className="hidden lg:flex items-center flex-1 mx-8">
-          <div className="relative w-full max-w-md">
-            <input
-              type="text"
-              placeholder="Rechercher joueurs, matchs, actualités..."
-              className="w-full pl-4 pr-10 py-2 border border-gray-300 dark:border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-madrid-blue dark:bg-gray-800 dark:text-white text-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <button 
-              type="submit" 
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-madrid-blue"
-            >
-              <Search className="h-4 w-4" />
-            </button>
-          </div>
-        </form>
+        <div className="hidden lg:flex items-center flex-1 mx-8 justify-center">
+          <AnimatedSearchBar 
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onSubmit={handleSearchSubmit}
+          />
+        </div>
 
         {/* Mobile Menu Button */}
         <div className="flex items-center gap-1 md:gap-2 md:hidden">
