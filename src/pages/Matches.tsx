@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
 import { Calendar, Clock, MapPin, ChevronRight, Activity, RefreshCw, Users, Goal, LayoutGrid, List } from "lucide-react";
 import { MatchDetail } from "@/components/matches/MatchDetail";
-import { MatchStats } from "@/components/matches/MatchStats";
 import { TeamFormation } from "@/components/matches/TeamFormation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMatches } from "@/hooks/useMatches";
@@ -18,7 +17,6 @@ import { toast } from "sonner";
 const Matches = () => {
   const [selectedMatch, setSelectedMatch] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [showFormations, setShowFormations] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [selectedCompetition, setSelectedCompetition] = useState<string>("all");
@@ -166,10 +164,6 @@ const Matches = () => {
   const handleOpenMatchDetail = (match: any) => {
     setSelectedMatch(match);
     setIsDetailOpen(true);
-  };
-  const handleOpenMatchStats = (match: any) => {
-    setSelectedMatch(match);
-    setIsStatsOpen(true);
   };
   const handleOpenFormations = (match: any) => {
     setSelectedMatch(match);
@@ -538,10 +532,6 @@ const Matches = () => {
                             <Users size={16} />
                             Compositions
                           </Button>
-                          <Button variant="outline" onClick={() => handleOpenMatchStats(match)} className="flex items-center gap-2">
-                            <Activity size={16} />
-                            Statistiques du match
-                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -554,8 +544,6 @@ const Matches = () => {
       <Footer />
       
       <MatchDetail match={selectedMatch} isOpen={isDetailOpen} onClose={() => setIsDetailOpen(false)} />
-      
-      {selectedMatch && <MatchStats match={selectedMatch} isOpen={isStatsOpen} onClose={() => setIsStatsOpen(false)} />}
 
       {/* Team Formations Dialog */}
       <Dialog open={showFormations} onOpenChange={setShowFormations}>
