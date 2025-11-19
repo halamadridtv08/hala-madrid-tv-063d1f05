@@ -34,6 +34,8 @@ interface OpposingPlayer {
 export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
   const [opposingPlayers, setOpposingPlayers] = useState<OpposingPlayer[]>([]);
   const [realMadridPlayers, setRealMadridPlayers] = useState<PlayerType[]>([]);
+  const [probableLineups, setProbableLineups] = useState<any[]>([]);
+  const [absentPlayers, setAbsentPlayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -47,6 +49,27 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
     
     setLoading(true);
     try {
+      // Récupérer les compositions probables
+      const { data: lineupsData } = await supabase
+        .from('match_probable_lineups')
+        .select('*')
+        .eq('match_id', match.id)
+        .order('is_starter', { ascending: false });
+      
+      if (lineupsData) {
+        setProbableLineups(lineupsData);
+      }
+
+      // Récupérer les joueurs absents
+      const { data: absentData } = await supabase
+        .from('match_absent_players')
+        .select('*')
+        .eq('match_id', match.id);
+      
+      if (absentData) {
+        setAbsentPlayers(absentData);
+      }
+
       // Récupérer les joueurs Real Madrid depuis la base de données
       const { data: realMadridData, error: realMadridError } = await supabase
         .from('players')
@@ -104,29 +127,25 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
 
   if (!match) return null;
 
-  // Séparer les joueurs Real Madrid en titulaires et remplaçants
-  // Pour l'instant, on prend les 11 premiers comme titulaires et le reste comme remplaçants
-  const realMadridLineup = realMadridPlayers.slice(0, 11);
-  const realMadridSubs = realMadridPlayers.slice(11);
+  // Utiliser les compositions probables de la base de données
+  const realMadridLineup = probableLineups
+    .filter(l => l.team_type === 'real_madrid' && l.is_starter)
+    .map(l => ({ name: l.player_name, position: l.position, number: l.jersey_number || 0 }));
+  
+  const realMadridSubs = probableLineups
+    .filter(l => l.team_type === 'real_madrid' && !l.is_starter)
+    .map(l => ({ name: l.player_name, position: l.position, number: l.jersey_number || 0 }));
 
-  // Convertir les joueurs adverses en format PlayerType
-  const opposingTeamStarters = opposingPlayers
-    .filter(player => player.is_starter)
-    .map(player => ({
-      name: player.name,
-      position: player.position,
-      number: player.jersey_number || 0
-    }));
+  // Utiliser les compositions probables de la base de données pour l'équipe adverse
+  const opposingLineup = probableLineups
+    .filter(l => l.team_type === 'opposing' && l.is_starter)
+    .map(l => ({ name: l.player_name, position: l.position, number: l.jersey_number || 0 }));
+  
+  const opposingSubs = probableLineups
+    .filter(l => l.team_type === 'opposing' && !l.is_starter)
+    .map(l => ({ name: l.player_name, position: l.position, number: l.jersey_number || 0 }));
 
-  const opposingTeamSubs = opposingPlayers
-    .filter(player => !player.is_starter)
-    .map(player => ({
-      name: player.name,
-      position: player.position,
-      number: player.jersey_number || 0
-    }));
-
-  // Données par défaut si aucun joueur n'est trouvé
+  // Données par défaut si aucune composition n'est trouvée
   const defaultOpposingLineup = [
     { name: "Gardien", position: "GK", number: 1 },
     { name: "Défenseur 1", position: "CB", number: 2 },
@@ -148,16 +167,11 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
     { name: "Remplaçant 4", position: "ST", number: 15 }
   ];
 
-  // Utiliser les vrais joueurs ou les données par défaut
-  const finalOpposingLineup = opposingTeamStarters.length > 0 ? opposingTeamStarters : defaultOpposingLineup;
-  const finalOpposingSubs = opposingTeamSubs.length > 0 ? opposingTeamSubs : defaultOpposingSubs;
+  // Utiliser les vraies compos ou les données par défaut
+  const finalOpposingLineup = opposingLineup.length > 0 ? opposingLineup : defaultOpposingLineup;
+  const finalOpposingSubs = opposingSubs.length > 0 ? opposingSubs : defaultOpposingSubs;
 
-  // Données simulées pour les joueurs absents
-  const absentPlayers = [
-    { name: "Alaba", reason: "Blessure (Ligament croisé)", team: "Real Madrid", return: "Septembre 2025" },
-    { name: "Ceballos", reason: "Suspension (Cumulation de cartons jaunes)", team: "Real Madrid", return: "Prochain match" },
-    { name: "Rodrygo", reason: "Incertain (Fatigue musculaire)", team: "Real Madrid", return: "Test avant-match" }
-  ];
+  // Les joueurs absents viennent maintenant de la base de données via le state
 
   const formatMatchDate = (dateString: string) => {
     const date = new Date(dateString);

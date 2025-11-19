@@ -309,6 +309,67 @@ export type Database = {
         }
         Relationships: []
       }
+      match_absent_players: {
+        Row: {
+          created_at: string | null
+          id: string
+          match_id: string
+          opposing_player_id: string | null
+          player_id: string | null
+          player_name: string
+          reason: string
+          return_date: string | null
+          team_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          match_id: string
+          opposing_player_id?: string | null
+          player_id?: string | null
+          player_name: string
+          reason: string
+          return_date?: string | null
+          team_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          match_id?: string
+          opposing_player_id?: string | null
+          player_id?: string | null
+          player_name?: string
+          reason?: string
+          return_date?: string | null
+          team_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_absent_players_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_absent_players_opposing_player_id_fkey"
+            columns: ["opposing_player_id"]
+            isOneToOne: false
+            referencedRelation: "opposing_players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_absent_players_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_formation_players: {
         Row: {
           created_at: string
@@ -439,6 +500,70 @@ export type Database = {
             columns: ["opposing_team_id"]
             isOneToOne: false
             referencedRelation: "opposing_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_probable_lineups: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_starter: boolean | null
+          jersey_number: number | null
+          match_id: string
+          opposing_player_id: string | null
+          player_id: string | null
+          player_name: string
+          position: string
+          team_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_starter?: boolean | null
+          jersey_number?: number | null
+          match_id: string
+          opposing_player_id?: string | null
+          player_id?: string | null
+          player_name: string
+          position: string
+          team_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_starter?: boolean | null
+          jersey_number?: number | null
+          match_id?: string
+          opposing_player_id?: string | null
+          player_id?: string | null
+          player_name?: string
+          position?: string
+          team_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_probable_lineups_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_probable_lineups_opposing_player_id_fkey"
+            columns: ["opposing_player_id"]
+            isOneToOne: false
+            referencedRelation: "opposing_players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_probable_lineups_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
             referencedColumns: ["id"]
           },
         ]
