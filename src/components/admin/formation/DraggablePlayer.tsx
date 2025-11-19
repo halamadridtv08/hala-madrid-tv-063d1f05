@@ -35,15 +35,24 @@ export const DraggablePlayer = ({
   } : undefined;
 
   if (variant === 'field') {
+    // Séparer la position (left, top) du transform de drag
+    const { left, top, transform: _transform, ...restStyle } = style || {};
+    
+    const combinedStyle = {
+      left,
+      top,
+      ...restStyle,
+    };
+
     return (
       <div
         ref={setNodeRef}
-        style={{ ...style, ...transformStyle }}
+        style={{ ...combinedStyle, ...transformStyle }}
         {...listeners}
         {...attributes}
         className={`absolute cursor-move ${isDragging ? 'opacity-50' : ''}`}
       >
-        <div className="relative">
+        <div className="relative" style={{ transform: 'translate(-50%, -50%)' }}>
           {imageUrl ? (
             <img 
               src={imageUrl} 
