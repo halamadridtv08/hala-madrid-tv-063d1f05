@@ -1,6 +1,7 @@
 
 import { HeroSection } from "@/components/home/HeroSection";
 import { LatestNews } from "@/components/home/LatestNews";
+import { LatestNewsWidget } from "@/components/home/LatestNewsWidget";
 import { UpcomingMatch } from "@/components/home/UpcomingMatch";
 import { PlayerSpotlight } from "@/components/home/PlayerSpotlight";
 import FeaturedKits from "@/components/home/FeaturedKits";
@@ -22,7 +23,19 @@ const Index = () => {
       <main>
       <HeroSection />
       <FeaturedYouTubeVideo />
-      <LatestNews />
+      
+      {/* Section actualités avec widget */}
+      <div className="madrid-container py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <LatestNews />
+          </div>
+          <div className="lg:col-span-1">
+            <LatestNewsWidget />
+          </div>
+        </div>
+      </div>
+      
       <VideoSection />
       <YouTubeVideos />
       <TrophiesShowcase />
