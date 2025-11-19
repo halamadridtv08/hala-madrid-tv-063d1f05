@@ -13,10 +13,12 @@ interface DroppableFieldPlayerProps {
     position_y: number;
   };
   onDelete: () => void;
+  onToggleLock?: () => void;
+  isLocked?: boolean;
   style: React.CSSProperties;
 }
 
-export const DroppableFieldPlayer = ({ player, onDelete, style }: DroppableFieldPlayerProps) => {
+export const DroppableFieldPlayer = ({ player, onDelete, onToggleLock, isLocked, style }: DroppableFieldPlayerProps) => {
   const { setNodeRef, isOver } = useDroppable({
     id: player.id || player.player_id,
   });
@@ -25,7 +27,7 @@ export const DroppableFieldPlayer = ({ player, onDelete, style }: DroppableField
     <div
       ref={setNodeRef}
       style={style}
-      className={`absolute ${isOver ? 'ring-2 ring-yellow-400 rounded-full' : ''}`}
+      className={`absolute transition-all duration-300 ease-in-out ${isOver ? 'ring-2 ring-yellow-400 rounded-full scale-110' : ''}`}
     >
       <DraggablePlayer
         id={player.id || player.player_id}
@@ -36,6 +38,8 @@ export const DroppableFieldPlayer = ({ player, onDelete, style }: DroppableField
         variant="field"
         showDelete
         onDelete={onDelete}
+        onToggleLock={onToggleLock}
+        isLocked={isLocked}
       />
     </div>
   );

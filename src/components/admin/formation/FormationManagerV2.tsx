@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, Users, Shield, Trash2, Plus, Grid3x3, Layout, Columns2, Rows2 } from 'lucide-react';
+import { Save, Users, Shield, Trash2, Plus, Grid3x3, Layout, Columns2, Rows2, Undo, Lock, Unlock } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import {
   DndContext,
@@ -89,6 +89,13 @@ export const FormationManagerV2: React.FC = () => {
   const [formationVariant, setFormationVariant] = useState<string>("principale");
   const [showGrid, setShowGrid] = useState<boolean>(true);
   const [layoutMode, setLayoutMode] = useState<"horizontal" | "vertical">("horizontal");
+  const [positionHistory, setPositionHistory] = useState<Array<{
+    playerId: string;
+    position_x: number;
+    position_y: number;
+    timestamp: number;
+  }>>([]);
+  const [lockedPlayers, setLockedPlayers] = useState<Set<string>>(new Set());
   
   const [availablePlayers, setAvailablePlayers] = useState<Player[]>([]);
   const [fieldPlayers, setFieldPlayers] = useState<FormationPlayer[]>([]);
@@ -437,7 +444,27 @@ export const FormationManagerV2: React.FC = () => {
       const targetPlayer = fieldPlayers.find(p => p.id === over.id || p.player_id === over.id);
       const draggedPlayer = fieldPlayers.find(p => p.id === activePlayerId || p.player_id === activePlayerId);
       
+      // Vérifier si les joueurs sont verrouillés
+      if (draggedPlayer && lockedPlayers.has(draggedPlayer.id || draggedPlayer.player_id)) {
+        toast.error("Ce joueur est verrouillé");
+        setActiveId(null);
+        return;
+      }
+      
       if (targetPlayer && draggedPlayer && targetPlayer.id && draggedPlayer.id && targetPlayer.id !== draggedPlayer.id) {
+        // Sauvegarder l'historique avant le changement
+        setPositionHistory(prev => [...prev, {
+          playerId: draggedPlayer.id,
+          position_x: draggedPlayer.position_x,
+          position_y: draggedPlayer.position_y,
+          timestamp: Date.now()
+        }, {
+          playerId: targetPlayer.id,
+          position_x: targetPlayer.position_x,
+          position_y: targetPlayer.position_y,
+          timestamp: Date.now()
+        }]);
+
         // Échanger les positions des deux joueurs
         const tempX = targetPlayer.position_x;
         const tempY = targetPlayer.position_y;
@@ -468,7 +495,23 @@ export const FormationManagerV2: React.FC = () => {
     // Move player on field
     if (isFromField && over.id === 'field') {
       const player = fieldPlayers.find(p => p.id === activePlayerId || p.player_id === activePlayerId);
+      
+      // Vérifier si le joueur est verrouillé
+      if (player && lockedPlayers.has(player.id || player.player_id)) {
+        toast.error("Ce joueur est verrouillé");
+        setActiveId(null);
+        return;
+      }
+      
       if (player && player.id) {
+        // Sauvegarder l'historique avant le changement
+        setPositionHistory(prev => [...prev, {
+          playerId: player.id!,
+          position_x: player.position_x,
+          position_y: player.position_y,
+          timestamp: Date.now()
+        }]);
+
         const pitchElement = document.querySelector('[data-pitch="true"]');
         if (pitchElement) {
           const rect = pitchElement.getBoundingClientRect();
@@ -554,6 +597,49 @@ export const FormationManagerV2: React.FC = () => {
     }
 
     setActiveId(null);
+  };
+
+  const undoLastChange = async () => {
+    if (positionHistory.length === 0) {
+      toast.error("Aucun changement à annuler");
+      return;
+    }
+
+    // Récupérer les derniers changements (peut être 1 ou 2 selon si c'était un échange ou un déplacement)
+    const lastChange = positionHistory[positionHistory.length - 1];
+    const timestamp = lastChange.timestamp;
+    const changes = positionHistory.filter(h => h.timestamp === timestamp);
+
+    // Restaurer les positions
+    for (const change of changes) {
+      await supabase
+        .from('match_formation_players')
+        .update({
+          position_x: change.position_x,
+          position_y: change.position_y
+        })
+        .eq('id', change.playerId);
+    }
+
+    // Supprimer les changements de l'historique
+    setPositionHistory(prev => prev.filter(h => h.timestamp !== timestamp));
+    
+    fetchFormation();
+    toast.success("Changement annulé");
+  };
+
+  const togglePlayerLock = (playerId: string) => {
+    setLockedPlayers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(playerId)) {
+        newSet.delete(playerId);
+        toast.success("Joueur déverrouillé");
+      } else {
+        newSet.add(playerId);
+        toast.success("Joueur verrouillé");
+      }
+      return newSet;
+    });
   };
 
   const deletePlayer = async (playerId: string) => {
@@ -727,6 +813,15 @@ export const FormationManagerV2: React.FC = () => {
                             </>
                           )}
                         </Button>
+                        <Button 
+                          onClick={undoLastChange} 
+                          size="sm" 
+                          variant="outline"
+                          disabled={positionHistory.length === 0}
+                        >
+                          <Undo className="h-4 w-4 mr-2" />
+                          Annuler ({positionHistory.length})
+                        </Button>
                         <Button onClick={deleteFormation} variant="destructive" size="sm">
                           <Trash2 className="h-4 w-4 mr-2" />
                           Supprimer
@@ -865,6 +960,8 @@ export const FormationManagerV2: React.FC = () => {
                                       key={player.id}
                                       player={player}
                                       onDelete={() => deletePlayer(player.id!)}
+                                      onToggleLock={() => togglePlayerLock(player.id || player.player_id)}
+                                      isLocked={lockedPlayers.has(player.id || player.player_id)}
                                       style={{
                                         left: `${player.position_x}%`,
                                         top: `${player.position_y}%`,
@@ -968,6 +1065,8 @@ export const FormationManagerV2: React.FC = () => {
                                     key={player.id}
                                     player={player}
                                     onDelete={() => deletePlayer(player.id!)}
+                                    onToggleLock={() => togglePlayerLock(player.id || player.player_id)}
+                                    isLocked={lockedPlayers.has(player.id || player.player_id)}
                                     style={{
                                       left: `${player.position_x}%`,
                                       top: `${player.position_y}%`,
