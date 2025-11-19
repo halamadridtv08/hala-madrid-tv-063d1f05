@@ -743,7 +743,7 @@ export const FormationManagerV2: React.FC = () => {
                       </Card>
 
                       {/* Terrain + Remplaçants - Plus compact */}
-                      <div className="col-span-3 space-y-3">
+                      <div className="col-span-3 space-y-2">
                         <div className="flex items-center justify-between mb-2">
                           <Badge variant={fieldPlayers.length === 11 ? "default" : "secondary"} className="text-sm">
                             {fieldPlayers.length}/11 joueurs sur le terrain
