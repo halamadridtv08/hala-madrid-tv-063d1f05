@@ -48,17 +48,17 @@ export const DraggablePlayer = ({
             <img 
               src={imageUrl} 
               alt={name}
-              className="w-12 h-12 rounded-lg object-cover border-2 border-white shadow-lg"
+              className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-lg"
             />
           ) : (
-            <div className="w-12 h-12 rounded-lg bg-white border-2 border-primary flex items-center justify-center shadow-lg">
-              <span className="text-lg font-bold">{jerseyNumber}</span>
+            <div className="w-12 h-12 rounded-full bg-white border-2 border-primary flex items-center justify-center shadow-lg">
+              <span className="text-lg font-bold text-primary">{jerseyNumber}</span>
             </div>
           )}
           <Badge className="absolute -top-1 -right-1 text-xs h-5 min-w-5 flex items-center justify-center">
             {jerseyNumber}
           </Badge>
-          <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white px-1.5 py-0.5 rounded text-[10px]">
+          <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white px-1.5 py-0.5 rounded text-[10px]">
             {name.split(' ').pop()}
           </div>
           {showDelete && onDelete && (
