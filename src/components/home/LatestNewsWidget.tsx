@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Zap, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +15,8 @@ interface Article {
 export const LatestNewsWidget = () => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const isOnNewsPage = location.pathname === '/news';
 
   useEffect(() => {
     const fetchLatestNews = async () => {
@@ -89,13 +91,23 @@ export const LatestNewsWidget = () => {
         ))}
       </div>
 
-      <Link
-        to="/news"
-        className="mt-6 flex items-center justify-center gap-2 text-sm font-medium hover:text-blue-200 transition-colors border-t border-blue-400/30 pt-4"
-      >
-        Voir toutes les actualités
-        <ArrowRight className="h-4 w-4" />
-      </Link>
+      {isOnNewsPage ? (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="mt-6 flex items-center justify-center gap-2 text-sm font-medium hover:text-blue-200 transition-colors border-t border-blue-400/30 pt-4 w-full"
+        >
+          Retour en haut
+          <ArrowRight className="h-4 w-4 -rotate-90" />
+        </button>
+      ) : (
+        <Link
+          to="/news"
+          className="mt-6 flex items-center justify-center gap-2 text-sm font-medium hover:text-blue-200 transition-colors border-t border-blue-400/30 pt-4"
+        >
+          Voir toutes les actualités
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      )}
     </Card>
   );
 };
