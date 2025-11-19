@@ -47,6 +47,7 @@ export const DraggablePlayer = ({
       left,
       top,
       ...restStyle,
+      transition: isDragging ? 'none' : 'left 0.3s ease-out, top 0.3s ease-out',
     };
 
     return (
