@@ -3,10 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, Users, Shield, Trash2, Plus } from 'lucide-react';
+import { Save, Users, Shield, Trash2, Plus, Grid3x3, Layout } from 'lucide-react';
 import {
   DndContext,
   DragEndEvent,
@@ -16,11 +18,11 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragOverEvent,
 } from '@dnd-kit/core';
 import { useDroppable } from '@dnd-kit/core';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { DraggablePlayer } from './DraggablePlayer';
+import { FORMATION_TEMPLATES, snapToGrid } from './FormationTemplates';
 
 interface Match {
   id: string;
@@ -80,6 +82,8 @@ export const FormationManagerV2: React.FC = () => {
   const [selectedFormation, setSelectedFormation] = useState<string>('4-3-3');
   const [activeTeam, setActiveTeam] = useState<"real_madrid" | "opposing">("real_madrid");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [formationVariant, setFormationVariant] = useState<string>("principale");
+  const [showGrid, setShowGrid] = useState<boolean>(true);
   
   const [availablePlayers, setAvailablePlayers] = useState<Player[]>([]);
   const [fieldPlayers, setFieldPlayers] = useState<FormationPlayer[]>([]);
@@ -199,6 +203,63 @@ export const FormationManagerV2: React.FC = () => {
 
     setFormationId(data.id);
     toast.success("Formation créée");
+  };
+
+  const applyFormationTemplate = async () => {
+    if (!formationId) return;
+
+    const template = FORMATION_TEMPLATES.find(t => t.formation === selectedFormation);
+    if (!template) return;
+
+    // Clear existing field players
+    if (fieldPlayers.length > 0) {
+      const playerIds = fieldPlayers.map(p => p.id).filter(Boolean);
+      if (playerIds.length > 0) {
+        await supabase
+          .from('match_formation_players')
+          .delete()
+          .in('id', playerIds);
+      }
+    }
+
+    // Get available players sorted by position preference
+    const sortedPlayers = [...availablePlayers].sort((a, b) => {
+      const aNum = a.jersey_number || 999;
+      const bNum = b.jersey_number || 999;
+      return aNum - bNum;
+    });
+
+    // Assign players to template positions
+    const newPlayers = [];
+    for (let i = 0; i < Math.min(template.positions.length, sortedPlayers.length); i++) {
+      const player = sortedPlayers[i];
+      const templatePos = template.positions[i];
+      
+      const { data, error } = await supabase
+        .from('match_formation_players')
+        .insert({
+          formation_id: formationId,
+          player_id: activeTeam === "real_madrid" ? player.id : null,
+          opposing_player_id: activeTeam === "opposing" ? player.id : null,
+          player_name: player.name,
+          player_position: player.position,
+          jersey_number: player.jersey_number,
+          player_image_url: activeTeam === "real_madrid" ? (player.profile_image_url || player.image_url) : null,
+          position_x: templatePos.x,
+          position_y: templatePos.y,
+          is_starter: true,
+          player_rating: 0
+        })
+        .select()
+        .single();
+
+      if (!error && data) {
+        newPlayers.push(data);
+      }
+    }
+
+    fetchFormation();
+    toast.success("Template de formation appliqué");
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -394,7 +455,7 @@ export const FormationManagerV2: React.FC = () => {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -403,20 +464,38 @@ export const FormationManagerV2: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label>Sélectionner un match</Label>
-              <Select value={selectedMatch} onValueChange={setSelectedMatch}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choisir un match" />
-                </SelectTrigger>
-                <SelectContent>
-                  {matches.map((match) => (
-                    <SelectItem key={match.id} value={match.id}>
-                      {match.home_team} vs {match.away_team} - {new Date(match.match_date).toLocaleDateString()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Sélectionner un match</Label>
+                <Select value={selectedMatch} onValueChange={setSelectedMatch}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir un match" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {matches.map((match) => (
+                      <SelectItem key={match.id} value={match.id}>
+                        {match.home_team} vs {match.away_team} - {new Date(match.match_date).toLocaleDateString()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Formation</Label>
+                <Select value={selectedFormation} onValueChange={setSelectedFormation}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FORMATION_TEMPLATES.map((template) => (
+                      <SelectItem key={template.formation} value={template.formation}>
+                        {template.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {selectedMatch && (
@@ -434,155 +513,155 @@ export const FormationManagerV2: React.FC = () => {
 
                 <TabsContent value={activeTeam} className="space-y-4 mt-4">
                   {!formationId ? (
-                    <Button onClick={createFormation}>
+                    <Button onClick={createFormation} size="sm">
                       <Plus className="h-4 w-4 mr-2" />
                       Créer la formation
                     </Button>
                   ) : (
-                    <Button onClick={deleteFormation} variant="destructive">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Supprimer la formation
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button onClick={applyFormationTemplate} size="sm" variant="outline">
+                        <Layout className="h-4 w-4 mr-2" />
+                        Appliquer template {selectedFormation}
+                      </Button>
+                      <Button 
+                        onClick={() => setShowGrid(!showGrid)} 
+                        size="sm" 
+                        variant={showGrid ? "default" : "outline"}
+                      >
+                        <Grid3x3 className="h-4 w-4 mr-2" />
+                        {showGrid ? "Grille active" : "Grille désactivée"}
+                      </Button>
+                      <Button onClick={deleteFormation} variant="destructive" size="sm">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Supprimer
+                      </Button>
+                    </div>
                   )}
 
                   {formationId && (
-                    <div className="grid grid-cols-12 gap-4">
-                      {/* Liste des joueurs disponibles */}
-                      <Card className="col-span-3">
-                        <CardHeader>
+                    <div className="grid grid-cols-4 gap-4">
+                      {/* Liste des joueurs disponibles - Plus compact */}
+                      <Card className="col-span-1">
+                        <CardHeader className="py-3">
                           <CardTitle className="text-sm">Joueurs disponibles</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                          <ScrollArea className="h-[600px]">
-                            <div className="space-y-2">
+                        <CardContent className="p-2">
+                          <ScrollArea className="h-[500px]">
+                            <div className="space-y-1">
                               {availablePlayers
                                 .filter(p => 
                                   !fieldPlayers.some(fp => fp.player_id === p.id) &&
                                   !substitutes.some(sp => sp.player_id === p.id)
                                 )
                                 .map((player) => (
-                                  <div
+                                  <DraggablePlayer
                                     key={player.id}
-                                    draggable
-                                    onDragStart={(e) => {
-                                      e.dataTransfer.effectAllowed = "move";
-                                      setActiveId(player.id);
-                                    }}
-                                    className="p-2 bg-card border rounded cursor-move hover:bg-accent"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <Badge variant="secondary">{player.jersey_number}</Badge>
-                                      <div className="flex-1">
-                                        <div className="font-medium text-sm">{player.name}</div>
-                                        <div className="text-xs text-muted-foreground">{player.position}</div>
-                                      </div>
-                                    </div>
-                                  </div>
+                                    id={player.id}
+                                    name={player.name}
+                                    position={player.position}
+                                    jerseyNumber={player.jersey_number}
+                                    variant="list"
+                                  />
                                 ))}
                             </div>
                           </ScrollArea>
                         </CardContent>
                       </Card>
 
-                      {/* Terrain */}
-                      <div className="col-span-9 space-y-4">
+                      {/* Terrain + Remplaçants - Plus compact */}
+                      <div className="col-span-3 space-y-3">
                         <DroppableField id="field">
                           <div 
                             className="relative w-full bg-gradient-to-b from-green-400 to-green-600 rounded-lg overflow-hidden shadow-lg" 
-                            style={{ aspectRatio: "3/4", minHeight: "600px" }}
+                            style={{ aspectRatio: "16/11", maxHeight: "450px" }}
                             data-pitch="true"
                           >
                             {/* Lignes du terrain */}
-                            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                              <rect x="5" y="5" width="90" height="90" fill="none" stroke="white" strokeWidth="0.3" />
-                              <line x1="5" y1="50" x2="95" y2="50" stroke="white" strokeWidth="0.3" />
-                              <circle cx="50" cy="50" r="8" fill="none" stroke="white" strokeWidth="0.3" />
-                              <circle cx="50" cy="50" r="0.5" fill="white" />
-                              <rect x="25" y="5" width="50" height="16" fill="none" stroke="white" strokeWidth="0.3" />
-                              <rect x="35" y="5" width="30" height="8" fill="none" stroke="white" strokeWidth="0.3" />
-                              <rect x="25" y="79" width="50" height="16" fill="none" stroke="white" strokeWidth="0.3" />
-                              <rect x="35" y="87" width="30" height="8" fill="none" stroke="white" strokeWidth="0.3" />
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+                              <rect x="5" y="5" width="90" height="90" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                              <line x1="5" y1="50" x2="95" y2="50" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                              <circle cx="50" cy="50" r="8" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                              <circle cx="50" cy="50" r="0.5" fill="white" opacity="0.7" />
+                              <rect x="28" y="5" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                              <rect x="38" y="5" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                              <rect x="28" y="80" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                              <rect x="38" y="88" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                              
+                              {/* Grille magnétique */}
+                              {showGrid && (
+                                <>
+                                  {[...Array(20)].map((_, i) => (
+                                    <line 
+                                      key={`v-${i}`} 
+                                      x1={5 + (i * 4.5)} 
+                                      y1="5" 
+                                      x2={5 + (i * 4.5)} 
+                                      y2="95" 
+                                      stroke="white" 
+                                      strokeWidth="0.1" 
+                                      opacity="0.2" 
+                                    />
+                                  ))}
+                                  {[...Array(20)].map((_, i) => (
+                                    <line 
+                                      key={`h-${i}`} 
+                                      x1="5" 
+                                      y1={5 + (i * 4.5)} 
+                                      x2="95" 
+                                      y2={5 + (i * 4.5)} 
+                                      stroke="white" 
+                                      strokeWidth="0.1" 
+                                      opacity="0.2" 
+                                    />
+                                  ))}
+                                </>
+                              )}
                             </svg>
 
                             {/* Joueurs sur le terrain */}
                             {fieldPlayers.map((player) => (
-                              <div
+                              <DraggablePlayer
                                 key={player.id}
-                                draggable
-                                onDragStart={() => setActiveId(player.id || player.player_id)}
-                                className="absolute cursor-move"
+                                id={player.id || player.player_id}
+                                name={player.player_name}
+                                position={player.player_position}
+                                jerseyNumber={player.jersey_number}
+                                imageUrl={player.player_image_url}
+                                variant="field"
+                                showDelete
+                                onDelete={() => deletePlayer(player.id!)}
                                 style={{
                                   left: `${player.position_x}%`,
                                   top: `${player.position_y}%`,
                                   transform: 'translate(-50%, -50%)'
                                 }}
-                              >
-                                <div className="relative">
-                                  {player.player_image_url ? (
-                                    <img 
-                                      src={player.player_image_url} 
-                                      alt={player.player_name}
-                                      className="w-16 h-16 rounded-lg object-cover border-2 border-white shadow-lg"
-                                    />
-                                  ) : (
-                                    <div className="w-16 h-16 rounded-lg bg-white border-2 border-primary flex items-center justify-center shadow-lg">
-                                      <span className="text-xl font-bold">{player.jersey_number}</span>
-                                    </div>
-                                  )}
-                                  <Badge className="absolute -top-2 -right-2 text-xs">
-                                    {player.jersey_number}
-                                  </Badge>
-                                  <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/70 text-white px-2 py-0.5 rounded text-xs">
-                                    {player.player_name}
-                                  </div>
-                                  <Button
-                                    size="icon"
-                                    variant="destructive"
-                                    className="absolute -top-2 -left-2 h-5 w-5"
-                                    onClick={() => deletePlayer(player.id!)}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>
+                              />
                             ))}
                           </div>
                         </DroppableField>
 
-                        {/* Zone des remplaçants */}
+                        {/* Zone des remplaçants - Plus compacte */}
                         <Card>
-                          <CardHeader>
+                          <CardHeader className="py-2">
                             <CardTitle className="text-sm">Remplaçants</CardTitle>
                           </CardHeader>
-                          <CardContent>
+                          <CardContent className="p-2">
                             <DroppableSubstitutes id="substitutes">
-                              <div className="flex flex-wrap gap-2">
+                              <div className="flex flex-wrap gap-1.5 min-h-[80px]">
                                 {substitutes.length === 0 && (
-                                  <p className="text-sm text-muted-foreground">Glissez des joueurs ici pour les ajouter aux remplaçants</p>
+                                  <p className="text-xs text-muted-foreground p-2">Glissez des joueurs ici pour les ajouter aux remplaçants</p>
                                 )}
                                 {substitutes.map((player) => (
-                                  <div
+                                  <DraggablePlayer
                                     key={player.id}
-                                    draggable
-                                    onDragStart={() => setActiveId(player.id || player.player_id)}
-                                    className="p-2 bg-card border rounded cursor-move hover:bg-accent relative"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <Badge variant="secondary">{player.jersey_number}</Badge>
-                                      <div>
-                                        <div className="font-medium text-sm">{player.player_name}</div>
-                                        <div className="text-xs text-muted-foreground">{player.player_position}</div>
-                                      </div>
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-6 w-6 ml-2"
-                                        onClick={() => deletePlayer(player.id!)}
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
-                                    </div>
-                                  </div>
+                                    id={player.id || player.player_id}
+                                    name={player.player_name}
+                                    position={player.player_position}
+                                    jerseyNumber={player.jersey_number}
+                                    variant="list"
+                                    showDelete
+                                    onDelete={() => deletePlayer(player.id!)}
+                                  />
                                 ))}
                               </div>
                             </DroppableSubstitutes>
