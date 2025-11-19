@@ -19,41 +19,46 @@ interface MatchJsonData {
   venue?: string;
   competition?: string;
   status?: string;
-  match_details?: {
-    stadium?: string;
-    attendance?: number;
-    referee?: string;
-    weather?: string;
-    goals?: Array<{
-      player: string;
-      minute: number;
-      team: string;
-      type?: string;
-    }>;
-    cards?: Array<{
-      player: string;
-      minute: number;
-      team: string;
-      type: "yellow" | "red";
-    }>;
-    substitutions?: Array<{
-      player_in: string;
-      player_out: string;
-      minute: number;
-      team: string;
-    }>;
+  match_details?: any;
+}
+
+interface ImportedMatchJson {
+  match: {
+    date: string;
+    time: string;
+    round?: string;
+    score: {
+      [team: string]: number;
+    };
+    teams: {
+      away: string;
+      home: string;
+    };
+    season?: string;
+    status: string;
     possession?: {
-      home: number;
-      away: number;
+      [team: string]: string;
     };
-    shots?: {
-      home: { total: number; on_target: number };
-      away: { total: number; on_target: number };
+    competition: string;
+    venue?: string;
+  };
+  events?: {
+    cards?: {
+      red: { [team: string]: number };
+      yellow: { [team: string]: number };
     };
-    passes?: {
-      home: { total: number; accuracy: number };
-      away: { total: number; accuracy: number };
-    };
+    fouls?: Array<{ team: string; minute: number; player: string }>;
+    goals?: Array<{ team: string; minute: number; scorer: string }>;
+    substitutions?: Array<{ in: string; out: string; team: string; minute: number }>;
+  };
+  statistics?: {
+    fouls?: { [team: string]: number };
+    shots?: any;
+    passes?: any;
+    corners?: { [team: string]: number };
+    tackles?: { [team: string]: number };
+    offsides?: { [team: string]: number };
+    goalkeeper_saves?: { [team: string]: number };
   };
 }
 
@@ -63,13 +68,45 @@ export const MatchJsonImporter = () => {
   const [validationStatus, setValidationStatus] = useState<"idle" | "valid" | "invalid">("idle");
   const [parsedData, setParsedData] = useState<MatchJsonData | null>(null);
 
+  const transformImportedJson = (imported: ImportedMatchJson): MatchJsonData => {
+    const homeTeam = imported.match.teams.home;
+    const awayTeam = imported.match.teams.away;
+    
+    return {
+      home_team: homeTeam === "real_madrid" ? "Real Madrid" : homeTeam.charAt(0).toUpperCase() + homeTeam.slice(1),
+      away_team: awayTeam === "real_madrid" ? "Real Madrid" : awayTeam.charAt(0).toUpperCase() + awayTeam.slice(1),
+      home_score: imported.match.score[homeTeam] || 0,
+      away_score: imported.match.score[awayTeam] || 0,
+      match_date: `${imported.match.date}T${imported.match.time}:00Z`,
+      venue: imported.match.venue,
+      competition: imported.match.competition.replace(/_/g, ' ').toUpperCase(),
+      status: imported.match.status === "termine" ? "finished" : imported.match.status,
+      match_details: {
+        possession: imported.match.possession,
+        goals: imported.events?.goals,
+        cards: imported.events?.cards,
+        substitutions: imported.events?.substitutions,
+        fouls: imported.events?.fouls,
+        statistics: imported.statistics
+      }
+    };
+  };
+
   const validateJson = (input: string): boolean => {
     try {
       const data = JSON.parse(input);
       
-      // Vérification des champs requis
+      // Check if it's the new format
+      if (data.match && data.match.teams) {
+        const transformed = transformImportedJson(data as ImportedMatchJson);
+        setParsedData(transformed);
+        setValidationStatus("valid");
+        return true;
+      }
+      
+      // Check if it's the old format
       if (!data.home_team || !data.away_team || !data.match_date) {
-        toast.error("Champs requis manquants: home_team, away_team, match_date");
+        toast.error("Format JSON invalide. Vérifiez la structure.");
         return false;
       }
 
@@ -146,12 +183,15 @@ export const MatchJsonImporter = () => {
       // Mise à jour des statistiques des joueurs si fournies
       if (parsedData.match_details?.goals) {
         for (const goal of parsedData.match_details.goals) {
+          const playerName = goal.scorer || goal.player;
+          if (!playerName) continue;
+
           // Trouver le joueur par nom
           const { data: playerData } = await supabase
             .from('players')
             .select('id')
-            .ilike('name', `%${goal.player}%`)
-            .single();
+            .ilike('name', `%${playerName.replace(/_/g, ' ')}%`)
+            .maybeSingle();
 
           if (playerData) {
             // Récupérer les stats existantes
@@ -160,7 +200,7 @@ export const MatchJsonImporter = () => {
               .select('*')
               .eq('player_id', playerData.id)
               .eq('match_id', matchId)
-              .single();
+              .maybeSingle();
 
             if (existingStats) {
               // Incrémenter les buts
@@ -201,33 +241,47 @@ export const MatchJsonImporter = () => {
   };
 
   const exampleJson = {
-    id: "uuid-du-match-si-mise-a-jour",
-    home_team: "Real Madrid",
-    away_team: "FC Barcelona",
-    home_team_logo: "https://example.com/real-madrid-logo.png",
-    away_team_logo: "https://example.com/barcelona-logo.png",
-    home_score: 3,
-    away_score: 2,
-    match_date: "2024-03-15T20:00:00Z",
-    venue: "Santiago Bernabéu",
-    competition: "La Liga",
-    status: "finished",
-    match_details: {
-      stadium: "Santiago Bernabéu",
-      attendance: 78000,
-      referee: "Antonio Mateu Lahoz",
+    match: {
+      date: "2025-11-04",
+      time: "20:00",
+      round: "ronde_4",
+      score: {
+        liverpool: 1,
+        real_madrid: 0
+      },
+      teams: {
+        away: "real_madrid",
+        home: "liverpool"
+      },
+      season: "2025-2026",
+      status: "termine",
+      possession: {
+        liverpool: "38%",
+        real_madrid: "62%"
+      },
+      competition: "uefa_champions_league",
+      venue: "Anfield"
+    },
+    events: {
+      cards: {
+        red: { liverpool: 0, real_madrid: 0 },
+        yellow: { liverpool: 1, real_madrid: 4 }
+      },
       goals: [
-        { player: "Vinicius Jr", minute: 12, team: "Real Madrid", type: "open_play" },
-        { player: "Jude Bellingham", minute: 35, team: "Real Madrid" },
-        { player: "Robert Lewandowski", minute: 48, team: "Barcelona" }
+        { team: "liverpool", minute: 61, scorer: "a_mac_allister" }
       ],
-      cards: [
-        { player: "Gavi", minute: 65, team: "Barcelona", type: "yellow" }
-      ],
-      possession: { home: 58, away: 42 },
+      substitutions: [
+        { in: "e_camavinga", out: "rodrygo", team: "real_madrid", minute: 69 }
+      ]
+    },
+    statistics: {
       shots: {
-        home: { total: 15, on_target: 8 },
-        away: { total: 12, on_target: 5 }
+        total: { liverpool: 17, real_madrid: 8 },
+        on_target: { liverpool: 2, real_madrid: 5 }
+      },
+      passes: {
+        liverpool: { total: 332, accuracy: "77%", completed: 257 },
+        real_madrid: { total: 531, accuracy: "86%", completed: 460 }
       }
     }
   };
