@@ -6,10 +6,9 @@ import {
   DialogTitle,
   DialogDescription
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Shield, Share2, Flag, Clock } from "lucide-react";
+import { Activity, Shield, Share2, Flag } from "lucide-react";
 
 interface MatchStatsProps {
   match: any;
@@ -92,62 +91,6 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
     }
   };
 
-  // Build timeline from events
-  const timeline = [];
-  
-  // Add fouls/fautes
-  if (events?.fautes) {
-    events.fautes.forEach(faute => {
-      timeline.push({
-        minute: faute.minute,
-        event: "Faute",
-        player: faute.player,
-        team: faute.team,
-        details: ""
-      });
-    });
-  }
-
-  // Add yellow cards from events
-  if (events?.cartes?.jaune && events.cartes.jaune.length > 1) {
-    events.cartes.jaune.slice(1).forEach(card => {
-      if (card.team && card.player) {
-        timeline.push({
-          minute: card.minute || 0,
-          event: "Carton jaune",
-          player: card.player,
-          team: card.team,
-          details: ""
-        });
-      }
-    });
-  }
-
-  // Add red cards from events
-  if (events?.cartes?.rouge && events.cartes.rouge.length > 1) {
-    events.cartes.rouge.slice(1).forEach(card => {
-      if (card.team && card.player) {
-        timeline.push({
-          minute: card.minute || 0,
-          event: "Carton rouge",
-          player: card.player,
-          team: card.team,
-          details: ""
-        });
-      }
-    });
-  }
-
-  const formatMatchDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('fr-FR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    }).format(date);
-  };
-
   const getCompetitionColor = (competition: string) => {
     switch (competition) {
       case "La Liga": return "bg-green-600";
@@ -155,6 +98,16 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
       case "Copa del Rey": return "bg-purple-600";
       default: return "bg-gray-600";
     }
+  };
+
+  const formatMatchDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    };
+    return new Date(dateString).toLocaleDateString('fr-FR', options);
   };
 
   const renderProgressBar = (homeValue: number, awayValue: number) => {
@@ -174,26 +127,6 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
         ></div>
       </div>
     );
-  };
-
-  const getEventColor = (event: string) => {
-    switch (event) {
-      case "But": return "bg-green-500 text-white";
-      case "Carton jaune": return "bg-yellow-500 text-black";
-      case "Carton rouge": return "bg-red-500 text-white";
-      case "Faute": return "bg-orange-500 text-white";
-      default: return "bg-gray-500 text-white";
-    }
-  };
-
-  const getEventIcon = (event: string) => {
-    switch (event) {
-      case "But": return "⚽";
-      case "Carton jaune": return "🟨";
-      case "Carton rouge": return "🟥";
-      case "Faute": return "⚠️";
-      default: return "•";
-    }
   };
 
   return (
@@ -245,14 +178,7 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
           </div>
         </div>
 
-        <Tabs defaultValue="general" className="mt-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="general">Statistiques générales</TabsTrigger>
-            <TabsTrigger value="timeline">Chronologie</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="general">
-            <Card>
+        <Card className="mt-6">
               <CardContent className="pt-6">
                 <div className="space-y-8">
                   {/* Statistiques d'attaque */}
@@ -405,47 +331,6 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-          
-          <TabsContent value="timeline">
-            <Card>
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-semibold flex items-center mb-4">
-                  <Clock className="mr-2 h-5 w-5 text-madrid-blue" />
-                  Chronologie des événements
-                </h3>
-                
-                <div className="relative px-4">
-                  <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-                  <div className="space-y-6">
-                    {timeline && timeline.length > 0 ? timeline.sort((a, b) => a.minute - b.minute).map((event, index) => (
-                      <div key={index} className="flex gap-4 relative">
-                        <div className="flex flex-col items-center">
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getEventColor(event?.event || "")}`}>
-                            <span className="text-lg">{getEventIcon(event?.event || "")}</span>
-                          </div>
-                          <div className="text-sm font-bold mt-1">{event?.minute || 0}'</div>
-                        </div>
-                        <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg flex-1">
-                          <div className="font-bold text-md">{event?.event || "Événement"}</div>
-                          <div className="flex justify-between mb-1">
-                            <span>{event?.player || "Joueur inconnu"}</span>
-                            <span className="text-gray-500">{event?.team || "Équipe"}</span>
-                          </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">{event?.details || "Aucun détail"}</p>
-                        </div>
-                      </div>
-                    )) : (
-                      <div className="text-center text-gray-500 py-8">
-                        Aucun événement disponible pour ce match
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </DialogContent>
     </Dialog>
   );
