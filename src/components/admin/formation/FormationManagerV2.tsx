@@ -696,8 +696,20 @@ export const FormationManagerV2: React.FC = () => {
       .delete()
       .eq('id', playerId);
 
-    await fetchFormation();
+    // Rafraîchir les deux états
+    await Promise.all([
+      fetchFormation(),
+      fetchAvailablePlayers()
+    ]);
+    
     toast.success("Joueur retiré");
+  };
+
+  const saveFormation = async () => {
+    if (!formationId) return;
+    
+    setLastSaved(new Date());
+    toast.success("Formation sauvegardée");
   };
 
   const deleteFormation = async () => {
@@ -878,6 +890,19 @@ export const FormationManagerV2: React.FC = () => {
                         >
                           <Users className="h-4 w-4 mr-2" />
                           Sync Images
+                        </Button>
+                        <Button 
+                          onClick={saveFormation}
+                          size="sm"
+                          disabled={!formationId}
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          Sauvegarder
+                          {lastSaved && (
+                            <span className="ml-2 text-xs opacity-70">
+                              {lastSaved.toLocaleTimeString()}
+                            </span>
+                          )}
                         </Button>
                         <Button onClick={deleteFormation} variant="destructive" size="sm">
                           <Trash2 className="h-4 w-4 mr-2" />
