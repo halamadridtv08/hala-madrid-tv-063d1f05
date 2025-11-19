@@ -62,7 +62,8 @@ const Matches = () => {
             word.charAt(0).toUpperCase() + word.slice(1)
           ).join(' '),
           team: goal.team || '',
-          minute: goal.minute || 0
+          minute: goal.minute || 0,
+          type: goal.type || goal.goal_type || null // Ajouter le type de but
         }));
       }
     }
@@ -299,35 +300,83 @@ const Matches = () => {
                               {match.venue}
                             </div>
                             <div className="mt-4">
-                              <h4 className="font-semibold mb-2 flex items-center justify-center gap-2">
+                              <h4 className="font-semibold mb-3 flex items-center justify-center gap-2">
                                 <Goal className="h-4 w-4" />
                                 Buteurs:
                               </h4>
                               {match.scorers && Array.isArray(match.scorers) && match.scorers.length > 0 ? (
-                                <div className="space-y-2">
-                                  {match.scorers.map((scorer: any, idx: number) => {
-                                    const isRealMadrid = scorer.team?.toLowerCase().includes('real_madrid') || 
-                                                       scorer.team?.toLowerCase().includes('real madrid');
-                                    const teamName = scorer.team?.replace(/_/g, ' ').split(' ').map((w: string) => 
-                                      w.charAt(0).toUpperCase() + w.slice(1)
-                                    ).join(' ') || '';
+                                <div className="space-y-3">
+                                  {/* Grouper par équipe */}
+                                  {(() => {
+                                    const realMadridGoals = match.scorers.filter((s: any) => 
+                                      s.team?.toLowerCase().includes('real_madrid') || 
+                                      s.team?.toLowerCase().includes('real madrid')
+                                    );
+                                    const otherGoals = match.scorers.filter((s: any) => 
+                                      !s.team?.toLowerCase().includes('real_madrid') && 
+                                      !s.team?.toLowerCase().includes('real madrid')
+                                    );
                                     
                                     return (
-                                      <div 
-                                        key={idx}
-                                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
-                                          isRealMadrid 
-                                            ? 'bg-madrid-gold/20 text-madrid-gold border border-madrid-gold/30' 
-                                            : 'bg-muted/50 text-foreground border border-border/30'
-                                        }`}
-                                      >
-                                        <Goal className="h-3.5 w-3.5" />
-                                        <span className="font-medium">{scorer.name}</span>
-                                        <span className="opacity-70">({scorer.minute}')</span>
-                                        <span className="text-xs opacity-60">• {teamName}</span>
-                                      </div>
+                                      <>
+                                        {realMadridGoals.length > 0 && (
+                                          <div className="space-y-1.5">
+                                            <div className="text-xs font-medium text-madrid-gold">Real Madrid</div>
+                                            <div className="flex flex-wrap gap-2 justify-center">
+                                              {realMadridGoals.map((scorer: any, idx: number) => (
+                                                <div 
+                                                  key={idx}
+                                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-madrid-gold/20 text-madrid-gold border border-madrid-gold/30"
+                                                >
+                                                  <Goal className="h-3.5 w-3.5" />
+                                                  <span className="font-medium">{scorer.name}</span>
+                                                  <span className="opacity-70">({scorer.minute}')</span>
+                                                  {scorer.type && (
+                                                    <span className="text-xs opacity-60 ml-1">
+                                                      {scorer.type === 'penalty' && '⚽ P'}
+                                                      {scorer.type === 'header' && '🎯 T'}
+                                                      {scorer.type === 'left_foot' && '👈'}
+                                                      {scorer.type === 'right_foot' && '👉'}
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                        
+                                        {otherGoals.length > 0 && (
+                                          <div className="space-y-1.5">
+                                            <div className="text-xs font-medium text-muted-foreground">
+                                              {otherGoals[0]?.team?.replace(/_/g, ' ').split(' ').map((w: string) => 
+                                                w.charAt(0).toUpperCase() + w.slice(1)
+                                              ).join(' ')}
+                                            </div>
+                                            <div className="flex flex-wrap gap-2 justify-center">
+                                              {otherGoals.map((scorer: any, idx: number) => (
+                                                <div 
+                                                  key={idx}
+                                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-muted/50 text-foreground border border-border/30"
+                                                >
+                                                  <Goal className="h-3.5 w-3.5" />
+                                                  <span className="font-medium">{scorer.name}</span>
+                                                  <span className="opacity-70">({scorer.minute}')</span>
+                                                  {scorer.type && (
+                                                    <span className="text-xs opacity-60 ml-1">
+                                                      {scorer.type === 'penalty' && '⚽ P'}
+                                                      {scorer.type === 'header' && '🎯 T'}
+                                                      {scorer.type === 'left_foot' && '👈'}
+                                                      {scorer.type === 'right_foot' && '👉'}
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </>
                                     );
-                                  })}
+                                  })()}
                                 </div>
                               ) : (
                                 <p className="text-sm text-muted-foreground">Aucun but marqué</p>
