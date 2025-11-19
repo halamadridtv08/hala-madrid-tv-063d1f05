@@ -54,8 +54,10 @@ const Matches = () => {
     let scorers: string[] = [];
     if (match.match_details && typeof match.match_details === 'object') {
       const details = match.match_details as any;
-      if (details.events?.goals && Array.isArray(details.events.goals)) {
-        scorers = details.events.goals.map((goal: any) => {
+      // Vérifier d'abord dans details.goals (nouveau format)
+      const goalsArray = details.goals || details.events?.goals;
+      if (goalsArray && Array.isArray(goalsArray)) {
+        scorers = goalsArray.map((goal: any) => {
           const scorerName = goal.scorer || goal.player || '';
           return scorerName.replace(/_/g, ' ').split(' ').map((word: string) => 
             word.charAt(0).toUpperCase() + word.slice(1)
