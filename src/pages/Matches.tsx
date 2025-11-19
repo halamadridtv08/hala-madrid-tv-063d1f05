@@ -501,6 +501,7 @@ const Matches = () => {
                                 )}
                               </div>
                             )}
+                          </div>
                           
                           <div className={`flex ${viewMode === 'list' ? 'flex-row' : 'flex-col'} items-center ${viewMode === 'list' ? 'gap-3' : ''}`}>
                             <div className="relative">
