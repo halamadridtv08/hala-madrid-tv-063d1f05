@@ -279,8 +279,41 @@ export const FormationManagerV2: React.FC = () => {
     const isFromField = fieldPlayers.some(p => p.player_id === activePlayerId || p.id === activePlayerId);
     const isFromSubstitutes = substitutes.some(p => p.player_id === activePlayerId || p.id === activePlayerId);
 
-    // Drag from available players to field
+    // Check if dragging a substitute onto a field player (swap them)
+    const targetFieldPlayer = fieldPlayers.find(p => p.id === over.id || p.player_id === over.id);
+    if (isFromSubstitutes && targetFieldPlayer) {
+      const substitutePlayer = substitutes.find(p => p.id === activePlayerId || p.player_id === activePlayerId);
+      if (substitutePlayer && substitutePlayer.id && targetFieldPlayer.id) {
+        // Swap positions: substitute becomes starter at field player's position, field player becomes substitute
+        await supabase
+          .from('match_formation_players')
+          .update({
+            is_starter: true,
+            position_x: targetFieldPlayer.position_x,
+            position_y: targetFieldPlayer.position_y
+          })
+          .eq('id', substitutePlayer.id);
+
+        await supabase
+          .from('match_formation_players')
+          .update({ is_starter: false })
+          .eq('id', targetFieldPlayer.id);
+
+        fetchFormation();
+        toast.success("Joueurs échangés");
+        setActiveId(null);
+        return;
+      }
+    }
+
+    // Drag from available players to field - Check 11 players limit
     if (isFromAvailable && over.id === 'field') {
+      if (fieldPlayers.length >= 11) {
+        toast.error("Maximum 11 joueurs sur le terrain");
+        setActiveId(null);
+        return;
+      }
+
       const player = availablePlayers.find(p => p.id === activePlayerId);
       if (player) {
         const pitchElement = document.querySelector('[data-pitch="true"]');
@@ -289,8 +322,15 @@ export const FormationManagerV2: React.FC = () => {
           const mouseX = event.activatorEvent ? (event.activatorEvent as PointerEvent).clientX : rect.left + rect.width / 2;
           const mouseY = event.activatorEvent ? (event.activatorEvent as PointerEvent).clientY : rect.top + rect.height / 2;
           
-          const percentX = ((mouseX - rect.left) / rect.width) * 100;
-          const percentY = ((mouseY - rect.top) / rect.height) * 100;
+          let percentX = ((mouseX - rect.left) / rect.width) * 100;
+          let percentY = ((mouseY - rect.top) / rect.height) * 100;
+
+          // Apply grid snapping if enabled
+          if (showGrid) {
+            const snapped = snapToGrid(percentX, percentY);
+            percentX = snapped.x;
+            percentY = snapped.y;
+          }
 
           const { data, error } = await supabase
             .from('match_formation_players')
@@ -303,15 +343,15 @@ export const FormationManagerV2: React.FC = () => {
               jersey_number: player.jersey_number,
               player_image_url: activeTeam === "real_madrid" ? (player.profile_image_url || player.image_url) : null,
               position_x: Math.max(5, Math.min(95, percentX)),
-              position_y: Math.max(5, Math.min(95, percentY)),
+              position_y: Math.max(10, Math.min(90, percentY)),
               is_starter: true,
-              player_rating: 7.0
+              player_rating: 0
             })
             .select()
             .single();
 
-          if (!error && data) {
-            setFieldPlayers([...fieldPlayers, data as any]);
+          if (!error) {
+            fetchFormation();
             toast.success("Joueur ajouté au terrain");
           }
         }
@@ -332,16 +372,16 @@ export const FormationManagerV2: React.FC = () => {
             player_position: player.position,
             jersey_number: player.jersey_number,
             player_image_url: activeTeam === "real_madrid" ? (player.profile_image_url || player.image_url) : null,
-            position_x: 50,
-            position_y: 50,
+            position_x: 0,
+            position_y: 0,
             is_starter: false,
-            player_rating: 7.0
+            player_rating: 0
           })
           .select()
           .single();
 
-        if (!error && data) {
-          setSubstitutes([...substitutes, data as any]);
+        if (!error) {
+          fetchFormation();
           toast.success("Joueur ajouté aux remplaçants");
         }
       }
@@ -357,14 +397,21 @@ export const FormationManagerV2: React.FC = () => {
           const mouseX = event.activatorEvent ? (event.activatorEvent as PointerEvent).clientX : rect.left + rect.width / 2;
           const mouseY = event.activatorEvent ? (event.activatorEvent as PointerEvent).clientY : rect.top + rect.height / 2;
           
-          const percentX = ((mouseX - rect.left) / rect.width) * 100;
-          const percentY = ((mouseY - rect.top) / rect.height) * 100;
+          let percentX = ((mouseX - rect.left) / rect.width) * 100;
+          let percentY = ((mouseY - rect.top) / rect.height) * 100;
+
+          // Apply grid snapping if enabled
+          if (showGrid) {
+            const snapped = snapToGrid(percentX, percentY);
+            percentX = snapped.x;
+            percentY = snapped.y;
+          }
 
           await supabase
             .from('match_formation_players')
             .update({
               position_x: Math.max(5, Math.min(95, percentX)),
-              position_y: Math.max(5, Math.min(95, percentY))
+              position_y: Math.max(10, Math.min(90, percentY))
             })
             .eq('id', player.id);
 
@@ -387,8 +434,14 @@ export const FormationManagerV2: React.FC = () => {
       }
     }
 
-    // Move from substitutes to field
+    // Move from substitutes to field - Check 11 players limit
     if (isFromSubstitutes && over.id === 'field') {
+      if (fieldPlayers.length >= 11) {
+        toast.error("Maximum 11 joueurs sur le terrain");
+        setActiveId(null);
+        return;
+      }
+
       const player = substitutes.find(p => p.id === activePlayerId || p.player_id === activePlayerId);
       if (player && player.id) {
         const pitchElement = document.querySelector('[data-pitch="true"]');
@@ -397,15 +450,22 @@ export const FormationManagerV2: React.FC = () => {
           const mouseX = event.activatorEvent ? (event.activatorEvent as PointerEvent).clientX : rect.left + rect.width / 2;
           const mouseY = event.activatorEvent ? (event.activatorEvent as PointerEvent).clientY : rect.top + rect.height / 2;
           
-          const percentX = ((mouseX - rect.left) / rect.width) * 100;
-          const percentY = ((mouseY - rect.top) / rect.height) * 100;
+          let percentX = ((mouseX - rect.left) / rect.width) * 100;
+          let percentY = ((mouseY - rect.top) / rect.height) * 100;
+
+          // Apply grid snapping if enabled
+          if (showGrid) {
+            const snapped = snapToGrid(percentX, percentY);
+            percentX = snapped.x;
+            percentY = snapped.y;
+          }
 
           await supabase
             .from('match_formation_players')
             .update({
               is_starter: true,
               position_x: Math.max(5, Math.min(95, percentX)),
-              position_y: Math.max(5, Math.min(95, percentY))
+              position_y: Math.max(10, Math.min(90, percentY))
             })
             .eq('id', player.id);
 
@@ -570,6 +630,16 @@ export const FormationManagerV2: React.FC = () => {
 
                       {/* Terrain + Remplaçants - Plus compact */}
                       <div className="col-span-3 space-y-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant={fieldPlayers.length === 11 ? "default" : "secondary"} className="text-sm">
+                            {fieldPlayers.length}/11 joueurs sur le terrain
+                          </Badge>
+                          {fieldPlayers.length < 11 && (
+                            <span className="text-xs text-muted-foreground">
+                              Glissez {11 - fieldPlayers.length} joueur{11 - fieldPlayers.length > 1 ? 's' : ''} de plus
+                            </span>
+                          )}
+                        </div>
                         <DroppableField id="field">
                           <div 
                             className="relative w-full bg-gradient-to-b from-green-400 to-green-600 rounded-lg overflow-hidden shadow-lg" 
