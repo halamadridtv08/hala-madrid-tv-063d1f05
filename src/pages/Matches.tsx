@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, MapPin, ChevronRight, Activity, RefreshCw, Users } from "lucide-react";
+import { Calendar, Clock, MapPin, ChevronRight, Activity, RefreshCw, Users, Goal } from "lucide-react";
 import { MatchDetail } from "@/components/matches/MatchDetail";
 import { MatchStats } from "@/components/matches/MatchStats";
 import { TeamFormation } from "@/components/matches/TeamFormation";
@@ -50,19 +50,20 @@ const Matches = () => {
 
   // Convertir les matchs Supabase au format attendu par les composants
   const formatMatchForDisplay = (match: Match) => {
-    // Extraire les buteurs depuis match_details
-    let scorers: string[] = [];
+    // Extraire les buteurs avec toutes leurs infos depuis match_details
+    let scorers: Array<{ name: string; team: string; minute: number }> = [];
     if (match.match_details && typeof match.match_details === 'object') {
       const details = match.match_details as any;
       // Vérifier d'abord dans details.goals (nouveau format)
       const goalsArray = details.goals || details.events?.goals;
       if (goalsArray && Array.isArray(goalsArray)) {
-        scorers = goalsArray.map((goal: any) => {
-          const scorerName = goal.scorer || goal.player || '';
-          return scorerName.replace(/_/g, ' ').split(' ').map((word: string) => 
+        scorers = goalsArray.map((goal: any) => ({
+          name: (goal.scorer || goal.player || '').replace(/_/g, ' ').split(' ').map((word: string) => 
             word.charAt(0).toUpperCase() + word.slice(1)
-          ).join(' ');
-        });
+          ).join(' '),
+          team: goal.team || '',
+          minute: goal.minute || 0
+        }));
       }
     }
 
@@ -298,8 +299,39 @@ const Matches = () => {
                               {match.venue}
                             </div>
                             <div className="mt-4">
-                              <h4 className="font-semibold mb-1">Buteurs:</h4>
-                              <p className="text-sm">{match.scorers?.length ? match.scorers.join(", ") : "Aucun but marqué"}</p>
+                              <h4 className="font-semibold mb-2 flex items-center justify-center gap-2">
+                                <Goal className="h-4 w-4" />
+                                Buteurs:
+                              </h4>
+                              {match.scorers && Array.isArray(match.scorers) && match.scorers.length > 0 ? (
+                                <div className="space-y-2">
+                                  {match.scorers.map((scorer: any, idx: number) => {
+                                    const isRealMadrid = scorer.team?.toLowerCase().includes('real_madrid') || 
+                                                       scorer.team?.toLowerCase().includes('real madrid');
+                                    const teamName = scorer.team?.replace(/_/g, ' ').split(' ').map((w: string) => 
+                                      w.charAt(0).toUpperCase() + w.slice(1)
+                                    ).join(' ') || '';
+                                    
+                                    return (
+                                      <div 
+                                        key={idx}
+                                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
+                                          isRealMadrid 
+                                            ? 'bg-madrid-gold/20 text-madrid-gold border border-madrid-gold/30' 
+                                            : 'bg-muted/50 text-foreground border border-border/30'
+                                        }`}
+                                      >
+                                        <Goal className="h-3.5 w-3.5" />
+                                        <span className="font-medium">{scorer.name}</span>
+                                        <span className="opacity-70">({scorer.minute}')</span>
+                                        <span className="text-xs opacity-60">• {teamName}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : (
+                                <p className="text-sm text-muted-foreground">Aucun but marqué</p>
+                              )}
                             </div>
                           </div>
                           
