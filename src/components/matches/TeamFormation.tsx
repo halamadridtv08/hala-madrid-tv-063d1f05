@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +11,6 @@ import { DraggablePlayerCard } from '@/components/formation/DraggablePlayerCard'
 import { Users, RotateCcw, Save } from 'lucide-react';
 import { Player } from '@/types/Player';
 import { Match } from '@/types/Match';
-
 interface FormationPlayer {
   id: string;
   player_id?: string;
@@ -34,34 +24,36 @@ interface FormationPlayer {
   player_image_url?: string;
   player_rating: number;
 }
-
 interface TeamFormationProps {
   match: Match;
 }
-
-const FORMATIONS = [
-  { value: "4-3-3", label: "4-3-3" },
-  { value: "4-4-2", label: "4-4-2" },
-  { value: "3-5-2", label: "3-5-2" },
-  { value: "4-2-3-1", label: "4-2-3-1" }
-];
-
-export const TeamFormation: React.FC<TeamFormationProps> = ({ match }) => {
+const FORMATIONS = [{
+  value: "4-3-3",
+  label: "4-3-3"
+}, {
+  value: "4-4-2",
+  label: "4-4-2"
+}, {
+  value: "3-5-2",
+  label: "3-5-2"
+}, {
+  value: "4-2-3-1",
+  label: "4-2-3-1"
+}];
+export const TeamFormation: React.FC<TeamFormationProps> = ({
+  match
+}) => {
   const [formations, setFormations] = useState<any>({});
   const [loading, setLoading] = useState(false);
   const [activeTeam, setActiveTeam] = useState<"real_madrid" | "opposing">("real_madrid");
   const [activeId, setActiveId] = useState<string | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [opposingPlayers, setOpposingPlayers] = useState<any[]>([]);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
-
+  const sensors = useSensors(useSensor(PointerSensor, {
+    activationConstraint: {
+      distance: 8
+    }
+  }));
   useEffect(() => {
     if (match?.id) {
       fetchFormations();
@@ -69,13 +61,12 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({ match }) => {
       fetchOpposingPlayers();
     }
   }, [match?.id]);
-
   const fetchFormations = async () => {
     if (!match?.id) return;
-
-    const { data, error } = await supabase
-      .from('match_formations')
-      .select(`
+    const {
+      data,
+      error
+    } = await supabase.from('match_formations').select(`
         id,
         team_type,
         formation,
@@ -92,14 +83,11 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({ match }) => {
           player_image_url,
           player_rating
         )
-      `)
-      .eq('match_id', match.id);
-
+      `).eq('match_id', match.id);
     if (error) {
       console.error('Error fetching formations:', error);
       return;
     }
-
     const formationsData: any = {};
     data?.forEach(formation => {
       formationsData[formation.team_type] = {
@@ -108,77 +96,56 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({ match }) => {
         players: formation.match_formation_players || []
       };
     });
-
     setFormations(formationsData);
   };
-
   const fetchPlayers = async () => {
-    const { data, error } = await supabase
-      .from('players')
-      .select('id, name, position, jersey_number, image_url, is_active, created_at, updated_at')
-      .eq('is_active', true)
-      .order('jersey_number');
-
+    const {
+      data,
+      error
+    } = await supabase.from('players').select('id, name, position, jersey_number, image_url, is_active, created_at, updated_at').eq('is_active', true).order('jersey_number');
     if (!error && data) {
       setPlayers(data);
     }
   };
-
   const fetchOpposingPlayers = async () => {
     if (!match?.opposing_team_id) return;
-
-    const { data, error } = await supabase
-      .from('opposing_players')
-      .select('id, name, position, jersey_number')
-      .eq('team_id', match.opposing_team_id)
-      .order('jersey_number');
-
+    const {
+      data,
+      error
+    } = await supabase.from('opposing_players').select('id, name, position, jersey_number').eq('team_id', match.opposing_team_id).order('jersey_number');
     if (!error && data) {
       setOpposingPlayers(data);
     }
   };
-
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(String(event.active.id));
   };
-
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    
+    const {
+      active,
+      over
+    } = event;
     if (over && active.id !== over.id) {
       handleSwapPlayers(String(active.id), String(over.id));
     }
-    
     setActiveId(null);
   };
-
   const handleSwapPlayers = async (playerId1: string, playerId2: string) => {
     const currentFormation = formations[activeTeam];
     if (!currentFormation) return;
-
     const player1 = currentFormation.players.find((p: FormationPlayer) => p.id === playerId1);
     const player2 = currentFormation.players.find((p: FormationPlayer) => p.id === playerId2);
-
     if (!player1 || !player2) return;
-
     try {
       // Swap positions in database
-      await supabase
-        .from('match_formation_players')
-        .update({ 
-          position_x: player2.position_x, 
-          position_y: player2.position_y 
-        })
-        .eq('id', player1.id);
-
-      await supabase
-        .from('match_formation_players')
-        .update({ 
-          position_x: player1.position_x, 
-          position_y: player1.position_y 
-        })
-        .eq('id', player2.id);
-
+      await supabase.from('match_formation_players').update({
+        position_x: player2.position_x,
+        position_y: player2.position_y
+      }).eq('id', player1.id);
+      await supabase.from('match_formation_players').update({
+        position_x: player1.position_x,
+        position_y: player1.position_y
+      }).eq('id', player2.id);
       toast.success('Positions échangées');
       fetchFormations();
     } catch (error) {
@@ -186,34 +153,26 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({ match }) => {
       toast.error('Erreur lors de l\'échange');
     }
   };
-
   const resetFormation = async () => {
     // Implementation for resetting formation to default positions
     toast.success('Formation réinitialisée');
     fetchFormations();
   };
-
   const saveFormation = async () => {
     // Implementation for saving current formation
     toast.success('Formation sauvegardée');
   };
-
   const renderFormation = (teamType: "real_madrid" | "opposing") => {
     const formation = formations[teamType];
     if (!formation) {
-      return (
-        <div className="text-center py-8 text-muted-foreground">
+      return <div className="text-center py-8 text-muted-foreground">
           <p>Aucune formation disponible pour cette équipe</p>
-        </div>
-      );
+        </div>;
     }
-
     const starters = formation.players.filter((p: FormationPlayer) => p.is_starter);
     const substitutes = formation.players.filter((p: FormationPlayer) => !p.is_starter);
     const activeDragPlayer = activeId ? starters.find((p: FormationPlayer) => p.id === activeId) : null;
-
-    return (
-      <div className="space-y-6">
+    return <div className="space-y-6">
         {/* Formation header */}
         <div className="flex items-center justify-between">
           <Badge variant="default" className="text-lg px-3 py-1">
@@ -239,59 +198,46 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({ match }) => {
         </div>
 
         {/* Football pitch with players */}
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="relative">
             <FootballPitch>
-              {starters.map((player: FormationPlayer) => (
-                <DraggablePlayerCard
-                  key={player.id}
-                  player={{
-                    id: player.id,
-                    player_name: player.player_name,
-                    player_position: player.player_position,
-                    jersey_number: player.jersey_number,
-                    player_image_url: player.player_image_url,
-                    player_rating: player.player_rating
-                  }}
-                  position={{ x: player.position_x, y: player.position_y }}
-                />
-              ))}
+              {starters.map((player: FormationPlayer) => <DraggablePlayerCard key={player.id} player={{
+              id: player.id,
+              player_name: player.player_name,
+              player_position: player.player_position,
+              jersey_number: player.jersey_number,
+              player_image_url: player.player_image_url,
+              player_rating: player.player_rating
+            }} position={{
+              x: player.position_x,
+              y: player.position_y
+            }} />)}
             </FootballPitch>
 
             <DragOverlay>
-              {activeDragPlayer && (
-                <DraggablePlayerCard
-                  player={{
-                    id: activeDragPlayer.id,
-                    player_name: activeDragPlayer.player_name,
-                    player_position: activeDragPlayer.player_position,
-                    jersey_number: activeDragPlayer.jersey_number,
-                    player_image_url: activeDragPlayer.player_image_url,
-                    player_rating: activeDragPlayer.player_rating
-                  }}
-                  position={{ x: activeDragPlayer.position_x, y: activeDragPlayer.position_y }}
-                  isDragOverlay
-                />
-              )}
+              {activeDragPlayer && <DraggablePlayerCard player={{
+              id: activeDragPlayer.id,
+              player_name: activeDragPlayer.player_name,
+              player_position: activeDragPlayer.player_position,
+              jersey_number: activeDragPlayer.jersey_number,
+              player_image_url: activeDragPlayer.player_image_url,
+              player_rating: activeDragPlayer.player_rating
+            }} position={{
+              x: activeDragPlayer.position_x,
+              y: activeDragPlayer.position_y
+            }} isDragOverlay />}
             </DragOverlay>
           </div>
         </DndContext>
 
         {/* Remplaçants - Affichage horizontal */}
-        {substitutes.length > 0 && (
-          <div className="space-y-3">
+        {substitutes.length > 0 && <div className="space-y-3">
             <h4 className="font-semibold text-muted-foreground flex items-center gap-2">
               <Users className="h-4 w-4" />
               Remplaçants ({substitutes.length})
             </h4>
             <div className="flex flex-wrap gap-3 p-4 bg-muted/50 rounded-lg">
-              {substitutes.map((player: FormationPlayer) => (
-                <div key={player.id} className="flex items-center gap-2 bg-background p-2 rounded-lg border min-w-0">
+              {substitutes.map((player: FormationPlayer) => <div key={player.id} className="flex items-center gap-2 bg-background p-2 rounded-lg border min-w-0">
                   <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-xs font-bold text-white">
                       {player.jersey_number}
@@ -306,30 +252,22 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({ match }) => {
                       {player.player_rating.toFixed(1)}
                     </span>
                   </div>
-                </div>
-              ))}
+                </div>)}
             </div>
-          </div>
-        )}
-      </div>
-    );
+          </div>}
+      </div>;
   };
-
   if (loading) {
-    return (
-      <Card>
+    return <Card>
         <CardContent className="flex items-center justify-center py-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-muted-foreground">Chargement des compositions...</p>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5" />
@@ -340,7 +278,7 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({ match }) => {
         </p>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTeam} onValueChange={(value) => setActiveTeam(value as "real_madrid" | "opposing")}>
+        <Tabs value={activeTeam} onValueChange={value => setActiveTeam(value as "real_madrid" | "opposing")}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="real_madrid">Real Madrid</TabsTrigger>
             <TabsTrigger value="opposing">
@@ -358,16 +296,7 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({ match }) => {
         </Tabs>
 
         {/* Instructions */}
-        <div className="mt-6 text-sm text-muted-foreground bg-muted/50 p-4 rounded-lg">
-          <h4 className="font-medium mb-2">Instructions :</h4>
-          <ul className="space-y-1 text-xs">
-            <li>• Glissez-déposez les joueurs pour échanger leurs positions</li>
-            <li>• Les numéros jaunes indiquent les notes des joueurs</li>
-            <li>• Utilisez les onglets pour basculer entre les équipes</li>
-            <li>• Sauvegardez vos modifications</li>
-          </ul>
-        </div>
+        
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
