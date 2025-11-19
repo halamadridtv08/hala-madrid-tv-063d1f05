@@ -10,8 +10,6 @@ interface MatchStatisticsProps {
 export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStatisticsProps) => {
   if (!matchDetails) return null;
 
-  console.log("Match details:", matchDetails);
-
   // Normaliser les noms d'équipe pour correspondre aux clés JSON
   const normalizeTeamName = (name: string) => {
     return name.toLowerCase().replace(/\s+/g, '_');
@@ -24,10 +22,6 @@ export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStati
   const statistics = matchDetails.statistics || {};
   const possession = matchDetails.possession || {};
   const cards = matchDetails.cards || {};
-
-  console.log("Statistics:", statistics);
-  console.log("Possession:", possession);
-  console.log("Cards:", cards);
 
   // Parse possession percentages
   const parsePossession = (possessionStr: string) => {
