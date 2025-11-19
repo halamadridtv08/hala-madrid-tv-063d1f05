@@ -49,28 +49,44 @@ const Matches = () => {
   };
 
   // Convertir les matchs Supabase au format attendu par les composants
-  const formatMatchForDisplay = (match: Match) => ({
-    id: match.id,
-    competition: match.competition || 'Match amical',
-    round: '',
-    date: match.match_date,
-    homeTeam: {
-      name: match.home_team,
-      logo: match.home_team_logo || (match.home_team === 'Real Madrid' ? "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png" : "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sport_balls.svg/1200px-Sport_balls.svg.png"),
-      score: match.home_score
-    },
-    awayTeam: {
-      name: match.away_team,
-      logo: match.away_team_logo || (match.away_team === 'Real Madrid' ? "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png" : "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sport_balls.svg/1200px-Sport_balls.svg.png"),
-      score: match.away_score
-    },
-    venue: match.venue,
-    tickets: match.home_team === 'Real Madrid',
-    scorers: [],
-    match_details: match.match_details,
-    stats: {},
-    timeline: []
-  });
+  const formatMatchForDisplay = (match: Match) => {
+    // Extraire les buteurs depuis match_details
+    let scorers: string[] = [];
+    if (match.match_details && typeof match.match_details === 'object') {
+      const details = match.match_details as any;
+      if (details.events?.goals && Array.isArray(details.events.goals)) {
+        scorers = details.events.goals.map((goal: any) => {
+          const scorerName = goal.scorer || goal.player || '';
+          return scorerName.replace(/_/g, ' ').split(' ').map((word: string) => 
+            word.charAt(0).toUpperCase() + word.slice(1)
+          ).join(' ');
+        });
+      }
+    }
+
+    return {
+      id: match.id,
+      competition: match.competition || 'Match amical',
+      round: '',
+      date: match.match_date,
+      homeTeam: {
+        name: match.home_team,
+        logo: match.home_team_logo || (match.home_team === 'Real Madrid' ? "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png" : "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sport_balls.svg/1200px-Sport_balls.svg.png"),
+        score: match.home_score
+      },
+      awayTeam: {
+        name: match.away_team,
+        logo: match.away_team_logo || (match.away_team === 'Real Madrid' ? "https://upload.wikimedia.org/wikipedia/en/thumb/5/56/Real_Madrid_CF.svg/1200px-Real_Madrid_CF.svg.png" : "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sport_balls.svg/1200px-Sport_balls.svg.png"),
+        score: match.away_score
+      },
+      venue: match.venue,
+      tickets: match.home_team === 'Real Madrid',
+      scorers: scorers,
+      match_details: match.match_details,
+      stats: {},
+      timeline: []
+    };
+  };
   const formattedUpcomingMatches = upcomingMatches.map(formatMatchForDisplay);
   const formattedPastMatches = pastMatches.map(formatMatchForDisplay);
   const formatMatchDate = (dateString: string) => {
