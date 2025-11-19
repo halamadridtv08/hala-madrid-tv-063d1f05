@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { LatestNewsWidget } from "@/components/home/LatestNewsWidget";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -103,56 +102,94 @@ const News = () => {
         </div>
 
         <div className="madrid-container py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Contenu principal */}
-            <div className="lg:col-span-2">
-              <div className="flex flex-col md:flex-row gap-4 mb-8 justify-between">
-                <Input
-                  placeholder="Rechercher une actualité..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="max-w-sm"
-                />
-                
-                <div className="flex flex-wrap gap-2">
-                  {categories.map(category => (
-                    <Badge
-                      key={category.value ?? "all"}
-                      className={`cursor-pointer ${
-                        selectedCategory === category.value 
-                        ? "bg-madrid-gold text-black" 
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                      }`}
-                      onClick={() => setSelectedCategory(category.value)}
-                    >
-                      {category.name}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              
-              {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-...
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-...
-                </div>
-              )}
-
-              {filteredNews.length === 0 && !loading && (
-                <div className="text-center py-12">
-                  <p className="text-gray-600 dark:text-gray-400 text-lg">Aucun article trouvé.</p>
-                </div>
-              )}
-            </div>
-
-            {/* Widget des dernières infos */}
-            <div className="lg:col-span-1">
-              <LatestNewsWidget />
+          <div className="flex flex-col md:flex-row gap-4 mb-8 justify-between">
+            <Input
+              placeholder="Rechercher une actualité..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+            
+            <div className="flex flex-wrap gap-2">
+              {categories.map(category => (
+                <Badge
+                  key={category.value ?? "all"}
+                  className={`cursor-pointer ${
+                    selectedCategory === category.value 
+                    ? "bg-madrid-gold text-black" 
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                  }`}
+                  onClick={() => setSelectedCategory(category.value)}
+                >
+                  {category.name}
+                </Badge>
+              ))}
             </div>
           </div>
+          
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <Card key={i} className="overflow-hidden">
+                  <Skeleton className="h-48 w-full" />
+                  <CardHeader>
+                    <Skeleton className="h-4 w-20 mb-2" />
+                    <Skeleton className="h-6 w-full" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredNews.map(article => (
+                <Card key={article.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  {article.image_url && (
+                    <div className="relative h-48 overflow-hidden">
+                      <img 
+                        src={article.image_url} 
+                        alt={article.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <Badge className={`absolute top-4 left-4 ${getCategoryColor(article.category)}`}>
+                        {article.category}
+                      </Badge>
+                    </div>
+                  )}
+                  <CardHeader>
+                    <CardTitle className="line-clamp-2">{article.title}</CardTitle>
+                    <CardDescription className="line-clamp-3">{article.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        <span>Admin</span>
+                      </div>
+                      <span>{formatDate(article.published_at)}</span>
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Link to={`/news/${article.id}`} className="w-full">
+                      <Button variant="outline" className="w-full">
+                        Lire l'article
+                        <ExternalLink className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {filteredNews.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <p className="text-gray-600 dark:text-gray-400 text-lg">Aucun article trouvé.</p>
+            </div>
+          )}
         </div>
       </main>
       <Footer />
