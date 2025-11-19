@@ -44,6 +44,11 @@ export function MatchLineupManager() {
   const [isStarter, setIsStarter] = useState<boolean>(true);
   const [absentReason, setAbsentReason] = useState<string>("");
   const [returnDate, setReturnDate] = useState<string>("");
+  
+  // Form states for opposing team (simple text inputs)
+  const [opposingPlayerName, setOpposingPlayerName] = useState<string>("");
+  const [opposingPlayerNumber, setOpposingPlayerNumber] = useState<string>("");
+  const [opposingPlayerPosition, setOpposingPlayerPosition] = useState<string>("");
 
   useEffect(() => {
     fetchMatches();
@@ -132,27 +137,47 @@ export function MatchLineupManager() {
   };
 
   const addToProbableLineup = async (teamType: "real_madrid" | "opposing") => {
-    if (!selectedMatch || !selectedPlayer) {
-      toast.error("Veuillez sélectionner un match et un joueur");
+    if (!selectedMatch) {
+      toast.error("Veuillez sélectionner un match");
       return;
     }
 
-    const playerList = teamType === "real_madrid" ? players : opposingPlayers;
-    const player = playerList.find((p) => p.id === selectedPlayer);
-    if (!player) return;
-
-    const insertData = {
-      match_id: selectedMatch,
-      team_type: teamType,
-      player_name: player.name,
-      position: player.position,
-      jersey_number: player.jersey_number,
-      is_starter: isStarter,
-      ...(teamType === "real_madrid" 
-        ? { player_id: player.id, opposing_player_id: null }
-        : { opposing_player_id: player.id, player_id: null }
-      ),
-    };
+    let insertData;
+    
+    if (teamType === "real_madrid") {
+      if (!selectedPlayer) {
+        toast.error("Veuillez sélectionner un joueur");
+        return;
+      }
+      
+      const player = players.find((p) => p.id === selectedPlayer);
+      if (!player) return;
+      
+      insertData = {
+        match_id: selectedMatch,
+        team_type: teamType,
+        player_id: player.id,
+        player_name: player.name,
+        position: player.position,
+        jersey_number: player.jersey_number,
+        is_starter: isStarter,
+      };
+    } else {
+      // For opposing team, use simple text inputs
+      if (!opposingPlayerName || !opposingPlayerPosition) {
+        toast.error("Veuillez renseigner le nom et la position");
+        return;
+      }
+      
+      insertData = {
+        match_id: selectedMatch,
+        team_type: teamType,
+        player_name: opposingPlayerName,
+        position: opposingPlayerPosition,
+        jersey_number: opposingPlayerNumber ? parseInt(opposingPlayerNumber) : null,
+        is_starter: isStarter,
+      };
+    }
 
     const { error } = await supabase
       .from("match_probable_lineups")
@@ -166,29 +191,51 @@ export function MatchLineupManager() {
     toast.success("Joueur ajouté à la composition probable");
     fetchMatchLineups();
     setSelectedPlayer("");
+    setOpposingPlayerName("");
+    setOpposingPlayerNumber("");
+    setOpposingPlayerPosition("");
   };
 
   const addToAbsentPlayers = async (teamType: "real_madrid" | "opposing") => {
-    if (!selectedMatch || !selectedPlayer || !absentReason) {
-      toast.error("Veuillez remplir tous les champs requis");
+    if (!selectedMatch || !absentReason) {
+      toast.error("Veuillez remplir la raison de l'absence");
       return;
     }
 
-    const playerList = teamType === "real_madrid" ? players : opposingPlayers;
-    const player = playerList.find((p) => p.id === selectedPlayer);
-    if (!player) return;
-
-    const insertData = {
-      match_id: selectedMatch,
-      team_type: teamType,
-      player_name: player.name,
-      reason: absentReason,
-      return_date: returnDate || null,
-      ...(teamType === "real_madrid"
-        ? { player_id: player.id, opposing_player_id: null }
-        : { opposing_player_id: player.id, player_id: null }
-      ),
-    };
+    let insertData;
+    
+    if (teamType === "real_madrid") {
+      if (!selectedPlayer) {
+        toast.error("Veuillez sélectionner un joueur");
+        return;
+      }
+      
+      const player = players.find((p) => p.id === selectedPlayer);
+      if (!player) return;
+      
+      insertData = {
+        match_id: selectedMatch,
+        team_type: teamType,
+        player_id: player.id,
+        player_name: player.name,
+        reason: absentReason,
+        return_date: returnDate || null,
+      };
+    } else {
+      // For opposing team, use simple text input
+      if (!opposingPlayerName) {
+        toast.error("Veuillez renseigner le nom du joueur");
+        return;
+      }
+      
+      insertData = {
+        match_id: selectedMatch,
+        team_type: teamType,
+        player_name: opposingPlayerName,
+        reason: absentReason,
+        return_date: returnDate || null,
+      };
+    }
 
     const { error } = await supabase
       .from("match_absent_players")
@@ -202,6 +249,7 @@ export function MatchLineupManager() {
     toast.success("Joueur ajouté aux absents");
     fetchAbsentPlayers();
     setSelectedPlayer("");
+    setOpposingPlayerName("");
     setAbsentReason("");
     setReturnDate("");
   };
@@ -434,7 +482,7 @@ export function MatchLineupManager() {
               </TabsContent>
 
               <TabsContent value="opposing" className="space-y-6">
-                {/* Same structure for opposing team */}
+                {/* Simplified form for opposing team */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -443,23 +491,35 @@ export function MatchLineupManager() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-4 gap-4">
+                      <div>
+                        <Label>N° Maillot</Label>
+                        <Input
+                          type="number"
+                          placeholder="Ex: 10"
+                          value={opposingPlayerNumber}
+                          onChange={(e) => setOpposingPlayerNumber(e.target.value)}
+                        />
+                      </div>
                       <div className="col-span-2">
-                        <Label>Joueur</Label>
-                        <Select value={selectedPlayer} onValueChange={setSelectedPlayer}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner un joueur" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {opposingPlayers.map((player) => (
-                              <SelectItem key={player.id} value={player.id}>
-                                {player.jersey_number} - {player.name} ({player.position})
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Label>Nom du joueur</Label>
+                        <Input
+                          placeholder="Ex: Mbappé"
+                          value={opposingPlayerName}
+                          onChange={(e) => setOpposingPlayerName(e.target.value)}
+                        />
                       </div>
                       <div>
+                        <Label>Position</Label>
+                        <Input
+                          placeholder="Ex: ST"
+                          value={opposingPlayerPosition}
+                          onChange={(e) => setOpposingPlayerPosition(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-end gap-4">
+                      <div className="flex-1">
                         <Label>Type</Label>
                         <Select value={isStarter.toString()} onValueChange={(v) => setIsStarter(v === "true")}>
                           <SelectTrigger>
@@ -471,11 +531,11 @@ export function MatchLineupManager() {
                           </SelectContent>
                         </Select>
                       </div>
+                      <Button onClick={() => addToProbableLineup("opposing")}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Ajouter
+                      </Button>
                     </div>
-                    <Button onClick={() => addToProbableLineup("opposing")}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Ajouter
-                    </Button>
 
                     <Table>
                       <TableHeader>
@@ -522,43 +582,40 @@ export function MatchLineupManager() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label>Joueur</Label>
-                        <Select value={selectedPlayer} onValueChange={setSelectedPlayer}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {opposingPlayers.map((player) => (
-                              <SelectItem key={player.id} value={player.id}>
-                                {player.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Label>Nom du joueur</Label>
+                        <Input
+                          placeholder="Ex: Benzema"
+                          value={opposingPlayerName}
+                          onChange={(e) => setOpposingPlayerName(e.target.value)}
+                        />
                       </div>
                       <div>
                         <Label>Raison</Label>
                         <Input
+                          placeholder="Ex: Blessé"
                           value={absentReason}
                           onChange={(e) => setAbsentReason(e.target.value)}
-                          placeholder="Blessure, suspension..."
                         />
                       </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label>Date de retour (optionnel)</Label>
+                        <Label>Date de retour prévue</Label>
                         <Input
                           type="date"
                           value={returnDate}
                           onChange={(e) => setReturnDate(e.target.value)}
                         />
                       </div>
+                      <div className="flex items-end">
+                        <Button onClick={() => addToAbsentPlayers("opposing")}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Ajouter
+                        </Button>
+                      </div>
                     </div>
-                    <Button onClick={() => addToAbsentPlayers("opposing")}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Ajouter
-                    </Button>
 
                     <Table>
                       <TableHeader>
