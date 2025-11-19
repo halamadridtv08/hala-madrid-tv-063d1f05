@@ -62,29 +62,94 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
     return parts.map(p => p[0]).join('').substring(0, 2).toUpperCase();
   };
 
-  // Fonction pour trouver l'image du joueur
+  // Fonction pour normaliser les noms (supprimer accents, espaces, etc.)
+  const normalizeString = (str: string): string => {
+    return str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Supprimer les accents
+      .replace(/[^a-z0-9]/g, '_') // Remplacer caractères spéciaux par underscore
+      .replace(/_+/g, '_') // Fusionner underscores multiples
+      .trim();
+  };
+
+  // Fonction pour extraire le nom de famille (dernier mot)
+  const getLastName = (name: string): string => {
+    const parts = name.split(/[\s_]+/).filter(p => p.length > 0);
+    return parts[parts.length - 1] || '';
+  };
+
+  // Fonction pour trouver l'image du joueur avec correspondance améliorée
   const getPlayerImage = (playerName: string, team: string): string | null => {
     if (team !== 'real_madrid') return null;
+    if (!playerName) return null;
 
-    // Normaliser le nom du joueur pour la correspondance
-    const normalizedEventName = playerName.toLowerCase().replace(/\s+/g, '_');
+    const normalizedEventName = normalizeString(playerName);
+    const eventLastName = normalizeString(getLastName(playerName));
+    
+    console.log('Searching for player:', playerName, 'normalized:', normalizedEventName, 'lastName:', eventLastName);
     
     // Chercher le joueur par correspondance de nom
     const player = realMadridPlayers.find(p => {
-      const normalizedDbName = p.name.toLowerCase().replace(/\s+/g, '_');
+      const normalizedDbName = normalizeString(p.name);
+      const dbLastName = normalizeString(getLastName(p.name));
       
-      // Correspondance exacte
-      if (normalizedDbName === normalizedEventName) return true;
+      console.log('Comparing with DB player:', p.name, 'normalized:', normalizedDbName, 'lastName:', dbLastName);
       
-      // Correspondance partielle (nom de famille)
-      const eventParts = normalizedEventName.split('_');
-      const dbParts = normalizedDbName.split('_');
+      // 1. Correspondance exacte du nom complet
+      if (normalizedDbName === normalizedEventName) {
+        console.log('✓ Exact match found:', p.name);
+        return true;
+      }
       
-      // Vérifier si le nom de famille correspond
-      return eventParts.some(part => 
-        dbParts.some(dbPart => dbPart.includes(part) || part.includes(dbPart))
-      );
+      // 2. Correspondance exacte du nom de famille
+      if (eventLastName && dbLastName && eventLastName === dbLastName) {
+        console.log('✓ Last name match found:', p.name);
+        return true;
+      }
+      
+      // 3. Le nom de l'événement contient le nom de famille de la DB
+      if (dbLastName && normalizedEventName.includes(dbLastName)) {
+        console.log('✓ Event name contains DB last name:', p.name);
+        return true;
+      }
+      
+      // 4. Le nom de la DB contient le nom de famille de l'événement
+      if (eventLastName && normalizedDbName.includes(eventLastName)) {
+        console.log('✓ DB name contains event last name:', p.name);
+        return true;
+      }
+      
+      // 5. Correspondance partielle des mots (au moins 50% de correspondance)
+      const eventParts = normalizedEventName.split('_').filter(p => p.length > 2);
+      const dbParts = normalizedDbName.split('_').filter(p => p.length > 2);
+      
+      if (eventParts.length === 0 || dbParts.length === 0) return false;
+      
+      let matchCount = 0;
+      for (const eventPart of eventParts) {
+        for (const dbPart of dbParts) {
+          if (eventPart === dbPart || eventPart.includes(dbPart) || dbPart.includes(eventPart)) {
+            matchCount++;
+            break;
+          }
+        }
+      }
+      
+      const matchRatio = matchCount / Math.max(eventParts.length, dbParts.length);
+      if (matchRatio >= 0.5) {
+        console.log('✓ Partial match found:', p.name, 'ratio:', matchRatio);
+        return true;
+      }
+      
+      return false;
     });
+
+    if (player) {
+      console.log('Final selected player:', player.name, 'image:', player.profile_image_url || player.image_url);
+    } else {
+      console.log('No player found for:', playerName);
+    }
 
     return player?.profile_image_url || player?.image_url || null;
   };
