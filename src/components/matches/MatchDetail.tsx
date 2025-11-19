@@ -8,6 +8,8 @@ import { Calendar, Clock, MapPin, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TacticalFormation } from "./TacticalFormation";
+import { MatchEvents } from "./MatchEvents";
+import { MatchStatistics } from "./MatchStatistics";
 
 interface PlayerType {
   name: string;
@@ -288,14 +290,28 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
         </div>
 
         <Tabs defaultValue="tactical" className="mt-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="tactical">Compositions officielles</TabsTrigger>
+            <TabsTrigger value="events">Événements</TabsTrigger>
+            <TabsTrigger value="stats">Statistiques</TabsTrigger>
             <TabsTrigger value="lineups">Compositions probables</TabsTrigger>
             <TabsTrigger value="absents">Joueurs absents</TabsTrigger>
           </TabsList>
           
           <TabsContent value="tactical">
             <TacticalFormation matchId={match.id} matchData={match} />
+          </TabsContent>
+
+          <TabsContent value="events">
+            <MatchEvents matchDetails={match.match_details} />
+          </TabsContent>
+
+          <TabsContent value="stats">
+            <MatchStatistics 
+              matchDetails={match.match_details}
+              homeTeam={match.homeTeam.name}
+              awayTeam={match.awayTeam.name}
+            />
           </TabsContent>
 
           <TabsContent value="lineups">
