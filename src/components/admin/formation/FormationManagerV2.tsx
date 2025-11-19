@@ -566,11 +566,10 @@ export const FormationManagerV2: React.FC = () => {
         const pitchElement = document.querySelector('[data-pitch="true"]');
         if (pitchElement) {
           const rect = pitchElement.getBoundingClientRect();
-          const mouseX = event.activatorEvent ? (event.activatorEvent as PointerEvent).clientX : rect.left + rect.width / 2;
-          const mouseY = event.activatorEvent ? (event.activatorEvent as PointerEvent).clientY : rect.top + rect.height / 2;
           
-          let percentX = ((mouseX - rect.left) / rect.width) * 100;
-          let percentY = ((mouseY - rect.top) / rect.height) * 100;
+          // Utiliser dragPreviewPosition si disponible
+          let percentX = dragPreviewPosition ? dragPreviewPosition.x : 50;
+          let percentY = dragPreviewPosition ? dragPreviewPosition.y : 50;
 
           // Apply grid snapping if enabled
           if (showGrid) {
@@ -620,18 +619,9 @@ export const FormationManagerV2: React.FC = () => {
         if (pitchElement) {
           const rect = pitchElement.getBoundingClientRect();
           
-          let percentX = 50; // Position par défaut au centre
-          let percentY = 50;
-          
-          // Si on a l'événement, utiliser les coordonnées de la souris
-          if (event.activatorEvent) {
-            const activatorEvent = event.activatorEvent as PointerEvent;
-            const mouseX = activatorEvent.clientX;
-            const mouseY = activatorEvent.clientY;
-            
-            percentX = ((mouseX - rect.left) / rect.width) * 100;
-            percentY = ((mouseY - rect.top) / rect.height) * 100;
-          }
+          // Utiliser dragPreviewPosition si disponible, sinon position par défaut
+          let percentX = dragPreviewPosition ? dragPreviewPosition.x : 50;
+          let percentY = dragPreviewPosition ? dragPreviewPosition.y : 50;
 
           // Apply grid snapping if enabled
           if (showGrid) {
