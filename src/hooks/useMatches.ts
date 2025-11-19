@@ -82,10 +82,12 @@ export function useMatches() {
 
   const getPastMatches = () => {
     const now = new Date();
-    return matches.filter(match => 
-      new Date(match.match_date) < now || 
-      match.status === 'finished'
-    );
+    return matches
+      .filter(match => 
+        new Date(match.match_date) < now || 
+        match.status === 'finished'
+      )
+      .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime()); // Plus récent en premier
   };
 
   return {
