@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { FileJson, Upload, CheckCircle2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Match } from "@/types/Match";
 
 interface MatchJsonData {
   id?: string;
@@ -67,6 +69,30 @@ export const MatchJsonImporter = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [validationStatus, setValidationStatus] = useState<"idle" | "valid" | "invalid">("idle");
   const [parsedData, setParsedData] = useState<MatchJsonData | null>(null);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [selectedMatchId, setSelectedMatchId] = useState<string>("");
+  const [isLoadingMatches, setIsLoadingMatches] = useState(true);
+
+  useEffect(() => {
+    loadMatches();
+  }, []);
+
+  const loadMatches = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('matches')
+        .select('*')
+        .order('match_date', { ascending: false });
+
+      if (error) throw error;
+      setMatches(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des matchs:', error);
+      toast.error("Erreur lors du chargement des matchs");
+    } finally {
+      setIsLoadingMatches(false);
+    }
+  };
 
   const transformImportedJson = (imported: ImportedMatchJson): MatchJsonData => {
     const homeTeam = imported.match.teams.home;
@@ -135,6 +161,11 @@ export const MatchJsonImporter = () => {
   };
 
   const handleImport = async () => {
+    if (!selectedMatchId) {
+      toast.error("Veuillez sélectionner un match à mettre à jour");
+      return;
+    }
+
     if (!parsedData) {
       toast.error("Veuillez d'abord valider le JSON");
       return;
@@ -157,28 +188,18 @@ export const MatchJsonImporter = () => {
         match_details: parsedData.match_details || {}
       };
 
-      let result;
-      
-      if (parsedData.id) {
-        // Mise à jour d'un match existant
-        result = await supabase
-          .from('matches')
-          .update(matchData)
-          .eq('id', parsedData.id)
-          .select();
-      } else {
-        // Création d'un nouveau match
-        result = await supabase
-          .from('matches')
-          .insert([matchData])
-          .select();
-      }
+      // Mise à jour du match sélectionné
+      const result = await supabase
+        .from('matches')
+        .update(matchData)
+        .eq('id', selectedMatchId)
+        .select();
 
       if (result.error) {
         throw result.error;
       }
 
-      const matchId = result.data[0].id;
+      const matchId = selectedMatchId;
 
       // Mise à jour des statistiques des joueurs si fournies
       if (parsedData.match_details?.goals) {
@@ -222,15 +243,13 @@ export const MatchJsonImporter = () => {
         }
       }
 
-      toast.success(
-        parsedData.id 
-          ? "Match mis à jour avec succès!" 
-          : "Match créé avec succès!"
-      );
+      toast.success("Match mis à jour avec succès!");
       
       setJsonInput("");
       setParsedData(null);
       setValidationStatus("idle");
+      setSelectedMatchId("");
+      loadMatches();
       
     } catch (error: any) {
       console.error('Erreur import:', error);
@@ -300,6 +319,28 @@ export const MatchJsonImporter = () => {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">1. Sélectionner le match à mettre à jour</label>
+          <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Choisir un match..." />
+            </SelectTrigger>
+            <SelectContent>
+              {isLoadingMatches ? (
+                <SelectItem value="loading" disabled>Chargement...</SelectItem>
+              ) : matches.length === 0 ? (
+                <SelectItem value="empty" disabled>Aucun match disponible</SelectItem>
+              ) : (
+                matches.map((match) => (
+                  <SelectItem key={match.id} value={match.id}>
+                    {match.home_team} vs {match.away_team} - {new Date(match.match_date).toLocaleDateString('fr-FR')}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+
         {validationStatus === "valid" && (
           <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -319,7 +360,7 @@ export const MatchJsonImporter = () => {
         )}
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Données JSON du match</label>
+          <label className="text-sm font-medium">2. Coller les données JSON du match</label>
           <Textarea
             placeholder="Collez votre JSON ici..."
             value={jsonInput}
@@ -333,7 +374,7 @@ export const MatchJsonImporter = () => {
           <Button 
             onClick={handleValidate}
             variant="outline"
-            disabled={!jsonInput.trim()}
+            disabled={!jsonInput.trim() || !selectedMatchId}
           >
             <CheckCircle2 className="h-4 w-4 mr-2" />
             Valider JSON
@@ -341,10 +382,10 @@ export const MatchJsonImporter = () => {
           
           <Button 
             onClick={handleImport}
-            disabled={validationStatus !== "valid" || isProcessing}
+            disabled={!selectedMatchId || validationStatus !== "valid" || isProcessing}
           >
             <Upload className="h-4 w-4 mr-2" />
-            {isProcessing ? "Import en cours..." : "Importer"}
+            {isProcessing ? "Mise à jour en cours..." : "Mettre à jour le match"}
           </Button>
         </div>
 
