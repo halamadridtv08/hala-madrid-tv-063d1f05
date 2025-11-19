@@ -1,7 +1,7 @@
 import { useDraggable } from '@dnd-kit/core';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Lock, Unlock } from 'lucide-react';
 
 interface DraggablePlayerProps {
   id: string;
@@ -11,6 +11,8 @@ interface DraggablePlayerProps {
   imageUrl?: string;
   onDelete?: () => void;
   showDelete?: boolean;
+  onToggleLock?: () => void;
+  isLocked?: boolean;
   variant?: 'list' | 'field';
   style?: React.CSSProperties;
 }
@@ -23,11 +25,14 @@ export const DraggablePlayer = ({
   imageUrl,
   onDelete,
   showDelete = false,
+  onToggleLock,
+  isLocked = false,
   variant = 'list',
   style
 }: DraggablePlayerProps) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: id,
+    disabled: isLocked,
   });
 
   const transformStyle = transform ? {
@@ -50,17 +55,17 @@ export const DraggablePlayer = ({
         style={{ ...combinedStyle, ...transformStyle }}
         {...listeners}
         {...attributes}
-        className={`absolute cursor-move ${isDragging ? 'opacity-50' : ''}`}
+        className={`absolute ${isLocked ? 'cursor-not-allowed' : 'cursor-move'} ${isDragging ? 'opacity-50' : ''} transition-all duration-300`}
       >
         <div className="relative" style={{ transform: 'translate(-50%, -50%)' }}>
           {imageUrl ? (
             <img 
               src={imageUrl} 
               alt={name}
-              className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-lg"
+              className={`w-12 h-12 rounded-full object-cover border-2 shadow-lg transition-all ${isLocked ? 'border-orange-500 opacity-75' : 'border-white'}`}
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-white border-2 border-primary flex items-center justify-center shadow-lg">
+            <div className={`w-12 h-12 rounded-full bg-white border-2 flex items-center justify-center shadow-lg transition-all ${isLocked ? 'border-orange-500 opacity-75' : 'border-primary'}`}>
               <span className="text-lg font-bold text-primary">{jerseyNumber}</span>
             </div>
           )}
@@ -70,6 +75,19 @@ export const DraggablePlayer = ({
           <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white px-1.5 py-0.5 rounded text-[10px]">
             {name.split(' ').pop()}
           </div>
+          {onToggleLock && (
+            <Button
+              size="icon"
+              variant={isLocked ? "default" : "secondary"}
+              className="absolute -top-1 -left-8 h-5 w-5"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleLock();
+              }}
+            >
+              {isLocked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+            </Button>
+          )}
           {showDelete && onDelete && (
             <Button
               size="icon"
