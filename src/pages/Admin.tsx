@@ -56,6 +56,7 @@ import { DataSynchronizer } from "@/components/admin/DataSynchronizer";
 import { OpposingTeamManager } from "@/components/admin/OpposingTeamManager";
 import { MatchFormationManager } from "@/components/admin/MatchFormationManager";
 import { FormationManager } from "@/components/admin/formation/FormationManager";
+import { FormationManagerV2 } from "@/components/admin/formation/FormationManagerV2";
 import { MatchLineupManager } from "@/components/admin/MatchLineupManager";
 import { SpecialArticlesManager } from "@/components/admin/SpecialArticlesManager";
 import { AuthImageManager } from "@/components/admin/AuthImageManager";
@@ -441,7 +442,7 @@ const Admin = () => {
   const renderFormations = () => (
     <div>
       <h2 className="text-2xl font-bold mb-4">Gestion des Formations Tactiques</h2>
-      <FormationManager />
+      <FormationManagerV2 />
     </div>
   );
 
