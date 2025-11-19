@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { LatestNewsWidget } from "@/components/home/LatestNewsWidget";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -174,47 +175,54 @@ const ArticleDetail = () => {
   return <>
       <Navbar />
       <main>
-        <div className="max-w-4xl mx-auto px-6 py-8">
-          <div className="mb-8">
-            <Badge className={`${getCategoryColor(article.category)} mb-4`}>
-              {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
-            </Badge>
-            <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
-            <p className="text-xl text-gray-500 dark:text-gray-400 mb-4">{article.description}</p>
-            
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-6">
-              <div className="flex items-center">
-                <User className="h-4 w-4 mr-1" />
-                <span>Administrateur</span>
+        <div className="madrid-container py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Contenu de l'article */}
+            <div className="lg:col-span-2">
+              <div className="mb-8">
+                <Badge className={`${getCategoryColor(article.category)} mb-4`}>
+                  {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
+                </Badge>
+                <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
+                <p className="text-xl text-gray-500 dark:text-gray-400 mb-4">{article.description}</p>
+                
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-6">
+                  <div className="flex items-center">
+                    <User className="h-4 w-4 mr-1" />
+                    <span>Administrateur</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    <span>{formatDate(article.published_at)}</span>
+                  </div>
+                  {article.read_time && <div className="flex items-center">
+                      <span>{article.read_time} de lecture</span>
+                    </div>}
+                </div>
               </div>
-              <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-1" />
-                <span>{formatDate(article.published_at)}</span>
-              </div>
-              {article.read_time && <div className="flex items-center">
-                  <span>{article.read_time} de lecture</span>
+              
+              {article.image_url && <div className="mb-8">
+                  <img src={article.image_url} alt={article.title} className="w-full h-auto max-h-[500px] object-cover object-center rounded-lg" />
                 </div>}
+              
+              <div className="mb-12">
+                {renderContent()}
+              </div>
+
+              {article.video_url && (
+                <ArticleVideoPlayer videoUrl={article.video_url} />
+              )}
+
+              {articleImages.length > 0 && (
+                <ArticleImageGallery images={articleImages} />
+              )}
+            </div>
+
+            {/* Widget des dernières infos */}
+            <div className="lg:col-span-1">
+              <LatestNewsWidget />
             </div>
           </div>
-          
-          {article.image_url && <div className="mb-8">
-              <img src={article.image_url} alt={article.title} className="w-full h-auto max-h-[500px] object-cover object-center rounded-lg" />
-            </div>}
-          
-          <div className="mb-12">
-            {renderContent()}
-          </div>
-
-          {article.video_url && (
-            <ArticleVideoPlayer videoUrl={article.video_url} />
-          )}
-
-          {articleImages.length > 0 && (
-            <ArticleImageGallery images={articleImages} />
-          )}
-
-          {/* Galerie d'actualités */}
-          
         </div>
       </main>
       <Footer />
