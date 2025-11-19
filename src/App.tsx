@@ -22,6 +22,7 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import ArticleDetail from "./pages/ArticleDetail";
 import Videos from "./pages/Videos";
+import Search from "./pages/Search";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/stats" element={<Stats />} />
             <Route path="/videos" element={<Videos />} />
+            <Route path="/search" element={<Search />} />
             <Route path="/auth" element={<Auth />} />
             <Route 
               path="/admin" 
