@@ -696,7 +696,7 @@ export const FormationManagerV2: React.FC = () => {
       .delete()
       .eq('id', playerId);
 
-    fetchFormation();
+    await fetchFormation();
     toast.success("Joueur retiré");
   };
 
