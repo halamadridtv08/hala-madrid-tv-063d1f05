@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface AnimatedSearchBarProps {
   value: string;
@@ -22,6 +22,7 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -121,8 +122,12 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
 
   const handleBlur = () => {
     setIsFocused(false);
-    // Délai pour permettre le clic sur les suggestions
-    setTimeout(() => setShowSuggestions(false), 200);
+  };
+
+  const handleSuggestionClick = (url: string) => {
+    setShowSuggestions(false);
+    onChange("");
+    navigate(url);
   };
 
   const getTypeLabel = (type: string) => {
@@ -188,14 +193,14 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
       {showSuggestions && suggestions.length > 0 && isFocused && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50 animate-fade-in">
           {suggestions.map((suggestion) => (
-            <Link
+            <button
               key={`${suggestion.type}-${suggestion.id}`}
-              to={suggestion.url}
-              className="block px-4 py-3 hover:bg-accent transition-colors border-b border-border last:border-b-0"
-              onClick={() => {
-                setShowSuggestions(false);
-                onChange("");
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleSuggestionClick(suggestion.url);
               }}
+              className="w-full text-left px-4 py-3 hover:bg-accent transition-colors border-b border-border last:border-b-0"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
@@ -208,18 +213,18 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
                   {getTypeLabel(suggestion.type)}
                 </span>
               </div>
-            </Link>
+            </button>
           ))}
-          <Link
-            to={`/search?q=${encodeURIComponent(value)}`}
-            className="block px-4 py-3 text-center text-sm text-primary hover:bg-accent transition-colors font-medium"
-            onClick={() => {
-              setShowSuggestions(false);
-              onChange("");
+          <button
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              handleSuggestionClick(`/search?q=${encodeURIComponent(value)}`);
             }}
+            className="w-full px-4 py-3 text-center text-sm text-primary hover:bg-accent transition-colors font-medium"
           >
             Voir tous les résultats pour "{value}"
-          </Link>
+          </button>
         </div>
       )}
     </div>
