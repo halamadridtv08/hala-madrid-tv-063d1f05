@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, MapPin, ChevronRight, Activity, RefreshCw, Users, Goal } from "lucide-react";
+import { Calendar, Clock, MapPin, ChevronRight, Activity, RefreshCw, Users, Goal, LayoutGrid, List } from "lucide-react";
 import { MatchDetail } from "@/components/matches/MatchDetail";
 import { MatchStats } from "@/components/matches/MatchStats";
 import { TeamFormation } from "@/components/matches/TeamFormation";
@@ -22,6 +22,7 @@ const Matches = () => {
   const [showFormations, setShowFormations] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [selectedCompetition, setSelectedCompetition] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const {
     upcomingMatches,
     pastMatches,
@@ -98,9 +99,21 @@ const Matches = () => {
   // Filtrer par compétition
   const filterByCompetition = (matches: any[]) => {
     if (selectedCompetition === "all") return matches;
-    return matches.filter(match => 
-      match.competition?.toLowerCase() === selectedCompetition.toLowerCase()
-    );
+    return matches.filter(match => {
+      const normalizedMatch = match.competition?.toUpperCase();
+      const normalizedFilter = selectedCompetition.toUpperCase();
+      
+      // Gérer Champions League avec différentes variantes
+      if (normalizedFilter.includes('CHAMPIONS')) {
+        return normalizedMatch?.includes('CHAMPIONS') || normalizedMatch?.includes('LIGUE DES CHAMPIONS');
+      }
+      // Gérer La Liga
+      if (normalizedFilter === 'LA LIGA' || normalizedFilter === 'LALIGA') {
+        return normalizedMatch === 'LALIGA' || normalizedMatch === 'LA LIGA';
+      }
+      
+      return match.competition?.toLowerCase() === selectedCompetition.toLowerCase();
+    });
   };
 
   const filteredUpcomingMatches = filterByCompetition(formattedUpcomingMatches);
@@ -108,7 +121,19 @@ const Matches = () => {
 
   // Obtenir la liste unique des compétitions
   const competitions = Array.from(
-    new Set([...upcomingMatches, ...pastMatches].map(m => m.competition).filter(Boolean))
+    new Set([...upcomingMatches, ...pastMatches]
+      .map(m => {
+        // Normaliser les noms de compétition
+        const comp = m.competition?.toUpperCase();
+        if (comp?.includes('CHAMPIONS') || comp?.includes('LIGUE DES CHAMPIONS')) {
+          return 'UEFA Champions League';
+        }
+        if (comp === 'LALIGA' || comp === 'LA LIGA') {
+          return 'La Liga';
+        }
+        return m.competition;
+      })
+      .filter(Boolean))
   );
   const formatMatchDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -175,27 +200,51 @@ const Matches = () => {
               {error}
             </div>}
           
-          {/* Filtres de compétition */}
-          <div className="mb-6 flex flex-wrap gap-2">
-            <Button
-              variant={selectedCompetition === "all" ? "default" : "outline"}
-              onClick={() => setSelectedCompetition("all")}
-              size="sm"
-              className="transition-all duration-200"
-            >
-              Toutes les compétitions
-            </Button>
-            {competitions.map((comp) => (
+          {/* Filtres de compétition et mode de vue */}
+          <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-wrap gap-2">
               <Button
-                key={comp}
-                variant={selectedCompetition === comp ? "default" : "outline"}
-                onClick={() => setSelectedCompetition(comp as string)}
+                variant={selectedCompetition === "all" ? "default" : "outline"}
+                onClick={() => setSelectedCompetition("all")}
                 size="sm"
                 className="transition-all duration-200"
               >
-                {comp}
+                Toutes les compétitions
               </Button>
-            ))}
+              {competitions.map((comp) => (
+                <Button
+                  key={comp}
+                  variant={selectedCompetition === comp ? "default" : "outline"}
+                  onClick={() => setSelectedCompetition(comp as string)}
+                  size="sm"
+                  className="transition-all duration-200"
+                >
+                  {comp}
+                </Button>
+              ))}
+            </div>
+            
+            {/* Bouton de basculement de vue */}
+            <div className="flex gap-2">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className="transition-all duration-200"
+              >
+                <LayoutGrid className="h-4 w-4 mr-2" />
+                Grille
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="transition-all duration-200"
+              >
+                <List className="h-4 w-4 mr-2" />
+                Liste
+              </Button>
+            </div>
           </div>
           
           <Tabs defaultValue="upcoming" className="w-full">
@@ -297,8 +346,8 @@ const Matches = () => {
                 </div> : filteredPastMatches.length === 0 ? <div className="text-center py-12 text-gray-500">
                   <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Aucun match passé trouvé</p>
-                </div> : <div className="grid gap-6">
-                  {filteredPastMatches.map(match => <Card key={match.id} className="overflow-hidden">
+                </div> : <div className={viewMode === 'grid' ? 'grid gap-6' : 'flex flex-col gap-4'}>
+                  {filteredPastMatches.map(match => <Card key={match.id} className={`overflow-hidden ${viewMode === 'list' ? 'hover:shadow-md' : ''}`}>
                     <CardContent className="p-0">
                       <div className="bg-gradient-to-r from-madrid-blue to-blue-800 p-4">
                         <div className="flex justify-between items-center text-white">
@@ -309,137 +358,178 @@ const Matches = () => {
                         </div>
                       </div>
                       
-                      <div className="p-6 md:p-8">
-                        <div className="flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0">
-                          <div className="flex flex-col items-center">
-                            <img 
-                              src={match.homeTeam.logo} 
-                              alt={match.homeTeam.name} 
-                              className="w-16 h-16 object-contain"
-                              width="64"
-                              height="64"
-                              loading="lazy"
-                            />
-                            <h3 className="text-lg font-bold mt-2">{match.homeTeam.name}</h3>
-                          </div>
-                          
-                          <div className="text-center">
-                            <div className="text-4xl font-bold mb-4">
-                              <span className={match.homeTeam.score > match.awayTeam.score ? "text-madrid-gold" : ""}>
-                                {match.homeTeam.score}
-                              </span>
-                              <span className="mx-2">-</span>
-                              <span className={match.awayTeam.score > match.homeTeam.score ? "text-madrid-gold" : ""}>
-                                {match.awayTeam.score}
-                              </span>
-                            </div>
-                            <div className="text-sm text-gray-500 mb-2">
-                              {formatMatchDate(match.date)}
-                            </div>
-                            <div className="text-sm text-gray-500 mb-2">
-                              {match.venue}
-                            </div>
-                            <div className="mt-4">
-                              <h4 className="font-semibold mb-3 flex items-center justify-center gap-2">
-                                <Goal className="h-4 w-4" />
-                                Buteurs:
-                              </h4>
-                              {match.scorers && Array.isArray(match.scorers) && match.scorers.length > 0 ? (
-                                <div className="space-y-3">
-                                  {/* Grouper par équipe */}
-                                  {(() => {
-                                    const realMadridGoals = match.scorers.filter((s: any) => 
-                                      s.team?.toLowerCase().includes('real_madrid') || 
-                                      s.team?.toLowerCase().includes('real madrid')
-                                    );
-                                    const otherGoals = match.scorers.filter((s: any) => 
-                                      !s.team?.toLowerCase().includes('real_madrid') && 
-                                      !s.team?.toLowerCase().includes('real madrid')
-                                    );
-                                    
-                                    return (
-                                      <>
-                                        {realMadridGoals.length > 0 && (
-                                          <div className="space-y-1.5 animate-fade-in">
-                                            <div className="text-xs font-medium text-madrid-gold">Real Madrid</div>
-                                            <div className="flex flex-wrap gap-2 justify-center">
-                                              {realMadridGoals.map((scorer: any, idx: number) => (
-                                                <div 
-                                                  key={idx}
-                                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-madrid-gold/20 text-madrid-gold border border-madrid-gold/30 animate-scale-in hover-scale"
-                                                  style={{ animationDelay: `${idx * 100}ms` }}
-                                                >
-                                                  <Goal className="h-3.5 w-3.5" />
-                                                  <span className="font-medium">{scorer.name}</span>
-                                                  <span className="opacity-70">({scorer.minute}')</span>
-                                                  {scorer.type && (
-                                                    <span className="text-xs opacity-60 ml-1">
-                                                      {scorer.type === 'penalty' && '⚽ P'}
-                                                      {scorer.type === 'header' && '🎯 T'}
-                                                      {scorer.type === 'left_foot' && '👈'}
-                                                      {scorer.type === 'right_foot' && '👉'}
-                                                    </span>
-                                                  )}
-                                                </div>
-                                              ))}
-                                            </div>
-                                          </div>
-                                        )}
-                                        
-                                        {otherGoals.length > 0 && (
-                                          <div className="space-y-1.5 animate-fade-in" style={{ animationDelay: `${realMadridGoals.length * 100}ms` }}>
-                                            <div className="text-xs font-medium text-muted-foreground">
-                                              {otherGoals[0]?.team?.replace(/_/g, ' ').split(' ').map((w: string) => 
-                                                w.charAt(0).toUpperCase() + w.slice(1)
-                                              ).join(' ')}
-                                            </div>
-                                            <div className="flex flex-wrap gap-2 justify-center">
-                                              {otherGoals.map((scorer: any, idx: number) => (
-                                                <div 
-                                                  key={idx}
-                                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-muted/50 text-foreground border border-border/30 animate-scale-in hover-scale"
-                                                  style={{ animationDelay: `${(realMadridGoals.length + idx) * 100}ms` }}
-                                                >
-                                                  <Goal className="h-3.5 w-3.5" />
-                                                  <span className="font-medium">{scorer.name}</span>
-                                                  <span className="opacity-70">({scorer.minute}')</span>
-                                                  {scorer.type && (
-                                                    <span className="text-xs opacity-60 ml-1">
-                                                      {scorer.type === 'penalty' && '⚽ P'}
-                                                      {scorer.type === 'header' && '🎯 T'}
-                                                      {scorer.type === 'left_foot' && '👈'}
-                                                      {scorer.type === 'right_foot' && '👉'}
-                                                    </span>
-                                                  )}
-                                                </div>
-                                              ))}
-                                            </div>
-                                          </div>
-                                        )}
-                                      </>
-                                    );
-                                  })()}
-                                </div>
-                              ) : (
-                                <p className="text-sm text-muted-foreground">Aucun but marqué</p>
+                      <div className={viewMode === 'list' ? 'p-4' : 'p-6 md:p-8'}>
+                        <div className={`flex ${viewMode === 'list' ? 'flex-row' : 'flex-col md:flex-row'} justify-between items-center ${viewMode === 'list' ? 'gap-4' : 'space-y-8 md:space-y-0'}`}>
+                          <div className={`flex ${viewMode === 'list' ? 'flex-row' : 'flex-col'} items-center ${viewMode === 'list' ? 'gap-3' : ''}`}>
+                            <div className="relative">
+                              <img 
+                                src={match.homeTeam.logo} 
+                                alt={match.homeTeam.name} 
+                                className={viewMode === 'list' ? 'w-12 h-12 object-contain' : 'w-16 h-16 object-contain'}
+                                width={viewMode === 'list' ? '48' : '64'}
+                                height={viewMode === 'list' ? '48' : '64'}
+                                loading="lazy"
+                              />
+                              {/* Badge de score pour l'équipe domicile */}
+                              {match.homeTeam.score !== null && match.homeTeam.score !== undefined && (
+                                <Badge 
+                                  className={`absolute -top-2 -right-2 ${
+                                    match.homeTeam.score > match.awayTeam.score 
+                                      ? 'bg-madrid-gold text-white' 
+                                      : 'bg-muted text-foreground'
+                                  }`}
+                                >
+                                  {match.homeTeam.score}
+                                </Badge>
                               )}
                             </div>
+                            <h3 className={`font-bold ${viewMode === 'list' ? 'text-base' : 'text-lg'} mt-2`}>{match.homeTeam.name}</h3>
                           </div>
                           
-                          <div className="flex flex-col items-center">
-                            <img 
-                              src={match.awayTeam.logo} 
-                              alt={match.awayTeam.name} 
-                              className="w-16 h-16 object-contain"
-                              width="64"
-                              height="64"
-                              loading="lazy"
-                            />
-                            <h3 className="text-lg font-bold mt-2">{match.awayTeam.name}</h3>
+                          <div className={`text-center ${viewMode === 'list' ? 'flex-1' : ''}`}>
+                            {viewMode === 'grid' && (
+                              <>
+                                <div className="text-4xl font-bold mb-4">
+                                  <span className={match.homeTeam.score > match.awayTeam.score ? "text-madrid-gold" : ""}>
+                                    {match.homeTeam.score}
+                                  </span>
+                                  <span className="mx-2">-</span>
+                                  <span className={match.awayTeam.score > match.homeTeam.score ? "text-madrid-gold" : ""}>
+                                    {match.awayTeam.score}
+                                  </span>
+                                </div>
+                                <div className="text-sm text-gray-500 mb-2">
+                                  {formatMatchDate(match.date)}
+                                </div>
+                                <div className="text-sm text-gray-500 mb-2">
+                                  {match.venue}
+                                </div>
+                              </>
+                            )}
+                            
+                            {viewMode === 'list' && (
+                              <div className="text-sm text-gray-500">
+                                <div className="mb-1">{formatMatchDate(match.date)}</div>
+                                <div>{match.venue}</div>
+                              </div>
+                            )}
+                            
+                            {viewMode === 'grid' && (
+                              <div className="mt-4">
+                                <h4 className="font-semibold mb-3 flex items-center justify-center gap-2">
+                                  <Goal className="h-4 w-4" />
+                                  Buteurs:
+                                </h4>
+                                {match.scorers && Array.isArray(match.scorers) && match.scorers.length > 0 ? (
+                                  <div className="space-y-3">
+                                    {/* Grouper par équipe */}
+                                    {(() => {
+                                      const realMadridGoals = match.scorers.filter((s: any) => 
+                                        s.team?.toLowerCase().includes('real_madrid') || 
+                                        s.team?.toLowerCase().includes('real madrid')
+                                      );
+                                      const otherGoals = match.scorers.filter((s: any) => 
+                                        !s.team?.toLowerCase().includes('real_madrid') && 
+                                        !s.team?.toLowerCase().includes('real madrid')
+                                      );
+                                      
+                                      return (
+                                        <>
+                                          {realMadridGoals.length > 0 && (
+                                            <div className="space-y-1.5 animate-fade-in">
+                                              <div className="text-xs font-medium text-madrid-gold">Real Madrid</div>
+                                              <div className="flex flex-wrap gap-2 justify-center">
+                                                {realMadridGoals.map((scorer: any, idx: number) => (
+                                                  <div 
+                                                    key={idx}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-madrid-gold/20 text-madrid-gold border border-madrid-gold/30 animate-scale-in hover-scale"
+                                                    style={{ animationDelay: `${idx * 100}ms` }}
+                                                  >
+                                                    <Goal className="h-3.5 w-3.5" />
+                                                    <span className="font-medium">{scorer.name}</span>
+                                                    <span className="opacity-70">({scorer.minute}')</span>
+                                                    {scorer.type && (
+                                                      <span className="text-xs opacity-60 ml-1">
+                                                        {scorer.type === 'penalty' && '⚽ P'}
+                                                        {scorer.type === 'header' && '🎯 T'}
+                                                        {scorer.type === 'left_foot' && '👈'}
+                                                        {scorer.type === 'right_foot' && '👉'}
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          )}
+                                          
+                                          {otherGoals.length > 0 && (
+                                            <div className="space-y-1.5 animate-fade-in" style={{ animationDelay: `${realMadridGoals.length * 100}ms` }}>
+                                              <div className="text-xs font-medium text-muted-foreground">
+                                                {otherGoals[0]?.team?.replace(/_/g, ' ').split(' ').map((w: string) => 
+                                                  w.charAt(0).toUpperCase() + w.slice(1)
+                                                ).join(' ')}
+                                              </div>
+                                              <div className="flex flex-wrap gap-2 justify-center">
+                                                {otherGoals.map((scorer: any, idx: number) => (
+                                                  <div 
+                                                    key={idx}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-muted/50 text-foreground border border-border/30 animate-scale-in hover-scale"
+                                                    style={{ animationDelay: `${(realMadridGoals.length + idx) * 100}ms` }}
+                                                  >
+                                                    <Goal className="h-3.5 w-3.5" />
+                                                    <span className="font-medium">{scorer.name}</span>
+                                                    <span className="opacity-70">({scorer.minute}')</span>
+                                                    {scorer.type && (
+                                                      <span className="text-xs opacity-60 ml-1">
+                                                        {scorer.type === 'penalty' && '⚽ P'}
+                                                        {scorer.type === 'header' && '🎯 T'}
+                                                        {scorer.type === 'left_foot' && '👈'}
+                                                        {scorer.type === 'right_foot' && '👉'}
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          )}
+                                        </>
+                                      );
+                                    })()}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground">Aucun but marqué</p>
+                                )}
+                              </div>
+                            )}
+                          
+                          <div className={`flex ${viewMode === 'list' ? 'flex-row' : 'flex-col'} items-center ${viewMode === 'list' ? 'gap-3' : ''}`}>
+                            <div className="relative">
+                              <img 
+                                src={match.awayTeam.logo} 
+                                alt={match.awayTeam.name} 
+                                className={viewMode === 'list' ? 'w-12 h-12 object-contain' : 'w-16 h-16 object-contain'}
+                                width={viewMode === 'list' ? '48' : '64'}
+                                height={viewMode === 'list' ? '48' : '64'}
+                                loading="lazy"
+                              />
+                              {/* Badge de score pour l'équipe extérieure */}
+                              {match.awayTeam.score !== null && match.awayTeam.score !== undefined && (
+                                <Badge 
+                                  className={`absolute -top-2 -right-2 ${
+                                    match.awayTeam.score > match.homeTeam.score 
+                                      ? 'bg-madrid-gold text-white' 
+                                      : 'bg-muted text-foreground'
+                                  }`}
+                                >
+                                  {match.awayTeam.score}
+                                </Badge>
+                              )}
+                            </div>
+                            <h3 className={`font-bold ${viewMode === 'list' ? 'text-base' : 'text-lg'} mt-2`}>{match.awayTeam.name}</h3>
                           </div>
                         </div>
                         
-                        <div className="mt-8 flex flex-wrap justify-center gap-4">
+                        <div className={`${viewMode === 'list' ? 'mt-4' : 'mt-8'} flex flex-wrap justify-center gap-4`}>
                           <Button variant="outline" onClick={() => handleOpenMatchDetail(match)}>
                             Voir le résumé du match
                           </Button>
