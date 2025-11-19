@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -12,13 +12,40 @@ import {
   FileWarning,
   Megaphone
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MatchEventsProps {
   matchDetails: any;
 }
 
+interface Player {
+  id: string;
+  name: string;
+  image_url: string | null;
+  profile_image_url: string | null;
+}
+
 export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
   const [sortByMinute, setSortByMinute] = useState(false);
+  const [realMadridPlayers, setRealMadridPlayers] = useState<Player[]>([]);
+
+  useEffect(() => {
+    fetchRealMadridPlayers();
+  }, []);
+
+  const fetchRealMadridPlayers = async () => {
+    const { data, error } = await supabase
+      .from('players')
+      .select('id, name, image_url, profile_image_url')
+      .eq('is_active', true);
+
+    if (error) {
+      console.error('Error fetching players:', error);
+      return;
+    }
+
+    setRealMadridPlayers(data || []);
+  };
 
   if (!matchDetails) return null;
 
@@ -33,6 +60,33 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
     const formatted = formatPlayerName(name);
     const parts = formatted.split(' ');
     return parts.map(p => p[0]).join('').substring(0, 2).toUpperCase();
+  };
+
+  // Fonction pour trouver l'image du joueur
+  const getPlayerImage = (playerName: string, team: string): string | null => {
+    if (team !== 'real_madrid') return null;
+
+    // Normaliser le nom du joueur pour la correspondance
+    const normalizedEventName = playerName.toLowerCase().replace(/\s+/g, '_');
+    
+    // Chercher le joueur par correspondance de nom
+    const player = realMadridPlayers.find(p => {
+      const normalizedDbName = p.name.toLowerCase().replace(/\s+/g, '_');
+      
+      // Correspondance exacte
+      if (normalizedDbName === normalizedEventName) return true;
+      
+      // Correspondance partielle (nom de famille)
+      const eventParts = normalizedEventName.split('_');
+      const dbParts = normalizedDbName.split('_');
+      
+      // Vérifier si le nom de famille correspond
+      return eventParts.some(part => 
+        dbParts.some(dbPart => dbPart.includes(part) || part.includes(dbPart))
+      );
+    });
+
+    return player?.profile_image_url || player?.image_url || null;
   };
 
   // Extraire les événements
@@ -74,50 +128,54 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
     icon: Icon, 
     iconColor,
     isRightSide = false,
-    avatar,
+    team,
     score,
     additionalInfo
-  }: any) => (
-    <div className={`flex items-center gap-3 p-3 hover:bg-muted/30 rounded-lg transition-colors ${isRightSide ? 'flex-row-reverse' : ''}`}>
-      <Avatar className="h-10 w-10 border-2 border-border">
-        <AvatarImage src={avatar} />
-        <AvatarFallback className="bg-madrid-blue text-white text-xs">
-          {getPlayerInitials(player)}
-        </AvatarFallback>
-      </Avatar>
-      
-      <div className={`flex-1 ${isRightSide ? 'text-right' : ''}`}>
-        <div className="font-semibold text-foreground">
-          {formatPlayerName(player)}
-        </div>
-        {detail && (
-          <div className="text-sm text-muted-foreground flex items-center gap-1">
-            {Icon && <Icon className="h-3 w-3" />}
-            {detail}
+  }: any) => {
+    const playerImage = getPlayerImage(player, team);
+    
+    return (
+      <div className={`flex items-center gap-3 p-3 hover:bg-muted/30 rounded-lg transition-colors ${isRightSide ? 'flex-row-reverse' : ''}`}>
+        <Avatar className="h-10 w-10 border-2 border-border">
+          {playerImage && <AvatarImage src={playerImage} alt={formatPlayerName(player)} />}
+          <AvatarFallback className="bg-madrid-blue text-white text-xs">
+            {getPlayerInitials(player)}
+          </AvatarFallback>
+        </Avatar>
+        
+        <div className={`flex-1 ${isRightSide ? 'text-right' : ''}`}>
+          <div className="font-semibold text-foreground">
+            {formatPlayerName(player)}
           </div>
+          {detail && (
+            <div className="text-sm text-muted-foreground flex items-center gap-1">
+              {Icon && <Icon className="h-3 w-3" />}
+              {detail}
+            </div>
+          )}
+          {score && (
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {score}
+            </div>
+          )}
+        </div>
+
+        {Icon && iconColor && (
+          <Icon className={`h-5 w-5 ${iconColor}`} />
         )}
-        {score && (
-          <div className="text-xs text-muted-foreground mt-0.5">
-            {score}
+
+        <Badge className="bg-green-600 hover:bg-green-700 text-white min-w-[45px] justify-center font-bold">
+          {minute}'
+        </Badge>
+
+        {additionalInfo && (
+          <div className="text-xs text-muted-foreground">
+            {additionalInfo}
           </div>
         )}
       </div>
-
-      {Icon && iconColor && (
-        <Icon className={`h-5 w-5 ${iconColor}`} />
-      )}
-
-      <Badge className="bg-green-600 hover:bg-green-700 text-white min-w-[45px] justify-center font-bold">
-        {minute}'
-      </Badge>
-
-      {additionalInfo && (
-        <div className="text-xs text-muted-foreground">
-          {additionalInfo}
-        </div>
-      )}
-    </div>
-  );
+    );
+  };
 
   const GoalEvent = ({ goal, index }: any) => {
     // Déterminer le type de but et l'icône
@@ -132,7 +190,7 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
         minute={goal.minute}
         icon={isPenalty ? Shield : Goal}
         iconColor="text-green-600"
-        avatar={null}
+        team={goal.team}
         score={goal.score}
         additionalInfo={isPenalty ? 'PEN' : null}
       />
@@ -151,7 +209,7 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
           icon={ArrowRightLeft}
           iconColor="text-red-500"
           isRightSide={isRightSide}
-          avatar={null}
+          team={sub.team}
         />
       </div>
     );
@@ -169,7 +227,7 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
         icon={Flag}
         iconColor={card.type === 'red' ? 'text-red-600' : 'text-yellow-500'}
         isRightSide={isRightSide}
-        avatar={null}
+        team={card.team}
       />
     );
   };
@@ -213,7 +271,7 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
                 minute={var_event.minute}
                 icon={FileWarning}
                 iconColor="text-purple-600"
-                avatar={null}
+                team={var_event.team}
               />
             ))}
           </EventSection>
@@ -230,7 +288,7 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
                 minute={chance.minute}
                 icon={Megaphone}
                 iconColor="text-blue-600"
-                avatar={null}
+                team={chance.team}
               />
             ))}
           </EventSection>
