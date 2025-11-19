@@ -742,9 +742,9 @@ export const FormationManagerV2: React.FC = () => {
                         </CardContent>
                       </Card>
 
-                      {/* Terrain + Remplaçants - Plus compact */}
-                      <div className="col-span-3 space-y-2">
-                        <div className="flex items-center justify-between mb-2">
+                      {/* Terrain + Remplaçants en disposition horizontale */}
+                      <div className="col-span-3">
+                        <div className="flex items-center justify-between mb-1">
                           <Badge variant={fieldPlayers.length === 11 ? "default" : "secondary"} className="text-sm">
                             {fieldPlayers.length}/11 joueurs sur le terrain
                           </Badge>
@@ -755,98 +755,105 @@ export const FormationManagerV2: React.FC = () => {
                           )}
                         </div>
                         
-                        <DroppableField id="field">
-                          <div 
-                            className="relative w-full bg-gradient-to-b from-green-400 to-green-600 rounded-lg overflow-hidden shadow-lg" 
-                            style={{ aspectRatio: "16/11", maxHeight: "450px" }}
-                            data-pitch="true"
-                          >
-                            {/* Lignes du terrain */}
-                            <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-                              <rect x="5" y="5" width="90" height="90" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                              <line x1="5" y1="50" x2="95" y2="50" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                              <circle cx="50" cy="50" r="8" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                              <circle cx="50" cy="50" r="0.5" fill="white" opacity="0.7" />
-                              <rect x="28" y="5" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                              <rect x="38" y="5" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                              <rect x="28" y="80" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                              <rect x="38" y="88" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                              
-                              {/* Grille magnétique */}
-                              {showGrid && (
-                                <>
-                                  {[...Array(20)].map((_, i) => (
-                                    <line 
-                                      key={`v-${i}`} 
-                                      x1={5 + (i * 4.5)} 
-                                      y1="5" 
-                                      x2={5 + (i * 4.5)} 
-                                      y2="95" 
-                                      stroke="white" 
-                                      strokeWidth="0.1" 
-                                      opacity="0.2" 
-                                    />
-                                  ))}
-                                  {[...Array(20)].map((_, i) => (
-                                    <line 
-                                      key={`h-${i}`} 
-                                      x1="5" 
-                                      y1={5 + (i * 4.5)} 
-                                      x2="95" 
-                                      y2={5 + (i * 4.5)} 
-                                      stroke="white" 
-                                      strokeWidth="0.1" 
-                                      opacity="0.2" 
-                                    />
-                                  ))}
-                                </>
-                              )}
-                            </svg>
+                        <div className="grid grid-cols-3 gap-2">
+                          {/* Terrain - 2 colonnes */}
+                          <div className="col-span-2">
+                            <DroppableField id="field">
+                              <div 
+                                className="relative w-full bg-gradient-to-b from-green-400 to-green-600 rounded-lg overflow-hidden shadow-lg" 
+                                style={{ aspectRatio: "16/11", maxHeight: "380px" }}
+                                data-pitch="true"
+                              >
+                                {/* Lignes du terrain */}
+                                <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                  <rect x="5" y="5" width="90" height="90" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                  <line x1="5" y1="50" x2="95" y2="50" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                  <circle cx="50" cy="50" r="8" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                  <circle cx="50" cy="50" r="0.5" fill="white" opacity="0.7" />
+                                  <rect x="28" y="5" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                  <rect x="38" y="5" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                  <rect x="28" y="80" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                  <rect x="38" y="88" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                  
+                                  {/* Grille magnétique */}
+                                  {showGrid && (
+                                    <>
+                                      {[...Array(20)].map((_, i) => (
+                                        <line 
+                                          key={`v-${i}`} 
+                                          x1={5 + (i * 4.5)} 
+                                          y1="5" 
+                                          x2={5 + (i * 4.5)} 
+                                          y2="95" 
+                                          stroke="white" 
+                                          strokeWidth="0.1" 
+                                          opacity="0.2" 
+                                        />
+                                      ))}
+                                      {[...Array(20)].map((_, i) => (
+                                        <line 
+                                          key={`h-${i}`} 
+                                          x1="5" 
+                                          y1={5 + (i * 4.5)} 
+                                          x2="95" 
+                                          y2={5 + (i * 4.5)} 
+                                          stroke="white" 
+                                          strokeWidth="0.1" 
+                                          opacity="0.2" 
+                                        />
+                                      ))}
+                                    </>
+                                  )}
+                                </svg>
 
-                            {/* Joueurs sur le terrain */}
-                            {fieldPlayers.map((player) => (
-                              <DroppableFieldPlayer
-                                key={player.id}
-                                player={player}
-                                onDelete={() => deletePlayer(player.id!)}
-                                style={{
-                                  left: `${player.position_x}%`,
-                                  top: `${player.position_y}%`,
-                                  transform: 'translate(-50%, -50%)',
-                                  zIndex: 10
-                                }}
-                              />
-                            ))}
-                          </div>
-                        </DroppableField>
-
-                        {/* Zone des remplaçants - Plus compacte */}
-                        <Card>
-                          <CardHeader className="py-2">
-                            <CardTitle className="text-sm">Remplaçants</CardTitle>
-                          </CardHeader>
-                          <CardContent className="p-2">
-                            <DroppableSubstitutes id="substitutes">
-                              <div className="flex flex-wrap gap-1.5 min-h-[80px]">
-                                {substitutes.length === 0 && (
-                                  <p className="text-xs text-muted-foreground p-2">Glissez des joueurs ici pour les ajouter aux remplaçants</p>
-                                )}
-                                {substitutes.map((player) => (
-                                  <DraggablePlayer
+                                {/* Joueurs sur le terrain */}
+                                {fieldPlayers.map((player) => (
+                                  <DroppableFieldPlayer
                                     key={player.id}
-                                    id={player.id || player.player_id}
-                                    name={player.player_name}
-                                    position={player.player_position}
-                                    jerseyNumber={player.jersey_number}
-                                    variant="list"
-                                    showDelete
+                                    player={player}
                                     onDelete={() => deletePlayer(player.id!)}
+                                    style={{
+                                      left: `${player.position_x}%`,
+                                      top: `${player.position_y}%`,
+                                      transform: 'translate(-50%, -50%)',
+                                      zIndex: 10
+                                    }}
                                   />
                                 ))}
                               </div>
-                            </DroppableSubstitutes>
-                          </CardContent>
-                        </Card>
+                            </DroppableField>
+                          </div>
+
+                          {/* Remplaçants - 1 colonne */}
+                          <Card className="col-span-1">
+                            <CardHeader className="py-2">
+                              <CardTitle className="text-sm">Remplaçants</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-2">
+                              <DroppableSubstitutes id="substitutes">
+                                <ScrollArea className="h-[380px]">
+                                  <div className="space-y-1.5">
+                                    {substitutes.length === 0 && (
+                                      <p className="text-xs text-muted-foreground p-2">Glissez des joueurs ici</p>
+                                    )}
+                                    {substitutes.map((player) => (
+                                      <DraggablePlayer
+                                        key={player.id}
+                                        id={player.id || player.player_id}
+                                        name={player.player_name}
+                                        position={player.player_position}
+                                        jerseyNumber={player.jersey_number}
+                                        variant="list"
+                                        showDelete
+                                        onDelete={() => deletePlayer(player.id!)}
+                                      />
+                                    ))}
+                                  </div>
+                                </ScrollArea>
+                              </DroppableSubstitutes>
+                            </CardContent>
+                          </Card>
+                        </div>
                       </div>
                     </div>
                   )}
