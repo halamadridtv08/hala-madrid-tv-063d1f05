@@ -21,8 +21,12 @@ import {
 } from '@dnd-kit/core';
 import { useDroppable } from '@dnd-kit/core';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DraggablePlayer } from './DraggablePlayer';
+import { DroppableFieldPlayer } from './DroppableFieldPlayer';
+import { FootballField3D } from './FootballField3D';
 import { FORMATION_TEMPLATES, snapToGrid } from './FormationTemplates';
+import { Copy, Eye } from 'lucide-react';
 
 interface Match {
   id: string;
@@ -89,6 +93,9 @@ export const FormationManagerV2: React.FC = () => {
   const [fieldPlayers, setFieldPlayers] = useState<FormationPlayer[]>([]);
   const [substitutes, setSubstitutes] = useState<FormationPlayer[]>([]);
   const [formationId, setFormationId] = useState<string | null>(null);
+  const [show3DView, setShow3DView] = useState<boolean>(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [previousMatches, setPreviousMatches] = useState<Match[]>([]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -106,8 +113,21 @@ export const FormationManagerV2: React.FC = () => {
     if (selectedMatch) {
       fetchAvailablePlayers();
       fetchFormation();
+      fetchPreviousMatchFormations();
     }
   }, [selectedMatch, activeTeam]);
+
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    if (!formationId) return;
+
+    const autoSaveInterval = setInterval(() => {
+      setLastSaved(new Date());
+      toast.success("Formation sauvegardée automatiquement", { duration: 2000 });
+    }, 30000);
+
+    return () => clearInterval(autoSaveInterval);
+  }, [formationId]);
 
   const fetchMatches = async () => {
     const { data } = await supabase
@@ -115,6 +135,31 @@ export const FormationManagerV2: React.FC = () => {
       .select('id, home_team, away_team, match_date')
       .order('match_date', { ascending: true });
     setMatches(data || []);
+  };
+
+  const fetchPreviousMatchFormations = async () => {
+    const { data } = await supabase
+      .from('match_formations')
+      .select(`
+        id,
+        match_id,
+        matches!inner(id, home_team, away_team, match_date)
+      `)
+      .eq('team_type', activeTeam)
+      .neq('match_id', selectedMatch)
+      .order('matches.match_date', { ascending: false })
+      .limit(10);
+
+    if (data) {
+      const matchesWithFormations = data.map((f: any) => ({
+        id: f.match_id,
+        home_team: f.matches.home_team,
+        away_team: f.matches.away_team,
+        match_date: f.matches.match_date,
+        formation_id: f.id
+      }));
+      setPreviousMatches(matchesWithFormations as any);
+    }
   };
 
   const fetchAvailablePlayers = async () => {
@@ -502,6 +547,46 @@ export const FormationManagerV2: React.FC = () => {
     toast.success("Formation supprimée");
   };
 
+  const copyFormationFromPrevious = async (sourceFormationId: string) => {
+    if (!formationId) return;
+
+    // Fetch source formation players
+    const { data: sourcePlayers } = await supabase
+      .from('match_formation_players')
+      .select('*')
+      .eq('formation_id', sourceFormationId);
+
+    if (!sourcePlayers) return;
+
+    // Delete current formation players
+    await supabase
+      .from('match_formation_players')
+      .delete()
+      .eq('formation_id', formationId);
+
+    // Copy players to new formation
+    const newPlayers = sourcePlayers.map(player => ({
+      formation_id: formationId,
+      player_id: player.player_id,
+      opposing_player_id: player.opposing_player_id,
+      player_name: player.player_name,
+      player_position: player.player_position,
+      jersey_number: player.jersey_number,
+      player_image_url: player.player_image_url,
+      position_x: player.position_x,
+      position_y: player.position_y,
+      is_starter: player.is_starter,
+      player_rating: player.player_rating
+    }));
+
+    await supabase
+      .from('match_formation_players')
+      .insert(newPlayers);
+
+    fetchFormation();
+    toast.success("Formation copiée avec succès");
+  };
+
   const activeDragData = activeId ? 
     availablePlayers.find(p => p.id === activeId) ||
     fieldPlayers.find(p => p.id === activeId || p.player_id === activeId) ||
@@ -578,23 +663,62 @@ export const FormationManagerV2: React.FC = () => {
                       Créer la formation
                     </Button>
                   ) : (
-                    <div className="flex flex-wrap gap-2">
-                      <Button onClick={applyFormationTemplate} size="sm" variant="outline">
-                        <Layout className="h-4 w-4 mr-2" />
-                        Appliquer template {selectedFormation}
-                      </Button>
-                      <Button 
-                        onClick={() => setShowGrid(!showGrid)} 
-                        size="sm" 
-                        variant={showGrid ? "default" : "outline"}
-                      >
-                        <Grid3x3 className="h-4 w-4 mr-2" />
-                        {showGrid ? "Grille active" : "Grille désactivée"}
-                      </Button>
-                      <Button onClick={deleteFormation} variant="destructive" size="sm">
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Supprimer
-                      </Button>
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-2">
+                        <Button onClick={applyFormationTemplate} size="sm" variant="outline">
+                          <Layout className="h-4 w-4 mr-2" />
+                          Appliquer template {selectedFormation}
+                        </Button>
+                        <Button 
+                          onClick={() => setShowGrid(!showGrid)} 
+                          size="sm" 
+                          variant={showGrid ? "default" : "outline"}
+                        >
+                          <Grid3x3 className="h-4 w-4 mr-2" />
+                          {showGrid ? "Grille active" : "Grille désactivée"}
+                        </Button>
+                        <Button 
+                          onClick={() => setShow3DView(!show3DView)} 
+                          size="sm" 
+                          variant={show3DView ? "default" : "outline"}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          Vue 3D
+                        </Button>
+                        <Button onClick={deleteFormation} variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Supprimer
+                        </Button>
+                      </div>
+                      
+                      {previousMatches.length > 0 && (
+                        <Alert>
+                          <Copy className="h-4 w-4" />
+                          <AlertDescription>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm">Copier depuis:</span>
+                              <Select onValueChange={(value) => copyFormationFromPrevious(value)}>
+                                <SelectTrigger className="w-[250px] h-8">
+                                  <SelectValue placeholder="Sélectionner un match" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {previousMatches.map((match: any) => (
+                                    <SelectItem key={match.formation_id} value={match.formation_id}>
+                                      {match.home_team} vs {match.away_team}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                      
+                      {lastSaved && (
+                        <p className="text-xs text-muted-foreground">
+                          Dernière sauvegarde: {lastSaved.toLocaleTimeString()}
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -630,85 +754,122 @@ export const FormationManagerV2: React.FC = () => {
 
                       {/* Terrain + Remplaçants - Plus compact */}
                       <div className="col-span-3 space-y-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge variant={fieldPlayers.length === 11 ? "default" : "secondary"} className="text-sm">
-                            {fieldPlayers.length}/11 joueurs sur le terrain
-                          </Badge>
-                          {fieldPlayers.length < 11 && (
-                            <span className="text-xs text-muted-foreground">
-                              Glissez {11 - fieldPlayers.length} joueur{11 - fieldPlayers.length > 1 ? 's' : ''} de plus
-                            </span>
-                          )}
-                        </div>
-                        <DroppableField id="field">
-                          <div 
-                            className="relative w-full bg-gradient-to-b from-green-400 to-green-600 rounded-lg overflow-hidden shadow-lg" 
-                            style={{ aspectRatio: "16/11", maxHeight: "450px" }}
-                            data-pitch="true"
-                          >
-                            {/* Lignes du terrain */}
-                            <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-                              <rect x="5" y="5" width="90" height="90" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                              <line x1="5" y1="50" x2="95" y2="50" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                              <circle cx="50" cy="50" r="8" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                              <circle cx="50" cy="50" r="0.5" fill="white" opacity="0.7" />
-                              <rect x="28" y="5" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                              <rect x="38" y="5" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                              <rect x="28" y="80" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                              <rect x="38" y="88" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                              
-                              {/* Grille magnétique */}
-                              {showGrid && (
-                                <>
-                                  {[...Array(20)].map((_, i) => (
-                                    <line 
-                                      key={`v-${i}`} 
-                                      x1={5 + (i * 4.5)} 
-                                      y1="5" 
-                                      x2={5 + (i * 4.5)} 
-                                      y2="95" 
-                                      stroke="white" 
-                                      strokeWidth="0.1" 
-                                      opacity="0.2" 
-                                    />
-                                  ))}
-                                  {[...Array(20)].map((_, i) => (
-                                    <line 
-                                      key={`h-${i}`} 
-                                      x1="5" 
-                                      y1={5 + (i * 4.5)} 
-                                      x2="95" 
-                                      y2={5 + (i * 4.5)} 
-                                      stroke="white" 
-                                      strokeWidth="0.1" 
-                                      opacity="0.2" 
-                                    />
-                                  ))}
-                                </>
+                        {show3DView ? (
+                          <FootballField3D fieldPlayers={fieldPlayers} />
+                        ) : (
+                          <>
+                            <div className="flex items-center justify-between mb-2">
+                              <Badge variant={fieldPlayers.length === 11 ? "default" : "secondary"} className="text-sm">
+                                {fieldPlayers.length}/11 joueurs sur le terrain
+                              </Badge>
+                              {fieldPlayers.length < 11 && (
+                                <span className="text-xs text-muted-foreground">
+                                  Glissez {11 - fieldPlayers.length} joueur{11 - fieldPlayers.length > 1 ? 's' : ''} de plus
+                                </span>
                               )}
-                            </svg>
+                            </div>
+                            
+                            {/* Légende des zones */}
+                            <div className="flex gap-2 text-xs">
+                              <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 bg-yellow-500/30 border border-yellow-500"></div>
+                                <span>GK</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 bg-blue-500/30 border border-blue-500"></div>
+                                <span>DEF</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 bg-green-500/30 border border-green-500"></div>
+                                <span>MID</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <div className="w-3 h-3 bg-red-500/30 border border-red-500"></div>
+                                <span>ATT</span>
+                              </div>
+                            </div>
+                            
+                            <DroppableField id="field">
+                              <div 
+                                className="relative w-full bg-gradient-to-b from-green-400 to-green-600 rounded-lg overflow-hidden shadow-lg" 
+                                style={{ aspectRatio: "16/11", maxHeight: "450px" }}
+                                data-pitch="true"
+                              >
+                                {/* Zones colorées par position */}
+                                <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ zIndex: 1 }}>
+                                  {/* Zone Gardien (GK) - 85-95% */}
+                                  <rect x="5" y="85" width="90" height="10" fill="yellow" opacity="0.15" />
+                                  
+                                  {/* Zone Défense (DEF) - 65-85% */}
+                                  <rect x="5" y="65" width="90" height="20" fill="blue" opacity="0.15" />
+                                  
+                                  {/* Zone Milieu (MID) - 35-65% */}
+                                  <rect x="5" y="35" width="90" height="30" fill="green" opacity="0.15" />
+                                  
+                                  {/* Zone Attaque (ATT) - 5-35% */}
+                                  <rect x="5" y="5" width="90" height="30" fill="red" opacity="0.15" />
+                                </svg>
+                                
+                                {/* Lignes du terrain */}
+                                <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ zIndex: 2 }}>
+                                  <rect x="5" y="5" width="90" height="90" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                  <line x1="5" y1="50" x2="95" y2="50" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                  <circle cx="50" cy="50" r="8" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                  <circle cx="50" cy="50" r="0.5" fill="white" opacity="0.7" />
+                                  <rect x="28" y="5" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                  <rect x="38" y="5" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                  <rect x="28" y="80" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                  <rect x="38" y="88" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                  
+                                  {/* Grille magnétique */}
+                                  {showGrid && (
+                                    <>
+                                      {[...Array(20)].map((_, i) => (
+                                        <line 
+                                          key={`v-${i}`} 
+                                          x1={5 + (i * 4.5)} 
+                                          y1="5" 
+                                          x2={5 + (i * 4.5)} 
+                                          y2="95" 
+                                          stroke="white" 
+                                          strokeWidth="0.1" 
+                                          opacity="0.2" 
+                                        />
+                                      ))}
+                                      {[...Array(20)].map((_, i) => (
+                                        <line 
+                                          key={`h-${i}`} 
+                                          x1="5" 
+                                          y1={5 + (i * 4.5)} 
+                                          x2="95" 
+                                          y2={5 + (i * 4.5)} 
+                                          stroke="white" 
+                                          strokeWidth="0.1" 
+                                          opacity="0.2" 
+                                        />
+                                      ))}
+                                    </>
+                                  )}
+                                </svg>
 
-                            {/* Joueurs sur le terrain */}
-                            {fieldPlayers.map((player) => (
-                              <DraggablePlayer
-                                key={player.id}
-                                id={player.id || player.player_id}
-                                name={player.player_name}
-                                position={player.player_position}
-                                jerseyNumber={player.jersey_number}
-                                imageUrl={player.player_image_url}
-                                variant="field"
-                                showDelete
-                                onDelete={() => deletePlayer(player.id!)}
-                                style={{
-                                  left: `${player.position_x}%`,
-                                  top: `${player.position_y}%`,
-                                  transform: 'translate(-50%, -50%)'
-                                }}
-                              />
-                            ))}
-                          </div>
-                        </DroppableField>
+                                {/* Joueurs sur le terrain */}
+                                {fieldPlayers.map((player) => (
+                                  <DroppableFieldPlayer
+                                    key={player.id}
+                                    player={player}
+                                    onDelete={() => deletePlayer(player.id!)}
+                                    style={{
+                                      left: `${player.position_x}%`,
+                                      top: `${player.position_y}%`,
+                                      transform: 'translate(-50%, -50%)',
+                                      zIndex: 10
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                            </DroppableField>
+                          </>
+                        )}
 
                         {/* Zone des remplaçants - Plus compacte */}
                         <Card>
