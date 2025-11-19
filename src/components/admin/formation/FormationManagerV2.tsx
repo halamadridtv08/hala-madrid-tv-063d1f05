@@ -15,6 +15,7 @@ import {
   DragEndEvent,
   DragOverlay,
   DragStartEvent,
+  DragMoveEvent,
   closestCenter,
   PointerSensor,
   useSensor,
@@ -336,32 +337,37 @@ export const FormationManagerV2: React.FC = () => {
     setActiveDragPlayer(fieldPlayer || substitutePlayer || availablePlayer || null);
   };
 
-  const handleDragMove = (event: any) => {
+  const handleDragMove = (event: DragMoveEvent) => {
     if (!event.over || event.over.id !== 'field') {
       setDragPreviewPosition(null);
       return;
     }
 
     const pitchElement = document.querySelector('[data-pitch="true"]');
-    if (pitchElement && event.activatorEvent) {
+    if (pitchElement) {
       const rect = pitchElement.getBoundingClientRect();
-      const mouseX = (event.activatorEvent as PointerEvent).clientX;
-      const mouseY = (event.activatorEvent as PointerEvent).clientY;
       
-      let percentX = ((mouseX - rect.left) / rect.width) * 100;
-      let percentY = ((mouseY - rect.top) / rect.height) * 100;
+      // Calculer la position actuelle de la souris pendant le drag
+      const activeRect = event.active.rect.current.translated;
+      if (activeRect) {
+        const centerX = activeRect.left + activeRect.width / 2;
+        const centerY = activeRect.top + activeRect.height / 2;
+        
+        let percentX = ((centerX - rect.left) / rect.width) * 100;
+        let percentY = ((centerY - rect.top) / rect.height) * 100;
 
-      // Apply grid snapping if enabled
-      if (showGrid) {
-        const snapped = snapToGrid(percentX, percentY);
-        percentX = snapped.x;
-        percentY = snapped.y;
+        // Apply grid snapping if enabled
+        if (showGrid) {
+          const snapped = snapToGrid(percentX, percentY);
+          percentX = snapped.x;
+          percentY = snapped.y;
+        }
+
+        setDragPreviewPosition({
+          x: Math.max(5, Math.min(95, percentX)),
+          y: Math.max(10, Math.min(90, percentY))
+        });
       }
-
-      setDragPreviewPosition({
-        x: Math.max(5, Math.min(95, percentX)),
-        y: Math.max(10, Math.min(90, percentY))
-      });
     }
   };
 
