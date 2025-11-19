@@ -651,6 +651,45 @@ export const FormationManagerV2: React.FC = () => {
     });
   };
 
+  const syncPlayerImages = async () => {
+    if (!formationId) return;
+    
+    const { data: formationPlayers } = await supabase
+      .from('match_formation_players')
+      .select('id, player_id, player_image_url')
+      .eq('formation_id', formationId)
+      .not('player_id', 'is', null);
+
+    if (!formationPlayers) return;
+
+    const playersToUpdate = formationPlayers.filter(fp => !fp.player_image_url && fp.player_id);
+
+    if (playersToUpdate.length === 0) {
+      toast.info("Toutes les images sont à jour");
+      return;
+    }
+
+    for (const fp of playersToUpdate) {
+      const { data: playerData } = await supabase
+        .from('players')
+        .select('profile_image_url, image_url')
+        .eq('id', fp.player_id)
+        .single();
+
+      if (playerData) {
+        await supabase
+          .from('match_formation_players')
+          .update({
+            player_image_url: playerData.profile_image_url || playerData.image_url
+          })
+          .eq('id', fp.id);
+      }
+    }
+
+    await fetchFormation();
+    toast.success(`${playersToUpdate.length} image(s) synchronisée(s)`);
+  };
+
   const deletePlayer = async (playerId: string) => {
     await supabase
       .from('match_formation_players')
@@ -831,6 +870,15 @@ export const FormationManagerV2: React.FC = () => {
                           <Undo className="h-4 w-4 mr-2" />
                           Annuler ({positionHistory.length})
                         </Button>
+                        <Button 
+                          onClick={syncPlayerImages}
+                          size="sm"
+                          variant="outline"
+                          disabled={!formationId}
+                        >
+                          <Users className="h-4 w-4 mr-2" />
+                          Sync Images
+                        </Button>
                         <Button onClick={deleteFormation} variant="destructive" size="sm">
                           <Trash2 className="h-4 w-4 mr-2" />
                           Supprimer
@@ -1005,6 +1053,7 @@ export const FormationManagerV2: React.FC = () => {
                                             name={player.player_name}
                                             position={player.player_position}
                                             jerseyNumber={player.jersey_number}
+                                            imageUrl={player.player_image_url}
                                             variant="list"
                                             showDelete
                                             onDelete={() => deletePlayer(player.id!)}
