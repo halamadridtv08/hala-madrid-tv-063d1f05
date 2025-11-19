@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { LatestNewsWidget } from "@/components/home/LatestNewsWidget";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -102,98 +103,56 @@ const News = () => {
         </div>
 
         <div className="madrid-container py-8">
-          <div className="flex flex-col md:flex-row gap-4 mb-8 justify-between">
-            <Input
-              placeholder="Rechercher une actualité..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-            
-            <div className="flex flex-wrap gap-2">
-              {categories.map(category => (
-                <Badge
-                  key={category.value ?? "all"}
-                  className={`cursor-pointer ${
-                    selectedCategory === category.value 
-                    ? "bg-madrid-gold text-black" 
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                  }`}
-                  onClick={() => setSelectedCategory(category.value)}
-                >
-                  {category.name}
-                </Badge>
-              ))}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Contenu principal */}
+            <div className="lg:col-span-2">
+              <div className="flex flex-col md:flex-row gap-4 mb-8 justify-between">
+                <Input
+                  placeholder="Rechercher une actualité..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="max-w-sm"
+                />
+                
+                <div className="flex flex-wrap gap-2">
+                  {categories.map(category => (
+                    <Badge
+                      key={category.value ?? "all"}
+                      className={`cursor-pointer ${
+                        selectedCategory === category.value 
+                        ? "bg-madrid-gold text-black" 
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                      }`}
+                      onClick={() => setSelectedCategory(category.value)}
+                    >
+                      {category.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+...
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+...
+                </div>
+              )}
+
+              {filteredNews.length === 0 && !loading && (
+                <div className="text-center py-12">
+                  <p className="text-gray-600 dark:text-gray-400 text-lg">Aucun article trouvé.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Widget des dernières infos */}
+            <div className="lg:col-span-1">
+              <LatestNewsWidget />
             </div>
           </div>
-          
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, index) => (
-                <Card key={index} className="overflow-hidden">
-                  <Skeleton className="h-48 w-full" />
-                  <CardHeader>
-                    <Skeleton className="h-4 w-20 mb-2" />
-                    <Skeleton className="h-6 w-full mb-2" />
-                    <Skeleton className="h-4 w-3/4" />
-                  </CardHeader>
-                  <CardFooter>
-                    <Skeleton className="h-4 w-1/3" />
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredNews.map(article => (
-                <Card key={article.id} className="overflow-hidden card-hover">
-                  <div className="h-48 overflow-hidden">
-                    <img 
-                      src={article.image_url || "https://via.placeholder.com/400x200?text=Real+Madrid"} 
-                      alt={article.title}
-                      className="w-full h-full object-cover object-center"
-                    />
-                  </div>
-                  <CardHeader className="p-3">
-                    <div className="flex justify-between items-start mb-1">
-                      <Badge className={`${getCategoryColor(article.category)} text-white text-xs`}>
-                        {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
-                      </Badge>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {formatDate(article.published_at)}
-                      </span>
-                    </div>
-                    <CardTitle className="line-clamp-2 text-base">{article.title}</CardTitle>
-                    <CardDescription className="line-clamp-1 text-sm">{article.description}</CardDescription>
-                  </CardHeader>
-                  <CardFooter className="flex justify-between items-center">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <User className="h-4 w-4" />
-                      <span>Admin</span>
-                    </div>
-                    <Button asChild variant="link" className="p-0 text-madrid-blue dark:text-blue-400">
-                      <a 
-                        href={`/news/${article.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1"
-                      >
-                        Lire l'article
-                        <ExternalLink className="h-3 w-3 ml-1" />
-                      </a>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
-
-          {!loading && filteredNews.length === 0 && (
-            <div className="text-center py-12">
-              <h3 className="text-xl font-semibold mb-2">Aucune actualité trouvée</h3>
-              <p className="text-gray-500">Essayez de modifier vos critères de recherche</p>
-            </div>
-          )}
         </div>
       </main>
       <Footer />
