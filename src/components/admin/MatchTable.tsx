@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { Match } from "@/types/Match";
 import { MatchForm } from "./MatchForm";
+import { MatchJsonImporter } from "./MatchJsonImporter";
 import { Plus, Edit, Trash2, Calendar } from "lucide-react";
 import { toast } from "sonner";
 
@@ -100,16 +101,19 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Matchs ({matches.length})</CardTitle>
-            <Button onClick={handleAddMatch}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nouveau match
-            </Button>
-          </div>
-        </CardHeader>
+      <div className="space-y-6">
+        <MatchJsonImporter />
+        
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Matchs ({matches.length})</CardTitle>
+              <Button onClick={handleAddMatch}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nouveau match
+              </Button>
+            </div>
+          </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {matches.map((match) => (
@@ -177,6 +181,7 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
           </div>
         </CardContent>
       </Card>
+      </div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="max-w-2xl">
