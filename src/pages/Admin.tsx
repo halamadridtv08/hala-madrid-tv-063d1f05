@@ -56,6 +56,7 @@ import { DataSynchronizer } from "@/components/admin/DataSynchronizer";
 import { OpposingTeamManager } from "@/components/admin/OpposingTeamManager";
 import { MatchFormationManager } from "@/components/admin/MatchFormationManager";
 import { FormationManager } from "@/components/admin/formation/FormationManager";
+import { MatchLineupManager } from "@/components/admin/MatchLineupManager";
 import { SpecialArticlesManager } from "@/components/admin/SpecialArticlesManager";
 import { AuthImageManager } from "@/components/admin/AuthImageManager";
 import { useNavigate } from "react-router-dom";
@@ -439,8 +440,15 @@ const Admin = () => {
 
   const renderFormations = () => (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Gestion des Compositions</h2>
+      <h2 className="text-2xl font-bold mb-4">Gestion des Formations Tactiques</h2>
       <FormationManager />
+    </div>
+  );
+
+  const renderLineups = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Gestion des Compositions et Joueurs Absents</h2>
+      <MatchLineupManager />
     </div>
   );
 
@@ -524,7 +532,11 @@ const Admin = () => {
               </TabsTrigger>
               <TabsTrigger value="formations" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
                 <Target className="h-4 w-4" />
-                Compositions
+                Formations Tactiques
+              </TabsTrigger>
+              <TabsTrigger value="lineups" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <Users className="h-4 w-4" />
+                Compositions Probables
               </TabsTrigger>
               <TabsTrigger value="press" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
                 <Mic className="h-4 w-4" />
@@ -563,6 +575,7 @@ const Admin = () => {
           <TabsContent value="matches">{renderMatches()}</TabsContent>
           <TabsContent value="opponents">{renderOpponents()}</TabsContent>
           <TabsContent value="formations">{renderFormations()}</TabsContent>
+          <TabsContent value="lineups">{renderLineups()}</TabsContent>
           <TabsContent value="press">{renderPressConferences()}</TabsContent>
           <TabsContent value="training">{renderTrainingSessions()}</TabsContent>
           <TabsContent value="stats">{renderStats()}</TabsContent>
