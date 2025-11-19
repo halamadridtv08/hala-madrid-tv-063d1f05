@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, Users, Shield, Trash2, Plus, Grid3x3, Layout } from 'lucide-react';
+import { Save, Users, Shield, Trash2, Plus, Grid3x3, Layout, Columns2, Rows2 } from 'lucide-react';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import {
   DndContext,
   DragEndEvent,
@@ -87,6 +88,7 @@ export const FormationManagerV2: React.FC = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [formationVariant, setFormationVariant] = useState<string>("principale");
   const [showGrid, setShowGrid] = useState<boolean>(true);
+  const [layoutMode, setLayoutMode] = useState<"horizontal" | "vertical">("horizontal");
   
   const [availablePlayers, setAvailablePlayers] = useState<Player[]>([]);
   const [fieldPlayers, setFieldPlayers] = useState<FormationPlayer[]>([]);
@@ -675,6 +677,23 @@ export const FormationManagerV2: React.FC = () => {
                           <Grid3x3 className="h-4 w-4 mr-2" />
                           {showGrid ? "Grille active" : "Grille désactivée"}
                         </Button>
+                        <Button 
+                          onClick={() => setLayoutMode(layoutMode === "horizontal" ? "vertical" : "horizontal")} 
+                          size="sm" 
+                          variant="outline"
+                        >
+                          {layoutMode === "horizontal" ? (
+                            <>
+                              <Rows2 className="h-4 w-4 mr-2" />
+                              Vue verticale
+                            </>
+                          ) : (
+                            <>
+                              <Columns2 className="h-4 w-4 mr-2" />
+                              Vue horizontale
+                            </>
+                          )}
+                        </Button>
                         <Button onClick={deleteFormation} variant="destructive" size="sm">
                           <Trash2 className="h-4 w-4 mr-2" />
                           Supprimer
@@ -742,7 +761,7 @@ export const FormationManagerV2: React.FC = () => {
                         </CardContent>
                       </Card>
 
-                      {/* Terrain + Remplaçants en disposition horizontale */}
+                      {/* Terrain + Remplaçants - Disposition adaptative */}
                       <div className="col-span-3">
                         <div className="flex items-center justify-between mb-1">
                           <Badge variant={fieldPlayers.length === 11 ? "default" : "secondary"} className="text-sm">
@@ -755,13 +774,117 @@ export const FormationManagerV2: React.FC = () => {
                           )}
                         </div>
                         
-                        <div className="grid grid-cols-3 gap-2">
-                          {/* Terrain - 2 colonnes */}
-                          <div className="col-span-2">
+                        {layoutMode === "horizontal" ? (
+                          <ResizablePanelGroup direction="horizontal" className="rounded-lg border">
+                            {/* Terrain - Redimensionnable */}
+                            <ResizablePanel defaultSize={65} minSize={50}>
+                              <DroppableField id="field">
+                                <div 
+                                  className="relative w-full h-full bg-gradient-to-b from-green-400 to-green-600 overflow-hidden" 
+                                  style={{ minHeight: "380px", maxHeight: "480px" }}
+                                  data-pitch="true"
+                                >
+                                  {/* Lignes du terrain */}
+                                  <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                    <rect x="5" y="5" width="90" height="90" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                    <line x1="5" y1="50" x2="95" y2="50" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                    <circle cx="50" cy="50" r="8" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                    <circle cx="50" cy="50" r="0.5" fill="white" opacity="0.7" />
+                                    <rect x="28" y="5" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                    <rect x="38" y="5" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                    <rect x="28" y="80" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                    <rect x="38" y="88" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                                    
+                                    {/* Grille magnétique */}
+                                    {showGrid && (
+                                      <>
+                                        {[...Array(20)].map((_, i) => (
+                                          <line 
+                                            key={`v-${i}`} 
+                                            x1={5 + (i * 4.5)} 
+                                            y1="5" 
+                                            x2={5 + (i * 4.5)} 
+                                            y2="95" 
+                                            stroke="white" 
+                                            strokeWidth="0.1" 
+                                            opacity="0.2" 
+                                          />
+                                        ))}
+                                        {[...Array(20)].map((_, i) => (
+                                          <line 
+                                            key={`h-${i}`} 
+                                            x1="5" 
+                                            y1={5 + (i * 4.5)} 
+                                            x2="95" 
+                                            y2={5 + (i * 4.5)} 
+                                            stroke="white" 
+                                            strokeWidth="0.1" 
+                                            opacity="0.2" 
+                                          />
+                                        ))}
+                                      </>
+                                    )}
+                                  </svg>
+
+                                  {/* Joueurs sur le terrain */}
+                                  {fieldPlayers.map((player) => (
+                                    <DroppableFieldPlayer
+                                      key={player.id}
+                                      player={player}
+                                      onDelete={() => deletePlayer(player.id!)}
+                                      style={{
+                                        left: `${player.position_x}%`,
+                                        top: `${player.position_y}%`,
+                                        transform: 'translate(-50%, -50%)',
+                                        zIndex: 10
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                              </DroppableField>
+                            </ResizablePanel>
+
+                            <ResizableHandle withHandle />
+
+                            {/* Remplaçants - Redimensionnable */}
+                            <ResizablePanel defaultSize={35} minSize={25}>
+                              <Card className="h-full border-0 rounded-none">
+                                <CardHeader className="py-2">
+                                  <CardTitle className="text-sm">Remplaçants</CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-2">
+                                  <DroppableSubstitutes id="substitutes">
+                                    <ScrollArea className="h-[380px]">
+                                      <div className="space-y-1.5 pr-2">
+                                        {substitutes.length === 0 && (
+                                          <p className="text-xs text-muted-foreground p-2">Glissez des joueurs ici</p>
+                                        )}
+                                        {substitutes.map((player) => (
+                                          <DraggablePlayer
+                                            key={player.id}
+                                            id={player.id || player.player_id}
+                                            name={player.player_name}
+                                            position={player.player_position}
+                                            jerseyNumber={player.jersey_number}
+                                            variant="list"
+                                            showDelete
+                                            onDelete={() => deletePlayer(player.id!)}
+                                          />
+                                        ))}
+                                      </div>
+                                    </ScrollArea>
+                                  </DroppableSubstitutes>
+                                </CardContent>
+                              </Card>
+                            </ResizablePanel>
+                          </ResizablePanelGroup>
+                        ) : (
+                          <div className="space-y-2">
+                            {/* Terrain */}
                             <DroppableField id="field">
                               <div 
                                 className="relative w-full bg-gradient-to-b from-green-400 to-green-600 rounded-lg overflow-hidden shadow-lg" 
-                                style={{ aspectRatio: "16/11", maxHeight: "380px" }}
+                                style={{ aspectRatio: "16/11", maxHeight: "400px" }}
                                 data-pitch="true"
                               >
                                 {/* Lignes du terrain */}
@@ -822,19 +945,17 @@ export const FormationManagerV2: React.FC = () => {
                                 ))}
                               </div>
                             </DroppableField>
-                          </div>
 
-                          {/* Remplaçants - 1 colonne */}
-                          <Card className="col-span-1">
-                            <CardHeader className="py-2">
-                              <CardTitle className="text-sm">Remplaçants</CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-2">
-                              <DroppableSubstitutes id="substitutes">
-                                <ScrollArea className="h-[380px]">
-                                  <div className="space-y-1.5">
+                            {/* Remplaçants */}
+                            <Card>
+                              <CardHeader className="py-2">
+                                <CardTitle className="text-sm">Remplaçants</CardTitle>
+                              </CardHeader>
+                              <CardContent className="p-2">
+                                <DroppableSubstitutes id="substitutes">
+                                  <div className="flex flex-wrap gap-1.5 min-h-[100px]">
                                     {substitutes.length === 0 && (
-                                      <p className="text-xs text-muted-foreground p-2">Glissez des joueurs ici</p>
+                                      <p className="text-xs text-muted-foreground p-2">Glissez des joueurs ici pour les ajouter aux remplaçants</p>
                                     )}
                                     {substitutes.map((player) => (
                                       <DraggablePlayer
@@ -849,11 +970,11 @@ export const FormationManagerV2: React.FC = () => {
                                       />
                                     ))}
                                   </div>
-                                </ScrollArea>
-                              </DroppableSubstitutes>
-                            </CardContent>
-                          </Card>
-                        </div>
+                                </DroppableSubstitutes>
+                              </CardContent>
+                            </Card>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
