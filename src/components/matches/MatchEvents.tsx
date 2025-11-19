@@ -62,6 +62,33 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
     return parts.map(p => p[0]).join('').substring(0, 2).toUpperCase();
   };
 
+  // Table de correction des noms courants (mapping manuel)
+  const nameCorrections: { [key: string]: string } = {
+    // Variations courantes
+    'vinicius': 'vinicius_junior',
+    'vini': 'vinicius_junior',
+    'rodrygo': 'rodrygo',
+    'mbappe': 'kylian_mbappe',
+    'kylian': 'kylian_mbappe',
+    'bellingham': 'jude_bellingham',
+    'jude': 'jude_bellingham',
+    'valverde': 'federico_valverde',
+    'fede': 'federico_valverde',
+    'modric': 'luka_modric',
+    'kroos': 'toni_kroos',
+    'courtois': 'thibaut_courtois',
+    'militao': 'eder_militao',
+    'rudiger': 'antonio_rudiger',
+    'carvajal': 'dani_carvajal',
+    'camavinga': 'eduardo_camavinga',
+    'tchouameni': 'aurelien_tchouameni',
+    'guler': 'arda_guler',
+    'arda': 'arda_guler',
+    'brahim': 'brahim_diaz',
+    'endrick': 'endrick',
+    'ancelotti': 'carlo_ancelotti'
+  };
+
   // Fonction pour normaliser les noms (supprimer accents, espaces, etc.)
   const normalizeString = (str: string): string => {
     return str
@@ -70,6 +97,7 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
       .replace(/[\u0300-\u036f]/g, '') // Supprimer les accents
       .replace(/[^a-z0-9]/g, '_') // Remplacer caractères spéciaux par underscore
       .replace(/_+/g, '_') // Fusionner underscores multiples
+      .replace(/^_|_$/g, '') // Supprimer underscores début/fin
       .trim();
   };
 
@@ -79,44 +107,56 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
     return parts[parts.length - 1] || '';
   };
 
+  // Fonction pour suggérer une correction de nom
+  const suggestNameCorrection = (playerName: string): string => {
+    const normalized = normalizeString(playerName);
+    
+    // Vérifier d'abord dans la table de corrections
+    if (nameCorrections[normalized]) {
+      return nameCorrections[normalized];
+    }
+    
+    // Vérifier le nom de famille dans la table
+    const lastName = normalizeString(getLastName(playerName));
+    if (nameCorrections[lastName]) {
+      return nameCorrections[lastName];
+    }
+    
+    return playerName;
+  };
+
   // Fonction pour trouver l'image du joueur avec correspondance améliorée
   const getPlayerImage = (playerName: string, team: string): string | null => {
     if (team !== 'real_madrid') return null;
     if (!playerName) return null;
 
-    const normalizedEventName = normalizeString(playerName);
-    const eventLastName = normalizeString(getLastName(playerName));
-    
-    console.log('Searching for player:', playerName, 'normalized:', normalizedEventName, 'lastName:', eventLastName);
+    // Appliquer la correction de nom
+    const correctedName = suggestNameCorrection(playerName);
+    const normalizedEventName = normalizeString(correctedName);
+    const eventLastName = normalizeString(getLastName(correctedName));
     
     // Chercher le joueur par correspondance de nom
     const player = realMadridPlayers.find(p => {
       const normalizedDbName = normalizeString(p.name);
       const dbLastName = normalizeString(getLastName(p.name));
       
-      console.log('Comparing with DB player:', p.name, 'normalized:', normalizedDbName, 'lastName:', dbLastName);
-      
       // 1. Correspondance exacte du nom complet
       if (normalizedDbName === normalizedEventName) {
-        console.log('✓ Exact match found:', p.name);
         return true;
       }
       
       // 2. Correspondance exacte du nom de famille
       if (eventLastName && dbLastName && eventLastName === dbLastName) {
-        console.log('✓ Last name match found:', p.name);
         return true;
       }
       
       // 3. Le nom de l'événement contient le nom de famille de la DB
       if (dbLastName && normalizedEventName.includes(dbLastName)) {
-        console.log('✓ Event name contains DB last name:', p.name);
         return true;
       }
       
       // 4. Le nom de la DB contient le nom de famille de l'événement
       if (eventLastName && normalizedDbName.includes(eventLastName)) {
-        console.log('✓ DB name contains event last name:', p.name);
         return true;
       }
       
@@ -137,19 +177,8 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
       }
       
       const matchRatio = matchCount / Math.max(eventParts.length, dbParts.length);
-      if (matchRatio >= 0.5) {
-        console.log('✓ Partial match found:', p.name, 'ratio:', matchRatio);
-        return true;
-      }
-      
-      return false;
+      return matchRatio >= 0.5;
     });
-
-    if (player) {
-      console.log('Final selected player:', player.name, 'image:', player.profile_image_url || player.image_url);
-    } else {
-      console.log('No player found for:', playerName);
-    }
 
     return player?.profile_image_url || player?.image_url || null;
   };
@@ -160,11 +189,25 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
   const cards = matchDetails.cards || { yellow: {}, red: {} };
   const fouls = matchDetails.fouls || [];
 
-  // Créer les événements de cartons à partir des fautes
+  // Créer les événements de cartons à partir des fautes (cartons jaunes)
   const yellowCardEvents = fouls.map((foul: any) => ({
     ...foul,
     type: 'yellow'
   }));
+
+  // Créer les événements de cartons rouges (si disponibles dans les données)
+  const redCardEvents: any[] = [];
+  
+  // Vérifier si on a des données de cartons rouges dans les événements
+  if (matchDetails.cards && matchDetails.cards.red_card_events) {
+    redCardEvents.push(...matchDetails.cards.red_card_events.map((card: any) => ({
+      ...card,
+      type: 'red'
+    })));
+  }
+
+  // Combiner tous les événements de cartons
+  const allCardEvents = [...yellowCardEvents, ...redCardEvents];
 
   // Fonction de tri
   const sortEvents = (events: any[]) => {
@@ -282,24 +325,43 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
 
   const CardEvent = ({ card, index }: any) => {
     const isRightSide = card.team !== 'real_madrid';
+    const isRed = card.type === 'red';
     
     return (
-      <EventRow
-        key={index}
-        player={card.player}
-        detail="Faute"
-        minute={card.minute}
-        icon={Flag}
-        iconColor={card.type === 'red' ? 'text-red-600' : 'text-yellow-500'}
-        isRightSide={isRightSide}
-        team={card.team}
-      />
+      <div key={index} className={`flex items-center gap-3 p-3 hover:bg-muted/30 rounded-lg transition-colors ${isRightSide ? 'flex-row-reverse' : ''}`}>
+        <Avatar className="h-10 w-10 border-2 border-border">
+          {getPlayerImage(card.player, card.team) && (
+            <AvatarImage src={getPlayerImage(card.player, card.team)!} alt={formatPlayerName(card.player)} />
+          )}
+          <AvatarFallback className="bg-madrid-blue text-white text-xs">
+            {getPlayerInitials(card.player)}
+          </AvatarFallback>
+        </Avatar>
+        
+        <div className={`flex-1 ${isRightSide ? 'text-right' : ''}`}>
+          <div className="font-semibold text-foreground">
+            {formatPlayerName(card.player)}
+          </div>
+          <div className="text-sm text-muted-foreground flex items-center gap-1">
+            <Flag className="h-3 w-3" />
+            Faute
+          </div>
+        </div>
+
+        {/* Carton visuel */}
+        <div className={`w-6 h-8 rounded-sm shadow-md ${isRed ? 'bg-red-600' : 'bg-yellow-400'}`}>
+        </div>
+
+        <Badge className="bg-green-600 hover:bg-green-700 text-white min-w-[45px] justify-center font-bold">
+          {card.minute}'
+        </Badge>
+      </div>
     );
   };
 
   const sortedGoals = sortEvents(goals);
   const sortedSubstitutions = sortEvents(substitutions);
-  const sortedCards = sortEvents(yellowCardEvents);
+  const sortedCards = sortEvents(allCardEvents);
 
   return (
     <Card>
