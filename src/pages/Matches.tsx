@@ -21,6 +21,7 @@ const Matches = () => {
   const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [showFormations, setShowFormations] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [selectedCompetition, setSelectedCompetition] = useState<string>("all");
   const {
     upcomingMatches,
     pastMatches,
@@ -93,6 +94,22 @@ const Matches = () => {
   };
   const formattedUpcomingMatches = upcomingMatches.map(formatMatchForDisplay);
   const formattedPastMatches = pastMatches.map(formatMatchForDisplay);
+
+  // Filtrer par compétition
+  const filterByCompetition = (matches: any[]) => {
+    if (selectedCompetition === "all") return matches;
+    return matches.filter(match => 
+      match.competition?.toLowerCase() === selectedCompetition.toLowerCase()
+    );
+  };
+
+  const filteredUpcomingMatches = filterByCompetition(formattedUpcomingMatches);
+  const filteredPastMatches = filterByCompetition(formattedPastMatches);
+
+  // Obtenir la liste unique des compétitions
+  const competitions = Array.from(
+    new Set([...upcomingMatches, ...pastMatches].map(m => m.competition).filter(Boolean))
+  );
   const formatMatchDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('fr-FR', {
@@ -158,20 +175,43 @@ const Matches = () => {
               {error}
             </div>}
           
+          {/* Filtres de compétition */}
+          <div className="mb-6 flex flex-wrap gap-2">
+            <Button
+              variant={selectedCompetition === "all" ? "default" : "outline"}
+              onClick={() => setSelectedCompetition("all")}
+              size="sm"
+              className="transition-all duration-200"
+            >
+              Toutes les compétitions
+            </Button>
+            {competitions.map((comp) => (
+              <Button
+                key={comp}
+                variant={selectedCompetition === comp ? "default" : "outline"}
+                onClick={() => setSelectedCompetition(comp as string)}
+                size="sm"
+                className="transition-all duration-200"
+              >
+                {comp}
+              </Button>
+            ))}
+          </div>
+          
           <Tabs defaultValue="upcoming" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="upcoming">Prochains matchs ({formattedUpcomingMatches.length})</TabsTrigger>
-              <TabsTrigger value="past">Matchs passés ({formattedPastMatches.length})</TabsTrigger>
+              <TabsTrigger value="upcoming">Prochains matchs ({filteredUpcomingMatches.length})</TabsTrigger>
+              <TabsTrigger value="past">Matchs passés ({filteredPastMatches.length})</TabsTrigger>
             </TabsList>
             
             <TabsContent value="upcoming">
               {loading ? <div className="flex justify-center py-12">
                   <RefreshCw className="h-8 w-8 animate-spin text-madrid-blue" />
-                </div> : formattedUpcomingMatches.length === 0 ? <div className="text-center py-12 text-gray-500">
+                </div> : filteredUpcomingMatches.length === 0 ? <div className="text-center py-12 text-gray-500">
                   <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Aucun match programmé pour le moment</p>
                 </div> : <div className="grid gap-6">
-                  {formattedUpcomingMatches.map(match => <Card key={match.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleOpenMatchDetail(match)}>
+                  {filteredUpcomingMatches.map(match => <Card key={match.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleOpenMatchDetail(match)}>
                     <CardContent className="p-0">
                       <div className="bg-gradient-to-r from-madrid-blue to-blue-800 p-4">
                         <div className="flex justify-between items-center text-white">
@@ -254,11 +294,11 @@ const Matches = () => {
             <TabsContent value="past">
               {loading ? <div className="flex justify-center py-12">
                   <RefreshCw className="h-8 w-8 animate-spin text-madrid-blue" />
-                </div> : formattedPastMatches.length === 0 ? <div className="text-center py-12 text-gray-500">
+                </div> : filteredPastMatches.length === 0 ? <div className="text-center py-12 text-gray-500">
                   <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Aucun match passé trouvé</p>
                 </div> : <div className="grid gap-6">
-                  {formattedPastMatches.map(match => <Card key={match.id} className="overflow-hidden">
+                  {filteredPastMatches.map(match => <Card key={match.id} className="overflow-hidden">
                     <CardContent className="p-0">
                       <div className="bg-gradient-to-r from-madrid-blue to-blue-800 p-4">
                         <div className="flex justify-between items-center text-white">
@@ -320,13 +360,14 @@ const Matches = () => {
                                     return (
                                       <>
                                         {realMadridGoals.length > 0 && (
-                                          <div className="space-y-1.5">
+                                          <div className="space-y-1.5 animate-fade-in">
                                             <div className="text-xs font-medium text-madrid-gold">Real Madrid</div>
                                             <div className="flex flex-wrap gap-2 justify-center">
                                               {realMadridGoals.map((scorer: any, idx: number) => (
                                                 <div 
                                                   key={idx}
-                                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-madrid-gold/20 text-madrid-gold border border-madrid-gold/30"
+                                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-madrid-gold/20 text-madrid-gold border border-madrid-gold/30 animate-scale-in hover-scale"
+                                                  style={{ animationDelay: `${idx * 100}ms` }}
                                                 >
                                                   <Goal className="h-3.5 w-3.5" />
                                                   <span className="font-medium">{scorer.name}</span>
@@ -346,7 +387,7 @@ const Matches = () => {
                                         )}
                                         
                                         {otherGoals.length > 0 && (
-                                          <div className="space-y-1.5">
+                                          <div className="space-y-1.5 animate-fade-in" style={{ animationDelay: `${realMadridGoals.length * 100}ms` }}>
                                             <div className="text-xs font-medium text-muted-foreground">
                                               {otherGoals[0]?.team?.replace(/_/g, ' ').split(' ').map((w: string) => 
                                                 w.charAt(0).toUpperCase() + w.slice(1)
@@ -356,7 +397,8 @@ const Matches = () => {
                                               {otherGoals.map((scorer: any, idx: number) => (
                                                 <div 
                                                   key={idx}
-                                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-muted/50 text-foreground border border-border/30"
+                                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-muted/50 text-foreground border border-border/30 animate-scale-in hover-scale"
+                                                  style={{ animationDelay: `${(realMadridGoals.length + idx) * 100}ms` }}
                                                 >
                                                   <Goal className="h-3.5 w-3.5" />
                                                   <span className="font-medium">{scorer.name}</span>
