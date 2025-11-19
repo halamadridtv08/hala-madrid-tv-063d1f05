@@ -10,56 +10,68 @@ interface MatchStatisticsProps {
 export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStatisticsProps) => {
   if (!matchDetails) return null;
 
-  // Extract match_details from the database
-  const matchData = matchDetails?.match || {};
-  const events = matchDetails?.événements || {};
-  
-  // Parse possession percentages
-  const parsePossession = (possessionStr: string) => {
-    return parseInt(possessionStr?.replace('%', '')?.trim() || '0');
+  console.log("Match details:", matchDetails);
+
+  // Normaliser les noms d'équipe pour correspondre aux clés JSON
+  const normalizeTeamName = (name: string) => {
+    return name.toLowerCase().replace(/\s+/g, '_');
   };
 
-  const homePossession = parsePossession(matchData.possession?.[matchData.équipes?.home] || '0');
-  const awayPossession = parsePossession(matchData.possession?.[matchData.équipes?.away] || '0');
+  const homeKey = normalizeTeamName(homeTeam);
+  const awayKey = normalizeTeamName(awayTeam);
 
-  // Get yellow and red cards
-  const yellowCards = events?.cartes?.jaune?.[0] || {};
-  const redCards = events?.cartes?.rouge?.[0] || {};
+  // Extraire les statistiques depuis la structure JSON correcte
+  const statistics = matchDetails.statistics || {};
+  const possession = matchDetails.possession || {};
+  const cards = matchDetails.cards || {};
 
-  // Safe access to stats from match_details
+  console.log("Statistics:", statistics);
+  console.log("Possession:", possession);
+  console.log("Cards:", cards);
+
+  // Parse possession percentages
+  const parsePossession = (possessionStr: string) => {
+    if (!possessionStr) return 0;
+    return parseInt(possessionStr.replace('%', '').trim());
+  };
+
+  const homePossession = parsePossession(possession[homeKey] || '0%');
+  const awayPossession = parsePossession(possession[awayKey] || '0%');
+
+  // Get statistics data
   const stats = {
     attack: {
       totalShots: { 
-        home: matchData?.tirs_totaux?.[matchData.équipes?.home] || 0, 
-        away: matchData?.tirs_totaux?.[matchData.équipes?.away] || 0 
+        home: statistics.shots?.total?.[homeKey] || 0, 
+        away: statistics.shots?.total?.[awayKey] || 0 
       },
       shotsOnTarget: { 
-        home: matchData?.tirs_cadrés?.[matchData.équipes?.home] || 0, 
-        away: matchData?.tirs_cadrés?.[matchData.équipes?.away] || 0 
+        home: statistics.shots?.on_target?.[homeKey] || 0, 
+        away: statistics.shots?.on_target?.[awayKey] || 0 
       },
       shotsOffTarget: { 
-        home: matchData?.tirs_non_cadrés?.[matchData.équipes?.home] || 0, 
-        away: matchData?.tirs_non_cadrés?.[matchData.équipes?.away] || 0 
+        home: statistics.shots?.off_target?.[homeKey] || 0, 
+        away: statistics.shots?.off_target?.[awayKey] || 0 
       }
     },
     defense: {
       saves: { 
-        home: matchData?.arrêts_gardien?.[matchData.équipes?.home] || 0, 
-        away: matchData?.arrêts_gardien?.[matchData.équipes?.away] || 0 
+        home: statistics.goalkeeper_saves?.[homeKey] || 0, 
+        away: statistics.goalkeeper_saves?.[awayKey] || 0 
       },
       tackles: { 
-        home: matchData?.tacles?.[matchData.équipes?.home] || 0, 
-        away: matchData?.tacles?.[matchData.équipes?.away] || 0 
+        home: statistics.tackles?.[homeKey] || 0, 
+        away: statistics.tackles?.[awayKey] || 0 
       }
     },
     distribution: {
       totalPasses: { 
-        home: matchData?.passes_totales?.[matchData.équipes?.home] || 0, 
-        away: matchData?.passes_totales?.[matchData.équipes?.away] || 0 
+        home: statistics.passes?.[homeKey]?.total || 0, 
+        away: statistics.passes?.[awayKey]?.total || 0 
       },
       completedPasses: { 
-        home: matchData?.passes_réussies?.[matchData.équipes?.home] || 0, 
-        away: matchData?.passes_réussies?.[matchData.équipes?.away] || 0 
+        home: statistics.passes?.[homeKey]?.completed || 0, 
+        away: statistics.passes?.[awayKey]?.completed || 0 
       },
       possession: {
         home: homePossession,
@@ -68,16 +80,16 @@ export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStati
     },
     discipline: {
       fouls: { 
-        home: events?.fautes?.filter(f => f.team === matchData.équipes?.home)?.length || 0, 
-        away: events?.fautes?.filter(f => f.team === matchData.équipes?.away)?.length || 0 
+        home: statistics.fouls?.[homeKey] || 0, 
+        away: statistics.fouls?.[awayKey] || 0 
       },
       yellowCards: { 
-        home: yellowCards[matchData.équipes?.home] || 0, 
-        away: yellowCards[matchData.équipes?.away] || 0 
+        home: cards.yellow?.[homeKey] || 0, 
+        away: cards.yellow?.[awayKey] || 0 
       },
       redCards: { 
-        home: redCards[matchData.équipes?.home] || 0, 
-        away: redCards[matchData.équipes?.away] || 0 
+        home: cards.red?.[homeKey] || 0, 
+        away: cards.red?.[awayKey] || 0 
       }
     }
   };
