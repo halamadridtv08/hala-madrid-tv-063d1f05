@@ -319,7 +319,7 @@ export const FormationManagerV2: React.FC = () => {
       }
     }
 
-    fetchFormation();
+    await fetchFormation();
     toast.success("Template de formation appliqué");
   };
 
@@ -360,7 +360,7 @@ export const FormationManagerV2: React.FC = () => {
           .update({ is_starter: false })
           .eq('id', targetFieldPlayer.id);
 
-        fetchFormation();
+        await fetchFormation();
         toast.success("Joueurs échangés");
         setActiveId(null);
         return;
@@ -412,7 +412,7 @@ export const FormationManagerV2: React.FC = () => {
             .single();
 
           if (!error) {
-            fetchFormation();
+            await fetchFormation();
             toast.success("Joueur ajouté au terrain");
           }
         }
@@ -442,7 +442,7 @@ export const FormationManagerV2: React.FC = () => {
           .single();
 
         if (!error) {
-          fetchFormation();
+          await fetchFormation();
           toast.success("Joueur ajouté aux remplaçants");
         }
       }
@@ -494,7 +494,7 @@ export const FormationManagerV2: React.FC = () => {
           })
           .eq('id', targetPlayer.id);
 
-        fetchFormation();
+        await fetchFormation();
         toast.success("Positions échangées");
         setActiveId(null);
         return;
@@ -545,7 +545,7 @@ export const FormationManagerV2: React.FC = () => {
             })
             .eq('id', player.id);
 
-          fetchFormation();
+          await fetchFormation();
         }
       }
     }
@@ -559,7 +559,7 @@ export const FormationManagerV2: React.FC = () => {
           .update({ is_starter: false })
           .eq('id', player.id);
 
-        fetchFormation();
+        await fetchFormation();
         toast.success("Joueur déplacé vers les remplaçants");
       }
     }
@@ -577,11 +577,19 @@ export const FormationManagerV2: React.FC = () => {
         const pitchElement = document.querySelector('[data-pitch="true"]');
         if (pitchElement) {
           const rect = pitchElement.getBoundingClientRect();
-          const mouseX = event.activatorEvent ? (event.activatorEvent as PointerEvent).clientX : rect.left + rect.width / 2;
-          const mouseY = event.activatorEvent ? (event.activatorEvent as PointerEvent).clientY : rect.top + rect.height / 2;
           
-          let percentX = ((mouseX - rect.left) / rect.width) * 100;
-          let percentY = ((mouseY - rect.top) / rect.height) * 100;
+          let percentX = 50; // Position par défaut au centre
+          let percentY = 50;
+          
+          // Si on a l'événement, utiliser les coordonnées de la souris
+          if (event.activatorEvent) {
+            const activatorEvent = event.activatorEvent as PointerEvent;
+            const mouseX = activatorEvent.clientX;
+            const mouseY = activatorEvent.clientY;
+            
+            percentX = ((mouseX - rect.left) / rect.width) * 100;
+            percentY = ((mouseY - rect.top) / rect.height) * 100;
+          }
 
           // Apply grid snapping if enabled
           if (showGrid) {
@@ -599,7 +607,7 @@ export const FormationManagerV2: React.FC = () => {
             })
             .eq('id', player.id);
 
-          fetchFormation();
+          await fetchFormation();
           toast.success("Joueur déplacé sur le terrain");
         }
       }
@@ -633,7 +641,7 @@ export const FormationManagerV2: React.FC = () => {
     // Supprimer les changements de l'historique
     setPositionHistory(prev => prev.filter(h => h.timestamp !== timestamp));
     
-    fetchFormation();
+    await fetchFormation();
     toast.success("Changement annulé");
   };
 
@@ -762,7 +770,7 @@ export const FormationManagerV2: React.FC = () => {
       .from('match_formation_players')
       .insert(newPlayers);
 
-    fetchFormation();
+    await fetchFormation();
     toast.success("Formation copiée avec succès");
   };
 
