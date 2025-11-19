@@ -55,7 +55,7 @@ export const DraggablePlayer = ({
         style={{ ...combinedStyle, ...transformStyle }}
         {...listeners}
         {...attributes}
-        className={`absolute ${isLocked ? 'cursor-not-allowed' : 'cursor-move'} ${isDragging ? 'opacity-50' : ''} transition-all duration-300`}
+        className={`absolute ${isLocked ? 'cursor-not-allowed' : 'cursor-move'} ${isDragging ? 'opacity-50' : ''}`}
       >
         <div className="relative" style={{ transform: 'translate(-50%, -50%)' }}>
           {imageUrl ? (
