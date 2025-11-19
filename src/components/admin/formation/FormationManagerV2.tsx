@@ -432,6 +432,39 @@ export const FormationManagerV2: React.FC = () => {
       }
     }
 
+    // Swap two players on field - drag one field player onto another
+    if (isFromField && over.id !== 'field' && over.id !== 'substitutes') {
+      const targetPlayer = fieldPlayers.find(p => p.id === over.id || p.player_id === over.id);
+      const draggedPlayer = fieldPlayers.find(p => p.id === activePlayerId || p.player_id === activePlayerId);
+      
+      if (targetPlayer && draggedPlayer && targetPlayer.id && draggedPlayer.id && targetPlayer.id !== draggedPlayer.id) {
+        // Échanger les positions des deux joueurs
+        const tempX = targetPlayer.position_x;
+        const tempY = targetPlayer.position_y;
+
+        await supabase
+          .from('match_formation_players')
+          .update({
+            position_x: tempX,
+            position_y: tempY
+          })
+          .eq('id', draggedPlayer.id);
+
+        await supabase
+          .from('match_formation_players')
+          .update({
+            position_x: draggedPlayer.position_x,
+            position_y: draggedPlayer.position_y
+          })
+          .eq('id', targetPlayer.id);
+
+        fetchFormation();
+        toast.success("Positions échangées");
+        setActiveId(null);
+        return;
+      }
+    }
+
     // Move player on field
     if (isFromField && over.id === 'field') {
       const player = fieldPlayers.find(p => p.id === activePlayerId || p.player_id === activePlayerId);
