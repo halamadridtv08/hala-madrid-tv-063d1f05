@@ -253,8 +253,17 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
                     <div className="space-y-4">
                       <div>
                         <div className="flex justify-between text-sm">
+                          <span>{stats.distribution.possession.home}%</span>
+                          <span className="font-medium">Possession du ballon</span>
+                          <span>{stats.distribution.possession.away}%</span>
+                        </div>
+                        {renderProgressBar(stats.distribution.possession.home, stats.distribution.possession.away)}
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between text-sm">
                           <span>{stats.distribution.totalPasses.home}</span>
-                          <span className="font-medium">Passes totales</span>
+                          <span className="font-medium">Total des passes</span>
                           <span>{stats.distribution.totalPasses.away}</span>
                         </div>
                         {renderProgressBar(stats.distribution.totalPasses.home, stats.distribution.totalPasses.away)}
@@ -280,15 +289,6 @@ export const MatchStats = ({ match, isOpen, onClose }: MatchStatsProps) => {
                           </span>
                         </div>
                         {renderProgressBar(stats.distribution.completedPasses.home, stats.distribution.completedPasses.away)}
-                      </div>
-
-                      <div>
-                        <div className="flex justify-between text-sm">
-                          <span>{stats.distribution.possession.home}%</span>
-                          <span className="font-medium">Possession</span>
-                          <span>{stats.distribution.possession.away}%</span>
-                        </div>
-                        {renderProgressBar(stats.distribution.possession.home, stats.distribution.possession.away)}
                       </div>
                     </div>
                   </div>
