@@ -24,9 +24,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DraggablePlayer } from './DraggablePlayer';
 import { DroppableFieldPlayer } from './DroppableFieldPlayer';
-import { FootballField3D } from './FootballField3D';
 import { FORMATION_TEMPLATES, snapToGrid } from './FormationTemplates';
-import { Copy, Eye } from 'lucide-react';
+import { Copy } from 'lucide-react';
 
 interface Match {
   id: string;
@@ -93,7 +92,6 @@ export const FormationManagerV2: React.FC = () => {
   const [fieldPlayers, setFieldPlayers] = useState<FormationPlayer[]>([]);
   const [substitutes, setSubstitutes] = useState<FormationPlayer[]>([]);
   const [formationId, setFormationId] = useState<string | null>(null);
-  const [show3DView, setShow3DView] = useState<boolean>(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [previousMatches, setPreviousMatches] = useState<Match[]>([]);
 
@@ -677,14 +675,6 @@ export const FormationManagerV2: React.FC = () => {
                           <Grid3x3 className="h-4 w-4 mr-2" />
                           {showGrid ? "Grille active" : "Grille désactivée"}
                         </Button>
-                        <Button 
-                          onClick={() => setShow3DView(!show3DView)} 
-                          size="sm" 
-                          variant={show3DView ? "default" : "outline"}
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          Vue 3D
-                        </Button>
                         <Button onClick={deleteFormation} variant="destructive" size="sm">
                           <Trash2 className="h-4 w-4 mr-2" />
                           Supprimer
@@ -754,122 +744,81 @@ export const FormationManagerV2: React.FC = () => {
 
                       {/* Terrain + Remplaçants - Plus compact */}
                       <div className="col-span-3 space-y-3">
-                        {show3DView ? (
-                          <FootballField3D fieldPlayers={fieldPlayers} />
-                        ) : (
-                          <>
-                            <div className="flex items-center justify-between mb-2">
-                              <Badge variant={fieldPlayers.length === 11 ? "default" : "secondary"} className="text-sm">
-                                {fieldPlayers.length}/11 joueurs sur le terrain
-                              </Badge>
-                              {fieldPlayers.length < 11 && (
-                                <span className="text-xs text-muted-foreground">
-                                  Glissez {11 - fieldPlayers.length} joueur{11 - fieldPlayers.length > 1 ? 's' : ''} de plus
-                                </span>
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant={fieldPlayers.length === 11 ? "default" : "secondary"} className="text-sm">
+                            {fieldPlayers.length}/11 joueurs sur le terrain
+                          </Badge>
+                          {fieldPlayers.length < 11 && (
+                            <span className="text-xs text-muted-foreground">
+                              Glissez {11 - fieldPlayers.length} joueur{11 - fieldPlayers.length > 1 ? 's' : ''} de plus
+                            </span>
+                          )}
+                        </div>
+                        
+                        <DroppableField id="field">
+                          <div 
+                            className="relative w-full bg-gradient-to-b from-green-400 to-green-600 rounded-lg overflow-hidden shadow-lg" 
+                            style={{ aspectRatio: "16/11", maxHeight: "450px" }}
+                            data-pitch="true"
+                          >
+                            {/* Lignes du terrain */}
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+                              <rect x="5" y="5" width="90" height="90" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                              <line x1="5" y1="50" x2="95" y2="50" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                              <circle cx="50" cy="50" r="8" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                              <circle cx="50" cy="50" r="0.5" fill="white" opacity="0.7" />
+                              <rect x="28" y="5" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                              <rect x="38" y="5" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                              <rect x="28" y="80" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                              <rect x="38" y="88" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
+                              
+                              {/* Grille magnétique */}
+                              {showGrid && (
+                                <>
+                                  {[...Array(20)].map((_, i) => (
+                                    <line 
+                                      key={`v-${i}`} 
+                                      x1={5 + (i * 4.5)} 
+                                      y1="5" 
+                                      x2={5 + (i * 4.5)} 
+                                      y2="95" 
+                                      stroke="white" 
+                                      strokeWidth="0.1" 
+                                      opacity="0.2" 
+                                    />
+                                  ))}
+                                  {[...Array(20)].map((_, i) => (
+                                    <line 
+                                      key={`h-${i}`} 
+                                      x1="5" 
+                                      y1={5 + (i * 4.5)} 
+                                      x2="95" 
+                                      y2={5 + (i * 4.5)} 
+                                      stroke="white" 
+                                      strokeWidth="0.1" 
+                                      opacity="0.2" 
+                                    />
+                                  ))}
+                                </>
                               )}
-                            </div>
-                            
-                            {/* Légende des zones */}
-                            <div className="flex gap-2 text-xs">
-                              <div className="flex items-center gap-1">
-                                <div className="w-3 h-3 bg-yellow-500/30 border border-yellow-500"></div>
-                                <span>GK</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <div className="w-3 h-3 bg-blue-500/30 border border-blue-500"></div>
-                                <span>DEF</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <div className="w-3 h-3 bg-green-500/30 border border-green-500"></div>
-                                <span>MID</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <div className="w-3 h-3 bg-red-500/30 border border-red-500"></div>
-                                <span>ATT</span>
-                              </div>
-                            </div>
-                            
-                            <DroppableField id="field">
-                              <div 
-                                className="relative w-full bg-gradient-to-b from-green-400 to-green-600 rounded-lg overflow-hidden shadow-lg" 
-                                style={{ aspectRatio: "16/11", maxHeight: "450px" }}
-                                data-pitch="true"
-                              >
-                                {/* Zones colorées par position */}
-                                <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ zIndex: 1 }}>
-                                  {/* Zone Gardien (GK) - 85-95% */}
-                                  <rect x="5" y="85" width="90" height="10" fill="yellow" opacity="0.15" />
-                                  
-                                  {/* Zone Défense (DEF) - 65-85% */}
-                                  <rect x="5" y="65" width="90" height="20" fill="blue" opacity="0.15" />
-                                  
-                                  {/* Zone Milieu (MID) - 35-65% */}
-                                  <rect x="5" y="35" width="90" height="30" fill="green" opacity="0.15" />
-                                  
-                                  {/* Zone Attaque (ATT) - 5-35% */}
-                                  <rect x="5" y="5" width="90" height="30" fill="red" opacity="0.15" />
-                                </svg>
-                                
-                                {/* Lignes du terrain */}
-                                <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ zIndex: 2 }}>
-                                  <rect x="5" y="5" width="90" height="90" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                                  <line x1="5" y1="50" x2="95" y2="50" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                                  <circle cx="50" cy="50" r="8" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                                  <circle cx="50" cy="50" r="0.5" fill="white" opacity="0.7" />
-                                  <rect x="28" y="5" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                                  <rect x="38" y="5" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                                  <rect x="28" y="80" width="44" height="15" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                                  <rect x="38" y="88" width="24" height="7" fill="none" stroke="white" strokeWidth="0.3" opacity="0.7" />
-                                  
-                                  {/* Grille magnétique */}
-                                  {showGrid && (
-                                    <>
-                                      {[...Array(20)].map((_, i) => (
-                                        <line 
-                                          key={`v-${i}`} 
-                                          x1={5 + (i * 4.5)} 
-                                          y1="5" 
-                                          x2={5 + (i * 4.5)} 
-                                          y2="95" 
-                                          stroke="white" 
-                                          strokeWidth="0.1" 
-                                          opacity="0.2" 
-                                        />
-                                      ))}
-                                      {[...Array(20)].map((_, i) => (
-                                        <line 
-                                          key={`h-${i}`} 
-                                          x1="5" 
-                                          y1={5 + (i * 4.5)} 
-                                          x2="95" 
-                                          y2={5 + (i * 4.5)} 
-                                          stroke="white" 
-                                          strokeWidth="0.1" 
-                                          opacity="0.2" 
-                                        />
-                                      ))}
-                                    </>
-                                  )}
-                                </svg>
+                            </svg>
 
-                                {/* Joueurs sur le terrain */}
-                                {fieldPlayers.map((player) => (
-                                  <DroppableFieldPlayer
-                                    key={player.id}
-                                    player={player}
-                                    onDelete={() => deletePlayer(player.id!)}
-                                    style={{
-                                      left: `${player.position_x}%`,
-                                      top: `${player.position_y}%`,
-                                      transform: 'translate(-50%, -50%)',
-                                      zIndex: 10
-                                    }}
-                                  />
-                                ))}
-                              </div>
-                            </DroppableField>
-                          </>
-                        )}
+                            {/* Joueurs sur le terrain */}
+                            {fieldPlayers.map((player) => (
+                              <DroppableFieldPlayer
+                                key={player.id}
+                                player={player}
+                                onDelete={() => deletePlayer(player.id!)}
+                                style={{
+                                  left: `${player.position_x}%`,
+                                  top: `${player.position_y}%`,
+                                  transform: 'translate(-50%, -50%)',
+                                  zIndex: 10
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </DroppableField>
 
                         {/* Zone des remplaçants - Plus compacte */}
                         <Card>
