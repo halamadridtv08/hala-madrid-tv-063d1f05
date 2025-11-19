@@ -363,6 +363,53 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
   const sortedSubstitutions = sortEvents(substitutions);
   const sortedCards = sortEvents(allCardEvents);
 
+  // Créer une timeline combinée quand le tri par minute est activé
+  const combinedTimeline = sortByMinute ? [
+    ...goals.map(g => ({ ...g, eventType: 'goal' })),
+    ...substitutions.map(s => ({ ...s, eventType: 'substitution' })),
+    ...allCardEvents.map(c => ({ ...c, eventType: 'card' })),
+    ...(matchDetails.var || []).map((v: any) => ({ ...v, eventType: 'var' })),
+    ...(matchDetails.chances || []).map((ch: any) => ({ ...ch, eventType: 'chance' }))
+  ].sort((a, b) => a.minute - b.minute) : [];
+
+  // Fonction pour rendre un événement en fonction de son type
+  const renderEvent = (event: any, index: number) => {
+    switch (event.eventType) {
+      case 'goal':
+        return <GoalEvent key={`goal-${index}`} goal={event} index={index} />;
+      case 'substitution':
+        return <SubstitutionEvent key={`sub-${index}`} sub={event} index={index} />;
+      case 'card':
+        return <CardEvent key={`card-${index}`} card={event} index={index} />;
+      case 'var':
+        return (
+          <EventRow
+            key={`var-${index}`}
+            player={event.player}
+            detail={event.decision}
+            minute={event.minute}
+            icon={FileWarning}
+            iconColor="text-purple-600"
+            team={event.team}
+          />
+        );
+      case 'chance':
+        return (
+          <EventRow
+            key={`chance-${index}`}
+            player={event.player}
+            detail={event.type}
+            minute={event.minute}
+            icon={Megaphone}
+            iconColor="text-blue-600"
+            team={event.team}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -378,71 +425,87 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
           />
         </div>
 
-        {/* Section Buts */}
-        {sortedGoals.length > 0 && (
-          <EventSection title="BUTS" icon={Goal}>
-            {sortedGoals.map((goal: any, index: number) => (
-              <GoalEvent key={index} goal={goal} index={index} />
-            ))}
-          </EventSection>
-        )}
-
-        {/* Section VAR - si disponible */}
-        {matchDetails.var && matchDetails.var.length > 0 && (
-          <EventSection title="VAR" icon={FileWarning}>
-            {matchDetails.var.map((var_event: any, index: number) => (
-              <EventRow
-                key={index}
-                player={var_event.player}
-                detail={var_event.decision}
-                minute={var_event.minute}
-                icon={FileWarning}
-                iconColor="text-purple-600"
-                team={var_event.team}
-              />
-            ))}
-          </EventSection>
-        )}
-
-        {/* Section Occasions - si disponible */}
-        {matchDetails.chances && matchDetails.chances.length > 0 && (
-          <EventSection title="OCCASIONS" icon={Megaphone}>
-            {matchDetails.chances.map((chance: any, index: number) => (
-              <EventRow
-                key={index}
-                player={chance.player}
-                detail={chance.type}
-                minute={chance.minute}
-                icon={Megaphone}
-                iconColor="text-blue-600"
-                team={chance.team}
-              />
-            ))}
-          </EventSection>
-        )}
-
-        {/* Section Cartes */}
-        {sortedCards.length > 0 && (
-          <EventSection title="CARTES" icon={Flag}>
-            {sortedCards.map((card: any, index: number) => (
-              <CardEvent key={index} card={card} index={index} />
-            ))}
-          </EventSection>
-        )}
-
-        {/* Section Substitutions */}
-        {sortedSubstitutions.length > 0 && (
-          <EventSection title="SUBSTITUTIONS" icon={ArrowRightLeft}>
-            {sortedSubstitutions.map((sub: any, index: number) => (
-              <SubstitutionEvent key={index} sub={sub} index={index} />
-            ))}
-          </EventSection>
-        )}
-
-        {sortedGoals.length === 0 && sortedSubstitutions.length === 0 && sortedCards.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            Aucun événement disponible pour ce match
+        {/* Affichage par minute (timeline combinée) */}
+        {sortByMinute ? (
+          <div className="space-y-2">
+            {combinedTimeline.length > 0 ? (
+              combinedTimeline.map((event, index) => renderEvent(event, index))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Aucun événement disponible pour ce match
+              </div>
+            )}
           </div>
+        ) : (
+          /* Affichage par catégorie */
+          <>
+            {/* Section Buts */}
+            {sortedGoals.length > 0 && (
+              <EventSection title="BUTS" icon={Goal}>
+                {sortedGoals.map((goal: any, index: number) => (
+                  <GoalEvent key={index} goal={goal} index={index} />
+                ))}
+              </EventSection>
+            )}
+
+            {/* Section VAR - si disponible */}
+            {matchDetails.var && matchDetails.var.length > 0 && (
+              <EventSection title="VAR" icon={FileWarning}>
+                {matchDetails.var.map((var_event: any, index: number) => (
+                  <EventRow
+                    key={index}
+                    player={var_event.player}
+                    detail={var_event.decision}
+                    minute={var_event.minute}
+                    icon={FileWarning}
+                    iconColor="text-purple-600"
+                    team={var_event.team}
+                  />
+                ))}
+              </EventSection>
+            )}
+
+            {/* Section Occasions - si disponible */}
+            {matchDetails.chances && matchDetails.chances.length > 0 && (
+              <EventSection title="OCCASIONS" icon={Megaphone}>
+                {matchDetails.chances.map((chance: any, index: number) => (
+                  <EventRow
+                    key={index}
+                    player={chance.player}
+                    detail={chance.type}
+                    minute={chance.minute}
+                    icon={Megaphone}
+                    iconColor="text-blue-600"
+                    team={chance.team}
+                  />
+                ))}
+              </EventSection>
+            )}
+
+            {/* Section Cartes */}
+            {sortedCards.length > 0 && (
+              <EventSection title="CARTES" icon={Flag}>
+                {sortedCards.map((card: any, index: number) => (
+                  <CardEvent key={index} card={card} index={index} />
+                ))}
+              </EventSection>
+            )}
+
+            {/* Section Substitutions */}
+            {sortedSubstitutions.length > 0 && (
+              <EventSection title="SUBSTITUTIONS" icon={ArrowRightLeft}>
+                {sortedSubstitutions.map((sub: any, index: number) => (
+                  <SubstitutionEvent key={index} sub={sub} index={index} />
+                ))}
+              </EventSection>
+            )}
+
+            {sortedGoals.length === 0 && sortedSubstitutions.length === 0 && sortedCards.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                Aucun événement disponible pour ce match
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
