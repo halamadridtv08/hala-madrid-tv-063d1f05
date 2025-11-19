@@ -27,7 +27,7 @@ export const DroppableFieldPlayer = ({ player, onDelete, onToggleLock, isLocked,
     <div
       ref={setNodeRef}
       style={style}
-      className={`absolute transition-all duration-300 ease-in-out ${isOver ? 'ring-2 ring-yellow-400 rounded-full scale-110' : ''}`}
+      className={`absolute ${isOver ? 'ring-2 ring-yellow-400 rounded-full scale-110' : ''}`}
     >
       <DraggablePlayer
         id={player.id || player.player_id}

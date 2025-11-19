@@ -226,8 +226,17 @@ export const FormationManagerV2: React.FC = () => {
       setFormationId(data.id);
       setSelectedFormation(data.formation);
       const players = data.match_formation_players as any[] || [];
-      setFieldPlayers(players.filter(p => p.is_starter));
-      setSubstitutes(players.filter(p => !p.is_starter));
+      
+      // Filtrer et nettoyer les doublons
+      const starters = players.filter(p => p.is_starter);
+      const subs = players.filter(p => !p.is_starter);
+      
+      // Vérifier qu'il n'y a pas de doublons entre starters et remplaçants
+      const starterIds = new Set(starters.map(p => p.id));
+      const cleanSubs = subs.filter(p => !starterIds.has(p.id));
+      
+      setFieldPlayers(starters);
+      setSubstitutes(cleanSubs);
     } else {
       setFormationId(null);
       setFieldPlayers([]);
