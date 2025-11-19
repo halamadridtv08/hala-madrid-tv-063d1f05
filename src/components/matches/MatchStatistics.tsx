@@ -1,6 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { BarChart3 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Activity, Shield, Share2, Flag } from "lucide-react";
 
 interface MatchStatisticsProps {
   matchDetails: any;
@@ -9,165 +8,251 @@ interface MatchStatisticsProps {
 }
 
 export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStatisticsProps) => {
-  if (!matchDetails || !matchDetails.statistics) return null;
+  if (!matchDetails) return null;
 
-  const stats = matchDetails.statistics;
-
-  const formatTeamName = (team: string) => {
-    if (team === 'real_madrid') return 'Real Madrid';
-    return team.replace(/_/g, ' ').split(' ').map((word: string) => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
+  // Extract match_details from the database
+  const matchData = matchDetails?.match || {};
+  const events = matchDetails?.événements || {};
+  
+  // Parse possession percentages
+  const parsePossession = (possessionStr: string) => {
+    return parseInt(possessionStr?.replace('%', '')?.trim() || '0');
   };
 
-  const getTeamKey = (teamName: string) => {
-    const normalized = teamName.toLowerCase().replace(/\s+/g, '_');
-    if (normalized === 'real_madrid') return 'real_madrid';
-    return Object.keys(stats.possession || {})[0] === 'real_madrid' 
-      ? Object.keys(stats.possession || {})[1] 
-      : Object.keys(stats.possession || {})[0];
+  const homePossession = parsePossession(matchData.possession?.[matchData.équipes?.home] || '0');
+  const awayPossession = parsePossession(matchData.possession?.[matchData.équipes?.away] || '0');
+
+  // Get yellow and red cards
+  const yellowCards = events?.cartes?.jaune?.[0] || {};
+  const redCards = events?.cartes?.rouge?.[0] || {};
+
+  // Safe access to stats from match_details
+  const stats = {
+    attack: {
+      totalShots: { 
+        home: matchData?.tirs_totaux?.[matchData.équipes?.home] || 0, 
+        away: matchData?.tirs_totaux?.[matchData.équipes?.away] || 0 
+      },
+      shotsOnTarget: { 
+        home: matchData?.tirs_cadrés?.[matchData.équipes?.home] || 0, 
+        away: matchData?.tirs_cadrés?.[matchData.équipes?.away] || 0 
+      },
+      shotsOffTarget: { 
+        home: matchData?.tirs_non_cadrés?.[matchData.équipes?.home] || 0, 
+        away: matchData?.tirs_non_cadrés?.[matchData.équipes?.away] || 0 
+      }
+    },
+    defense: {
+      saves: { 
+        home: matchData?.arrêts_gardien?.[matchData.équipes?.home] || 0, 
+        away: matchData?.arrêts_gardien?.[matchData.équipes?.away] || 0 
+      },
+      tackles: { 
+        home: matchData?.tacles?.[matchData.équipes?.home] || 0, 
+        away: matchData?.tacles?.[matchData.équipes?.away] || 0 
+      }
+    },
+    distribution: {
+      totalPasses: { 
+        home: matchData?.passes_totales?.[matchData.équipes?.home] || 0, 
+        away: matchData?.passes_totales?.[matchData.équipes?.away] || 0 
+      },
+      completedPasses: { 
+        home: matchData?.passes_réussies?.[matchData.équipes?.home] || 0, 
+        away: matchData?.passes_réussies?.[matchData.équipes?.away] || 0 
+      },
+      possession: {
+        home: homePossession,
+        away: awayPossession
+      }
+    },
+    discipline: {
+      fouls: { 
+        home: events?.fautes?.filter(f => f.team === matchData.équipes?.home)?.length || 0, 
+        away: events?.fautes?.filter(f => f.team === matchData.équipes?.away)?.length || 0 
+      },
+      yellowCards: { 
+        home: yellowCards[matchData.équipes?.home] || 0, 
+        away: yellowCards[matchData.équipes?.away] || 0 
+      },
+      redCards: { 
+        home: redCards[matchData.équipes?.home] || 0, 
+        away: redCards[matchData.équipes?.away] || 0 
+      }
+    }
   };
 
-  const homeKey = getTeamKey(homeTeam);
-  const awayKey = getTeamKey(awayTeam);
-
-  const StatRow = ({ 
-    label, 
-    homeValue, 
-    awayValue, 
-    isPercentage = false 
-  }: { 
-    label: string; 
-    homeValue: number | string; 
-    awayValue: number | string;
-    isPercentage?: boolean;
-  }) => {
-    const homeNum = typeof homeValue === 'string' ? parseInt(homeValue) : homeValue;
-    const awayNum = typeof awayValue === 'string' ? parseInt(awayValue) : awayValue;
-    const total = homeNum + awayNum;
-    const homePercent = total > 0 ? (homeNum / total) * 100 : 50;
+  const renderProgressBar = (homeValue: number, awayValue: number) => {
+    const total = homeValue + awayValue;
+    const homePercent = total === 0 ? 50 : Math.round((homeValue / total) * 100);
+    const awayPercent = total === 0 ? 50 : 100 - homePercent;
 
     return (
-      <div className="space-y-2">
-        <div className="flex justify-between items-center text-sm">
-          <span className="font-semibold">{homeValue}{isPercentage ? '%' : ''}</span>
-          <span className="text-muted-foreground">{label}</span>
-          <span className="font-semibold">{awayValue}{isPercentage ? '%' : ''}</span>
-        </div>
-        <div className="relative h-2 bg-muted rounded-full overflow-hidden">
-          <div 
-            className="absolute left-0 h-full bg-madrid-blue transition-all"
-            style={{ width: `${homePercent}%` }}
-          />
-          <div 
-            className="absolute right-0 h-full bg-gray-400 transition-all"
-            style={{ width: `${100 - homePercent}%` }}
-          />
-        </div>
+      <div className="flex h-2 my-2 w-full bg-gray-200 rounded-full overflow-hidden">
+        <div 
+          className="bg-madrid-blue" 
+          style={{ width: `${homePercent}%` }}
+        ></div>
+        <div 
+          className="bg-blue-500" 
+          style={{ width: `${awayPercent}%` }}
+        ></div>
       </div>
     );
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <BarChart3 className="h-5 w-5" />
-          Statistiques du match
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* En-tête avec les noms des équipes */}
-        <div className="flex justify-between text-sm font-medium pb-4 border-b">
-          <span>{formatTeamName(homeTeam)}</span>
-          <span>{formatTeamName(awayTeam)}</span>
+    <Card className="mt-6">
+      <CardContent className="pt-6">
+        <div className="space-y-8">
+          {/* Statistiques d'attaque */}
+          <div>
+            <h3 className="text-lg font-semibold flex items-center mb-4">
+              <Activity className="mr-2 h-5 w-5 text-madrid-blue" />
+              Attaque
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm">
+                  <span>{stats.attack.totalShots.home}</span>
+                  <span className="font-medium">Tirs totaux</span>
+                  <span>{stats.attack.totalShots.away}</span>
+                </div>
+                {renderProgressBar(stats.attack.totalShots.home, stats.attack.totalShots.away)}
+              </div>
+              
+              <div>
+                <div className="flex justify-between text-sm">
+                  <span>{stats.attack.shotsOnTarget.home}</span>
+                  <span className="font-medium">Tirs cadrés</span>
+                  <span>{stats.attack.shotsOnTarget.away}</span>
+                </div>
+                {renderProgressBar(stats.attack.shotsOnTarget.home, stats.attack.shotsOnTarget.away)}
+              </div>
+              
+              <div>
+                <div className="flex justify-between text-sm">
+                  <span>{stats.attack.shotsOffTarget.home}</span>
+                  <span className="font-medium">Tirs non cadrés</span>
+                  <span>{stats.attack.shotsOffTarget.away}</span>
+                </div>
+                {renderProgressBar(stats.attack.shotsOffTarget.home, stats.attack.shotsOffTarget.away)}
+              </div>
+            </div>
+          </div>
+          
+          {/* Statistiques de défense */}
+          <div>
+            <h3 className="text-lg font-semibold flex items-center mb-4">
+              <Shield className="mr-2 h-5 w-5 text-madrid-blue" />
+              Défense
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm">
+                  <span>{stats.defense.saves.home}</span>
+                  <span className="font-medium">Arrêts du gardien</span>
+                  <span>{stats.defense.saves.away}</span>
+                </div>
+                {renderProgressBar(stats.defense.saves.home, stats.defense.saves.away)}
+              </div>
+              
+              <div>
+                <div className="flex justify-between text-sm">
+                  <span>{stats.defense.tackles.home}</span>
+                  <span className="font-medium">Tacles</span>
+                  <span>{stats.defense.tackles.away}</span>
+                </div>
+                {renderProgressBar(stats.defense.tackles.home, stats.defense.tackles.away)}
+              </div>
+            </div>
+          </div>
+          
+          {/* Statistiques de passes */}
+          <div>
+            <h3 className="text-lg font-semibold flex items-center mb-4">
+              <Share2 className="mr-2 h-5 w-5 text-madrid-blue" />
+              Distribution
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm">
+                  <span>{stats.distribution.possession.home}%</span>
+                  <span className="font-medium">Possession du ballon</span>
+                  <span>{stats.distribution.possession.away}%</span>
+                </div>
+                {renderProgressBar(stats.distribution.possession.home, stats.distribution.possession.away)}
+              </div>
+
+              <div>
+                <div className="flex justify-between text-sm">
+                  <span>{stats.distribution.totalPasses.home}</span>
+                  <span className="font-medium">Total des passes</span>
+                  <span>{stats.distribution.totalPasses.away}</span>
+                </div>
+                {renderProgressBar(stats.distribution.totalPasses.home, stats.distribution.totalPasses.away)}
+              </div>
+              
+              <div>
+                <div className="flex justify-between text-sm">
+                  <span>{stats.distribution.completedPasses.home}</span>
+                  <span className="font-medium">Passes réussies</span>
+                  <span>{stats.distribution.completedPasses.away}</span>
+                </div>
+                {renderProgressBar(stats.distribution.completedPasses.home, stats.distribution.completedPasses.away)}
+              </div>
+              
+              <div>
+                <div className="flex justify-between text-sm">
+                  <span>
+                    {Math.round((stats.distribution.completedPasses.home / stats.distribution.totalPasses.home) * 100) || 0}%
+                  </span>
+                  <span className="font-medium">Précision des passes</span>
+                  <span>
+                    {Math.round((stats.distribution.completedPasses.away / stats.distribution.totalPasses.away) * 100) || 0}%
+                  </span>
+                </div>
+                {renderProgressBar(stats.distribution.completedPasses.home, stats.distribution.completedPasses.away)}
+              </div>
+            </div>
+          </div>
+          
+          {/* Statistiques de discipline */}
+          <div>
+            <h3 className="text-lg font-semibold flex items-center mb-4">
+              <Flag className="mr-2 h-5 w-5 text-madrid-blue" />
+              Discipline
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm">
+                  <span>{stats.discipline.fouls.home}</span>
+                  <span className="font-medium">Fautes</span>
+                  <span>{stats.discipline.fouls.away}</span>
+                </div>
+                {renderProgressBar(stats.discipline.fouls.home, stats.discipline.fouls.away)}
+              </div>
+              
+              <div>
+                <div className="flex justify-between text-sm">
+                  <span>{stats.discipline.yellowCards.home}</span>
+                  <span className="font-medium">Cartons jaunes</span>
+                  <span>{stats.discipline.yellowCards.away}</span>
+                </div>
+                {renderProgressBar(stats.discipline.yellowCards.home, stats.discipline.yellowCards.away)}
+              </div>
+              
+              <div>
+                <div className="flex justify-between text-sm">
+                  <span>{stats.discipline.redCards.home}</span>
+                  <span className="font-medium">Cartons rouges</span>
+                  <span>{stats.discipline.redCards.away}</span>
+                </div>
+                {renderProgressBar(stats.discipline.redCards.home, stats.discipline.redCards.away)}
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* Possession */}
-        {stats.possession && (
-          <StatRow
-            label="Possession"
-            homeValue={stats.possession[homeKey] || '0%'}
-            awayValue={stats.possession[awayKey] || '0%'}
-            isPercentage={true}
-          />
-        )}
-
-        {/* Tirs */}
-        {stats.shots?.total && (
-          <>
-            <StatRow
-              label="Tirs totaux"
-              homeValue={stats.shots.total[homeKey] || 0}
-              awayValue={stats.shots.total[awayKey] || 0}
-            />
-            {stats.shots.on_target && (
-              <StatRow
-                label="Tirs cadrés"
-                homeValue={stats.shots.on_target[homeKey] || 0}
-                awayValue={stats.shots.on_target[awayKey] || 0}
-              />
-            )}
-          </>
-        )}
-
-        {/* Passes */}
-        {stats.passes && (
-          <>
-            <StatRow
-              label="Passes réussies"
-              homeValue={stats.passes[homeKey]?.completed || 0}
-              awayValue={stats.passes[awayKey]?.completed || 0}
-            />
-            <StatRow
-              label="Précision des passes"
-              homeValue={stats.passes[homeKey]?.accuracy || '0%'}
-              awayValue={stats.passes[awayKey]?.accuracy || '0%'}
-              isPercentage={true}
-            />
-          </>
-        )}
-
-        {/* Autres statistiques */}
-        {stats.corners && (
-          <StatRow
-            label="Corners"
-            homeValue={stats.corners[homeKey] || 0}
-            awayValue={stats.corners[awayKey] || 0}
-          />
-        )}
-
-        {stats.fouls && (
-          <StatRow
-            label="Fautes"
-            homeValue={stats.fouls[homeKey] || 0}
-            awayValue={stats.fouls[awayKey] || 0}
-          />
-        )}
-
-        {stats.offsides && (
-          <StatRow
-            label="Hors-jeu"
-            homeValue={stats.offsides[homeKey] || 0}
-            awayValue={stats.offsides[awayKey] || 0}
-          />
-        )}
-
-        {stats.goalkeeper_saves && (
-          <StatRow
-            label="Arrêts du gardien"
-            homeValue={stats.goalkeeper_saves[homeKey] || 0}
-            awayValue={stats.goalkeeper_saves[awayKey] || 0}
-          />
-        )}
-
-        {stats.tackles && (
-          <StatRow
-            label="Tacles"
-            homeValue={stats.tackles[homeKey] || 0}
-            awayValue={stats.tackles[awayKey] || 0}
-          />
-        )}
       </CardContent>
     </Card>
   );
