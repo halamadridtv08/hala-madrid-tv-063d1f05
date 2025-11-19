@@ -337,34 +337,47 @@ export const FormationManagerV2: React.FC = () => {
 
     const activePlayerId = active.id as string;
     const isFromAvailable = availablePlayers.some(p => p.id === activePlayerId);
-    const isFromField = fieldPlayers.some(p => p.player_id === activePlayerId || p.id === activePlayerId);
-    const isFromSubstitutes = substitutes.some(p => p.player_id === activePlayerId || p.id === activePlayerId);
+    const isFromField = fieldPlayers.some(p => (p.id === activePlayerId) || (p.player_id === activePlayerId));
+    const isFromSubstitutes = substitutes.some(p => (p.id === activePlayerId) || (p.player_id === activePlayerId));
+
+    console.log('Drag end:', { activePlayerId, isFromAvailable, isFromField, isFromSubstitutes, over: over.id });
 
     // Check if dragging a substitute onto a field player (swap them)
-    const targetFieldPlayer = fieldPlayers.find(p => p.id === over.id || p.player_id === over.id);
+    const targetFieldPlayer = fieldPlayers.find(p => (p.id === over.id) || (p.player_id === over.id));
     if (isFromSubstitutes && targetFieldPlayer) {
-      const substitutePlayer = substitutes.find(p => p.id === activePlayerId || p.player_id === activePlayerId);
-      if (substitutePlayer && substitutePlayer.id && targetFieldPlayer.id) {
-        // Swap positions: substitute becomes starter at field player's position, field player becomes substitute
-        await supabase
-          .from('match_formation_players')
-          .update({
-            is_starter: true,
-            position_x: targetFieldPlayer.position_x,
-            position_y: targetFieldPlayer.position_y
-          })
-          .eq('id', substitutePlayer.id);
-
-        await supabase
-          .from('match_formation_players')
-          .update({ is_starter: false })
-          .eq('id', targetFieldPlayer.id);
-
-        fetchFormation();
-        toast.success("Joueurs échangés");
+      const substitutePlayer = substitutes.find(p => (p.id === activePlayerId) || (p.player_id === activePlayerId));
+      if (!substitutePlayer?.id || !targetFieldPlayer?.id) {
+        console.error('Missing IDs:', { substitutePlayer, targetFieldPlayer });
+        toast.error("Erreur: ID manquant");
         setActiveId(null);
         return;
       }
+      
+      // Swap positions: substitute becomes starter at field player's position, field player becomes substitute
+      const { error: error1 } = await supabase
+        .from('match_formation_players')
+        .update({
+          is_starter: true,
+          position_x: targetFieldPlayer.position_x,
+          position_y: targetFieldPlayer.position_y
+        })
+        .eq('id', substitutePlayer.id);
+
+      const { error: error2 } = await supabase
+        .from('match_formation_players')
+        .update({ is_starter: false })
+        .eq('id', targetFieldPlayer.id);
+
+      if (error1 || error2) {
+        console.error('Swap errors:', { error1, error2 });
+        toast.error("Erreur lors de l'échange");
+      } else {
+        toast.success("Joueurs échangés");
+      }
+      
+      await fetchFormation();
+      setActiveId(null);
+      return;
     }
 
     // Drag from available players to field - Check 11 players limit
@@ -393,6 +406,9 @@ export const FormationManagerV2: React.FC = () => {
             percentY = snapped.y;
           }
 
+          const imageUrl = activeTeam === "real_madrid" ? (player.profile_image_url || player.image_url) : null;
+          console.log('Adding player to field:', { player, imageUrl });
+
           const { data, error } = await supabase
             .from('match_formation_players')
             .insert({
@@ -402,7 +418,7 @@ export const FormationManagerV2: React.FC = () => {
               player_name: player.name,
               player_position: player.position,
               jersey_number: player.jersey_number,
-              player_image_url: activeTeam === "real_madrid" ? (player.profile_image_url || player.image_url) : null,
+              player_image_url: imageUrl,
               position_x: Math.max(5, Math.min(95, percentX)),
               position_y: Math.max(10, Math.min(90, percentY)),
               is_starter: true,
@@ -411,19 +427,26 @@ export const FormationManagerV2: React.FC = () => {
             .select()
             .single();
 
-          if (!error) {
-            fetchFormation();
-            toast.success("Joueur ajouté au terrain");
+          if (error) {
+            console.error('Error adding player to field:', error);
+            toast.error("Erreur lors de l'ajout du joueur");
+          } else {
+            console.log('Player added successfully:', data);
+            toast.success("Joueur ajouté sur le terrain");
+            await fetchFormation();
           }
         }
       }
+      setActiveId(null);
+      return;
     }
 
     // Drag from available players to substitutes
     if (isFromAvailable && over.id === 'substitutes') {
       const player = availablePlayers.find(p => p.id === activePlayerId);
       if (player) {
-        const { data, error } = await supabase
+        const imageUrl = activeTeam === "real_madrid" ? (player.profile_image_url || player.image_url) : null;
+        const { error } = await supabase
           .from('match_formation_players')
           .insert({
             formation_id: formationId,
@@ -432,35 +455,51 @@ export const FormationManagerV2: React.FC = () => {
             player_name: player.name,
             player_position: player.position,
             jersey_number: player.jersey_number,
-            player_image_url: activeTeam === "real_madrid" ? (player.profile_image_url || player.image_url) : null,
+            player_image_url: imageUrl,
             position_x: 0,
             position_y: 0,
             is_starter: false,
             player_rating: 0
-          })
-          .select()
-          .single();
+          });
 
-        if (!error) {
-          fetchFormation();
+        if (error) {
+          console.error('Error adding to substitutes:', error);
+          toast.error("Erreur lors de l'ajout");
+        } else {
           toast.success("Joueur ajouté aux remplaçants");
+          await fetchFormation();
         }
       }
+      setActiveId(null);
+      return;
     }
 
     // Swap two players on field - drag one field player onto another
     if (isFromField && over.id !== 'field' && over.id !== 'substitutes') {
-      const targetPlayer = fieldPlayers.find(p => p.id === over.id || p.player_id === over.id);
-      const draggedPlayer = fieldPlayers.find(p => p.id === activePlayerId || p.player_id === activePlayerId);
+      const targetPlayer = fieldPlayers.find(p => (p.id === over.id) || (p.player_id === over.id));
+      const draggedPlayer = fieldPlayers.find(p => (p.id === activePlayerId) || (p.player_id === activePlayerId));
+      
+      if (!draggedPlayer || !targetPlayer) {
+        console.error('Player not found:', { draggedPlayer, targetPlayer, activePlayerId, over: over.id });
+        setActiveId(null);
+        return;
+      }
       
       // Vérifier si les joueurs sont verrouillés
-      if (draggedPlayer && lockedPlayers.has(draggedPlayer.id || draggedPlayer.player_id)) {
+      if (lockedPlayers.has(draggedPlayer.id || draggedPlayer.player_id)) {
         toast.error("Ce joueur est verrouillé");
         setActiveId(null);
         return;
       }
       
-      if (targetPlayer && draggedPlayer && targetPlayer.id && draggedPlayer.id && targetPlayer.id !== draggedPlayer.id) {
+      if (!targetPlayer.id || !draggedPlayer.id) {
+        console.error('Missing IDs:', { targetPlayer, draggedPlayer });
+        toast.error("Erreur: ID manquant");
+        setActiveId(null);
+        return;
+      }
+      
+      if (targetPlayer.id !== draggedPlayer.id) {
         // Sauvegarder l'historique avant le changement
         setPositionHistory(prev => [...prev, {
           playerId: draggedPlayer.id,
@@ -478,7 +517,7 @@ export const FormationManagerV2: React.FC = () => {
         const tempX = targetPlayer.position_x;
         const tempY = targetPlayer.position_y;
 
-        await supabase
+        const { error: error1 } = await supabase
           .from('match_formation_players')
           .update({
             position_x: tempX,
@@ -486,7 +525,7 @@ export const FormationManagerV2: React.FC = () => {
           })
           .eq('id', draggedPlayer.id);
 
-        await supabase
+        const { error: error2 } = await supabase
           .from('match_formation_players')
           .update({
             position_x: draggedPlayer.position_x,
@@ -494,8 +533,14 @@ export const FormationManagerV2: React.FC = () => {
           })
           .eq('id', targetPlayer.id);
 
-        fetchFormation();
-        toast.success("Positions échangées");
+        if (error1 || error2) {
+          console.error('Swap errors:', { error1, error2 });
+          toast.error("Erreur lors de l'échange");
+        } else {
+          toast.success("Positions échangées");
+        }
+        
+        await fetchFormation();
         setActiveId(null);
         return;
       }
@@ -503,16 +548,27 @@ export const FormationManagerV2: React.FC = () => {
 
     // Move player on field
     if (isFromField && over.id === 'field') {
-      const player = fieldPlayers.find(p => p.id === activePlayerId || p.player_id === activePlayerId);
+      const player = fieldPlayers.find(p => (p.id === activePlayerId) || (p.player_id === activePlayerId));
+      
+      if (!player) {
+        console.error('Player not found for move:', { activePlayerId, fieldPlayers });
+        setActiveId(null);
+        return;
+      }
       
       // Vérifier si le joueur est verrouillé
-      if (player && lockedPlayers.has(player.id || player.player_id)) {
+      if (lockedPlayers.has(player.id || player.player_id)) {
         toast.error("Ce joueur est verrouillé");
         setActiveId(null);
         return;
       }
       
-      if (player && player.id) {
+      if (!player.id) {
+        console.error('Missing player ID:', player);
+        toast.error("Erreur: ID manquant");
+        setActiveId(null);
+        return;
+      }
         // Sauvegarder l'historique avant le changement
         setPositionHistory(prev => [...prev, {
           playerId: player.id!,
@@ -537,7 +593,7 @@ export const FormationManagerV2: React.FC = () => {
             percentY = snapped.y;
           }
 
-          await supabase
+          const { error } = await supabase
             .from('match_formation_players')
             .update({
               position_x: Math.max(5, Math.min(95, percentX)),
@@ -545,23 +601,43 @@ export const FormationManagerV2: React.FC = () => {
             })
             .eq('id', player.id);
 
-          fetchFormation();
+          if (error) {
+            console.error('Error moving player:', error);
+            toast.error("Erreur lors du déplacement");
+          }
+          
+          await fetchFormation();
         }
       }
+      setActiveId(null);
+      return;
     }
 
     // Move from field to substitutes
     if (isFromField && over.id === 'substitutes') {
-      const player = fieldPlayers.find(p => p.id === activePlayerId || p.player_id === activePlayerId);
-      if (player && player.id) {
-        await supabase
-          .from('match_formation_players')
-          .update({ is_starter: false })
-          .eq('id', player.id);
+      const player = fieldPlayers.find(p => (p.id === activePlayerId) || (p.player_id === activePlayerId));
+      if (!player?.id) {
+        console.error('Player not found or missing ID:', { player, activePlayerId });
+        toast.error("Erreur: joueur introuvable");
+        setActiveId(null);
+        return;
+      }
+      
+      const { error } = await supabase
+        .from('match_formation_players')
+        .update({ is_starter: false })
+        .eq('id', player.id);
 
-        fetchFormation();
+      if (error) {
+        console.error('Error moving to substitutes:', error);
+        toast.error("Erreur lors du déplacement");
+      } else {
         toast.success("Joueur déplacé vers les remplaçants");
       }
+      
+      await fetchFormation();
+      setActiveId(null);
+      return;
     }
 
     // Move from substitutes to field - Check 11 players limit
@@ -572,37 +648,50 @@ export const FormationManagerV2: React.FC = () => {
         return;
       }
 
-      const player = substitutes.find(p => p.id === activePlayerId || p.player_id === activePlayerId);
-      if (player && player.id) {
-        const pitchElement = document.querySelector('[data-pitch="true"]');
-        if (pitchElement) {
-          const rect = pitchElement.getBoundingClientRect();
-          const mouseX = event.activatorEvent ? (event.activatorEvent as PointerEvent).clientX : rect.left + rect.width / 2;
-          const mouseY = event.activatorEvent ? (event.activatorEvent as PointerEvent).clientY : rect.top + rect.height / 2;
-          
-          let percentX = ((mouseX - rect.left) / rect.width) * 100;
-          let percentY = ((mouseY - rect.top) / rect.height) * 100;
+      const player = substitutes.find(p => (p.id === activePlayerId) || (p.player_id === activePlayerId));
+      if (!player?.id) {
+        console.error('Player not found or missing ID:', { player, activePlayerId });
+        toast.error("Erreur: joueur introuvable");
+        setActiveId(null);
+        return;
+      }
+      
+      const pitchElement = document.querySelector('[data-pitch="true"]');
+      if (pitchElement) {
+        const rect = pitchElement.getBoundingClientRect();
+        const mouseX = event.activatorEvent ? (event.activatorEvent as PointerEvent).clientX : rect.left + rect.width / 2;
+        const mouseY = event.activatorEvent ? (event.activatorEvent as PointerEvent).clientY : rect.top + rect.height / 2;
+        
+        let percentX = ((mouseX - rect.left) / rect.width) * 100;
+        let percentY = ((mouseY - rect.top) / rect.height) * 100;
 
-          // Apply grid snapping if enabled
-          if (showGrid) {
-            const snapped = snapToGrid(percentX, percentY);
-            percentX = snapped.x;
-            percentY = snapped.y;
-          }
+        // Apply grid snapping if enabled
+        if (showGrid) {
+          const snapped = snapToGrid(percentX, percentY);
+          percentX = snapped.x;
+          percentY = snapped.y;
+        }
 
-          await supabase
-            .from('match_formation_players')
-            .update({
-              is_starter: true,
-              position_x: Math.max(5, Math.min(95, percentX)),
-              position_y: Math.max(10, Math.min(90, percentY))
-            })
-            .eq('id', player.id);
+        const { error } = await supabase
+          .from('match_formation_players')
+          .update({
+            is_starter: true,
+            position_x: Math.max(5, Math.min(95, percentX)),
+            position_y: Math.max(10, Math.min(90, percentY))
+          })
+          .eq('id', player.id);
 
-          fetchFormation();
+        if (error) {
+          console.error('Error moving to field:', error);
+          toast.error("Erreur lors du déplacement");
+        } else {
           toast.success("Joueur déplacé sur le terrain");
         }
+        
+        await fetchFormation();
       }
+      setActiveId(null);
+      return;
     }
 
     setActiveId(null);
