@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Trash2, UserX, Users } from "lucide-react";
+import { Plus, Trash2, UserX, Users, Download, Upload } from "lucide-react";
+import Papa from "papaparse";
 
 interface Match {
   id: string;
@@ -49,6 +50,10 @@ export function MatchLineupManager() {
   const [opposingPlayerName, setOpposingPlayerName] = useState<string>("");
   const [opposingPlayerNumber, setOpposingPlayerNumber] = useState<string>("");
   const [opposingPlayerPosition, setOpposingPlayerPosition] = useState<string>("");
+
+  // Refs for file inputs
+  const lineupsFileInputRef = useRef<HTMLInputElement>(null);
+  const absentsFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchMatches();
@@ -284,6 +289,170 @@ export function MatchLineupManager() {
     fetchAbsentPlayers();
   };
 
+  // Export functions
+  const exportLineupsToCSV = () => {
+    if (!selectedMatch) {
+      toast.error("Veuillez sélectionner un match");
+      return;
+    }
+
+    const csvData = probableLineups.map((lineup) => ({
+      team_type: lineup.team_type,
+      player_name: lineup.player_name,
+      position: lineup.position,
+      jersey_number: lineup.jersey_number || "",
+      is_starter: lineup.is_starter ? "Oui" : "Non",
+    }));
+
+    const csv = Papa.unparse(csvData);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `compositions_probables_${selectedMatch}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Export CSV réussi");
+  };
+
+  const exportAbsentsToCSV = () => {
+    if (!selectedMatch) {
+      toast.error("Veuillez sélectionner un match");
+      return;
+    }
+
+    const csvData = absentPlayers.map((player) => ({
+      team_type: player.team_type,
+      player_name: player.player_name,
+      reason: player.reason,
+      return_date: player.return_date || "",
+    }));
+
+    const csv = Papa.unparse(csvData);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `joueurs_absents_${selectedMatch}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Export CSV réussi");
+  };
+
+  // Import functions
+  const importLineupsFromCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedMatch) {
+      toast.error("Veuillez sélectionner un match");
+      return;
+    }
+
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      complete: async (results) => {
+        const validRows = results.data.filter((row: any) => 
+          row.team_type && row.player_name && row.position
+        );
+
+        if (validRows.length === 0) {
+          toast.error("Aucune donnée valide trouvée dans le fichier");
+          return;
+        }
+
+        const insertData = validRows.map((row: any) => ({
+          match_id: selectedMatch,
+          team_type: row.team_type,
+          player_name: row.player_name,
+          position: row.position,
+          jersey_number: row.jersey_number ? parseInt(row.jersey_number) : null,
+          is_starter: row.is_starter === "Oui" || row.is_starter === "true",
+          player_id: null,
+          opposing_player_id: null,
+        }));
+
+        const { error } = await supabase
+          .from("match_probable_lineups")
+          .insert(insertData);
+
+        if (error) {
+          toast.error("Erreur lors de l'import: " + error.message);
+          return;
+        }
+
+        toast.success(`${validRows.length} joueurs importés avec succès`);
+        fetchMatchLineups();
+        
+        if (lineupsFileInputRef.current) {
+          lineupsFileInputRef.current.value = "";
+        }
+      },
+      error: (error) => {
+        toast.error("Erreur lors de la lecture du fichier: " + error.message);
+      },
+    });
+  };
+
+  const importAbsentsFromCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedMatch) {
+      toast.error("Veuillez sélectionner un match");
+      return;
+    }
+
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      complete: async (results) => {
+        const validRows = results.data.filter((row: any) => 
+          row.team_type && row.player_name && row.reason
+        );
+
+        if (validRows.length === 0) {
+          toast.error("Aucune donnée valide trouvée dans le fichier");
+          return;
+        }
+
+        const insertData = validRows.map((row: any) => ({
+          match_id: selectedMatch,
+          team_type: row.team_type,
+          player_name: row.player_name,
+          reason: row.reason,
+          return_date: row.return_date || null,
+          player_id: null,
+          opposing_player_id: null,
+        }));
+
+        const { error } = await supabase
+          .from("match_absent_players")
+          .insert(insertData);
+
+        if (error) {
+          toast.error("Erreur lors de l'import: " + error.message);
+          return;
+        }
+
+        toast.success(`${validRows.length} joueurs absents importés avec succès`);
+        fetchAbsentPlayers();
+        
+        if (absentsFileInputRef.current) {
+          absentsFileInputRef.current.value = "";
+        }
+      },
+      error: (error) => {
+        toast.error("Erreur lors de la lecture du fichier: " + error.message);
+      },
+    });
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -307,6 +476,52 @@ export function MatchLineupManager() {
               </SelectContent>
             </Select>
           </div>
+
+          {selectedMatch && (
+            <div className="flex flex-wrap gap-4 pt-4 border-t">
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold">Compositions Probables</h3>
+                <div className="flex gap-2">
+                  <Button onClick={exportLineupsToCSV} variant="outline" size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    Exporter CSV
+                  </Button>
+                  <Button onClick={() => lineupsFileInputRef.current?.click()} variant="outline" size="sm">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Importer CSV
+                  </Button>
+                  <input
+                    ref={lineupsFileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={importLineupsFromCSV}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold">Joueurs Absents</h3>
+                <div className="flex gap-2">
+                  <Button onClick={exportAbsentsToCSV} variant="outline" size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    Exporter CSV
+                  </Button>
+                  <Button onClick={() => absentsFileInputRef.current?.click()} variant="outline" size="sm">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Importer CSV
+                  </Button>
+                  <input
+                    ref={absentsFileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={importAbsentsFromCSV}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {selectedMatch && (
             <Tabs defaultValue="real_madrid" className="w-full">
