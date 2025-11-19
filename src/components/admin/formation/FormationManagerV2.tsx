@@ -95,6 +95,8 @@ export const FormationManagerV2: React.FC = () => {
     timestamp: number;
   }>>([]);
   const [lockedPlayers, setLockedPlayers] = useState<Set<string>>(new Set());
+  const [dragPreviewPosition, setDragPreviewPosition] = useState<{ x: number; y: number } | null>(null);
+  const [activeDragPlayer, setActiveDragPlayer] = useState<FormationPlayer | Player | null>(null);
   
   const [availablePlayers, setAvailablePlayers] = useState<Player[]>([]);
   const [fieldPlayers, setFieldPlayers] = useState<FormationPlayer[]>([]);
@@ -323,7 +325,44 @@ export const FormationManagerV2: React.FC = () => {
   };
 
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
+    const draggedId = event.active.id as string;
+    setActiveId(draggedId);
+    
+    // Capturer le joueur en cours de drag pour le DragOverlay
+    const fieldPlayer = fieldPlayers.find(p => p.id === draggedId || p.player_id === draggedId);
+    const availablePlayer = availablePlayers.find(p => p.id === draggedId);
+    const substitutePlayer = substitutes.find(p => p.id === draggedId || p.player_id === draggedId);
+    
+    setActiveDragPlayer(fieldPlayer || substitutePlayer || availablePlayer || null);
+  };
+
+  const handleDragMove = (event: any) => {
+    if (!event.over || event.over.id !== 'field') {
+      setDragPreviewPosition(null);
+      return;
+    }
+
+    const pitchElement = document.querySelector('[data-pitch="true"]');
+    if (pitchElement && event.activatorEvent) {
+      const rect = pitchElement.getBoundingClientRect();
+      const mouseX = (event.activatorEvent as PointerEvent).clientX;
+      const mouseY = (event.activatorEvent as PointerEvent).clientY;
+      
+      let percentX = ((mouseX - rect.left) / rect.width) * 100;
+      let percentY = ((mouseY - rect.top) / rect.height) * 100;
+
+      // Apply grid snapping if enabled
+      if (showGrid) {
+        const snapped = snapToGrid(percentX, percentY);
+        percentX = snapped.x;
+        percentY = snapped.y;
+      }
+
+      setDragPreviewPosition({
+        x: Math.max(5, Math.min(95, percentX)),
+        y: Math.max(10, Math.min(90, percentY))
+      });
+    }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -331,6 +370,8 @@ export const FormationManagerV2: React.FC = () => {
 
     if (!over || !formationId) {
       setActiveId(null);
+      setDragPreviewPosition(null);
+      setActiveDragPlayer(null);
       return;
     }
 
@@ -494,7 +535,9 @@ export const FormationManagerV2: React.FC = () => {
           .eq('id', targetPlayer.id);
 
         await fetchFormation();
-        toast.success("Positions échangées");
+        toast.success(`${draggedPlayer.player_name} ⇄ ${targetPlayer.player_name} - Positions échangées !`, {
+          duration: 3000,
+        });
         setActiveId(null);
         return;
       }
@@ -613,6 +656,8 @@ export const FormationManagerV2: React.FC = () => {
     }
 
     setActiveId(null);
+    setDragPreviewPosition(null);
+    setActiveDragPlayer(null);
   };
 
   const undoLastChange = async () => {
@@ -773,17 +818,12 @@ export const FormationManagerV2: React.FC = () => {
     toast.success("Formation copiée avec succès");
   };
 
-  const activeDragData = activeId ? 
-    availablePlayers.find(p => p.id === activeId) ||
-    fieldPlayers.find(p => p.id === activeId || p.player_id === activeId) ||
-    substitutes.find(p => p.id === activeId || p.player_id === activeId)
-    : null;
-
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
     >
       <div className="space-y-4">
@@ -1043,6 +1083,29 @@ export const FormationManagerV2: React.FC = () => {
                                     )}
                                   </svg>
 
+                                  {/* Indicateur de position de prévisualisation */}
+                                  {dragPreviewPosition && activeId && (
+                                    <div
+                                      className="absolute pointer-events-none animate-pulse"
+                                      style={{
+                                        left: `${dragPreviewPosition.x}%`,
+                                        top: `${dragPreviewPosition.y}%`,
+                                        transform: 'translate(-50%, -50%)',
+                                        zIndex: 5
+                                      }}
+                                    >
+                                      <div className="relative">
+                                        {/* Cercle de prévisualisation avec animation */}
+                                        <div className="absolute inset-0 rounded-full bg-yellow-400/30 blur-xl animate-ping" style={{ width: '60px', height: '60px', transform: 'translate(-50%, -50%)', left: '50%', top: '50%' }} />
+                                        <div className="relative rounded-full border-4 border-yellow-400 border-dashed bg-yellow-400/20 backdrop-blur-sm" style={{ width: '50px', height: '50px' }}>
+                                          <div className="absolute inset-0 flex items-center justify-center">
+                                            <div className="w-2 h-2 rounded-full bg-yellow-400" />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
                                   {/* Joueurs sur le terrain */}
                                   {fieldPlayers.map((player) => (
                                     <DraggablePlayer
@@ -1154,6 +1217,29 @@ export const FormationManagerV2: React.FC = () => {
                                   )}
                                 </svg>
 
+                                {/* Indicateur de position de prévisualisation */}
+                                {dragPreviewPosition && activeId && (
+                                  <div
+                                    className="absolute pointer-events-none animate-pulse"
+                                    style={{
+                                      left: `${dragPreviewPosition.x}%`,
+                                      top: `${dragPreviewPosition.y}%`,
+                                      transform: 'translate(-50%, -50%)',
+                                      zIndex: 5
+                                    }}
+                                  >
+                                    <div className="relative">
+                                      {/* Cercle de prévisualisation avec animation */}
+                                      <div className="absolute inset-0 rounded-full bg-yellow-400/30 blur-xl animate-ping" style={{ width: '60px', height: '60px', transform: 'translate(-50%, -50%)', left: '50%', top: '50%' }} />
+                                      <div className="relative rounded-full border-4 border-yellow-400 border-dashed bg-yellow-400/20 backdrop-blur-sm" style={{ width: '50px', height: '50px' }}>
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                          <div className="w-2 h-2 rounded-full bg-yellow-400" />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
                                 {/* Joueurs sur le terrain */}
                                 {fieldPlayers.map((player) => (
                                   <DraggablePlayer
@@ -1218,18 +1304,18 @@ export const FormationManagerV2: React.FC = () => {
       </div>
 
       <DragOverlay>
-        {activeDragData && (
-          <div className="p-2 bg-card border rounded shadow-lg">
+        {activeDragPlayer && (
+          <div className="p-2 bg-card border rounded shadow-lg opacity-90">
             <div className="flex items-center gap-2">
               <Badge variant="secondary">
-                {'jersey_number' in activeDragData ? activeDragData.jersey_number : ''}
+                {'jersey_number' in activeDragPlayer ? activeDragPlayer.jersey_number : ''}
               </Badge>
               <div>
                 <div className="font-medium text-sm">
-                  {'name' in activeDragData ? activeDragData.name : (activeDragData as any).player_name}
+                  {'name' in activeDragPlayer ? activeDragPlayer.name : (activeDragPlayer as FormationPlayer).player_name}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {'position' in activeDragData ? activeDragData.position : (activeDragData as any).player_position}
+                  {'position' in activeDragPlayer ? activeDragPlayer.position : (activeDragPlayer as FormationPlayer).player_position}
                 </div>
               </div>
             </div>
