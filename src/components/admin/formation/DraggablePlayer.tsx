@@ -57,50 +57,75 @@ export const DraggablePlayer = ({
         {...attributes}
         className={`absolute ${isLocked ? 'cursor-not-allowed' : 'cursor-move'} ${isDragging ? 'opacity-50' : ''}`}
       >
-        <div className="relative" style={{ transform: 'translate(-50%, -50%)' }}>
-          {imageUrl ? (
-            <img 
-              src={imageUrl} 
-              alt={name}
-              className={`w-12 h-12 rounded-full object-cover border-2 shadow-lg transition-all ${isLocked ? 'border-orange-500 opacity-75' : 'border-white'}`}
-            />
-          ) : (
-            <div className={`w-12 h-12 rounded-full bg-white border-2 flex items-center justify-center shadow-lg transition-all ${isLocked ? 'border-orange-500 opacity-75' : 'border-primary'}`}>
-              <span className="text-lg font-bold text-primary">{jerseyNumber}</span>
-            </div>
-          )}
-          <Badge className="absolute -top-1 -right-1 text-xs h-5 min-w-5 flex items-center justify-center">
-            {jerseyNumber}
-          </Badge>
-          <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white px-1.5 py-0.5 rounded text-[10px]">
+        <div className="relative flex flex-col items-center" style={{ transform: 'translate(-50%, -50%)' }}>
+          {/* Maillot SVG avec numéro */}
+          <div className="relative">
+            <svg width="40" height="48" viewBox="0 0 40 48" className={`drop-shadow-lg ${isLocked ? 'opacity-75' : ''}`}>
+              {/* Corps du maillot */}
+              <path
+                d="M8 8 L8 2 L12 0 L16 2 L24 2 L28 0 L32 2 L32 8 L32 44 L28 48 L12 48 L8 44 Z"
+                fill={isLocked ? '#f97316' : '#1e40af'}
+                stroke="white"
+                strokeWidth="1"
+              />
+              {/* Col en V */}
+              <path
+                d="M12 2 L16 8 L20 2 L24 8 L28 2"
+                fill="none"
+                stroke="white"
+                strokeWidth="1"
+              />
+              {/* Manches */}
+              <ellipse cx="8" cy="12" rx="6" ry="8" fill={isLocked ? '#f97316' : '#1e40af'} stroke="white" strokeWidth="1" />
+              <ellipse cx="32" cy="12" rx="6" ry="8" fill={isLocked ? '#f97316' : '#1e40af'} stroke="white" strokeWidth="1" />
+              
+              {/* Numéro du joueur */}
+              <text
+                x="20"
+                y="30"
+                textAnchor="middle"
+                fill="white"
+                fontSize="18"
+                fontWeight="bold"
+                fontFamily="Arial, sans-serif"
+              >
+                {jerseyNumber}
+              </text>
+            </svg>
+            
+            {/* Boutons d'action */}
+            {onToggleLock && (
+              <Button
+                size="icon"
+                variant={isLocked ? "default" : "secondary"}
+                className="absolute -top-1 -left-9 h-5 w-5 z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleLock();
+                }}
+              >
+                {isLocked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+              </Button>
+            )}
+            {showDelete && onDelete && (
+              <Button
+                size="icon"
+                variant="destructive"
+                className="absolute -top-1 -right-9 h-5 w-5 z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+          
+          {/* Nom du joueur */}
+          <div className="mt-1 bg-black/80 text-white px-2 py-0.5 rounded text-[10px] font-medium whitespace-nowrap">
             {name.split(' ').pop()}
           </div>
-          {onToggleLock && (
-            <Button
-              size="icon"
-              variant={isLocked ? "default" : "secondary"}
-              className="absolute -top-1 -left-8 h-5 w-5"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleLock();
-              }}
-            >
-              {isLocked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
-            </Button>
-          )}
-          {showDelete && onDelete && (
-            <Button
-              size="icon"
-              variant="destructive"
-              className="absolute -top-1 -left-1 h-5 w-5"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
-          )}
         </div>
       </div>
     );
