@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { FlashNewsSource } from "@/types/FlashNewsSource";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { FlashNewsSourcePicker } from "./FlashNewsSourcePicker";
 import {
   Form,
   FormControl,
@@ -85,14 +86,15 @@ export const FlashNewsForm = ({ flashNews, onSuccess }: FlashNewsFormProps) => {
     },
   });
 
-  const handleSourceSelect = (sourceId: string) => {
-    const source = sources.find(s => s.id === sourceId);
-    if (source) {
-      setSelectedSource(source);
-      form.setValue('source_id', source.id);
-      form.setValue('author', source.name);
-      form.setValue('author_handle', source.handle);
-    }
+  const handleSourceSelect = (source: FlashNewsSource) => {
+    setSelectedSource(source);
+    form.setValue('source_id', source.id);
+    form.setValue('author', source.name);
+    form.setValue('author_handle', source.handle);
+  };
+
+  const handleSourcePickerSelect = (source: FlashNewsSource) => {
+    handleSourceSelect(source);
   };
 
   const onSubmit = async (values: FormValues) => {
@@ -150,40 +152,65 @@ export const FlashNewsForm = ({ flashNews, onSuccess }: FlashNewsFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="source_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Sélectionner une source</FormLabel>
-              <Select onValueChange={handleSourceSelect} value={field.value}>
+        <div className="space-y-4">
+          <FormField
+            control={form.control}
+            name="source_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Sélectionner une source rapide</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choisir une source prédéfinie" />
-                  </SelectTrigger>
+                  <FlashNewsSourcePicker 
+                    onSelect={handleSourcePickerSelect}
+                    selectedSourceId={field.value}
+                  />
                 </FormControl>
-                <SelectContent>
-                  {sources.map((source) => (
-                    <SelectItem key={source.id} value={source.id}>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={source.avatar_url || undefined} />
-                          <AvatarFallback>{source.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <span>{source.name}</span>
-                        <span className="text-muted-foreground text-sm">{source.handle}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="text-sm text-muted-foreground">
-                Ou remplissez manuellement ci-dessous
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <div className="text-sm text-muted-foreground">
+                  Ou utilisez le menu déroulant ci-dessous pour une recherche par nom
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="source_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Ou rechercher par nom</FormLabel>
+                <Select onValueChange={(value) => {
+                  const source = sources.find(s => s.id === value);
+                  if (source) handleSourceSelect(source);
+                }} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choisir une source prédéfinie" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {sources.map((source) => (
+                      <SelectItem key={source.id} value={source.id}>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={source.avatar_url || undefined} />
+                            <AvatarFallback>{source.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <span>{source.name}</span>
+                          <span className="text-muted-foreground text-sm">{source.handle}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="text-sm text-muted-foreground">
+                  Ou remplissez manuellement ci-dessous
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
