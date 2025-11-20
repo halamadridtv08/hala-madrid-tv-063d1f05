@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { Pencil, Trash2, Plus } from 'lucide-react';
-import { MediaUploader } from './MediaUploader';
+import { AvatarCropUploader } from './AvatarCropUploader';
 
 export const FlashNewsSourceManager = () => {
   const [sources, setSources] = useState<FlashNewsSource[]>([]);
@@ -145,19 +145,11 @@ export const FlashNewsSourceManager = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Avatar</Label>
-              <MediaUploader
-                onSuccess={(url) => setFormData({ ...formData, avatar_url: url })}
-                acceptTypes="image/*"
-                maxSizeMB={2}
-                folderPath="flash-news-sources"
-                bucketName="media"
-                buttonText="Télécharger l'avatar"
-                showPreview
-                currentValue={formData.avatar_url}
-              />
-            </div>
+            <AvatarCropUploader
+              currentAvatarUrl={formData.avatar_url || undefined}
+              onAvatarChange={(url) => setFormData({ ...formData, avatar_url: url })}
+              sourceName={formData.name || 'source'}
+            />
 
             <div className="flex items-center space-x-2">
               <Switch
