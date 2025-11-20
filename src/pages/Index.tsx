@@ -8,6 +8,7 @@ import { VideoSection } from "@/components/home/VideoSection";
 import YouTubeVideos from "@/components/home/YouTubeVideos";
 import FeaturedYouTubeVideo from "@/components/home/FeaturedYouTubeVideo";
 import { TrophiesShowcase } from "@/components/home/TrophiesShowcase";
+import { TwitterFlashCarousel } from "@/components/home/TwitterFlashCarousel";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ const Index = () => {
       <HeroSection />
       <FeaturedYouTubeVideo />
       <LatestNews />
+      <TwitterFlashCarousel />
       <VideoSection />
       <YouTubeVideos />
       <TrophiesShowcase />
