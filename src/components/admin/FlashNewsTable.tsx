@@ -242,7 +242,13 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
                   </div>
                 </TableCell>
                 <TableCell className="max-w-md">
-                  <div className="line-clamp-2 whitespace-pre-wrap break-words" style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+                  <div 
+                    className="line-clamp-2 whitespace-pre-wrap break-words" 
+                    style={{ 
+                      fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                      unicodeBidi: 'isolate'
+                    }}
+                  >
                     {news.content}
                   </div>
                 </TableCell>
