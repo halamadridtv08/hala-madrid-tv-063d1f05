@@ -185,21 +185,21 @@ export const TacticalFormation = ({ matchId, matchData }: TacticalFormationProps
                     <img
                       src={player.player_image_url}
                       alt={player.player_name}
-                      className="w-14 h-14 rounded-full border-3 border-white shadow-lg object-cover"
+                      className="w-12 h-12 rounded-full border-2 border-white shadow-lg object-cover"
                     />
                   ) : (
-                    <div className="w-14 h-14 rounded-full border-3 border-white bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">{player.jersey_number}</span>
+                    <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">{player.jersey_number}</span>
                     </div>
                   )}
                   
                   {/* Numéro du maillot */}
-                  <div className="absolute -top-1 -right-1 bg-white text-blue-600 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-md">
+                  <div className="absolute -top-1 -right-1 bg-white text-blue-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md text-[10px]">
                     {player.jersey_number}
                   </div>
                   
                   {/* Note du joueur */}
-                  <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-black text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-md">
+                  <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md text-[10px]">
                     {player.player_rating.toFixed(1)}
                   </div>
                   
@@ -233,21 +233,21 @@ export const TacticalFormation = ({ matchId, matchData }: TacticalFormationProps
                     <img
                       src={player.player_image_url}
                       alt={player.player_name}
-                      className="w-14 h-14 rounded-full border-3 border-white shadow-lg object-cover"
+                      className="w-12 h-12 rounded-full border-2 border-white shadow-lg object-cover"
                     />
                   ) : (
-                    <div className="w-14 h-14 rounded-full border-3 border-white bg-gradient-to-br from-red-600 to-red-700 shadow-lg flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">{player.jersey_number}</span>
+                    <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-br from-red-600 to-red-700 shadow-lg flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">{player.jersey_number}</span>
                     </div>
                   )}
                   
                   {/* Numéro du maillot */}
-                  <div className="absolute -top-1 -right-1 bg-white text-red-600 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-md">
+                  <div className="absolute -top-1 -right-1 bg-white text-red-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md text-[10px]">
                     {player.jersey_number}
                   </div>
                   
                   {/* Note du joueur */}
-                  <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-black text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-md">
+                  <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md text-[10px]">
                     {player.player_rating.toFixed(1)}
                   </div>
                   
