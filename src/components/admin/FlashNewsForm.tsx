@@ -30,7 +30,9 @@ const formSchema = z.object({
   content: z.string().min(10, "Le contenu doit faire au moins 10 caractères"),
   category: z.enum(['transfer', 'injury', 'match', 'general']),
   verified: z.boolean().default(true),
-  is_published: z.boolean().default(true),
+  is_published: z.boolean().default(false),
+  status: z.enum(['draft', 'pending', 'approved', 'published']).default('draft'),
+  scheduled_at: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -52,7 +54,9 @@ export const FlashNewsForm = ({ flashNews, onSuccess }: FlashNewsFormProps) => {
       content: flashNews?.content || "",
       category: flashNews?.category || "general",
       verified: flashNews?.verified ?? true,
-      is_published: flashNews?.is_published ?? true,
+      is_published: flashNews?.is_published ?? false,
+      status: flashNews?.status || "draft",
+      scheduled_at: flashNews?.scheduled_at || "",
     },
   });
 
@@ -82,6 +86,8 @@ export const FlashNewsForm = ({ flashNews, onSuccess }: FlashNewsFormProps) => {
             category: values.category,
             verified: values.verified,
             is_published: values.is_published,
+            status: values.status,
+            scheduled_at: values.scheduled_at || null,
           }]);
 
         if (error) throw error;
@@ -176,6 +182,51 @@ export const FlashNewsForm = ({ flashNews, onSuccess }: FlashNewsFormProps) => {
                   <SelectItem value="general">Général</SelectItem>
                 </SelectContent>
               </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Statut de modération</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un statut" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="draft">Brouillon</SelectItem>
+                  <SelectItem value="pending">En attente</SelectItem>
+                  <SelectItem value="approved">Approuvé</SelectItem>
+                  <SelectItem value="published">Publié</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="scheduled_at"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Planifier la publication (optionnel)</FormLabel>
+              <FormControl>
+                <Input
+                  type="datetime-local"
+                  {...field}
+                  placeholder="Date et heure de publication"
+                />
+              </FormControl>
+              <div className="text-sm text-muted-foreground">
+                Laisser vide pour une publication immédiate
+              </div>
               <FormMessage />
             </FormItem>
           )}

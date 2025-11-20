@@ -10,8 +10,9 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +34,7 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchFlashNews();
@@ -82,6 +84,36 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
     }
   };
 
+  const handleApprove = async (newsId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('flash_news')
+        .update({
+          status: 'approved',
+          approved_by: user.id,
+          approved_at: new Date().toISOString(),
+        })
+        .eq('id', newsId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Info flash approuvée",
+        description: "L'info flash a été approuvée avec succès.",
+      });
+
+      fetchFlashNews();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const getCategoryBadge = (category: string) => {
     const variants: Record<string, any> = {
       transfer: { variant: "default", label: "Transfert" },
@@ -90,6 +122,16 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
       general: { variant: "outline", label: "Général" },
     };
     return variants[category] || variants.general;
+  };
+
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, any> = {
+      draft: { variant: "outline", label: "Brouillon" },
+      pending: { variant: "secondary", label: "En attente" },
+      approved: { variant: "default", label: "Approuvé" },
+      published: { variant: "default", label: "Publié" },
+    };
+    return variants[status] || variants.draft;
   };
 
   if (loading) {
@@ -104,7 +146,8 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
             <TableHead>Auteur</TableHead>
             <TableHead>Contenu</TableHead>
             <TableHead>Catégorie</TableHead>
-            <TableHead>Statut</TableHead>
+            <TableHead>Modération</TableHead>
+            <TableHead>Publication</TableHead>
             <TableHead>Date</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -112,6 +155,7 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
         <TableBody>
           {flashNews.map((news) => {
             const categoryInfo = getCategoryBadge(news.category);
+            const statusInfo = getStatusBadge(news.status);
             return (
               <TableRow key={news.id}>
                 <TableCell>
@@ -125,15 +169,41 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
                   <Badge variant={categoryInfo.variant}>{categoryInfo.label}</Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={news.is_published ? "default" : "secondary"}>
-                    {news.is_published ? "Publié" : "Brouillon"}
-                  </Badge>
+                  <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                </TableCell>
+                <TableCell>
+                  {news.scheduled_at ? (
+                    <div className="text-sm">
+                      <div className="font-medium">Programmé</div>
+                      <div className="text-muted-foreground">
+                        {new Date(news.scheduled_at).toLocaleDateString('fr-FR')} à{' '}
+                        {new Date(news.scheduled_at).toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <Badge variant={news.is_published ? "default" : "secondary"}>
+                      {news.is_published ? "Publié" : "Brouillon"}
+                    </Badge>
+                  )}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {new Date(news.created_at).toLocaleDateString('fr-FR')}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
+                    {news.status === 'pending' && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleApprove(news.id)}
+                        title="Approuver"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"

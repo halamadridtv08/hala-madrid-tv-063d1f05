@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { FlashNews } from '@/types/FlashNews';
+import { toast } from 'sonner';
 
 export const useFlashNews = () => {
   const [flashNews, setFlashNews] = useState<FlashNews[]>([]);
@@ -14,7 +15,36 @@ export const useFlashNews = () => {
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
+          schema: 'public',
+          table: 'flash_news'
+        },
+        (payload) => {
+          const newFlashNews = payload.new as FlashNews;
+          if (newFlashNews.is_published) {
+            toast.success('Nouvelle info flash !', {
+              description: `${newFlashNews.author}: ${newFlashNews.content.substring(0, 50)}...`,
+              duration: 5000,
+            });
+            fetchFlashNews();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'flash_news'
+        },
+        () => {
+          fetchFlashNews();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
           schema: 'public',
           table: 'flash_news'
         },
@@ -35,6 +65,7 @@ export const useFlashNews = () => {
         .from('flash_news')
         .select('*')
         .eq('is_published', true)
+        .eq('status', 'published')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
