@@ -10,19 +10,16 @@ import { toast } from "sonner";
 import { TacticalFormation } from "./TacticalFormation";
 import { MatchEvents } from "./MatchEvents";
 import { MatchStatistics } from "./MatchStatistics";
-
 interface PlayerType {
   name: string;
   position: string;
   number: number;
 }
-
 interface MatchDetailProps {
   match: any;
   isOpen: boolean;
   onClose: () => void;
 }
-
 interface OpposingPlayer {
   id: string;
   name: string;
@@ -30,53 +27,50 @@ interface OpposingPlayer {
   jersey_number: number | null;
   is_starter: boolean;
 }
-
-export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
+export const MatchDetail = ({
+  match,
+  isOpen,
+  onClose
+}: MatchDetailProps) => {
   const [opposingPlayers, setOpposingPlayers] = useState<OpposingPlayer[]>([]);
   const [realMadridPlayers, setRealMadridPlayers] = useState<PlayerType[]>([]);
   const [probableLineups, setProbableLineups] = useState<any[]>([]);
   const [absentPlayers, setAbsentPlayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     if (isOpen && match) {
       fetchMatchData();
     }
   }, [isOpen, match]);
-
   const fetchMatchData = async () => {
     if (!match) return;
-    
     setLoading(true);
     try {
       // Récupérer les compositions probables
-      const { data: lineupsData } = await supabase
-        .from('match_probable_lineups')
-        .select('*')
-        .eq('match_id', match.id)
-        .order('is_starter', { ascending: false });
-      
+      const {
+        data: lineupsData
+      } = await supabase.from('match_probable_lineups').select('*').eq('match_id', match.id).order('is_starter', {
+        ascending: false
+      });
       if (lineupsData) {
         setProbableLineups(lineupsData);
       }
 
       // Récupérer les joueurs absents
-      const { data: absentData } = await supabase
-        .from('match_absent_players')
-        .select('*')
-        .eq('match_id', match.id);
-      
+      const {
+        data: absentData
+      } = await supabase.from('match_absent_players').select('*').eq('match_id', match.id);
       if (absentData) {
         setAbsentPlayers(absentData);
       }
 
       // Récupérer les joueurs Real Madrid depuis la base de données
-      const { data: realMadridData, error: realMadridError } = await supabase
-        .from('players')
-        .select('name, position, jersey_number')
-        .eq('is_active', true)
-        .order('jersey_number', { ascending: true });
-
+      const {
+        data: realMadridData,
+        error: realMadridError
+      } = await supabase.from('players').select('name, position, jersey_number').eq('is_active', true).order('jersey_number', {
+        ascending: true
+      });
       if (realMadridError) {
         console.error("Erreur lors du chargement des joueurs Real Madrid:", realMadridError);
         toast.error("Erreur lors du chargement des joueurs Real Madrid");
@@ -91,23 +85,21 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
 
       // Récupérer les joueurs de l'équipe adverse
       const opposingTeamName = match.homeTeam.name === 'Real Madrid' ? match.awayTeam.name : match.homeTeam.name;
-      
-      const { data: teamData, error: teamError } = await supabase
-        .from('opposing_teams')
-        .select('id')
-        .eq('name', opposingTeamName)
-        .maybeSingle();
-
+      const {
+        data: teamData,
+        error: teamError
+      } = await supabase.from('opposing_teams').select('id').eq('name', opposingTeamName).maybeSingle();
       if (teamError) {
         console.error("Erreur lors de la recherche de l'équipe adverse:", teamError);
       } else if (teamData) {
-        const { data: playersData, error: playersError } = await supabase
-          .from('opposing_players')
-          .select('*')
-          .eq('team_id', teamData.id)
-          .order('is_starter', { ascending: false })
-          .order('jersey_number', { ascending: true });
-
+        const {
+          data: playersData,
+          error: playersError
+        } = await supabase.from('opposing_players').select('*').eq('team_id', teamData.id).order('is_starter', {
+          ascending: false
+        }).order('jersey_number', {
+          ascending: true
+        });
         if (playersError) {
           console.error("Erreur lors du chargement des joueurs adverses:", playersError);
           toast.error("Erreur lors du chargement des joueurs");
@@ -124,48 +116,95 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
       setLoading(false);
     }
   };
-
   if (!match) return null;
 
   // Utiliser les compositions probables de la base de données
-  const realMadridLineup = probableLineups
-    .filter(l => l.team_type === 'real_madrid' && l.is_starter)
-    .map(l => ({ name: l.player_name, position: l.position, number: l.jersey_number || 0 }));
-  
-  const realMadridSubs = probableLineups
-    .filter(l => l.team_type === 'real_madrid' && !l.is_starter)
-    .map(l => ({ name: l.player_name, position: l.position, number: l.jersey_number || 0 }));
+  const realMadridLineup = probableLineups.filter(l => l.team_type === 'real_madrid' && l.is_starter).map(l => ({
+    name: l.player_name,
+    position: l.position,
+    number: l.jersey_number || 0
+  }));
+  const realMadridSubs = probableLineups.filter(l => l.team_type === 'real_madrid' && !l.is_starter).map(l => ({
+    name: l.player_name,
+    position: l.position,
+    number: l.jersey_number || 0
+  }));
 
   // Utiliser les compositions probables de la base de données pour l'équipe adverse
-  const opposingLineup = probableLineups
-    .filter(l => l.team_type === 'opposing' && l.is_starter)
-    .map(l => ({ name: l.player_name, position: l.position, number: l.jersey_number || 0 }));
-  
-  const opposingSubs = probableLineups
-    .filter(l => l.team_type === 'opposing' && !l.is_starter)
-    .map(l => ({ name: l.player_name, position: l.position, number: l.jersey_number || 0 }));
+  const opposingLineup = probableLineups.filter(l => l.team_type === 'opposing' && l.is_starter).map(l => ({
+    name: l.player_name,
+    position: l.position,
+    number: l.jersey_number || 0
+  }));
+  const opposingSubs = probableLineups.filter(l => l.team_type === 'opposing' && !l.is_starter).map(l => ({
+    name: l.player_name,
+    position: l.position,
+    number: l.jersey_number || 0
+  }));
 
   // Données par défaut si aucune composition n'est trouvée
-  const defaultOpposingLineup = [
-    { name: "Gardien", position: "GK", number: 1 },
-    { name: "Défenseur 1", position: "CB", number: 2 },
-    { name: "Défenseur 2", position: "CB", number: 3 },
-    { name: "Défenseur 3", position: "LB", number: 4 },
-    { name: "Défenseur 4", position: "RB", number: 5 },
-    { name: "Milieu 1", position: "CM", number: 6 },
-    { name: "Milieu 2", position: "CM", number: 7 },
-    { name: "Milieu 3", position: "CM", number: 8 },
-    { name: "Attaquant 1", position: "LW", number: 9 },
-    { name: "Attaquant 2", position: "ST", number: 10 },
-    { name: "Attaquant 3", position: "RW", number: 11 }
-  ];
-
-  const defaultOpposingSubs = [
-    { name: "Remplaçant 1", position: "GK", number: 12 },
-    { name: "Remplaçant 2", position: "CB", number: 13 },
-    { name: "Remplaçant 3", position: "CM", number: 14 },
-    { name: "Remplaçant 4", position: "ST", number: 15 }
-  ];
+  const defaultOpposingLineup = [{
+    name: "Gardien",
+    position: "GK",
+    number: 1
+  }, {
+    name: "Défenseur 1",
+    position: "CB",
+    number: 2
+  }, {
+    name: "Défenseur 2",
+    position: "CB",
+    number: 3
+  }, {
+    name: "Défenseur 3",
+    position: "LB",
+    number: 4
+  }, {
+    name: "Défenseur 4",
+    position: "RB",
+    number: 5
+  }, {
+    name: "Milieu 1",
+    position: "CM",
+    number: 6
+  }, {
+    name: "Milieu 2",
+    position: "CM",
+    number: 7
+  }, {
+    name: "Milieu 3",
+    position: "CM",
+    number: 8
+  }, {
+    name: "Attaquant 1",
+    position: "LW",
+    number: 9
+  }, {
+    name: "Attaquant 2",
+    position: "ST",
+    number: 10
+  }, {
+    name: "Attaquant 3",
+    position: "RW",
+    number: 11
+  }];
+  const defaultOpposingSubs = [{
+    name: "Remplaçant 1",
+    position: "GK",
+    number: 12
+  }, {
+    name: "Remplaçant 2",
+    position: "CB",
+    number: 13
+  }, {
+    name: "Remplaçant 3",
+    position: "CM",
+    number: 14
+  }, {
+    name: "Remplaçant 4",
+    position: "ST",
+    number: 15
+  }];
 
   // Utiliser les vraies compos ou les données par défaut
   const finalOpposingLineup = opposingLineup.length > 0 ? opposingLineup : defaultOpposingLineup;
@@ -182,7 +221,6 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
       year: 'numeric'
     }).format(date);
   };
-
   const formatMatchTime = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('fr-FR', {
@@ -190,20 +228,22 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
       minute: 'numeric'
     }).format(date);
   };
-
   const getCompetitionColor = (competition: string) => {
     switch (competition) {
-      case "La Liga": return "bg-green-600";
-      case "LALIGA": return "bg-green-600";
-      case "Ligue des Champions": return "bg-blue-600";
-      case "Copa del Rey": return "bg-purple-600";
-      default: return "bg-gray-600";
+      case "La Liga":
+        return "bg-green-600";
+      case "LALIGA":
+        return "bg-green-600";
+      case "Ligue des Champions":
+        return "bg-blue-600";
+      case "Copa del Rey":
+        return "bg-purple-600";
+      default:
+        return "bg-gray-600";
     }
   };
-
   const renderLineup = (lineup: PlayerType[], subs: PlayerType[], teamName: string) => {
-    return (
-      <div className="py-4">
+    return <div className="py-4">
         <h4 className="font-bold text-center mb-4">{teamName}</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -217,13 +257,11 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {lineup.map((player) => (
-                  <TableRow key={player.name}>
+                {lineup.map(player => <TableRow key={player.name}>
                     <TableCell>{player.number}</TableCell>
                     <TableCell>{player.name}</TableCell>
                     <TableCell>{player.position}</TableCell>
-                  </TableRow>
-                ))}
+                  </TableRow>)}
               </TableBody>
             </Table>
           </div>
@@ -238,23 +276,18 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {subs.map((player) => (
-                  <TableRow key={player.name}>
+                {subs.map(player => <TableRow key={player.name}>
                     <TableCell>{player.number}</TableCell>
                     <TableCell>{player.name}</TableCell>
                     <TableCell>{player.position}</TableCell>
-                  </TableRow>
-                ))}
+                  </TableRow>)}
               </TableBody>
             </Table>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={() => onClose()}>
+  return <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">
@@ -281,11 +314,7 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
 
         <div className="flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0 my-4">
           <div className="flex flex-col items-center">
-            <img 
-              src={match.homeTeam.logo} 
-              alt={match.homeTeam.name}
-              className="w-20 h-20 object-contain"
-            />
+            <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="w-20 h-20 object-contain" />
             <h3 className="text-xl font-bold mt-2">{match.homeTeam.name}</h3>
           </div>
           
@@ -294,11 +323,7 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
           </div>
           
           <div className="flex flex-col items-center">
-            <img 
-              src={match.awayTeam.logo} 
-              alt={match.awayTeam.name}
-              className="w-20 h-20 object-contain"
-            />
+            <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="w-20 h-20 object-contain" />
             <h3 className="text-xl font-bold mt-2">{match.awayTeam.name}</h3>
           </div>
         </div>
@@ -321,43 +346,29 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
           </TabsContent>
 
           <TabsContent value="stats">
-            <MatchStatistics 
-              matchDetails={match.match_details}
-              homeTeam={match.homeTeam.name}
-              awayTeam={match.awayTeam.name}
-            />
+            <MatchStatistics matchDetails={match.match_details} homeTeam={match.homeTeam.name} awayTeam={match.awayTeam.name} />
           </TabsContent>
 
           <TabsContent value="lineups">
             <Card>
               <CardContent className="pt-6">
-                {loading ? (
-                  <div className="text-center py-8">
+                {loading ? <div className="text-center py-8">
                     Chargement des compositions...
-                  </div>
-                ) : (
-                  <>
-                    {match.homeTeam.name === 'Real Madrid' ? (
-                      <>
+                  </div> : <>
+                    {match.homeTeam.name === 'Real Madrid' ? <>
                         {renderLineup(realMadridLineup, realMadridSubs, "Real Madrid")}
                         <hr className="my-4" />
                         {renderLineup(finalOpposingLineup, finalOpposingSubs, match.awayTeam.name)}
-                      </>
-                    ) : (
-                      <>
+                      </> : <>
                         {renderLineup(finalOpposingLineup, finalOpposingSubs, match.homeTeam.name)}
                         <hr className="my-4" />
                         {renderLineup(realMadridLineup, realMadridSubs, "Real Madrid")}
-                      </>
-                    )}
-                    {opposingPlayers.length === 0 && (
-                      <div className="text-center text-gray-500 mt-4">
+                      </>}
+                    {opposingPlayers.length === 0 && <div className="text-center text-gray-500 mt-4">
                         <p>Composition de l'équipe adverse non disponible.</p>
-                        <p className="text-sm">Les joueurs peuvent être ajoutés depuis l'interface d'administration.</p>
-                      </div>
-                    )}
-                  </>
-                )}
+                        
+                      </div>}
+                  </>}
               </CardContent>
             </Card>
           </TabsContent>
@@ -380,14 +391,12 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {absentPlayers.map((player) => (
-                      <TableRow key={player.name}>
+                    {absentPlayers.map(player => <TableRow key={player.name}>
                         <TableCell className="font-medium">{player.name}</TableCell>
                         <TableCell>{player.team}</TableCell>
                         <TableCell>{player.reason}</TableCell>
                         <TableCell>{player.return}</TableCell>
-                      </TableRow>
-                    ))}
+                      </TableRow>)}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -395,6 +404,5 @@ export const MatchDetail = ({ match, isOpen, onClose }: MatchDetailProps) => {
           </TabsContent>
         </Tabs>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
