@@ -25,7 +25,8 @@ import {
   PlayCircle,
   Shirt,
   Target,
-  Trophy
+  Trophy,
+  Twitter
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +61,8 @@ import { FormationManagerV2 } from "@/components/admin/formation/FormationManage
 import { MatchLineupManager } from "@/components/admin/MatchLineupManager";
 import { SpecialArticlesManager } from "@/components/admin/SpecialArticlesManager";
 import { AuthImageManager } from "@/components/admin/AuthImageManager";
+import { FlashNewsForm } from "@/components/admin/FlashNewsForm";
+import { FlashNewsTable } from "@/components/admin/FlashNewsTable";
 import { useNavigate } from "react-router-dom";
 
 interface StatsData {
@@ -86,6 +89,8 @@ const Admin = () => {
   const [trainingSessions, setTrainingSessions] = useState<TrainingSession[]>([]);
   const [kits, setKits] = useState<Kit[]>([]);
   const [youtubeVideos, setYoutubeVideos] = useState<YouTubeVideo[]>([]);
+  const [selectedFlashNews, setSelectedFlashNews] = useState<any>(null);
+  const [refreshFlashNews, setRefreshFlashNews] = useState(false);
   const [stats, setStats] = useState<StatsData>({
     totalPlayers: 0,
     activePlayers: 0,
@@ -460,6 +465,51 @@ const Admin = () => {
     </div>
   );
 
+  const renderFlashNews = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Gestion des Infos Flash</h2>
+        {selectedFlashNews && (
+          <Button
+            variant="outline"
+            onClick={() => setSelectedFlashNews(null)}
+          >
+            Nouvelle Info
+          </Button>
+        )}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {selectedFlashNews ? "Modifier l'info flash" : "Créer une info flash"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FlashNewsForm
+            flashNews={selectedFlashNews}
+            onSuccess={() => {
+              setSelectedFlashNews(null);
+              setRefreshFlashNews(!refreshFlashNews);
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Liste des Infos Flash</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FlashNewsTable
+            onEdit={(flashNews) => setSelectedFlashNews(flashNews)}
+            refresh={refreshFlashNews}
+          />
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   const renderSpecialArticles = () => (
     <SpecialArticlesManager />
   );
@@ -559,6 +609,10 @@ const Admin = () => {
                 <PlayCircle className="h-4 w-4" />
                 YouTube
               </TabsTrigger>
+              <TabsTrigger value="flash-news" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
+                <Twitter className="h-4 w-4" />
+                Infos Flash
+              </TabsTrigger>
               <TabsTrigger value="settings" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
                 <Settings className="h-4 w-4" />
                 Paramètres
@@ -582,6 +636,7 @@ const Admin = () => {
           <TabsContent value="stats">{renderStats()}</TabsContent>
           <TabsContent value="kits">{renderKits()}</TabsContent>
           <TabsContent value="youtube">{renderYouTubeVideos()}</TabsContent>
+          <TabsContent value="flash-news">{renderFlashNews()}</TabsContent>
           <TabsContent value="settings">{renderSettings()}</TabsContent>
         </Tabs>
       </div>
