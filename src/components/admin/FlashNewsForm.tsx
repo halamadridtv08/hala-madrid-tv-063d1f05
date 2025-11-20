@@ -13,6 +13,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { Smile, X } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 const formSchema = z.object({
   source_id: z.string().optional(),
   author: z.string().min(1, "L'auteur est requis"),
@@ -36,6 +39,7 @@ export const FlashNewsForm = ({
   const [loading, setLoading] = useState(false);
   const [sources, setSources] = useState<FlashNewsSource[]>([]);
   const [selectedSource, setSelectedSource] = useState<FlashNewsSource | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const {
     toast
   } = useToast();
@@ -120,6 +124,28 @@ export const FlashNewsForm = ({
     form.setValue('source_id', source.id);
     form.setValue('author', source.name);
     form.setValue('author_handle', source.handle);
+  };
+
+  const handleEmojiClick = (emojiData: EmojiClickData) => {
+    const currentContent = form.getValues('content');
+    form.setValue('content', currentContent + emojiData.emoji);
+    setShowEmojiPicker(false);
+  };
+
+  const handleCancel = () => {
+    form.reset({
+      source_id: "",
+      author: "",
+      author_handle: "@",
+      content: "",
+      category: "general",
+      verified: true,
+      is_published: false,
+      status: "draft",
+      scheduled_at: ""
+    });
+    setSelectedSource(null);
+    onSuccess?.();
   };
   const onSubmit = async (values: FormValues) => {
     try {
@@ -232,9 +258,57 @@ export const FlashNewsForm = ({
         field
       }) => <FormItem>
               <FormLabel>Contenu</FormLabel>
-              <FormControl>
-                <Textarea placeholder="🚨 Dernières nouvelles du Real Madrid..." className="min-h-[100px]" {...field} />
-              </FormControl>
+              <div className="relative">
+                <FormControl>
+                  <Textarea 
+                    placeholder="🚨 Dernières nouvelles du Real Madrid..." 
+                    className="min-h-[100px]" 
+                    {...field} 
+                  />
+                </FormControl>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-2"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                >
+                  <Smile className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {showEmojiPicker && (
+                <div className="relative mt-2">
+                  <div className="absolute z-50 right-0">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 z-10"
+                      onClick={() => setShowEmojiPicker(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                    <EmojiPicker onEmojiClick={handleEmojiClick} />
+                  </div>
+                </div>
+              )}
+              
+              {field.value && (
+                <Card className="mt-4 p-4">
+                  <div className="text-sm font-medium mb-2">Prévisualisation :</div>
+                  <div 
+                    className="whitespace-pre-wrap break-words"
+                    style={{ 
+                      fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                      unicodeBidi: 'isolate'
+                    }}
+                  >
+                    {field.value}
+                  </div>
+                </Card>
+              )}
+              
               <FormMessage />
             </FormItem>} />
 
@@ -321,9 +395,16 @@ export const FlashNewsForm = ({
               </FormItem>} />
         </div>
 
-        <Button type="submit" disabled={loading}>
-          {loading ? "Enregistrement..." : flashNews ? "Mettre à jour" : "Créer"}
-        </Button>
+        <div className="flex gap-2">
+          <Button type="submit" disabled={loading}>
+            {loading ? "Enregistrement..." : flashNews ? "Mettre à jour" : "Créer"}
+          </Button>
+          {flashNews && (
+            <Button type="button" variant="outline" onClick={handleCancel}>
+              Annuler
+            </Button>
+          )}
+        </div>
       </form>
     </Form>;
 };
