@@ -29,6 +29,9 @@ export function NewsCarousel() {
   const [slides, setSlides] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [api, setApi] = useState<any>(null);
+  const [current, setCurrent] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const fetchFeaturedArticles = async () => {
@@ -54,14 +57,29 @@ export function NewsCarousel() {
   }, []);
 
   useEffect(() => {
-    if (!api || slides.length <= 1) return;
+    if (!api) return;
 
-    const intervalId = setInterval(() => {
-      api.scrollNext();
-    }, 7000);
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap());
+      setProgress(0);
+    });
+  }, [api]);
 
-    return () => clearInterval(intervalId);
-  }, [api, slides.length]);
+  useEffect(() => {
+    if (!api || slides.length <= 1 || isPaused) return;
+
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          api.scrollNext();
+          return 0;
+        }
+        return prev + (100 / 70); // 7000ms / 100ms = 70 steps
+      });
+    }, 100);
+
+    return () => clearInterval(progressInterval);
+  }, [api, slides.length, isPaused]);
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -104,11 +122,18 @@ export function NewsCarousel() {
   }
 
   return (
-    <div className="relative overflow-hidden">
+    <div 
+      className="relative overflow-hidden"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
       <Carousel 
         setApi={setApi}
         className="w-full"
-        opts={{ loop: true }}
+        opts={{ 
+          loop: true,
+          duration: 30
+        }}
       >
         <CarouselContent>
           {slides.map((slide) => (
@@ -151,6 +176,27 @@ export function NewsCarousel() {
         <div className="absolute bottom-4 right-4 flex gap-2 z-10">
           <CarouselPrevious className="h-8 w-8 rounded-full bg-white/50 hover:bg-white -translate-y-0 static" />
           <CarouselNext className="h-8 w-8 rounded-full bg-white/50 hover:bg-white -translate-y-0 static" />
+        </div>
+        
+        {/* Progress indicators */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => api?.scrollTo(index)}
+              className="group relative"
+              aria-label={`Aller à l'article ${index + 1}`}
+            >
+              <div className="w-12 h-1 bg-white/30 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-white rounded-full transition-all duration-100"
+                  style={{ 
+                    width: current === index ? `${progress}%` : current > index ? '100%' : '0%'
+                  }}
+                />
+              </div>
+            </button>
+          ))}
         </div>
       </Carousel>
     </div>
