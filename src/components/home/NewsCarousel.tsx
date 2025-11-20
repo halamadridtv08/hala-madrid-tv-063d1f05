@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
-import useEmblaCarousel from 'embla-carousel-react';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Article {
@@ -30,7 +29,6 @@ export function NewsCarousel() {
   const [slides, setSlides] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [api, setApi] = useState<any>(null);
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
 
   useEffect(() => {
     const fetchFeaturedArticles = async () => {
@@ -54,12 +52,6 @@ export function NewsCarousel() {
 
     fetchFeaturedArticles();
   }, []);
-
-  useEffect(() => {
-    if (emblaApi) {
-      setApi(emblaApi);
-    }
-  }, [emblaApi]);
 
   useEffect(() => {
     if (!api || slides.length <= 1) return;
@@ -118,7 +110,7 @@ export function NewsCarousel() {
         className="w-full"
         opts={{ loop: true }}
       >
-        <CarouselContent ref={emblaRef}>
+        <CarouselContent>
           {slides.map((slide) => (
             <CarouselItem key={slide.id}>
               <div className="p-1">
