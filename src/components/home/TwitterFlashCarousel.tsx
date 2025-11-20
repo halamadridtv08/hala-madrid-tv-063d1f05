@@ -87,10 +87,6 @@ export const TwitterFlashCarousel = () => {
     );
   }
 
-  if (filteredNews.length === 0) {
-    return null;
-  }
-
   return (
     <section className="py-12 sm:py-16 bg-gradient-to-b from-background to-muted/30">
       <div className="container mx-auto px-4">
@@ -129,8 +125,18 @@ export const TwitterFlashCarousel = () => {
           ))}
         </div>
 
-        {/* Mobile Carousel */}
-        <div className="lg:hidden">
+        {filteredNews.length === 0 ? (
+          <Card className="p-8 text-center">
+            <CardContent>
+              <p className="text-muted-foreground">
+                Aucune actualité disponible pour cette catégorie pour le moment.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Mobile Carousel */}
+            <div className="lg:hidden">
           <Carousel
             opts={{
               align: "start",
@@ -236,6 +242,8 @@ export const TwitterFlashCarousel = () => {
             <CarouselNext className="right-0 translate-x-12" />
           </Carousel>
         </div>
+          </>
+        )}
       </div>
     </section>
   );
