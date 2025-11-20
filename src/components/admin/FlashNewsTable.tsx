@@ -134,6 +134,15 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
     return variants[status] || variants.draft;
   };
 
+  const getApproverEmail = async (approverId: string) => {
+    try {
+      const { data } = await supabase.auth.admin.getUserById(approverId);
+      return data?.user?.email || 'Inconnu';
+    } catch (error) {
+      return 'Inconnu';
+    }
+  };
+
   if (loading) {
     return <div>Chargement...</div>;
   }
@@ -146,7 +155,8 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
             <TableHead>Auteur</TableHead>
             <TableHead>Contenu</TableHead>
             <TableHead>Catégorie</TableHead>
-            <TableHead>Modération</TableHead>
+            <TableHead>Statut</TableHead>
+            <TableHead>Approbation</TableHead>
             <TableHead>Publication</TableHead>
             <TableHead>Date</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -170,6 +180,21 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
                 </TableCell>
                 <TableCell>
                   <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                </TableCell>
+                <TableCell>
+                  {news.approved_by && news.approved_at ? (
+                    <div className="text-sm">
+                      <div className="text-muted-foreground">
+                        {new Date(news.approved_at).toLocaleDateString('fr-FR')} à{' '}
+                        {new Date(news.approved_at).toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">—</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   {news.scheduled_at ? (

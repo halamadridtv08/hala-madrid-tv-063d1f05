@@ -63,6 +63,8 @@ import { SpecialArticlesManager } from "@/components/admin/SpecialArticlesManage
 import { AuthImageManager } from "@/components/admin/AuthImageManager";
 import { FlashNewsForm } from "@/components/admin/FlashNewsForm";
 import { FlashNewsTable } from "@/components/admin/FlashNewsTable";
+import { FlashNewsDashboard } from "@/components/admin/FlashNewsDashboard";
+import { UserRolesManager } from "@/components/admin/UserRolesManager";
 import { useNavigate } from "react-router-dom";
 
 interface StatsData {
@@ -432,6 +434,7 @@ const Admin = () => {
   const renderSettings = () => (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-4">Paramètres</h2>
+      <UserRolesManager />
       <AuthImageManager />
       <SettingsDashboard />
     </div>
@@ -478,6 +481,8 @@ const Admin = () => {
           </Button>
         )}
       </div>
+
+      <FlashNewsDashboard />
 
       <Card>
         <CardHeader>
