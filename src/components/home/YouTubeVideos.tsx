@@ -78,7 +78,7 @@ const YouTubeVideos = () => {
             className="group"
           >
             <a 
-              href="https://youtube.com/@halamadridtv" 
+              href="https://www.youtube.com/@HALAMADRIDTV10" 
               target="_blank" 
               rel="noopener noreferrer"
             >
