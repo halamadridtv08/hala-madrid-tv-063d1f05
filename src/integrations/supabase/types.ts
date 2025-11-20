@@ -283,6 +283,36 @@ export type Database = {
         }
         Relationships: []
       }
+      flash_news_sources: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          handle: string
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          handle: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          handle?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       flash_news_versions: {
         Row: {
           author: string

@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { FlashNewsSource } from "@/types/FlashNewsSource";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Form,
   FormControl,
@@ -25,6 +27,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
+  source_id: z.string().optional(),
   author: z.string().min(1, "L'auteur est requis"),
   author_handle: z.string().min(1, "Le handle est requis").regex(/^@/, "Doit commencer par @"),
   content: z.string().min(10, "Le contenu doit faire au moins 10 caractères"),
@@ -44,11 +47,33 @@ interface FlashNewsFormProps {
 
 export const FlashNewsForm = ({ flashNews, onSuccess }: FlashNewsFormProps) => {
   const [loading, setLoading] = useState(false);
+  const [sources, setSources] = useState<FlashNewsSource[]>([]);
+  const [selectedSource, setSelectedSource] = useState<FlashNewsSource | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    fetchSources();
+  }, []);
+
+  const fetchSources = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('flash_news_sources')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setSources(data || []);
+    } catch (error) {
+      console.error('Error fetching sources:', error);
+    }
+  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      source_id: flashNews?.source_id || "",
       author: flashNews?.author || "",
       author_handle: flashNews?.author_handle || "@",
       content: flashNews?.content || "",
@@ -59,6 +84,16 @@ export const FlashNewsForm = ({ flashNews, onSuccess }: FlashNewsFormProps) => {
       scheduled_at: flashNews?.scheduled_at || "",
     },
   });
+
+  const handleSourceSelect = (sourceId: string) => {
+    const source = sources.find(s => s.id === sourceId);
+    if (source) {
+      setSelectedSource(source);
+      form.setValue('source_id', source.id);
+      form.setValue('author', source.name);
+      form.setValue('author_handle', source.handle);
+    }
+  };
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -115,6 +150,41 @@ export const FlashNewsForm = ({ flashNews, onSuccess }: FlashNewsFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="source_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Sélectionner une source</FormLabel>
+              <Select onValueChange={handleSourceSelect} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir une source prédéfinie" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {sources.map((source) => (
+                    <SelectItem key={source.id} value={source.id}>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={source.avatar_url || undefined} />
+                          <AvatarFallback>{source.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <span>{source.name}</span>
+                        <span className="text-muted-foreground text-sm">{source.handle}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="text-sm text-muted-foreground">
+                Ou remplissez manuellement ci-dessous
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
