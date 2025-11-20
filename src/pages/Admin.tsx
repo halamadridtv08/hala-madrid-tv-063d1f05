@@ -95,6 +95,18 @@ const Admin = () => {
   const [youtubeVideos, setYoutubeVideos] = useState<YouTubeVideo[]>([]);
   const [selectedFlashNews, setSelectedFlashNews] = useState<any>(null);
   const [refreshFlashNews, setRefreshFlashNews] = useState(false);
+  const flashNewsFormRef = React.useRef<HTMLDivElement>(null);
+  
+  const handleEditFlashNews = (flashNews: any) => {
+    setSelectedFlashNews(flashNews);
+    // Scroll to form after a short delay to ensure it's rendered
+    setTimeout(() => {
+      flashNewsFormRef.current?.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }, 100);
+  };
   const [stats, setStats] = useState<StatsData>({
     totalPlayers: 0,
     activePlayers: 0,
@@ -488,7 +500,7 @@ const Admin = () => {
 
       <FlashNewsDashboard />
 
-      <Card>
+      <Card ref={flashNewsFormRef}>
         <CardHeader>
           <CardTitle>
             {selectedFlashNews ? "Modifier l'info flash" : "Créer une info flash"}
@@ -511,7 +523,7 @@ const Admin = () => {
         </CardHeader>
         <CardContent>
           <FlashNewsTable
-            onEdit={(flashNews) => setSelectedFlashNews(flashNews)}
+            onEdit={handleEditFlashNews}
             refresh={refreshFlashNews}
           />
         </CardContent>
