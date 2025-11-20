@@ -42,6 +42,7 @@ export const FlashNewsForm = ({
   useEffect(() => {
     fetchSources();
   }, []);
+
   const fetchSources = async () => {
     try {
       const {
@@ -68,6 +69,42 @@ export const FlashNewsForm = ({
       scheduled_at: flashNews?.scheduled_at || ""
     }
   });
+
+  // Reset form when flashNews changes (for edit mode)
+  useEffect(() => {
+    if (flashNews) {
+      form.reset({
+        source_id: flashNews.source_id || "",
+        author: flashNews.author || "",
+        author_handle: flashNews.author_handle || "@",
+        content: flashNews.content || "",
+        category: flashNews.category || "general",
+        verified: flashNews.verified ?? true,
+        is_published: flashNews.is_published ?? false,
+        status: flashNews.status || "draft",
+        scheduled_at: flashNews.scheduled_at || ""
+      });
+      
+      // Find and set the selected source
+      const source = sources.find(s => s.name === flashNews.author);
+      if (source) {
+        setSelectedSource(source);
+      }
+    } else {
+      form.reset({
+        source_id: "",
+        author: "",
+        author_handle: "@",
+        content: "",
+        category: "general",
+        verified: true,
+        is_published: false,
+        status: "draft",
+        scheduled_at: ""
+      });
+      setSelectedSource(null);
+    }
+  }, [flashNews, sources, form]);
   const handleSourceSelect = (sourceId: string) => {
     const source = sources.find(s => s.id === sourceId);
     if (source) {
