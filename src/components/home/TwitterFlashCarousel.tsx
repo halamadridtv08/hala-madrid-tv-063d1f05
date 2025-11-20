@@ -7,64 +7,18 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Twitter, TrendingUp, Newspaper } from "lucide-react";
+import { useFlashNews } from "@/hooks/useFlashNews";
+import { FlashNewsCategory } from "@/types/FlashNews";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface FlashNews {
-  id: string;
-  author: string;
-  authorHandle: string;
-  content: string;
-  timestamp: string;
-  verified: boolean;
-  category: "transfer" | "injury" | "match" | "general";
-}
-
-const mockFlashNews: FlashNews[] = [
-  {
-    id: "1",
-    author: "Fabrizio Romano",
-    authorHandle: "@FabrizioRomano",
-    content: "🚨 Kylian Mbappé to Real Madrid, HERE WE GO! All documents signed and sealed. Medical scheduled for next week. ⚪️👑",
-    timestamp: "Il y a 2h",
-    verified: true,
-    category: "transfer"
-  },
-  {
-    id: "2",
-    author: "Madrid Times",
-    authorHandle: "@MadridTimes",
-    content: "⚽️ OFFICIEL : Vinicius Jr. remporte le prix du meilleur joueur du mois de janvier avec 5 buts et 3 passes décisives!",
-    timestamp: "Il y a 4h",
-    verified: true,
-    category: "general"
-  },
-  {
-    id: "3",
-    author: "Carlo Ancelotti",
-    authorHandle: "@MrAncelotti",
-    content: "🏆 Très fier de l'équipe aujourd'hui. La mentalité et le travail collectif ont fait la différence. Hala Madrid! 💪",
-    timestamp: "Il y a 5h",
-    verified: true,
-    category: "match"
-  },
-  {
-    id: "4",
-    author: "Real Madrid Info",
-    authorHandle: "@RMadridInfo",
-    content: "🚑 Mise à jour médicale : Militão devrait reprendre l'entraînement avec le groupe la semaine prochaine après sa blessure.",
-    timestamp: "Il y a 6h",
-    verified: true,
-    category: "injury"
-  },
-  {
-    id: "5",
-    author: "Transfert News",
-    authorHandle: "@TransfertNews",
-    content: "📰 Le Real Madrid surveille de près plusieurs jeunes talents en Europe pour renforcer l'équipe cet été. Négociations en cours.",
-    timestamp: "Il y a 8h",
-    verified: true,
-    category: "transfer"
-  }
-];
+const categoryLabels: Record<FlashNewsCategory, string> = {
+  transfer: "Transferts",
+  injury: "Blessures",
+  match: "Matchs",
+  general: "Général",
+};
 
 const getCategoryIcon = (category: string) => {
   switch (category) {
@@ -93,6 +47,49 @@ const getCategoryColor = (category: string) => {
 };
 
 export const TwitterFlashCarousel = () => {
+  const { flashNews, loading } = useFlashNews();
+  const [selectedCategory, setSelectedCategory] = useState<FlashNewsCategory | 'all'>('all');
+
+  const filteredNews = selectedCategory === 'all' 
+    ? flashNews 
+    : flashNews.filter(news => news.category === selectedCategory);
+
+  const getTimestamp = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return "Il y a quelques minutes";
+    if (diffInHours < 24) return `Il y a ${diffInHours}h`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `Il y a ${diffInDays}j`;
+  };
+
+  if (loading) {
+    return (
+      <section className="py-12 sm:py-16 bg-gradient-to-b from-background to-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-3 mb-6">
+            <Skeleton className="w-12 h-12 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => (
+              <Skeleton key={i} className="h-48" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (filteredNews.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-12 sm:py-16 bg-gradient-to-b from-background to-muted/30">
       <div className="container mx-auto px-4">
@@ -110,6 +107,27 @@ export const TwitterFlashCarousel = () => {
           </div>
         </div>
 
+        {/* Category Filters */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <Button
+            variant={selectedCategory === 'all' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSelectedCategory('all')}
+          >
+            Tous
+          </Button>
+          {Object.entries(categoryLabels).map(([key, label]) => (
+            <Button
+              key={key}
+              variant={selectedCategory === key ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedCategory(key as FlashNewsCategory)}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
+
         {/* Mobile Carousel */}
         <div className="lg:hidden">
           <Carousel
@@ -120,7 +138,7 @@ export const TwitterFlashCarousel = () => {
             className="w-full"
           >
             <CarouselContent className="-ml-4">
-              {mockFlashNews.map((news) => (
+              {filteredNews.map((news) => (
                 <CarouselItem key={news.id} className="pl-4 basis-[90%] sm:basis-[70%]">
                   <Card className="group relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-300 bg-card/50 backdrop-blur-sm">
                     <CardContent className="p-5">
@@ -141,7 +159,7 @@ export const TwitterFlashCarousel = () => {
                               </svg>
                             )}
                           </div>
-                          <span className="text-muted-foreground text-xs">{news.authorHandle}</span>
+                          <span className="text-muted-foreground text-xs">{news.author_handle}</span>
                         </div>
                         <div className={`flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-medium ${getCategoryColor(news.category)}`}>
                           {getCategoryIcon(news.category)}
@@ -151,7 +169,7 @@ export const TwitterFlashCarousel = () => {
                         {news.content}
                       </p>
                       <div className="text-xs text-muted-foreground">
-                        {news.timestamp}
+                        {getTimestamp(news.created_at)}
                       </div>
                     </CardContent>
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
@@ -172,7 +190,7 @@ export const TwitterFlashCarousel = () => {
             className="w-full"
           >
             <CarouselContent className="-ml-4">
-              {mockFlashNews.map((news) => (
+              {filteredNews.map((news) => (
                 <CarouselItem key={news.id} className="pl-4 basis-1/3">
                   <Card className="group relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-300 bg-card/50 backdrop-blur-sm h-full">
                     <CardContent className="p-5">
@@ -193,7 +211,7 @@ export const TwitterFlashCarousel = () => {
                               </svg>
                             )}
                           </div>
-                          <span className="text-muted-foreground text-xs">{news.authorHandle}</span>
+                          <span className="text-muted-foreground text-xs">{news.author_handle}</span>
                         </div>
                         <div className={`flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-medium ${getCategoryColor(news.category)}`}>
                           {getCategoryIcon(news.category)}
@@ -203,7 +221,7 @@ export const TwitterFlashCarousel = () => {
                         {news.content}
                       </p>
                       <div className="text-xs text-muted-foreground">
-                        {news.timestamp}
+                        {getTimestamp(news.created_at)}
                       </div>
                     </CardContent>
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />

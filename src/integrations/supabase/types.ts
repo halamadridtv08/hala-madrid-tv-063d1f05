@@ -199,6 +199,42 @@ export type Database = {
         }
         Relationships: []
       }
+      flash_news: {
+        Row: {
+          author: string
+          author_handle: string
+          category: string
+          content: string
+          created_at: string | null
+          id: string
+          is_published: boolean | null
+          updated_at: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          author: string
+          author_handle: string
+          category: string
+          content: string
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          updated_at?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          author?: string
+          author_handle?: string
+          category?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          updated_at?: string | null
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       kit_images: {
         Row: {
           created_at: string
