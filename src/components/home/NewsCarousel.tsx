@@ -122,19 +122,20 @@ export function NewsCarousel() {
   }
 
   return (
-    <div 
-      className="relative overflow-hidden"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
-      <Carousel 
-        setApi={setApi}
-        className="w-full"
-        opts={{ 
-          loop: true,
-          duration: 30
-        }}
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4">
+      <div 
+        className="relative overflow-hidden"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
       >
+        <Carousel 
+          setApi={setApi}
+          className="w-full"
+          opts={{ 
+            loop: true,
+            duration: 30
+          }}
+        >
         <CarouselContent>
           {slides.map((slide) => (
             <CarouselItem key={slide.id}>
@@ -199,6 +200,45 @@ export function NewsCarousel() {
           ))}
         </div>
       </Carousel>
+      </div>
+
+      {/* Thumbnails sidebar */}
+      <div className="hidden lg:flex flex-col gap-3 overflow-y-auto max-h-[500px] pr-2">
+        <h3 className="text-sm font-semibold text-foreground mb-2">Autres actualités</h3>
+        {slides.map((slide, index) => (
+          <button
+            key={slide.id}
+            onClick={() => api?.scrollTo(index)}
+            className={`group relative flex gap-3 p-2 rounded-lg transition-all hover:bg-accent/10 ${
+              current === index ? 'bg-accent/20 ring-2 ring-primary' : ''
+            }`}
+          >
+            <div className="relative w-24 h-16 flex-shrink-0 rounded overflow-hidden">
+              <img
+                src={slide.image_url || "https://via.placeholder.com/200x100?text=RM"}
+                alt={slide.title}
+                className="w-full h-full object-cover"
+              />
+              {current === index && (
+                <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <Badge className={`${getCategoryColor(slide.category)} text-xs mb-1`}>
+                {slide.category}
+              </Badge>
+              <p className="text-xs font-medium line-clamp-2 text-foreground">
+                {slide.title}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {formatDate(slide.published_at).split(' ').slice(0, 2).join(' ')}
+              </p>
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
