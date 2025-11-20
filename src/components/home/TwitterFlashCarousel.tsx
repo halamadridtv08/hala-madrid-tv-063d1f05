@@ -7,8 +7,9 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Twitter, TrendingUp, Newspaper } from "lucide-react";
-import { useFlashNews } from "@/hooks/useFlashNews";
+import { useFlashNewsWithSources } from "@/hooks/useFlashNewsWithSources";
 import { FlashNewsCategory } from "@/types/FlashNews";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -47,7 +48,7 @@ const getCategoryColor = (category: string) => {
 };
 
 export const TwitterFlashCarousel = () => {
-  const { flashNews, loading } = useFlashNews();
+  const { flashNews, loading } = useFlashNewsWithSources();
   const [selectedCategory, setSelectedCategory] = useState<FlashNewsCategory | 'all'>('all');
 
   const filteredNews = selectedCategory === 'all' 
@@ -143,11 +144,12 @@ export const TwitterFlashCarousel = () => {
                   <Card className="group relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-300 bg-card/50 backdrop-blur-sm">
                     <CardContent className="p-5">
                       <div className="flex items-start gap-3 mb-3">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                          <span className="text-primary-foreground font-bold text-sm">
+                        <Avatar className="flex-shrink-0 w-10 h-10">
+                          <AvatarImage src={news.source?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground font-bold text-sm">
                             {news.author.charAt(0)}
-                          </span>
-                        </div>
+                          </AvatarFallback>
+                        </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-foreground text-sm truncate">
@@ -195,11 +197,12 @@ export const TwitterFlashCarousel = () => {
                   <Card className="group relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-300 bg-card/50 backdrop-blur-sm h-full">
                     <CardContent className="p-5">
                       <div className="flex items-start gap-3 mb-3">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                          <span className="text-primary-foreground font-bold text-sm">
+                        <Avatar className="flex-shrink-0 w-10 h-10">
+                          <AvatarImage src={news.source?.avatar_url || undefined} />
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground font-bold text-sm">
                             {news.author.charAt(0)}
-                          </span>
-                        </div>
+                          </AvatarFallback>
+                        </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-foreground text-sm truncate">
