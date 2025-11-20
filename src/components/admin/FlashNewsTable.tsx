@@ -23,6 +23,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { FlashNewsFilters } from "./FlashNewsFilters";
+import { FlashNewsVersionHistory } from "./FlashNewsVersionHistory";
 
 interface FlashNewsTableProps {
   onEdit: (flashNews: any) => void;
@@ -31,14 +33,68 @@ interface FlashNewsTableProps {
 
 export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
   const [flashNews, setFlashNews] = useState<any[]>([]);
+  const [filteredFlashNews, setFilteredFlashNews] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const { toast } = useToast();
   const { user } = useAuth();
 
   useEffect(() => {
     fetchFlashNews();
+    fetchCategories();
   }, [refresh]);
+
+  useEffect(() => {
+    filterFlashNews();
+  }, [flashNews, searchTerm, statusFilter, categoryFilter]);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('flash_news_categories')
+        .select('slug, name')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const filterFlashNews = () => {
+    let filtered = [...flashNews];
+
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (news) =>
+          news.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          news.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          news.author_handle.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((news) => news.status === statusFilter);
+    }
+
+    if (categoryFilter !== "all") {
+      filtered = filtered.filter((news) => news.category === categoryFilter);
+    }
+
+    setFilteredFlashNews(filtered);
+  };
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setCategoryFilter("all");
+  };
 
   const fetchFlashNews = async () => {
     try {
@@ -149,6 +205,17 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
 
   return (
     <>
+      <FlashNewsFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        statusFilter={statusFilter}
+        onStatusChange={setStatusFilter}
+        categoryFilter={categoryFilter}
+        onCategoryChange={setCategoryFilter}
+        onReset={resetFilters}
+        categories={categories}
+      />
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -163,7 +230,7 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {flashNews.map((news) => {
+          {filteredFlashNews.map((news) => {
             const categoryInfo = getCategoryBadge(news.category);
             const statusInfo = getStatusBadge(news.status);
             return (
@@ -219,6 +286,7 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
+                    <FlashNewsVersionHistory flashNewsId={news.id} />
                     {news.status === 'pending' && (
                       <Button
                         variant="ghost"

@@ -247,6 +247,108 @@ export type Database = {
         }
         Relationships: []
       }
+      flash_news_categories: {
+        Row: {
+          color: string
+          created_at: string | null
+          display_order: number | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string
+          created_at?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string
+          created_at?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      flash_news_versions: {
+        Row: {
+          author: string
+          author_handle: string
+          category: string
+          change_description: string | null
+          content: string
+          created_at: string | null
+          flash_news_id: string
+          id: string
+          modified_by: string | null
+          modified_by_email: string | null
+          scheduled_at: string | null
+          status: string | null
+          verified: boolean | null
+          version_number: number
+        }
+        Insert: {
+          author: string
+          author_handle: string
+          category: string
+          change_description?: string | null
+          content: string
+          created_at?: string | null
+          flash_news_id: string
+          id?: string
+          modified_by?: string | null
+          modified_by_email?: string | null
+          scheduled_at?: string | null
+          status?: string | null
+          verified?: boolean | null
+          version_number?: number
+        }
+        Update: {
+          author?: string
+          author_handle?: string
+          category?: string
+          change_description?: string | null
+          content?: string
+          created_at?: string | null
+          flash_news_id?: string
+          id?: string
+          modified_by?: string | null
+          modified_by_email?: string | null
+          scheduled_at?: string | null
+          status?: string | null
+          verified?: boolean | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flash_news_versions_flash_news_id_fkey"
+            columns: ["flash_news_id"]
+            isOneToOne: false
+            referencedRelation: "flash_news"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flash_news_versions_flash_news_id_fkey"
+            columns: ["flash_news_id"]
+            isOneToOne: false
+            referencedRelation: "published_flash_news"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kit_images: {
         Row: {
           created_at: string
