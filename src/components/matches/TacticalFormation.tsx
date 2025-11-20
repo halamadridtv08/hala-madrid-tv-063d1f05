@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, Trophy } from "lucide-react";
-
 interface FormationPlayer {
   id: string;
   player_id?: string;
@@ -17,35 +16,36 @@ interface FormationPlayer {
   player_image_url?: string;
   player_rating: number;
 }
-
 interface Formation {
   id: string;
   team_type: string;
   formation: string;
   players: FormationPlayer[];
 }
-
 interface TacticalFormationProps {
   matchId: string;
   matchData: any;
 }
-
-export const TacticalFormation = ({ matchId, matchData }: TacticalFormationProps) => {
-  const [formations, setFormations] = useState<{ [key: string]: Formation }>({});
+export const TacticalFormation = ({
+  matchId,
+  matchData
+}: TacticalFormationProps) => {
+  const [formations, setFormations] = useState<{
+    [key: string]: Formation;
+  }>({});
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     if (matchId) {
       fetchFormations();
     }
   }, [matchId]);
-
   const fetchFormations = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('match_formations')
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from('match_formations').select(`
           id,
           team_type,
           formation,
@@ -62,26 +62,22 @@ export const TacticalFormation = ({ matchId, matchData }: TacticalFormationProps
             player_image_url,
             player_rating
           )
-        `)
-        .eq('match_id', matchId);
-
+        `).eq('match_id', matchId);
       if (error) {
         console.error('Erreur lors du chargement des formations:', error);
         return;
       }
-
-      const formationsData: { [key: string]: Formation } = {};
+      const formationsData: {
+        [key: string]: Formation;
+      } = {};
       data?.forEach(formation => {
         formationsData[formation.team_type] = {
           id: formation.id,
           team_type: formation.team_type,
           formation: formation.formation,
-          players: (formation.match_formation_players || []).sort((a, b) => 
-            b.is_starter === a.is_starter ? a.jersey_number - b.jersey_number : (b.is_starter ? 1 : 0) - (a.is_starter ? 1 : 0)
-          )
+          players: (formation.match_formation_players || []).sort((a, b) => b.is_starter === a.is_starter ? a.jersey_number - b.jersey_number : (b.is_starter ? 1 : 0) - (a.is_starter ? 1 : 0))
         };
       });
-
       setFormations(formationsData);
     } catch (error) {
       console.error('Erreur:', error);
@@ -89,36 +85,27 @@ export const TacticalFormation = ({ matchId, matchData }: TacticalFormationProps
       setLoading(false);
     }
   };
-
   if (loading) {
-    return (
-      <Card>
+    return <Card>
         <CardContent className="py-8">
           <div className="text-center">Chargement des compositions...</div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
   if (Object.keys(formations).length === 0) {
-    return (
-      <Card>
+    return <Card>
         <CardContent className="py-8">
           <div className="text-center text-gray-500">
             <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>Aucune composition disponible pour ce match</p>
-            <p className="text-sm mt-2">Les compositions peuvent être configurées depuis l'interface d'administration</p>
+            
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
   const realMadridFormation = formations.real_madrid;
   const opposingFormation = formations.opposing;
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       {/* Vue tactique principale */}
       <Card>
         <CardHeader>
@@ -127,20 +114,19 @@ export const TacticalFormation = ({ matchId, matchData }: TacticalFormationProps
             Compositions officielles
           </CardTitle>
           <div className="flex items-center gap-4">
-            {realMadridFormation && (
-              <Badge variant="outline">
+            {realMadridFormation && <Badge variant="outline">
                 Real Madrid: {realMadridFormation.formation}
-              </Badge>
-            )}
-            {opposingFormation && (
-              <Badge variant="outline">
+              </Badge>}
+            {opposingFormation && <Badge variant="outline">
                 {matchData?.homeTeam?.name === 'Real Madrid' ? matchData?.awayTeam?.name : matchData?.homeTeam?.name}: {opposingFormation.formation}
-              </Badge>
-            )}
+              </Badge>}
           </div>
         </CardHeader>
         <CardContent>
-          <div className="relative w-full bg-gradient-to-b from-green-500 to-green-600 rounded-lg overflow-hidden shadow-lg" style={{ aspectRatio: "3/4", minHeight: "500px" }}>
+          <div className="relative w-full bg-gradient-to-b from-green-500 to-green-600 rounded-lg overflow-hidden shadow-lg" style={{
+          aspectRatio: "3/4",
+          minHeight: "500px"
+        }}>
             {/* Lignes du terrain de football */}
             <div className="absolute inset-0">
               {/* Ligne médiane */}
@@ -169,29 +155,14 @@ export const TacticalFormation = ({ matchId, matchData }: TacticalFormationProps
             </div>
 
             {/* Joueurs Real Madrid */}
-            {realMadridFormation?.players
-              .filter(player => player.is_starter)
-              .map((player) => (
-              <div
-                key={player.id}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
-                style={{
-                  left: `${player.position_x}%`,
-                  top: `${player.position_y}%`
-                }}
-              >
+            {realMadridFormation?.players.filter(player => player.is_starter).map(player => <div key={player.id} className="absolute transform -translate-x-1/2 -translate-y-1/2 group" style={{
+            left: `${player.position_x}%`,
+            top: `${player.position_y}%`
+          }}>
                 <div className="relative">
-                  {player.player_image_url ? (
-                    <img
-                      src={player.player_image_url}
-                      alt={player.player_name}
-                      className="w-12 h-12 rounded-full border-2 border-white shadow-lg object-cover"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg flex items-center justify-center">
+                  {player.player_image_url ? <img src={player.player_image_url} alt={player.player_name} className="w-12 h-12 rounded-full border-2 border-white shadow-lg object-cover" /> : <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg flex items-center justify-center">
                       <span className="text-white text-xs font-bold">{player.jersey_number}</span>
-                    </div>
-                  )}
+                    </div>}
                   
                   {/* Numéro du maillot */}
                   <div className="absolute -top-1 -right-1 bg-white text-blue-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md text-[10px]">
@@ -213,8 +184,7 @@ export const TacticalFormation = ({ matchId, matchData }: TacticalFormationProps
                     {player.player_position}
                   </div>
                 </div>
-              </div>
-            ))}
+              </div>)}
           </div>
         </CardContent>
       </Card>
@@ -222,17 +192,13 @@ export const TacticalFormation = ({ matchId, matchData }: TacticalFormationProps
       {/* Remplaçants */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Remplaçants Real Madrid */}
-        {realMadridFormation && (
-          <Card>
+        {realMadridFormation && <Card>
             <CardHeader>
               <CardTitle className="text-lg">Remplaçants Real Madrid</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-3">
-                {realMadridFormation.players
-                  .filter(player => !player.is_starter)
-                  .map((player) => (
-                  <div key={player.id} className="flex items-center space-x-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                {realMadridFormation.players.filter(player => !player.is_starter).map(player => <div key={player.id} className="flex items-center space-x-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
                       {player.jersey_number}
                     </div>
@@ -243,16 +209,13 @@ export const TacticalFormation = ({ matchId, matchData }: TacticalFormationProps
                     <div className="bg-yellow-400 text-black text-xs font-bold rounded-full w-8 h-8 flex items-center justify-center">
                       {player.player_rating.toFixed(1)}
                     </div>
-                  </div>
-                ))}
+                  </div>)}
               </div>
             </CardContent>
-          </Card>
-        )}
+          </Card>}
 
         {/* Remplaçants équipe adverse */}
-        {opposingFormation && (
-          <Card>
+        {opposingFormation && <Card>
             <CardHeader>
               <CardTitle className="text-lg">
                 Remplaçants {matchData?.homeTeam?.name === 'Real Madrid' ? matchData?.awayTeam?.name : matchData?.homeTeam?.name}
@@ -260,10 +223,7 @@ export const TacticalFormation = ({ matchId, matchData }: TacticalFormationProps
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-3">
-                {opposingFormation.players
-                  .filter(player => !player.is_starter)
-                  .map((player) => (
-                  <div key={player.id} className="flex items-center space-x-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                {opposingFormation.players.filter(player => !player.is_starter).map(player => <div key={player.id} className="flex items-center space-x-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white font-bold text-sm">
                       {player.jersey_number}
                     </div>
@@ -274,13 +234,10 @@ export const TacticalFormation = ({ matchId, matchData }: TacticalFormationProps
                     <div className="bg-yellow-400 text-black text-xs font-bold rounded-full w-8 h-8 flex items-center justify-center">
                       {player.player_rating.toFixed(1)}
                     </div>
-                  </div>
-                ))}
+                  </div>)}
               </div>
             </CardContent>
-          </Card>
-        )}
+          </Card>}
       </div>
-    </div>
-  );
+    </div>;
 };
