@@ -4,6 +4,11 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 
 const FeaturedKits = () => {
   const [featuredKits, setFeaturedKits] = useState<any[]>([]);
@@ -80,7 +85,70 @@ const FeaturedKits = () => {
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        {/* Mobile carousel */}
+        <div className="sm:hidden">
+          <Carousel
+            opts={{
+              align: "start",
+              dragFree: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-4">
+              {featuredKits.map((kit) => (
+                <CarouselItem key={kit.id} className="pl-4 basis-[85%]">
+                  <Card className="group overflow-hidden cursor-pointer hover:shadow-2xl transition-all duration-500">
+                    <CardContent className="p-0 relative">
+                      <div className="aspect-[3/4] overflow-hidden bg-gradient-to-br from-background to-muted">
+                        {kit.image_url ? (
+                          <img
+                            src={kit.image_url}
+                            alt={kit.title}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const parent = e.currentTarget.parentElement;
+                              if (parent) {
+                                const placeholder = document.createElement('div');
+                                placeholder.className = 'flex flex-col items-center justify-center h-full text-muted-foreground bg-muted';
+                                placeholder.innerHTML = '<div class="text-6xl mb-4">👕</div><div class="text-lg font-semibold">IMAGE COMING SOON</div>';
+                                parent.appendChild(placeholder);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                            <div className="text-6xl mb-4">👕</div>
+                            <div className="text-lg font-semibold">IMAGE COMING SOON</div>
+                          </div>
+                        )}
+                        
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        
+                        <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+                          <h3 className="text-white font-bold text-lg mb-2 drop-shadow-lg">
+                            {kit.title}
+                          </h3>
+                          <p className="text-white/90 text-sm mb-3 drop-shadow-lg line-clamp-2">
+                            {kit.description}
+                          </p>
+                          <Button asChild size="sm" className="w-full bg-madrid-gold text-madrid-blue hover:bg-madrid-gold/90">
+                            <Link to="/kits">
+                              Découvrir
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
+
+        {/* Desktop grid */}
+        <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {featuredKits.map((kit) => (
             <Card key={kit.id} className="group overflow-hidden cursor-pointer hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
               <CardContent className="p-0 relative">
