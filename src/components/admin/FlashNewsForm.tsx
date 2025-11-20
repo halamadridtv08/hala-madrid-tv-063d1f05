@@ -68,14 +68,21 @@ export const FlashNewsForm = ({
       scheduled_at: flashNews?.scheduled_at || ""
     }
   });
-  const handleSourceSelect = (source: FlashNewsSource) => {
+  const handleSourceSelect = (sourceId: string) => {
+    const source = sources.find(s => s.id === sourceId);
+    if (source) {
+      setSelectedSource(source);
+      form.setValue('source_id', source.id);
+      form.setValue('author', source.name);
+      form.setValue('author_handle', source.handle);
+    }
+  };
+  
+  const handleSourcePickerSelect = (source: FlashNewsSource) => {
     setSelectedSource(source);
     form.setValue('source_id', source.id);
     form.setValue('author', source.name);
     form.setValue('author_handle', source.handle);
-  };
-  const handleSourcePickerSelect = (source: FlashNewsSource) => {
-    handleSourceSelect(source);
   };
   const onSubmit = async (values: FormValues) => {
     try {
@@ -136,9 +143,30 @@ export const FlashNewsForm = ({
                 <FormMessage />
               </FormItem>} />
 
-          <FormField control={form.control} name="source_id" render={({
-          field
-        }) => {}} />
+          <FormField 
+            control={form.control} 
+            name="source_id" 
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Source (recherche par nom)</FormLabel>
+                <Select onValueChange={handleSourceSelect} value={field.value || ""}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner une source..." />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {sources.map((source) => (
+                      <SelectItem key={source.id} value={source.id}>
+                        {source.name} ({source.handle})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} 
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
