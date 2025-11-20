@@ -66,6 +66,7 @@ import { FlashNewsTable } from "@/components/admin/FlashNewsTable";
 import { FlashNewsDashboard } from "@/components/admin/FlashNewsDashboard";
 import { UserRolesManager } from "@/components/admin/UserRolesManager";
 import { FlashNewsCategoryManager } from "@/components/admin/FlashNewsCategoryManager";
+import { FlashNewsSourceManager } from "@/components/admin/FlashNewsSourceManager";
 import { useNavigate } from "react-router-dom";
 
 interface StatsData {
@@ -437,6 +438,7 @@ const Admin = () => {
       <h2 className="text-2xl font-bold mb-4">Paramètres</h2>
       <UserRolesManager />
       <FlashNewsCategoryManager />
+      <FlashNewsSourceManager />
       <AuthImageManager />
       <SettingsDashboard />
     </div>
