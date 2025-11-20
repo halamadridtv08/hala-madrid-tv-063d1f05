@@ -128,7 +128,11 @@ export const FlashNewsForm = ({
 
   const handleEmojiClick = (emojiData: EmojiClickData) => {
     const currentContent = form.getValues('content');
-    form.setValue('content', currentContent + emojiData.emoji);
+    // Use unified code for better emoji support (especially flags)
+    const emojiToInsert = emojiData.unified 
+      ? String.fromCodePoint(...emojiData.unified.split('-').map(u => parseInt(u, 16)))
+      : emojiData.emoji;
+    form.setValue('content', currentContent + emojiToInsert);
     setShowEmojiPicker(false);
   };
 
