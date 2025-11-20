@@ -1,4 +1,5 @@
 export type FlashNewsCategory = 'transfer' | 'injury' | 'match' | 'general';
+export type FlashNewsStatus = 'draft' | 'pending' | 'approved' | 'published';
 
 export interface FlashNews {
   id: string;
@@ -8,6 +9,10 @@ export interface FlashNews {
   category: FlashNewsCategory;
   verified: boolean;
   is_published: boolean;
+  status: FlashNewsStatus;
+  scheduled_at?: string;
+  approved_by?: string;
+  approved_at?: string;
   created_at: string;
   updated_at: string;
 }

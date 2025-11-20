@@ -201,6 +201,8 @@ export type Database = {
       }
       flash_news: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           author: string
           author_handle: string
           category: string
@@ -208,10 +210,14 @@ export type Database = {
           created_at: string | null
           id: string
           is_published: boolean | null
+          scheduled_at: string | null
+          status: string | null
           updated_at: string | null
           verified: boolean | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           author: string
           author_handle: string
           category: string
@@ -219,10 +225,14 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_published?: boolean | null
+          scheduled_at?: string | null
+          status?: string | null
           updated_at?: string | null
           verified?: boolean | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           author?: string
           author_handle?: string
           category?: string
@@ -230,6 +240,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_published?: boolean | null
+          scheduled_at?: string | null
+          status?: string | null
           updated_at?: string | null
           verified?: boolean | null
         }
@@ -1201,7 +1213,54 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      published_flash_news: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          author: string | null
+          author_handle: string | null
+          category: string | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          is_published: boolean | null
+          scheduled_at: string | null
+          status: string | null
+          updated_at: string | null
+          verified: boolean | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          author?: string | null
+          author_handle?: string | null
+          category?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_published?: boolean | null
+          scheduled_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          verified?: boolean | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          author?: string | null
+          author_handle?: string | null
+          category?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_published?: boolean | null
+          scheduled_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
@@ -1211,6 +1270,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      publish_scheduled_flash_news: { Args: never; Returns: undefined }
       update_all_players_ages: { Args: never; Returns: undefined }
     }
     Enums: {
