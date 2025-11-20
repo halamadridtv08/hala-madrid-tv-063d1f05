@@ -215,54 +215,6 @@ export const TacticalFormation = ({ matchId, matchData }: TacticalFormationProps
                 </div>
               </div>
             ))}
-
-            {/* Joueurs équipe adverse */}
-            {opposingFormation?.players
-              .filter(player => player.is_starter)
-              .map((player) => (
-              <div
-                key={player.id}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
-                style={{
-                  left: `${player.position_x}%`,
-                  top: `${player.position_y}%`
-                }}
-              >
-                <div className="relative">
-                  {player.player_image_url ? (
-                    <img
-                      src={player.player_image_url}
-                      alt={player.player_name}
-                      className="w-12 h-12 rounded-full border-2 border-white shadow-lg object-cover"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-br from-red-600 to-red-700 shadow-lg flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">{player.jersey_number}</span>
-                    </div>
-                  )}
-                  
-                  {/* Numéro du maillot */}
-                  <div className="absolute -top-1 -right-1 bg-white text-red-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md text-[10px]">
-                    {player.jersey_number}
-                  </div>
-                  
-                  {/* Note du joueur */}
-                  <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md text-[10px]">
-                    {player.player_rating.toFixed(1)}
-                  </div>
-                  
-                  {/* Nom du joueur */}
-                  <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                    {player.player_name}
-                  </div>
-                  
-                  {/* Position */}
-                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-red-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                    {player.player_position}
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         </CardContent>
       </Card>
