@@ -241,7 +241,11 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
                     <div className="text-sm text-muted-foreground">{news.author_handle}</div>
                   </div>
                 </TableCell>
-                <TableCell className="max-w-md truncate">{news.content}</TableCell>
+                <TableCell className="max-w-md">
+                  <div className="line-clamp-2 whitespace-pre-wrap break-words" style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+                    {news.content}
+                  </div>
+                </TableCell>
                 <TableCell>
                   <Badge variant={categoryInfo.variant}>{categoryInfo.label}</Badge>
                 </TableCell>
