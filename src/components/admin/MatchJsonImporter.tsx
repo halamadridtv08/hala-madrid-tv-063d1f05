@@ -11,6 +11,7 @@ import { Match } from "@/types/Match";
 import { MatchImportPreview } from "./MatchImportPreview";
 import { MatchImportHistory } from "./MatchImportHistory";
 import { PlayerNameValidator } from "./PlayerNameValidator";
+import { normalizeCompetitionName } from "@/utils/competitionNormalizer";
 
 interface MatchJsonData {
   id?: string;
@@ -102,9 +103,13 @@ export const MatchJsonImporter = () => {
     }
   };
 
-  const transformImportedJson = (imported: ImportedMatchJson): MatchJsonData => {
+  const transformImportedJson = async (imported: ImportedMatchJson): Promise<MatchJsonData> => {
     const homeTeam = imported.match.teams.home;
     const awayTeam = imported.match.teams.away;
+    
+    // Normalize competition name
+    const competitionRaw = imported.match.competition.replace(/_/g, ' ').toUpperCase();
+    const normalizedCompetition = await normalizeCompetitionName(competitionRaw);
     
     return {
       home_team: homeTeam === "real_madrid" ? "Real Madrid" : homeTeam.charAt(0).toUpperCase() + homeTeam.slice(1),
@@ -113,7 +118,7 @@ export const MatchJsonImporter = () => {
       away_score: imported.match.score[awayTeam] || 0,
       match_date: `${imported.match.date}T${imported.match.time}:00Z`,
       venue: imported.match.venue,
-      competition: imported.match.competition.replace(/_/g, ' ').toUpperCase(),
+      competition: normalizedCompetition,
       status: imported.match.status === "termine" ? "finished" : imported.match.status,
       match_details: {
         possession: imported.match.possession,
@@ -126,13 +131,13 @@ export const MatchJsonImporter = () => {
     };
   };
 
-  const validateJson = (input: string): boolean => {
+  const validateJson = async (input: string): Promise<boolean> => {
     try {
       const data = JSON.parse(input);
       
       // Check if it's the new format
       if (data.match && data.match.teams) {
-        const transformed = transformImportedJson(data as ImportedMatchJson);
+        const transformed = await transformImportedJson(data as ImportedMatchJson);
         setParsedData(transformed);
         setValidationStatus("valid");
         return true;
@@ -142,6 +147,11 @@ export const MatchJsonImporter = () => {
       if (!data.home_team || !data.away_team || !data.match_date) {
         toast.error("Format JSON invalide. Vérifiez la structure.");
         return false;
+      }
+
+      // Normalize competition name for old format too
+      if (data.competition) {
+        data.competition = await normalizeCompetitionName(data.competition);
       }
 
       setParsedData(data);
