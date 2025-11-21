@@ -204,7 +204,7 @@ const Players = () => {
         <div className="madrid-container py-8">
           <div className="flex flex-col lg:flex-row gap-8 mb-12">
             <div className="lg:w-1/4">
-              {mainCoach && <CoachCard name={mainCoach.name} title={mainCoach.role} nationality={mainCoach.nationality || "Italienne"} birthDate="10 juin 1959" atClubSince="2021" image={mainCoach.image_url} achievements={coachAchievements} />}
+              {mainCoach && <CoachCard name={mainCoach.name} title={mainCoach.role} nationality={mainCoach.nationality || "Italienne"} birthDate="25 Novembre 1981" atClubSince="2021" image={mainCoach.image_url} achievements={coachAchievements} />}
             </div>
             <div className="lg:w-3/4">
               <div className="bg-gray-100 dark:bg-gray-800 p-6 rounded-lg h-full">
