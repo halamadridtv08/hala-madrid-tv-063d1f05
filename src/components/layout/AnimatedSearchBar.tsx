@@ -96,6 +96,8 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
@@ -107,6 +109,18 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
     matches: any[];
     loaded: boolean;
   }>({ players: [], articles: [], matches: [], loaded: false });
+
+  // Charger l'historique de recherche depuis localStorage
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('searchHistory');
+    if (savedHistory) {
+      try {
+        setSearchHistory(JSON.parse(savedHistory));
+      } catch (error) {
+        console.error("Erreur lors du chargement de l'historique:", error);
+      }
+    }
+  }, []);
 
   // Charger toutes les données une seule fois au montage
   useEffect(() => {
@@ -143,7 +157,20 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (!value.trim() || value.length < 2) {
-        setSuggestions([]);
+        // Afficher l'historique si pas de recherche
+        if (value.trim().length === 0 && searchHistory.length > 0) {
+          const historyItems: Suggestion[] = searchHistory.slice(0, 5).map((term, index) => ({
+            id: `history-${index}`,
+            name: term,
+            type: "player" as const,
+            subtitle: "Recherche récente",
+            url: `/search?q=${encodeURIComponent(term)}`,
+            score: 1,
+          }));
+          setSuggestions(historyItems);
+        } else {
+          setSuggestions([]);
+        }
         setIsLoading(false);
         return;
       }
@@ -157,13 +184,12 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
       setIsLoading(true);
 
       try {
-
         const allResults: Suggestion[] = [];
 
         // Traiter les joueurs avec score de similarité
         allDataCache.current.players.forEach((p) => {
           const score = calculateSimilarity(value, p.name);
-          if (score > 0.25) { // Seuil réduit pour plus de tolérance
+          if (score > 0.25) {
             allResults.push({
               id: p.id,
               name: p.name,
@@ -224,7 +250,7 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
 
     const debounce = setTimeout(fetchSuggestions, 150);
     return () => clearTimeout(debounce);
-  }, [value]);
+  }, [value, searchHistory]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -240,16 +266,58 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
   const handleFocus = () => {
     setIsFocused(true);
     setShowSuggestions(true);
+    setSelectedIndex(-1);
   };
 
   const handleBlur = () => {
     setIsFocused(false);
   };
 
-  const handleSuggestionClick = (url: string) => {
+  const saveToHistory = (searchTerm: string) => {
+    if (!searchTerm.trim()) return;
+    
+    const newHistory = [searchTerm, ...searchHistory.filter(term => term !== searchTerm)].slice(0, 10);
+    setSearchHistory(newHistory);
+    localStorage.setItem('searchHistory', JSON.stringify(newHistory));
+  };
+
+  const handleSuggestionClick = (url: string, searchTerm: string) => {
     setShowSuggestions(false);
+    saveToHistory(searchTerm);
     onChange("");
     navigate(url);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex(prev => (prev < suggestions.length - 1 ? prev + 1 : prev));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex(prev => (prev > 0 ? prev - 1 : -1));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+          const selected = suggestions[selectedIndex];
+          handleSuggestionClick(selected.url, selected.name);
+        } else if (value.trim()) {
+          saveToHistory(value.trim());
+          navigate(`/search?q=${encodeURIComponent(value)}`);
+          setShowSuggestions(false);
+          onChange("");
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
+        break;
+    }
   };
 
   const getTypeLabel = (type: string) => {
@@ -284,9 +352,13 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
           type="text"
           placeholder="Rechercher..."
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            onChange(e.target.value);
+            setSelectedIndex(-1);
+          }}
           onFocus={handleFocus}
           onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
           className={`
             relative z-10 h-[50px] rounded-full border-none px-5 
             font-normal text-base
@@ -321,19 +393,24 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
             </div>
           ) : suggestions.length > 0 ? (
             <>
-              {suggestions.map((suggestion) => (
+              {suggestions.map((suggestion, index) => (
                 <button
                   key={`${suggestion.type}-${suggestion.id}`}
                   type="button"
                   onMouseDown={(e) => {
                     e.preventDefault();
-                    handleSuggestionClick(suggestion.url);
+                    handleSuggestionClick(suggestion.url, suggestion.name);
                   }}
-                  className="w-full text-left px-4 py-3 hover:bg-accent transition-colors border-b border-border last:border-b-0 group"
+                  onMouseEnter={() => setSelectedIndex(index)}
+                  className={`w-full text-left px-4 py-3 transition-colors border-b border-border last:border-b-0 group ${
+                    selectedIndex === index ? 'bg-accent' : 'hover:bg-accent'
+                  }`}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                      <p className={`font-medium truncate transition-colors ${
+                        selectedIndex === index ? 'text-primary' : 'text-foreground group-hover:text-primary'
+                      }`}>
                         {suggestion.name}
                       </p>
                       {suggestion.subtitle && (
@@ -341,26 +418,28 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
                       )}
                     </div>
                      <div className="flex items-center gap-2 flex-shrink-0">
-                      {suggestion.score && suggestion.score < 0.7 && (
+                      {suggestion.score && suggestion.score < 0.7 && suggestion.subtitle !== "Recherche récente" && (
                         <span className="text-xs text-muted-foreground italic">Suggestion</span>
                       )}
                       <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                        {getTypeLabel(suggestion.type)}
+                        {suggestion.subtitle === "Recherche récente" ? "Historique" : getTypeLabel(suggestion.type)}
                       </span>
                     </div>
                   </div>
                 </button>
               ))}
-              <button
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleSuggestionClick(`/search?q=${encodeURIComponent(value)}`);
-                }}
-                className="w-full px-4 py-3 text-center text-sm text-primary hover:bg-accent transition-colors font-medium"
-              >
-                Voir tous les résultats pour "{value}"
-              </button>
+              {value.trim().length >= 2 && (
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleSuggestionClick(`/search?q=${encodeURIComponent(value)}`, value);
+                  }}
+                  className="w-full px-4 py-3 text-center text-sm text-primary hover:bg-accent transition-colors font-medium"
+                >
+                  Voir tous les résultats pour "{value}"
+                </button>
+              )}
             </>
           ) : value.trim().length >= 2 ? (
             <div className="px-4 py-6 text-center text-muted-foreground">
@@ -369,7 +448,7 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
                 type="button"
                 onMouseDown={(e) => {
                   e.preventDefault();
-                  handleSuggestionClick(`/search?q=${encodeURIComponent(value)}`);
+                  handleSuggestionClick(`/search?q=${encodeURIComponent(value)}`, value);
                 }}
                 className="mt-2 text-sm text-primary hover:underline"
               >
