@@ -7,7 +7,6 @@ import { Trophy, Award, Target, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { CompetitionNormalizer } from "./CompetitionNormalizer";
 
 interface CompetitionStats {
   competition: string;
@@ -206,9 +205,6 @@ export const CompetitionReports = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Competition Normalizer */}
-          <CompetitionNormalizer />
-
           {/* Selectors */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
