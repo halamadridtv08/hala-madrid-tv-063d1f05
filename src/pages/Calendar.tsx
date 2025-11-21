@@ -132,7 +132,7 @@ const CalendarPage = () => {
                 </CardHeader>
                 <CardContent className="space-y-3 sm:space-y-0">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-                    <div className="flex flex-col items-center gap-3 w-full sm:w-auto">
+                    <div className="flex items-center gap-2 sm:gap-4 justify-center flex-wrap sm:flex-nowrap w-full sm:w-auto">
                       <div className="flex items-center gap-2">
                         {nextMatch.home_team_logo && (
                           <img 
@@ -144,11 +144,11 @@ const CalendarPage = () => {
                             }}
                           />
                         )}
-                        <span className="font-semibold text-sm sm:text-base">{nextMatch.home_team}</span>
+                        <span className="font-semibold text-sm sm:text-base whitespace-nowrap">{nextMatch.home_team}</span>
                       </div>
-                      <span className="text-xl font-bold">VS</span>
+                      <span className="text-xl sm:text-2xl font-bold flex-shrink-0">VS</span>
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm sm:text-base">{nextMatch.away_team}</span>
+                        <span className="font-semibold text-sm sm:text-base whitespace-nowrap">{nextMatch.away_team}</span>
                         {nextMatch.away_team_logo && (
                           <img 
                             src={nextMatch.away_team_logo} 
