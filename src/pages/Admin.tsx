@@ -537,106 +537,108 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="madrid-container py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+      <div className="madrid-container py-4 md:py-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4">
             <Button
               onClick={() => navigate('/')}
               variant="outline"
+              size="sm"
+              className="w-fit"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour au site
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
                 Administration HALA MADRID TV
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-2">
+              <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 mt-1 md:mt-2">
                 Gérez le contenu et les paramètres du site
               </p>
             </div>
           </div>
-          <Badge variant="outline" className="px-3 py-1">
+          <Badge variant="outline" className="px-3 py-1 w-fit">
             Version 2.0
           </Badge>
         </div>
 
         <AdminMenuBar activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="overflow-x-auto">
-            <TabsList className="inline-flex h-12 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground w-max min-w-full">
-              <TabsTrigger value="dashboard" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <LayoutDashboard className="h-4 w-4" />
-                Dashboard
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-thin">
+            <TabsList className="inline-flex h-10 md:h-12 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground w-max min-w-full">
+              <TabsTrigger value="dashboard" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <LayoutDashboard className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Dashboard</span>
               </TabsTrigger>
-              <TabsTrigger value="articles" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <FileText className="h-4 w-4" />
-                Articles
+              <TabsTrigger value="articles" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <FileText className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Articles</span>
               </TabsTrigger>
-              <TabsTrigger value="special-articles" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <Trophy className="h-4 w-4" />
-                Articles Spéciaux
+              <TabsTrigger value="special-articles" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <Trophy className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Articles Spéciaux</span>
               </TabsTrigger>
-              <TabsTrigger value="videos" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <Video className="h-4 w-4" />
-                Vidéos
+              <TabsTrigger value="videos" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <Video className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Vidéos</span>
               </TabsTrigger>
-              <TabsTrigger value="photos" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <Camera className="h-4 w-4" />
-                Photos
+              <TabsTrigger value="photos" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <Camera className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Photos</span>
               </TabsTrigger>
-              <TabsTrigger value="players" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <User className="h-4 w-4" />
-                Joueurs
+              <TabsTrigger value="players" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <User className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Joueurs</span>
               </TabsTrigger>
-              <TabsTrigger value="coaches" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <Users className="h-4 w-4" />
-                Entraîneurs
+              <TabsTrigger value="coaches" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <Users className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Entraîneurs</span>
               </TabsTrigger>
-              <TabsTrigger value="matches" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <Calendar className="h-4 w-4" />
-                Matchs
+              <TabsTrigger value="matches" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <Calendar className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Matchs</span>
               </TabsTrigger>
-              <TabsTrigger value="opponents" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <Target className="h-4 w-4" />
-                Équipes Adverses
+              <TabsTrigger value="opponents" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <Target className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Équipes Adverses</span>
               </TabsTrigger>
-              <TabsTrigger value="formations" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <Target className="h-4 w-4" />
-                Formations Tactiques
+              <TabsTrigger value="formations" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <Target className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Formations</span>
               </TabsTrigger>
-              <TabsTrigger value="lineups" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <Users className="h-4 w-4" />
-                Compositions Probables
+              <TabsTrigger value="lineups" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <Users className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Compositions</span>
               </TabsTrigger>
-              <TabsTrigger value="press" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <Mic className="h-4 w-4" />
-                Conférences
+              <TabsTrigger value="press" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <Mic className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Conférences</span>
               </TabsTrigger>
-              <TabsTrigger value="training" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <PlayCircle className="h-4 w-4" />
-                Entraînements
+              <TabsTrigger value="training" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <PlayCircle className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Entraînements</span>
               </TabsTrigger>
-              <TabsTrigger value="stats" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <BarChart3 className="h-4 w-4" />
-                Statistiques
+              <TabsTrigger value="stats" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <BarChart3 className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Statistiques</span>
               </TabsTrigger>
-              <TabsTrigger value="kits" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <Shirt className="h-4 w-4" />
-                Maillots
+              <TabsTrigger value="kits" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <Shirt className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Maillots</span>
               </TabsTrigger>
-              <TabsTrigger value="youtube" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <PlayCircle className="h-4 w-4" />
-                YouTube
+              <TabsTrigger value="youtube" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <PlayCircle className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">YouTube</span>
               </TabsTrigger>
-              <TabsTrigger value="flash-news" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <Twitter className="h-4 w-4" />
-                Infos Flash
+              <TabsTrigger value="flash-news" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <Twitter className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Infos Flash</span>
               </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-2 whitespace-nowrap px-3 py-2">
-                <Settings className="h-4 w-4" />
-                Paramètres
+              <TabsTrigger value="settings" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
+                <Settings className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Paramètres</span>
               </TabsTrigger>
             </TabsList>
           </div>
