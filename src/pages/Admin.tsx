@@ -68,6 +68,8 @@ import { FlashNewsDashboard } from "@/components/admin/FlashNewsDashboard";
 import { UserRolesManager } from "@/components/admin/UserRolesManager";
 import { FlashNewsCategoryManager } from "@/components/admin/FlashNewsCategoryManager";
 import { FlashNewsSourceManager } from "@/components/admin/FlashNewsSourceManager";
+import { BatchMatchImporter } from "@/components/admin/BatchMatchImporter";
+import { StatsEvolutionChart } from "@/components/admin/StatsEvolutionChart";
 import { useNavigate } from "react-router-dom";
 
 interface StatsData {
@@ -402,9 +404,14 @@ const Admin = () => {
   );
 
   const renderMatches = () => (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">Gestion des Matchs</h2>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Gestion des Matchs</h2>
       <MatchTable matches={matches} setMatches={setMatches} />
+      
+      <div className="mt-8">
+        <h3 className="text-xl font-semibold mb-4">Import par lots</h3>
+        <BatchMatchImporter />
+      </div>
     </div>
   );
 
@@ -429,13 +436,18 @@ const Admin = () => {
   );
 
   const renderStats = () => (
-    <div>
+    <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-6">Statistiques en Temps Réel</h2>
       {window.location.hash === '#stats-manager' ? (
         <AdminStatsManager />
       ) : (
         <AdminStatsOverview />
       )}
+      
+      <div className="mt-8">
+        <h3 className="text-xl font-semibold mb-4">Évolution des statistiques</h3>
+        <StatsEvolutionChart />
+      </div>
     </div>
   );
 
