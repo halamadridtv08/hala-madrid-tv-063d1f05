@@ -201,49 +201,163 @@ export const MatchJsonImporter = () => {
 
       const matchId = selectedMatchId;
 
-      // Mise à jour des statistiques des joueurs si fournies
+      // Mise à jour automatique des statistiques des joueurs
+      const playerStatsMap = new Map<string, any>();
+
+      // 1. Traiter les buts
       if (parsedData.match_details?.goals) {
         for (const goal of parsedData.match_details.goals) {
-          const playerName = goal.scorer || goal.player;
-          if (!playerName) continue;
+          const scorerName = goal.scorer || goal.player;
+          if (!scorerName) continue;
 
-          // Trouver le joueur par nom
           const { data: playerData } = await supabase
             .from('players')
-            .select('id')
-            .ilike('name', `%${playerName.replace(/_/g, ' ')}%`)
+            .select('id, name')
+            .ilike('name', `%${scorerName.replace(/_/g, ' ')}%`)
             .maybeSingle();
 
           if (playerData) {
-            // Récupérer les stats existantes
-            const { data: existingStats } = await supabase
-              .from('player_stats')
-              .select('*')
-              .eq('player_id', playerData.id)
-              .eq('match_id', matchId)
-              .maybeSingle();
+            if (!playerStatsMap.has(playerData.id)) {
+              playerStatsMap.set(playerData.id, { player_id: playerData.id, match_id: matchId, goals: 0, assists: 0, yellow_cards: 0, red_cards: 0, minutes_played: 90 });
+            }
+            const stats = playerStatsMap.get(playerData.id);
+            stats.goals = (stats.goals || 0) + 1;
 
-            if (existingStats) {
-              // Incrémenter les buts
-              await supabase
-                .from('player_stats')
-                .update({ goals: (existingStats.goals || 0) + 1 })
-                .eq('id', existingStats.id);
-            } else {
-              // Créer une nouvelle entrée de stats
-              await supabase
-                .from('player_stats')
-                .insert([{
-                  player_id: playerData.id,
-                  match_id: matchId,
-                  goals: 1
-                }]);
+            // Passes décisives (assist)
+            if (goal.assist) {
+              const { data: assistData } = await supabase
+                .from('players')
+                .select('id, name')
+                .ilike('name', `%${goal.assist.replace(/_/g, ' ')}%`)
+                .maybeSingle();
+
+              if (assistData) {
+                if (!playerStatsMap.has(assistData.id)) {
+                  playerStatsMap.set(assistData.id, { player_id: assistData.id, match_id: matchId, goals: 0, assists: 0, yellow_cards: 0, red_cards: 0, minutes_played: 90 });
+                }
+                const assistStats = playerStatsMap.get(assistData.id);
+                assistStats.assists = (assistStats.assists || 0) + 1;
+              }
             }
           }
         }
       }
 
-      toast.success("Match mis à jour avec succès!");
+      // 2. Traiter les cartons jaunes
+      if (parsedData.match_details?.cards?.yellow) {
+        const yellowCards = parsedData.match_details.cards.yellow;
+        for (const [team, cards] of Object.entries(yellowCards)) {
+          if (Array.isArray(cards)) {
+            for (const card of cards) {
+              const playerName = card.player || card;
+              if (!playerName) continue;
+
+              const { data: playerData } = await supabase
+                .from('players')
+                .select('id, name')
+                .ilike('name', `%${String(playerName).replace(/_/g, ' ')}%`)
+                .maybeSingle();
+
+              if (playerData) {
+                if (!playerStatsMap.has(playerData.id)) {
+                  playerStatsMap.set(playerData.id, { player_id: playerData.id, match_id: matchId, goals: 0, assists: 0, yellow_cards: 0, red_cards: 0, minutes_played: 90 });
+                }
+                const stats = playerStatsMap.get(playerData.id);
+                stats.yellow_cards = (stats.yellow_cards || 0) + 1;
+              }
+            }
+          }
+        }
+      }
+
+      // 3. Traiter les cartons rouges
+      if (parsedData.match_details?.cards?.red) {
+        const redCards = parsedData.match_details.cards.red;
+        for (const [team, cards] of Object.entries(redCards)) {
+          if (Array.isArray(cards)) {
+            for (const card of cards) {
+              const playerName = card.player || card;
+              if (!playerName) continue;
+
+              const { data: playerData } = await supabase
+                .from('players')
+                .select('id, name')
+                .ilike('name', `%${String(playerName).replace(/_/g, ' ')}%`)
+                .maybeSingle();
+
+              if (playerData) {
+                if (!playerStatsMap.has(playerData.id)) {
+                  playerStatsMap.set(playerData.id, { player_id: playerData.id, match_id: matchId, goals: 0, assists: 0, yellow_cards: 0, red_cards: 0, minutes_played: 90 });
+                }
+                const stats = playerStatsMap.get(playerData.id);
+                stats.red_cards = (stats.red_cards || 0) + 1;
+              }
+            }
+          }
+        }
+      }
+
+      // 4. Traiter les substitutions pour calculer les minutes jouées
+      if (parsedData.match_details?.substitutions) {
+        for (const sub of parsedData.match_details.substitutions) {
+          // Joueur sorti
+          if (sub.out) {
+            const { data: playerOut } = await supabase
+              .from('players')
+              .select('id, name')
+              .ilike('name', `%${sub.out.replace(/_/g, ' ')}%`)
+              .maybeSingle();
+
+            if (playerOut) {
+              if (!playerStatsMap.has(playerOut.id)) {
+                playerStatsMap.set(playerOut.id, { player_id: playerOut.id, match_id: matchId, goals: 0, assists: 0, yellow_cards: 0, red_cards: 0, minutes_played: 90 });
+              }
+              const stats = playerStatsMap.get(playerOut.id);
+              stats.minutes_played = sub.minute || 90;
+            }
+          }
+
+          // Joueur entré
+          if (sub.in) {
+            const { data: playerIn } = await supabase
+              .from('players')
+              .select('id, name')
+              .ilike('name', `%${sub.in.replace(/_/g, ' ')}%`)
+              .maybeSingle();
+
+            if (playerIn) {
+              if (!playerStatsMap.has(playerIn.id)) {
+                playerStatsMap.set(playerIn.id, { player_id: playerIn.id, match_id: matchId, goals: 0, assists: 0, yellow_cards: 0, red_cards: 0, minutes_played: 90 });
+              }
+              const stats = playerStatsMap.get(playerIn.id);
+              stats.minutes_played = 90 - (sub.minute || 0);
+            }
+          }
+        }
+      }
+
+      // 5. Sauvegarder toutes les stats des joueurs
+      for (const [playerId, stats] of playerStatsMap.entries()) {
+        const { data: existingStats } = await supabase
+          .from('player_stats')
+          .select('*')
+          .eq('player_id', playerId)
+          .eq('match_id', matchId)
+          .maybeSingle();
+
+        if (existingStats) {
+          await supabase
+            .from('player_stats')
+            .update(stats)
+            .eq('id', existingStats.id);
+        } else {
+          await supabase
+            .from('player_stats')
+            .insert([stats]);
+        }
+      }
+
+      toast.success(`Match et stats de ${playerStatsMap.size} joueur(s) mis à jour avec succès!`);
       
       setJsonInput("");
       setParsedData(null);
