@@ -1006,6 +1006,83 @@ export type Database = {
         }
         Relationships: []
       }
+      player_alert_thresholds: {
+        Row: {
+          alert_message: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          stat_type: string
+          threshold_value: number
+          updated_at: string
+        }
+        Insert: {
+          alert_message: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          stat_type: string
+          threshold_value: number
+          updated_at?: string
+        }
+        Update: {
+          alert_message?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          stat_type?: string
+          threshold_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      player_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_message: string
+          current_value: number
+          id: string
+          is_acknowledged: boolean | null
+          player_id: string
+          stat_type: string
+          threshold_value: number
+          triggered_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_message: string
+          current_value: number
+          id?: string
+          is_acknowledged?: boolean | null
+          player_id: string
+          stat_type: string
+          threshold_value: number
+          triggered_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_message?: string
+          current_value?: number
+          id?: string
+          is_acknowledged?: boolean | null
+          player_id?: string
+          stat_type?: string
+          threshold_value?: number
+          triggered_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_alerts_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       player_stats: {
         Row: {
           assists: number | null
@@ -1475,6 +1552,7 @@ export type Database = {
       }
     }
     Functions: {
+      check_player_stats_alerts: { Args: never; Returns: undefined }
       get_role_history: {
         Args: { p_user_id?: string }
         Returns: {
