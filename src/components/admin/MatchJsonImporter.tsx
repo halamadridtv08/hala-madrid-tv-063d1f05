@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Match } from "@/types/Match";
 import { MatchImportPreview } from "./MatchImportPreview";
 import { MatchImportHistory } from "./MatchImportHistory";
+import { PlayerNameValidator } from "./PlayerNameValidator";
 
 interface MatchJsonData {
   id?: string;
@@ -76,6 +77,9 @@ export const MatchJsonImporter = () => {
   const [isLoadingMatches, setIsLoadingMatches] = useState(true);
   const [previewData, setPreviewData] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [playerNamesToValidate, setPlayerNamesToValidate] = useState<string[]>([]);
+  const [showPlayerValidation, setShowPlayerValidation] = useState(false);
+  const [playerNameMapping, setPlayerNameMapping] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadMatches();
@@ -170,119 +174,170 @@ export const MatchJsonImporter = () => {
     const isValid = validateJson(jsonInput);
     
     if (isValid && parsedData) {
-      // Générer l'aperçu des stats
-      const playerStatsPreview: any[] = [];
-      const playerStatsMap = new Map<string, any>();
-
-      // Extraire les statistiques depuis le JSON
+      // Extraire tous les noms de joueurs du JSON
       const jsonData = JSON.parse(jsonInput);
+      const playerNames = new Set<string>();
       
-      // 1. Buts et passes
+      // Collecter les noms depuis les buts
       if (jsonData.events?.goals) {
-        for (const goal of jsonData.events.goals) {
-          const scorerName = goal.scorer || goal.player;
-          if (scorerName) {
-            const key = scorerName;
-            if (!playerStatsMap.has(key)) {
-              playerStatsMap.set(key, { playerName: scorerName.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
-            }
-            playerStatsMap.get(key).goals++;
-
-            if (goal.assist) {
-              const assistKey = goal.assist;
-              if (!playerStatsMap.has(assistKey)) {
-                playerStatsMap.set(assistKey, { playerName: goal.assist.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
-              }
-              playerStatsMap.get(assistKey).assists++;
-            }
-          }
-        }
+        jsonData.events.goals.forEach((goal: any) => {
+          if (goal.scorer) playerNames.add(goal.scorer);
+          if (goal.assist) playerNames.add(goal.assist);
+        });
       }
-
-      // 2. Cartons
+      
+      // Collecter depuis les cartons
       if (jsonData.events?.cards) {
-        if (jsonData.events.cards.yellow) {
-          for (const [team, cards] of Object.entries(jsonData.events.cards.yellow)) {
-            if (Array.isArray(cards)) {
-              for (const card of cards) {
-                const playerName = typeof card === 'string' ? card : card.player;
-                if (playerName) {
-                  const key = playerName;
-                  if (!playerStatsMap.has(key)) {
-                    playerStatsMap.set(key, { playerName: playerName.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
-                  }
-                  playerStatsMap.get(key).yellowCards = (playerStatsMap.get(key).yellowCards || 0) + 1;
-                }
+        ['yellow', 'red'].forEach(cardType => {
+          if (jsonData.events.cards[cardType]) {
+            Object.values(jsonData.events.cards[cardType]).forEach((cards: any) => {
+              if (Array.isArray(cards)) {
+                cards.forEach(card => {
+                  const playerName = typeof card === 'string' ? card : card.player;
+                  if (playerName) playerNames.add(playerName);
+                });
               }
-            }
+            });
           }
-        }
-        
-        if (jsonData.events.cards.red) {
-          for (const [team, cards] of Object.entries(jsonData.events.cards.red)) {
-            if (Array.isArray(cards)) {
-              for (const card of cards) {
-                const playerName = typeof card === 'string' ? card : card.player;
-                if (playerName) {
-                  const key = playerName;
-                  if (!playerStatsMap.has(key)) {
-                    playerStatsMap.set(key, { playerName: playerName.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
-                  }
-                  playerStatsMap.get(key).redCards = (playerStatsMap.get(key).redCards || 0) + 1;
-                }
-              }
-            }
-          }
-        }
+        });
       }
-
-      // 3. Substitutions (minutes jouées)
+      
+      // Collecter depuis les substitutions
       if (jsonData.events?.substitutions) {
-        for (const sub of jsonData.events.substitutions) {
-          if (sub.out) {
-            const key = sub.out;
-            if (!playerStatsMap.has(key)) {
-              playerStatsMap.set(key, { playerName: sub.out.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
-            }
-            playerStatsMap.get(key).minutesPlayed = sub.minute || 90;
-          }
-          if (sub.in) {
-            const key = sub.in;
-            if (!playerStatsMap.has(key)) {
-              playerStatsMap.set(key, { playerName: sub.in.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
-            }
-            playerStatsMap.get(key).minutesPlayed = 90 - (sub.minute || 0);
-          }
-        }
+        jsonData.events.substitutions.forEach((sub: any) => {
+          if (sub.in) playerNames.add(sub.in);
+          if (sub.out) playerNames.add(sub.out);
+        });
       }
-
-      // 4. Stats avancées (tirs, passes, tacles) depuis statistics
-      if (jsonData.statistics) {
-        // Extraire les stats par joueur si disponibles
-        if (jsonData.statistics.player_stats) {
-          for (const [playerKey, stats] of Object.entries(jsonData.statistics.player_stats)) {
-            const key = playerKey;
-            if (!playerStatsMap.has(key)) {
-              playerStatsMap.set(key, { playerName: playerKey.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
-            }
-            const playerStat = playerStatsMap.get(key);
-            const statObj = stats as any;
-            
-            if (statObj.shots !== undefined) playerStat.shots = statObj.shots;
-            if (statObj.shots_on_target !== undefined) playerStat.shotsOnTarget = statObj.shots_on_target;
-            if (statObj.passes_completed !== undefined) playerStat.passesCompleted = statObj.passes_completed;
-            if (statObj.pass_accuracy !== undefined) playerStat.passAccuracy = statObj.pass_accuracy;
-            if (statObj.tackles !== undefined) playerStat.tackles = statObj.tackles;
-          }
-        }
+      
+      const uniqueNames = Array.from(playerNames);
+      
+      if (uniqueNames.length > 0) {
+        setPlayerNamesToValidate(uniqueNames);
+        setShowPlayerValidation(true);
+      } else {
+        // Pas de joueurs à valider, passer directement à la prévisualisation
+        generatePreview(jsonData);
       }
-
-      setPreviewData({
-        matchData: parsedData,
-        playerStats: Array.from(playerStatsMap.values())
-      });
-      setShowPreview(true);
     }
+  };
+
+  const handlePlayerValidationComplete = (mapping: Record<string, string>) => {
+    setPlayerNameMapping(mapping);
+    setShowPlayerValidation(false);
+    
+    // Générer la prévisualisation avec les noms validés
+    const jsonData = JSON.parse(jsonInput);
+    generatePreview(jsonData);
+  };
+
+  const generatePreview = (jsonData: any) => {
+    // Générer l'aperçu des stats
+    const playerStatsPreview: any[] = [];
+    const playerStatsMap = new Map<string, any>();
+
+    // 1. Buts et passes
+    if (jsonData.events?.goals) {
+      for (const goal of jsonData.events.goals) {
+        const scorerName = goal.scorer || goal.player;
+        if (scorerName) {
+          const key = scorerName;
+          if (!playerStatsMap.has(key)) {
+            playerStatsMap.set(key, { playerName: scorerName.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
+          }
+          playerStatsMap.get(key).goals++;
+
+          if (goal.assist) {
+            const assistKey = goal.assist;
+            if (!playerStatsMap.has(assistKey)) {
+              playerStatsMap.set(assistKey, { playerName: goal.assist.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
+            }
+            playerStatsMap.get(assistKey).assists++;
+          }
+        }
+      }
+    }
+
+    // 2. Cartons
+    if (jsonData.events?.cards) {
+      if (jsonData.events.cards.yellow) {
+        for (const [team, cards] of Object.entries(jsonData.events.cards.yellow)) {
+          if (Array.isArray(cards)) {
+            for (const card of cards) {
+              const playerName = typeof card === 'string' ? card : card.player;
+              if (playerName) {
+                const key = playerName;
+                if (!playerStatsMap.has(key)) {
+                  playerStatsMap.set(key, { playerName: playerName.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
+                }
+                playerStatsMap.get(key).yellowCards = (playerStatsMap.get(key).yellowCards || 0) + 1;
+              }
+            }
+          }
+        }
+      }
+      
+      if (jsonData.events.cards.red) {
+        for (const [team, cards] of Object.entries(jsonData.events.cards.red)) {
+          if (Array.isArray(cards)) {
+            for (const card of cards) {
+              const playerName = typeof card === 'string' ? card : card.player;
+              if (playerName) {
+                const key = playerName;
+                if (!playerStatsMap.has(key)) {
+                  playerStatsMap.set(key, { playerName: playerName.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
+                }
+                playerStatsMap.get(key).redCards = (playerStatsMap.get(key).redCards || 0) + 1;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Substitutions (minutes jouées)
+    if (jsonData.events?.substitutions) {
+      for (const sub of jsonData.events.substitutions) {
+        if (sub.out) {
+          const key = sub.out;
+          if (!playerStatsMap.has(key)) {
+            playerStatsMap.set(key, { playerName: sub.out.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
+          }
+          playerStatsMap.get(key).minutesPlayed = sub.minute || 90;
+        }
+        if (sub.in) {
+          const key = sub.in;
+          if (!playerStatsMap.has(key)) {
+            playerStatsMap.set(key, { playerName: sub.in.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
+          }
+          playerStatsMap.get(key).minutesPlayed = 90 - (sub.minute || 0);
+        }
+      }
+    }
+
+    // 4. Stats avancées
+    if (jsonData.statistics?.player_stats) {
+      for (const [playerKey, stats] of Object.entries(jsonData.statistics.player_stats)) {
+        const key = playerKey;
+        if (!playerStatsMap.has(key)) {
+          playerStatsMap.set(key, { playerName: playerKey.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
+        }
+        const playerStat = playerStatsMap.get(key);
+        const statObj = stats as any;
+        
+        if (statObj.shots !== undefined) playerStat.shots = statObj.shots;
+        if (statObj.shots_on_target !== undefined) playerStat.shotsOnTarget = statObj.shots_on_target;
+        if (statObj.passes_completed !== undefined) playerStat.passesCompleted = statObj.passes_completed;
+        if (statObj.pass_accuracy !== undefined) playerStat.passAccuracy = statObj.pass_accuracy;
+        if (statObj.tackles !== undefined) playerStat.tackles = statObj.tackles;
+      }
+    }
+
+    setPreviewData({
+      matchData: parsedData,
+      playerStats: Array.from(playerStatsMap.values())
+    });
+    setShowPreview(true);
   };
 
   const handleImport = async () => {
@@ -351,16 +406,23 @@ export const MatchJsonImporter = () => {
           const scorerName = goal.scorer || goal.player;
           if (!scorerName) continue;
 
-          const { data: playerData } = await supabase
-            .from('players')
-            .select('id, name')
-            .ilike('name', `%${scorerName.replace(/_/g, ' ')}%`)
-            .maybeSingle();
+          // Utiliser le mapping validé ou chercher par nom
+          let playerId = playerNameMapping[scorerName];
+          
+          if (!playerId) {
+            const { data: playerData } = await supabase
+              .from('players')
+              .select('id, name')
+              .ilike('name', `%${scorerName.replace(/_/g, ' ')}%`)
+              .maybeSingle();
+            
+            playerId = playerData?.id;
+          }
 
-          if (playerData) {
-            if (!playerStatsMap.has(playerData.id)) {
-              playerStatsMap.set(playerData.id, {
-                player_id: playerData.id,
+          if (playerId) {
+            if (!playerStatsMap.has(playerId)) {
+              playerStatsMap.set(playerId, {
+                player_id: playerId,
                 match_id: matchId,
                 goals: 0,
                 assists: 0,
@@ -372,20 +434,26 @@ export const MatchJsonImporter = () => {
                 tackles: 0
               });
             }
-            playerStatsMap.get(playerData.id).goals++;
+            playerStatsMap.get(playerId).goals++;
 
             // Passes décisives
             if (goal.assist) {
-              const { data: assistData } = await supabase
-                .from('players')
-                .select('id, name')
-                .ilike('name', `%${goal.assist.replace(/_/g, ' ')}%`)
-                .maybeSingle();
+              let assistId = playerNameMapping[goal.assist];
+              
+              if (!assistId) {
+                const { data: assistData } = await supabase
+                  .from('players')
+                  .select('id, name')
+                  .ilike('name', `%${goal.assist.replace(/_/g, ' ')}%`)
+                  .maybeSingle();
+                
+                assistId = assistData?.id;
+              }
 
-              if (assistData) {
-                if (!playerStatsMap.has(assistData.id)) {
-                  playerStatsMap.set(assistData.id, {
-                    player_id: assistData.id,
+              if (assistId) {
+                if (!playerStatsMap.has(assistId)) {
+                  playerStatsMap.set(assistId, {
+                    player_id: assistId,
                     match_id: matchId,
                     goals: 0,
                     assists: 0,
@@ -397,7 +465,7 @@ export const MatchJsonImporter = () => {
                     tackles: 0
                   });
                 }
-                playerStatsMap.get(assistData.id).assists++;
+                playerStatsMap.get(assistId).assists++;
               }
             }
           }
@@ -739,17 +807,25 @@ export const MatchJsonImporter = () => {
             onChange={(e) => handleJsonChange(e.target.value)}
             rows={15}
             className="font-mono text-sm"
+            disabled={showPlayerValidation || showPreview}
           />
         </div>
+
+        {showPlayerValidation && (
+          <PlayerNameValidator
+            playerNames={playerNamesToValidate}
+            onValidationComplete={handlePlayerValidationComplete}
+          />
+        )}
 
         <div className="flex gap-2">
           <Button 
             onClick={handleValidate}
             variant="outline"
-            disabled={!jsonInput.trim() || !selectedMatchId || showPreview}
+            disabled={!jsonInput.trim() || !selectedMatchId || showPreview || showPlayerValidation}
           >
             <Eye className="h-4 w-4 mr-2" />
-            Prévisualiser
+            Valider et Prévisualiser
           </Button>
           
           <Button 
@@ -760,11 +836,14 @@ export const MatchJsonImporter = () => {
             {isProcessing ? "Mise à jour en cours..." : "Confirmer l'import"}
           </Button>
 
-          {showPreview && (
+          {(showPreview || showPlayerValidation) && (
             <Button 
               onClick={() => {
                 setShowPreview(false);
                 setPreviewData(null);
+                setShowPlayerValidation(false);
+                setPlayerNamesToValidate([]);
+                setPlayerNameMapping({});
               }}
               variant="ghost"
             >
