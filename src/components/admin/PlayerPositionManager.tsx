@@ -252,59 +252,62 @@ const PlayerPositionManager = ({ players, setPlayers }: PlayerPositionManagerPro
                   <Badge variant="outline">{group.players.length}</Badge>
                 </div>
                 
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {group.players.map((player) => (
-                    <div key={player.id} className="flex items-center justify-between p-3 bg-white rounded border">
-                      <div className="flex items-center gap-3 flex-1">
+                    <div key={player.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 sm:p-3 bg-white rounded border gap-2.5">
+                      <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
                         {player.image_url && (
                           <img 
                             src={player.image_url} 
                             alt={player.name}
-                            className="w-10 h-10 object-cover rounded-full"
+                            className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full flex-shrink-0"
                           />
                         )}
-                        <div className="flex-1">
-                          <h4 className="font-medium">{player.name}</h4>
-                          <p className="text-sm text-gray-600">{player.position}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant={player.is_active ? "default" : "secondary"}>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-sm sm:text-base truncate">{player.name}</h4>
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate">{player.position}</p>
+                          <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
+                            <Badge variant={player.is_active ? "default" : "secondary"} className="text-xs">
                               {player.is_active ? "Actif" : "Inactif"}
                             </Badge>
                             {player.jersey_number && (
-                              <Badge variant="outline">#{player.jersey_number}</Badge>
+                              <Badge variant="outline" className="text-xs">#{player.jersey_number}</Badge>
                             )}
                             {player.nationality && (
-                              <span className="text-xs text-gray-500">{player.nationality}</span>
+                              <span className="text-xs text-muted-foreground hidden sm:inline">{player.nationality}</span>
                             )}
                             {player.is_featured && (
-                              <Badge className="bg-madrid-gold text-black">⭐ Vedette</Badge>
+                              <Badge className="bg-madrid-gold text-black text-xs">⭐</Badge>
                             )}
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2 justify-end sm:justify-start">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => toggleActive(player.id, player.is_active)}
                           disabled={loading}
+                          className="h-8 w-8 sm:h-9 sm:w-9 p-0"
                         >
-                          <User className="h-4 w-4" />
+                          <User className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </Button>
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => handleEditPlayer(player)}
+                          className="h-8 w-8 sm:h-9 sm:w-9 p-0"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </Button>
                         <Button
                           variant="destructive"
                           size="sm"
                           onClick={() => handleDelete(player.id)}
                           disabled={loading}
+                          className="h-8 w-8 sm:h-9 sm:w-9 p-0"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </Button>
                       </div>
                     </div>

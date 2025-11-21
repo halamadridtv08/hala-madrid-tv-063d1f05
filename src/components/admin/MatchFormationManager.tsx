@@ -350,20 +350,20 @@ export const MatchFormationManager = () => {
                         </Button>
                       </div>
 
-                      <div className="relative w-full bg-green-600 rounded-lg overflow-hidden" style={{ aspectRatio: "3/4", minHeight: "400px" }}>
+                      <div className="relative w-full bg-green-600 rounded-lg overflow-hidden" style={{ aspectRatio: "3/4", minHeight: "300px", maxHeight: "600px" }}>
                         {/* Lignes du terrain */}
                         <div className="absolute inset-0">
                           <div className="absolute w-full h-0.5 bg-white top-1/2 transform -translate-y-0.5"></div>
                           <div className="absolute w-0.5 h-full bg-white left-1/2 transform -translate-x-0.5"></div>
-                          <div className="absolute w-20 h-20 border-2 border-white rounded-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                          <div className="absolute w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 border-2 border-white rounded-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
                           
                           {/* Surface de réparation */}
-                          <div className="absolute w-16 h-10 border-2 border-white top-0 left-1/2 transform -translate-x-1/2"></div>
-                          <div className="absolute w-16 h-10 border-2 border-white bottom-0 left-1/2 transform -translate-x-1/2"></div>
+                          <div className="absolute w-12 h-8 sm:w-14 sm:h-9 md:w-16 md:h-10 border-2 border-white top-0 left-1/2 transform -translate-x-1/2"></div>
+                          <div className="absolute w-12 h-8 sm:w-14 sm:h-9 md:w-16 md:h-10 border-2 border-white bottom-0 left-1/2 transform -translate-x-1/2"></div>
                           
                           {/* Petite surface */}
-                          <div className="absolute w-8 h-6 border-2 border-white top-0 left-1/2 transform -translate-x-1/2"></div>
-                          <div className="absolute w-8 h-6 border-2 border-white bottom-0 left-1/2 transform -translate-x-1/2"></div>
+                          <div className="absolute w-6 h-4 sm:w-7 sm:h-5 md:w-8 md:h-6 border-2 border-white top-0 left-1/2 transform -translate-x-1/2"></div>
+                          <div className="absolute w-6 h-4 sm:w-7 sm:h-5 md:w-8 md:h-6 border-2 border-white bottom-0 left-1/2 transform -translate-x-1/2"></div>
                         </div>
 
                         {/* Joueurs */}
@@ -372,7 +372,7 @@ export const MatchFormationManager = () => {
                           .map((player: FormationPlayer) => (
                           <div
                             key={player.id}
-                            className="absolute w-12 h-12 transform -translate-x-1/2 -translate-y-1/2 cursor-move"
+                            className="absolute w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 transform -translate-x-1/2 -translate-y-1/2 cursor-move"
                             style={{
                               left: `${player.position_x}%`,
                               top: `${player.position_y}%`
@@ -395,14 +395,14 @@ export const MatchFormationManager = () => {
                                   className="w-full h-full rounded-full border-2 border-white object-cover"
                                 />
                               ) : (
-                                <div className="w-full h-full rounded-full border-2 border-white bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+                                <div className="w-full h-full rounded-full border-2 border-white bg-blue-600 flex items-center justify-center text-white text-[10px] sm:text-xs font-bold">
                                   {player.jersey_number}
                                 </div>
                               )}
-                              <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white text-xs px-1 py-0.5 rounded whitespace-nowrap">
+                              <div className="absolute -bottom-3 sm:-bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white text-[9px] sm:text-xs px-1 py-0.5 rounded whitespace-nowrap max-w-[80px] truncate">
                                 {player.player_name}
                               </div>
-                              <div className="absolute -top-2 -right-1 bg-yellow-400 text-black text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                              <div className="absolute -top-1 sm:-top-2 -right-0.5 sm:-right-1 bg-yellow-400 text-black text-[9px] sm:text-xs font-bold rounded-full w-3.5 h-3.5 sm:w-4 sm:h-4 flex items-center justify-center">
                                 {player.player_rating.toFixed(1)}
                               </div>
                             </div>
@@ -412,16 +412,16 @@ export const MatchFormationManager = () => {
 
                       {/* Remplaçants */}
                       <div className="space-y-2">
-                        <h4 className="font-semibold">Remplaçants</h4>
-                        <div className="grid grid-cols-4 gap-2">
+                        <h4 className="font-semibold text-sm sm:text-base">Remplaçants</h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                           {formations[teamType].players
                             .filter((player: FormationPlayer) => !player.is_starter)
                             .map((player: FormationPlayer) => (
-                            <div key={player.id} className="flex items-center space-x-2 p-2 border rounded">
-                              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold">
+                            <div key={player.id} className="flex items-center space-x-1.5 sm:space-x-2 p-1.5 sm:p-2 border rounded">
+                              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold flex-shrink-0">
                                 {player.jersey_number}
                               </div>
-                              <span className="text-sm">{player.player_name}</span>
+                              <span className="text-xs sm:text-sm truncate">{player.player_name}</span>
                             </div>
                           ))}
                         </div>
