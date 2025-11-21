@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -15,93 +15,226 @@ interface Suggestion {
   type: "player" | "article" | "match";
   subtitle?: string;
   url: string;
+  score?: number;
 }
+
+// Normalisation des chaînes pour ignorer les accents et la casse
+const normalizeString = (str: string): string => {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, "");
+};
+
+// Distance de Levenshtein optimisée
+const levenshteinDistance = (str1: string, str2: string): number => {
+  const len1 = str1.length;
+  const len2 = str2.length;
+  
+  if (len1 === 0) return len2;
+  if (len2 === 0) return len1;
+  
+  const matrix: number[][] = Array(len1 + 1)
+    .fill(null)
+    .map(() => Array(len2 + 1).fill(0));
+  
+  for (let i = 0; i <= len1; i++) matrix[i][0] = i;
+  for (let j = 0; j <= len2; j++) matrix[0][j] = j;
+  
+  for (let i = 1; i <= len1; i++) {
+    for (let j = 1; j <= len2; j++) {
+      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost
+      );
+    }
+  }
+  
+  return matrix[len1][len2];
+};
+
+// Calcul du score de similarité (0-1, plus élevé = plus similaire)
+const calculateSimilarity = (search: string, target: string): number => {
+  const normalizedSearch = normalizeString(search);
+  const normalizedTarget = normalizeString(target);
+  
+  // Correspondance exacte
+  if (normalizedTarget === normalizedSearch) return 1.0;
+  
+  // Commence par
+  if (normalizedTarget.startsWith(normalizedSearch)) return 0.9;
+  
+  // Contient
+  if (normalizedTarget.includes(normalizedSearch)) return 0.8;
+  
+  // Distance de Levenshtein
+  const distance = levenshteinDistance(normalizedSearch, normalizedTarget);
+  const maxLength = Math.max(normalizedSearch.length, normalizedTarget.length);
+  const similarity = 1 - distance / maxLength;
+  
+  // Bonus pour les mots qui commencent pareil
+  const searchWords = normalizedSearch.split(/\s+/);
+  const targetWords = normalizedTarget.split(/\s+/);
+  let wordMatchBonus = 0;
+  
+  for (const searchWord of searchWords) {
+    for (const targetWord of targetWords) {
+      if (targetWord.startsWith(searchWord) && searchWord.length >= 3) {
+        wordMatchBonus += 0.1;
+      }
+    }
+  }
+  
+  return Math.min(1.0, similarity + wordMatchBonus);
+};
 
 export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchBarProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
+
+  // Cache pour les recherches récentes
+  const searchCache = useRef<Map<string, Suggestion[]>>(new Map());
 
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (!value.trim() || value.length < 2) {
         setSuggestions([]);
+        setIsLoading(false);
         return;
       }
 
-      const searchTerm = `%${value}%`;
-      const results: Suggestion[] = [];
+      // Vérifier le cache
+      const normalizedQuery = normalizeString(value);
+      if (searchCache.current.has(normalizedQuery)) {
+        setSuggestions(searchCache.current.get(normalizedQuery)!);
+        setIsLoading(false);
+        return;
+      }
+
+      // Annuler la requête précédente
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+
+      setIsLoading(true);
 
       try {
-        // Rechercher les joueurs
-        const { data: players } = await supabase
-          .from("players")
-          .select("id, name, position")
-          .ilike("name", searchTerm)
-          .eq("is_active", true)
-          .limit(3);
+        // Recherche large pour avoir plus de résultats à trier
+        const [playersResponse, articlesResponse, matchesResponse] = await Promise.all([
+          supabase
+            .from("players")
+            .select("id, name, position, image_url")
+            .eq("is_active", true)
+            .limit(20),
+          supabase
+            .from("articles")
+            .select("id, title, category")
+            .eq("is_published", true)
+            .limit(20),
+          supabase
+            .from("matches")
+            .select("id, home_team, away_team, competition")
+            .limit(15)
+        ]);
 
-        if (players) {
-          results.push(
-            ...players.map((p) => ({
-              id: p.id,
-              name: p.name,
-              type: "player" as const,
-              subtitle: p.position,
-              url: `/players/${p.id}`,
-            }))
-          );
+        const allResults: Suggestion[] = [];
+
+        // Traiter les joueurs avec score de similarité
+        if (playersResponse.data) {
+          playersResponse.data.forEach((p) => {
+            const score = calculateSimilarity(value, p.name);
+            if (score > 0.3) { // Seuil de similarité minimum
+              allResults.push({
+                id: p.id,
+                name: p.name,
+                type: "player",
+                subtitle: p.position,
+                url: `/players/${p.id}`,
+                score,
+              });
+            }
+          });
         }
 
-        // Rechercher les articles
-        const { data: articles } = await supabase
-          .from("articles")
-          .select("id, title, category")
-          .or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`)
-          .eq("is_published", true)
-          .limit(3);
-
-        if (articles) {
-          results.push(
-            ...articles.map((a) => ({
-              id: a.id,
-              name: a.title,
-              type: "article" as const,
-              subtitle: a.category,
-              url: `/news/${a.id}`,
-            }))
-          );
+        // Traiter les articles
+        if (articlesResponse.data) {
+          articlesResponse.data.forEach((a) => {
+            const score = calculateSimilarity(value, a.title);
+            if (score > 0.3) {
+              allResults.push({
+                id: a.id,
+                name: a.title,
+                type: "article",
+                subtitle: a.category,
+                url: `/news/${a.id}`,
+                score,
+              });
+            }
+          });
         }
 
-        // Rechercher les matchs
-        const { data: matches } = await supabase
-          .from("matches")
-          .select("id, home_team, away_team, competition")
-          .or(`home_team.ilike.${searchTerm},away_team.ilike.${searchTerm}`)
-          .limit(2);
-
-        if (matches) {
-          results.push(
-            ...matches.map((m) => ({
-              id: m.id,
-              name: `${m.home_team} vs ${m.away_team}`,
-              type: "match" as const,
-              subtitle: m.competition || undefined,
-              url: "/matches",
-            }))
-          );
+        // Traiter les matchs
+        if (matchesResponse.data) {
+          matchesResponse.data.forEach((m) => {
+            const matchName = `${m.home_team} vs ${m.away_team}`;
+            const homeScore = calculateSimilarity(value, m.home_team);
+            const awayScore = calculateSimilarity(value, m.away_team);
+            const score = Math.max(homeScore, awayScore);
+            
+            if (score > 0.3) {
+              allResults.push({
+                id: m.id,
+                name: matchName,
+                type: "match",
+                subtitle: m.competition || undefined,
+                url: "/matches",
+                score,
+              });
+            }
+          });
         }
 
-        setSuggestions(results.slice(0, 8));
-      } catch (error) {
-        console.error("Erreur lors de la recherche:", error);
+        // Trier par score et prendre les 8 meilleurs
+        const sortedResults = allResults
+          .sort((a, b) => (b.score || 0) - (a.score || 0))
+          .slice(0, 8);
+
+        // Mettre en cache
+        searchCache.current.set(normalizedQuery, sortedResults);
+        
+        // Limiter la taille du cache à 50 entrées
+        if (searchCache.current.size > 50) {
+          const firstKey = searchCache.current.keys().next().value;
+          searchCache.current.delete(firstKey);
+        }
+
+        setSuggestions(sortedResults);
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          console.error("Erreur lors de la recherche:", error);
+        }
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    const debounce = setTimeout(fetchSuggestions, 300);
-    return () => clearTimeout(debounce);
+    setIsLoading(true);
+    const debounce = setTimeout(fetchSuggestions, 200);
+    return () => {
+      clearTimeout(debounce);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [value]);
 
   useEffect(() => {
@@ -190,41 +323,71 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
       </form>
 
       {/* Suggestions dropdown */}
-      {showSuggestions && suggestions.length > 0 && isFocused && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50 animate-fade-in">
-          {suggestions.map((suggestion) => (
-            <button
-              key={`${suggestion.type}-${suggestion.id}`}
-              type="button"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleSuggestionClick(suggestion.url);
-              }}
-              className="w-full text-left px-4 py-3 hover:bg-accent transition-colors border-b border-border last:border-b-0"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-foreground truncate">{suggestion.name}</p>
-                  {suggestion.subtitle && (
-                    <p className="text-sm text-muted-foreground">{suggestion.subtitle}</p>
-                  )}
-                </div>
-                <span className="ml-2 text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                  {getTypeLabel(suggestion.type)}
-                </span>
-              </div>
-            </button>
-          ))}
-          <button
-            type="button"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              handleSuggestionClick(`/search?q=${encodeURIComponent(value)}`);
-            }}
-            className="w-full px-4 py-3 text-center text-sm text-primary hover:bg-accent transition-colors font-medium"
-          >
-            Voir tous les résultats pour "{value}"
-          </button>
+      {showSuggestions && isFocused && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg overflow-hidden z-50 animate-fade-in max-h-[400px] overflow-y-auto">
+          {isLoading ? (
+            <div className="px-4 py-6 text-center text-muted-foreground">
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              <p className="mt-2 text-sm">Recherche en cours...</p>
+            </div>
+          ) : suggestions.length > 0 ? (
+            <>
+              {suggestions.map((suggestion) => (
+                <button
+                  key={`${suggestion.type}-${suggestion.id}`}
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleSuggestionClick(suggestion.url);
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-accent transition-colors border-b border-border last:border-b-0 group"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                        {suggestion.name}
+                      </p>
+                      {suggestion.subtitle && (
+                        <p className="text-sm text-muted-foreground truncate">{suggestion.subtitle}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {suggestion.score && suggestion.score < 0.8 && (
+                        <span className="text-xs text-muted-foreground italic">Suggestion</span>
+                      )}
+                      <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                        {getTypeLabel(suggestion.type)}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleSuggestionClick(`/search?q=${encodeURIComponent(value)}`);
+                }}
+                className="w-full px-4 py-3 text-center text-sm text-primary hover:bg-accent transition-colors font-medium"
+              >
+                Voir tous les résultats pour "{value}"
+              </button>
+            </>
+          ) : value.trim().length >= 2 ? (
+            <div className="px-4 py-6 text-center text-muted-foreground">
+              <p className="text-sm">Aucun résultat trouvé pour "{value}"</p>
+              <button
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleSuggestionClick(`/search?q=${encodeURIComponent(value)}`);
+                }}
+                className="mt-2 text-sm text-primary hover:underline"
+              >
+                Rechercher quand même
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
     </div>
