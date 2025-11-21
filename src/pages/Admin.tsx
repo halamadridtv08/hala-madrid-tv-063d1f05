@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/tabs";
 import { QuickStatsCard } from "@/components/admin/QuickStatsCard";
 import { AdminMenuBar } from "@/components/layout/AdminMenuBar";
+import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
 import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
 import { AdminStatsManager } from "@/components/admin/AdminStatsManager";
 import { 
@@ -255,7 +256,7 @@ const Admin = () => {
   }, [players, coaches, articles, videos, matches, pressConferences, trainingSessions]);
 
   const renderDashboard = () => (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <QuickStatsCard 
         playersCount={players.length}
         coachesCount={coaches.length}
@@ -267,33 +268,33 @@ const Admin = () => {
       {/* Ajout du synchroniseur de données */}
       <DataSynchronizer />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <BarChart3 className="h-4 w-4 md:h-5 md:w-5" />
               Activité récente
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Articles publiés cette semaine</span>
-                <Badge variant="secondary">
+                <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Articles publiés</span>
+                <Badge variant="secondary" className="text-xs">
                   {articles.filter(a => a.is_published).length}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Vidéos ajoutées</span>
-                <Badge variant="secondary">{videos.length}</Badge>
+                <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Vidéos</span>
+                <Badge variant="secondary" className="text-xs">{videos.length}</Badge>
+              </div>
+              <div className="hidden sm:flex items-center justify-between">
+                <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Photos uploadées</span>
+                <Badge variant="secondary" className="text-xs">{photos.length}</Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Photos uploadées</span>
-                <Badge variant="secondary">{photos.length}</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Matchs programmés</span>
-                <Badge variant="secondary">
+                <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Matchs programmés</span>
+                <Badge variant="secondary" className="text-xs">
                   {matches.filter(m => m.status === 'upcoming').length}
                 </Badge>
               </div>
@@ -302,33 +303,33 @@ const Admin = () => {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <Users className="h-4 w-4 md:h-5 md:w-5" />
               Équipe
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Joueurs actifs</span>
-                <Badge variant="default">
+                <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Joueurs actifs</span>
+                <Badge variant="default" className="text-xs">
                   {players.filter(p => p.is_active).length}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Entraîneurs</span>
-                <Badge variant="default">{coaches.length}</Badge>
+                <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Entraîneurs</span>
+                <Badge variant="default" className="text-xs">{coaches.length}</Badge>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Gardiens</span>
-                <Badge variant="outline">
+              <div className="hidden sm:flex items-center justify-between">
+                <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Gardiens</span>
+                <Badge variant="outline" className="text-xs">
                   {players.filter(p => p.position === 'gardien').length}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Attaquants</span>
-                <Badge variant="outline">
+                <span className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Attaquants</span>
+                <Badge variant="outline" className="text-xs">
                   {players.filter(p => p.position === 'attaquant').length}
                 </Badge>
               </div>
@@ -337,28 +338,28 @@ const Admin = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab("articles")}>
-          <CardContent className="p-6 text-center">
-            <FileText className="h-12 w-12 mx-auto mb-4 text-madrid-blue" />
-            <h3 className="text-lg font-semibold mb-2">Gérer les Articles</h3>
-            <p className="text-gray-600 text-sm">Créer et modifier les articles de actualités</p>
+          <CardContent className="p-4 md:p-6 text-center">
+            <FileText className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-madrid-blue" />
+            <h3 className="text-sm md:text-lg font-semibold mb-1 md:mb-2">Gérer les Articles</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm hidden md:block">Créer et modifier les articles</p>
           </CardContent>
         </Card>
 
         <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab("videos")}>
-          <CardContent className="p-6 text-center">
-            <Video className="h-12 w-12 mx-auto mb-4 text-madrid-blue" />
-            <h3 className="text-lg font-semibold mb-2">Gérer les Vidéos</h3>
-            <p className="text-gray-600 text-sm">Ajouter et organiser les vidéos</p>
+          <CardContent className="p-4 md:p-6 text-center">
+            <Video className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-madrid-blue" />
+            <h3 className="text-sm md:text-lg font-semibold mb-1 md:mb-2">Gérer les Vidéos</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm hidden md:block">Ajouter et organiser les vidéos</p>
           </CardContent>
         </Card>
 
         <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab("photos")}>
-          <CardContent className="p-6 text-center">
-            <Camera className="h-12 w-12 mx-auto mb-4 text-madrid-blue" />
-            <h3 className="text-lg font-semibold mb-2">Gérer les Photos</h3>
-            <p className="text-gray-600 text-sm">Organiser la galerie photos</p>
+          <CardContent className="p-4 md:p-6 text-center">
+            <Camera className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 text-madrid-blue" />
+            <h3 className="text-sm md:text-lg font-semibold mb-1 md:mb-2">Gérer les Photos</h3>
+            <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm hidden md:block">Organiser la galerie photos</p>
           </CardContent>
         </Card>
       </div>
@@ -539,7 +540,8 @@ const Admin = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="madrid-container py-4 md:py-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4">
+          <div className="flex items-center gap-3 md:gap-4">
+            <AdminMobileNav activeTab={activeTab} onTabChange={setActiveTab} />
             <Button
               onClick={() => navigate('/')}
               variant="outline"
@@ -547,13 +549,13 @@ const Admin = () => {
               className="w-fit"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour au site
+              <span className="hidden sm:inline">Retour au site</span>
             </Button>
-            <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+            <div className="flex-1">
+              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
                 Administration HALA MADRID TV
               </h1>
-              <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 mt-1 md:mt-2">
+              <p className="hidden md:block text-sm md:text-base text-gray-600 dark:text-gray-300 mt-1 md:mt-2">
                 Gérez le contenu et les paramètres du site
               </p>
             </div>
@@ -566,7 +568,7 @@ const Admin = () => {
         <AdminMenuBar activeTab={activeTab} onTabChange={setActiveTab} />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-thin">
+          <div className="hidden lg:block overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-thin">
             <TabsList className="inline-flex h-10 md:h-12 items-center justify-start rounded-md bg-muted p-1 text-muted-foreground w-max min-w-full">
               <TabsTrigger value="dashboard" className="flex items-center gap-1 md:gap-2 whitespace-nowrap px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm">
                 <LayoutDashboard className="h-3 w-3 md:h-4 md:w-4" />
