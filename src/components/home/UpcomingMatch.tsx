@@ -101,9 +101,9 @@ export function UpcomingMatch() {
             <div className="p-6 md:p-8">
               <div className="flex flex-col lg:flex-row justify-between items-center gap-8">
                 {/* Équipes côte à côte sur grands écrans */}
-                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
-                  <div className="flex flex-col items-center">
-                    <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center overflow-hidden bg-white">
+                <div className="flex flex-col sm:flex-row items-end gap-4 sm:gap-8">
+                  <div className="flex flex-col items-center min-h-[120px] justify-end">
+                    <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center overflow-hidden bg-white mb-2">
                       {upcomingMatch.home_team_logo ? (
                         <img 
                           src={upcomingMatch.home_team_logo} 
@@ -119,13 +119,13 @@ export function UpcomingMatch() {
                         </div>
                       )}
                     </div>
-                    <h3 className="text-lg lg:text-xl font-bold mt-2">{upcomingMatch.home_team}</h3>
+                    <h3 className="text-lg lg:text-xl font-bold text-center">{upcomingMatch.home_team}</h3>
                   </div>
                   
-                  <div className="text-4xl lg:text-5xl font-bold text-madrid-gold">VS</div>
+                  <div className="text-4xl lg:text-5xl font-bold text-madrid-gold pb-2">VS</div>
                   
-                  <div className="flex flex-col items-center">
-                    <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center overflow-hidden bg-white">
+                  <div className="flex flex-col items-center min-h-[120px] justify-end">
+                    <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center overflow-hidden bg-white mb-2">
                       {upcomingMatch.away_team_logo ? (
                         <img 
                           src={upcomingMatch.away_team_logo} 
@@ -141,7 +141,7 @@ export function UpcomingMatch() {
                         </div>
                       )}
                     </div>
-                    <h3 className="text-lg lg:text-xl font-bold mt-2">{upcomingMatch.away_team}</h3>
+                    <h3 className="text-lg lg:text-xl font-bold text-center">{upcomingMatch.away_team}</h3>
                   </div>
                 </div>
                 
