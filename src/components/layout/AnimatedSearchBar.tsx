@@ -100,8 +100,45 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
   const abortControllerRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
 
-  // Cache pour les recherches récentes
-  const searchCache = useRef<Map<string, Suggestion[]>>(new Map());
+  // Cache pour toutes les données
+  const allDataCache = useRef<{
+    players: any[];
+    articles: any[];
+    matches: any[];
+    loaded: boolean;
+  }>({ players: [], articles: [], matches: [], loaded: false });
+
+  // Charger toutes les données une seule fois au montage
+  useEffect(() => {
+    const loadAllData = async () => {
+      try {
+        const [playersResponse, articlesResponse, matchesResponse] = await Promise.all([
+          supabase
+            .from("players")
+            .select("id, name, position, image_url")
+            .eq("is_active", true),
+          supabase
+            .from("articles")
+            .select("id, title, category")
+            .eq("is_published", true),
+          supabase
+            .from("matches")
+            .select("id, home_team, away_team, competition")
+        ]);
+
+        allDataCache.current = {
+          players: playersResponse.data || [],
+          articles: articlesResponse.data || [],
+          matches: matchesResponse.data || [],
+          loaded: true
+        };
+      } catch (error) {
+        console.error("Erreur lors du chargement des données:", error);
+      }
+    };
+
+    loadAllData();
+  }, []);
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -111,130 +148,82 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
         return;
       }
 
-      // Vérifier le cache
-      const normalizedQuery = normalizeString(value);
-      if (searchCache.current.has(normalizedQuery)) {
-        setSuggestions(searchCache.current.get(normalizedQuery)!);
-        setIsLoading(false);
+      // Attendre que les données soient chargées
+      if (!allDataCache.current.loaded) {
+        setIsLoading(true);
         return;
       }
-
-      // Annuler la requête précédente
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      abortControllerRef.current = new AbortController();
 
       setIsLoading(true);
 
       try {
-        // Recherche large pour avoir plus de résultats à trier
-        const [playersResponse, articlesResponse, matchesResponse] = await Promise.all([
-          supabase
-            .from("players")
-            .select("id, name, position, image_url")
-            .eq("is_active", true)
-            .limit(20),
-          supabase
-            .from("articles")
-            .select("id, title, category")
-            .eq("is_published", true)
-            .limit(20),
-          supabase
-            .from("matches")
-            .select("id, home_team, away_team, competition")
-            .limit(15)
-        ]);
 
         const allResults: Suggestion[] = [];
 
         // Traiter les joueurs avec score de similarité
-        if (playersResponse.data) {
-          playersResponse.data.forEach((p) => {
-            const score = calculateSimilarity(value, p.name);
-            if (score > 0.3) { // Seuil de similarité minimum
-              allResults.push({
-                id: p.id,
-                name: p.name,
-                type: "player",
-                subtitle: p.position,
-                url: `/players/${p.id}`,
-                score,
-              });
-            }
-          });
-        }
+        allDataCache.current.players.forEach((p) => {
+          const score = calculateSimilarity(value, p.name);
+          if (score > 0.25) { // Seuil réduit pour plus de tolérance
+            allResults.push({
+              id: p.id,
+              name: p.name,
+              type: "player",
+              subtitle: p.position,
+              url: `/players/${p.id}`,
+              score,
+            });
+          }
+        });
 
         // Traiter les articles
-        if (articlesResponse.data) {
-          articlesResponse.data.forEach((a) => {
-            const score = calculateSimilarity(value, a.title);
-            if (score > 0.3) {
-              allResults.push({
-                id: a.id,
-                name: a.title,
-                type: "article",
-                subtitle: a.category,
-                url: `/news/${a.id}`,
-                score,
-              });
-            }
-          });
-        }
+        allDataCache.current.articles.forEach((a) => {
+          const score = calculateSimilarity(value, a.title);
+          if (score > 0.25) {
+            allResults.push({
+              id: a.id,
+              name: a.title,
+              type: "article",
+              subtitle: a.category,
+              url: `/news/${a.id}`,
+              score,
+            });
+          }
+        });
 
         // Traiter les matchs
-        if (matchesResponse.data) {
-          matchesResponse.data.forEach((m) => {
-            const matchName = `${m.home_team} vs ${m.away_team}`;
-            const homeScore = calculateSimilarity(value, m.home_team);
-            const awayScore = calculateSimilarity(value, m.away_team);
-            const score = Math.max(homeScore, awayScore);
-            
-            if (score > 0.3) {
-              allResults.push({
-                id: m.id,
-                name: matchName,
-                type: "match",
-                subtitle: m.competition || undefined,
-                url: "/matches",
-                score,
-              });
-            }
-          });
-        }
+        allDataCache.current.matches.forEach((m) => {
+          const matchName = `${m.home_team} vs ${m.away_team}`;
+          const homeScore = calculateSimilarity(value, m.home_team);
+          const awayScore = calculateSimilarity(value, m.away_team);
+          const score = Math.max(homeScore, awayScore);
+          
+          if (score > 0.25) {
+            allResults.push({
+              id: m.id,
+              name: matchName,
+              type: "match",
+              subtitle: m.competition || undefined,
+              url: "/matches",
+              score,
+            });
+          }
+        });
 
         // Trier par score et prendre les 8 meilleurs
         const sortedResults = allResults
           .sort((a, b) => (b.score || 0) - (a.score || 0))
           .slice(0, 8);
 
-        // Mettre en cache
-        searchCache.current.set(normalizedQuery, sortedResults);
-        
-        // Limiter la taille du cache à 50 entrées
-        if (searchCache.current.size > 50) {
-          const firstKey = searchCache.current.keys().next().value;
-          searchCache.current.delete(firstKey);
-        }
-
         setSuggestions(sortedResults);
       } catch (error: any) {
-        if (error.name !== 'AbortError') {
-          console.error("Erreur lors de la recherche:", error);
-        }
+        console.error("Erreur lors de la recherche:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    setIsLoading(true);
-    const debounce = setTimeout(fetchSuggestions, 200);
-    return () => {
-      clearTimeout(debounce);
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
+    const debounce = setTimeout(fetchSuggestions, 150);
+    return () => clearTimeout(debounce);
   }, [value]);
 
   useEffect(() => {
@@ -351,8 +340,8 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
                         <p className="text-sm text-muted-foreground truncate">{suggestion.subtitle}</p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {suggestion.score && suggestion.score < 0.8 && (
+                     <div className="flex items-center gap-2 flex-shrink-0">
+                      {suggestion.score && suggestion.score < 0.7 && (
                         <span className="text-xs text-muted-foreground italic">Suggestion</span>
                       )}
                       <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
