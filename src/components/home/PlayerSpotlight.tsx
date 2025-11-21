@@ -7,28 +7,37 @@ import { Trophy, TrendingUp, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
-import useEmblaCarousel from 'embla-carousel-react';
+import { motion } from "framer-motion";
 export function PlayerSpotlight() {
   const [featuredPlayers, setFeaturedPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [api, setApi] = useState<any>(null);
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    loop: true
-  });
+  const [progress, setProgress] = useState(0);
   useEffect(() => {
     fetchFeaturedPlayers();
   }, []);
-  useEffect(() => {
-    if (emblaApi) {
-      setApi(emblaApi);
-    }
-  }, [emblaApi]);
+
+  // Auto-play avec barre de progression
   useEffect(() => {
     if (!api || featuredPlayers.length <= 1) return;
-    const intervalId = setInterval(() => {
-      api.scrollNext();
-    }, 7000); // Change automatique toutes les 7 secondes
-    return () => clearInterval(intervalId);
+    
+    const DURATION = 7000; // 7 secondes
+    const INTERVAL = 50; // Mise à jour toutes les 50ms
+    let elapsed = 0;
+
+    const progressInterval = setInterval(() => {
+      elapsed += INTERVAL;
+      const currentProgress = (elapsed / DURATION) * 100;
+      setProgress(currentProgress);
+
+      if (elapsed >= DURATION) {
+        api.scrollNext();
+        elapsed = 0;
+        setProgress(0);
+      }
+    }, INTERVAL);
+
+    return () => clearInterval(progressInterval);
   }, [api, featuredPlayers.length]);
   const fetchFeaturedPlayers = async () => {
     try {
@@ -160,7 +169,7 @@ export function PlayerSpotlight() {
             <Carousel setApi={setApi} className="w-full" opts={{
           loop: true
         }}>
-              <CarouselContent ref={emblaRef}>
+              <CarouselContent>
                 {featuredPlayers.map(player => <CarouselItem key={player.id}>
                     <Card className="overflow-hidden bg-white/10 backdrop-blur border-white/20">
                       <CardContent className="p-0">
@@ -175,9 +184,21 @@ export function PlayerSpotlight() {
               </div>
             </Carousel>
             
+            {/* Barre de progression */}
+            <div className="mt-4 w-full h-1 bg-white/20 rounded-full overflow-hidden">
+              <motion.div 
+                className="h-full bg-madrid-gold"
+                style={{ width: `${progress}%` }}
+                transition={{ duration: 0.05, ease: "linear" }}
+              />
+            </div>
+            
             {/* Indicator dots */}
             {featuredPlayers.length > 1 && <div className="flex justify-center gap-2 mt-4">
-                {featuredPlayers.map((_, index) => <button key={index} onClick={() => api?.scrollTo(index)} className="w-2 h-2 rounded-full bg-white/30 hover:bg-white/50 transition-colors" aria-label={`Aller au joueur ${index + 1}`} />)}
+                {featuredPlayers.map((_, index) => <button key={index} onClick={() => {
+                    api?.scrollTo(index);
+                    setProgress(0);
+                  }} className="w-2 h-2 rounded-full bg-white/30 hover:bg-white/50 transition-colors" aria-label={`Aller au joueur ${index + 1}`} />)}
               </div>}
           </div>}
       </div>
