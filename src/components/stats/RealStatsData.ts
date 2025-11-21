@@ -1,81 +1,84 @@
 
-import { useRealStats } from "@/hooks/useRealStats";
+import { useCompetitionStats } from "@/hooks/useCompetitionStats";
 
 export const useRealStatsData = () => {
-  const { stats, loading, error } = useRealStats();
+  // Récupérer les stats pour chaque compétition
+  const { stats: globalStats, loading: globalLoading, error: globalError } = useCompetitionStats('global');
+  const { stats: laligaStats, loading: laligaLoading } = useCompetitionStats('laliga');
+  const { stats: clStats, loading: clLoading } = useCompetitionStats('cl');
+  const { stats: copaStats, loading: copaLoading } = useCompetitionStats('copaDelRey');
+  const { stats: superEuropeStats, loading: superEuropeLoading } = useCompetitionStats('supercoupeEurope');
+  const { stats: superEspagneStats, loading: superEspagneLoading } = useCompetitionStats('supercoupeEspagne');
 
-  // Transformer les données réelles au format attendu par les composants existants
-  const getStatsForCompetition = (competition: string) => {
-    // Pour l'instant, on utilise les mêmes données pour toutes les compétitions
-    // Dans une version future, on pourrait filtrer par compétition
-    return {
-      topScorers: stats.topScorers,
-      topAssists: stats.topAssists,
-      mostPlayed: stats.mostPlayed,
-      teamPerformance: [
-        { name: "Victoires", value: stats.wins },
-        { name: "Nuls", value: stats.draws },
-        { name: "Défaites", value: stats.losses }
-      ],
-      standings: [
-        {
-          position: 1,
-          team: "Real Madrid",
-          played: stats.totalMatches,
-          won: stats.wins,
-          drawn: stats.draws,
-          lost: stats.losses,
-          goalsFor: stats.totalGoals,
-          goalsAgainst: Math.floor(stats.totalGoals * 0.3), // Estimation
-          points: stats.wins * 3 + stats.draws
-        }
-      ]
-    };
-  };
+  const loading = globalLoading || laligaLoading || clLoading || copaLoading || superEuropeLoading || superEspagneLoading;
+
+  const formatStatsForCompetition = (stats: typeof globalStats) => ({
+    topScorers: stats.topScorers,
+    topAssists: stats.topAssists,
+    mostPlayed: stats.mostPlayed,
+    teamPerformance: [
+      { name: "Victoires", value: stats.wins },
+      { name: "Nuls", value: stats.draws },
+      { name: "Défaites", value: stats.losses }
+    ],
+    standings: [
+      {
+        position: 1,
+        team: "Real Madrid",
+        played: stats.totalMatches,
+        won: stats.wins,
+        drawn: stats.draws,
+        lost: stats.losses,
+        goalsFor: stats.totalGoals,
+        goalsAgainst: 0, // TODO: calculer les buts encaissés
+        points: stats.wins * 3 + stats.draws
+      }
+    ]
+  });
 
   return {
     loading,
-    error,
-    globalStats: stats,
+    error: globalError,
+    globalStats,
     topScorers: {
-      global: stats.topScorers,
-      laliga: getStatsForCompetition('laliga').topScorers,
-      cl: getStatsForCompetition('cl').topScorers,
-      copaDelRey: getStatsForCompetition('copaDelRey').topScorers,
-      supercoupeEurope: getStatsForCompetition('supercoupeEurope').topScorers,
-      supercoupeEspagne: getStatsForCompetition('supercoupeEspagne').topScorers
+      global: globalStats.topScorers,
+      laliga: laligaStats.topScorers,
+      cl: clStats.topScorers,
+      copaDelRey: copaStats.topScorers,
+      supercoupeEurope: superEuropeStats.topScorers,
+      supercoupeEspagne: superEspagneStats.topScorers
     },
     topAssists: {
-      global: stats.topAssists,
-      laliga: getStatsForCompetition('laliga').topAssists,
-      cl: getStatsForCompetition('cl').topAssists,
-      copaDelRey: getStatsForCompetition('copaDelRey').topAssists,
-      supercoupeEurope: getStatsForCompetition('supercoupeEurope').topAssists,
-      supercoupeEspagne: getStatsForCompetition('supercoupeEspagne').topAssists
+      global: globalStats.topAssists,
+      laliga: laligaStats.topAssists,
+      cl: clStats.topAssists,
+      copaDelRey: copaStats.topAssists,
+      supercoupeEurope: superEuropeStats.topAssists,
+      supercoupeEspagne: superEspagneStats.topAssists
     },
     mostPlayed: {
-      global: stats.mostPlayed,
-      laliga: getStatsForCompetition('laliga').mostPlayed,
-      cl: getStatsForCompetition('cl').mostPlayed,
-      copaDelRey: getStatsForCompetition('copaDelRey').mostPlayed,
-      supercoupeEurope: getStatsForCompetition('supercoupeEurope').mostPlayed,
-      supercoupeEspagne: getStatsForCompetition('supercoupeEspagne').mostPlayed
+      global: globalStats.mostPlayed,
+      laliga: laligaStats.mostPlayed,
+      cl: clStats.mostPlayed,
+      copaDelRey: copaStats.mostPlayed,
+      supercoupeEurope: superEuropeStats.mostPlayed,
+      supercoupeEspagne: superEspagneStats.mostPlayed
     },
     teamPerformance: {
-      global: getStatsForCompetition('global').teamPerformance,
-      laliga: getStatsForCompetition('laliga').teamPerformance,
-      cl: getStatsForCompetition('cl').teamPerformance,
-      copaDelRey: getStatsForCompetition('copaDelRey').teamPerformance,
-      supercoupeEurope: getStatsForCompetition('supercoupeEurope').teamPerformance,
-      supercoupeEspagne: getStatsForCompetition('supercoupeEspagne').teamPerformance
+      global: formatStatsForCompetition(globalStats).teamPerformance,
+      laliga: formatStatsForCompetition(laligaStats).teamPerformance,
+      cl: formatStatsForCompetition(clStats).teamPerformance,
+      copaDelRey: formatStatsForCompetition(copaStats).teamPerformance,
+      supercoupeEurope: formatStatsForCompetition(superEuropeStats).teamPerformance,
+      supercoupeEspagne: formatStatsForCompetition(superEspagneStats).teamPerformance
     },
     standings: {
-      global: getStatsForCompetition('global').standings,
-      laliga: getStatsForCompetition('laliga').standings,
-      cl: getStatsForCompetition('cl').standings,
-      copaDelRey: getStatsForCompetition('copaDelRey').standings,
-      supercoupeEurope: getStatsForCompetition('supercoupeEurope').standings,
-      supercoupeEspagne: getStatsForCompetition('supercoupeEspagne').standings
+      global: formatStatsForCompetition(globalStats).standings,
+      laliga: formatStatsForCompetition(laligaStats).standings,
+      cl: formatStatsForCompetition(clStats).standings,
+      copaDelRey: formatStatsForCompetition(copaStats).standings,
+      supercoupeEurope: formatStatsForCompetition(superEuropeStats).standings,
+      supercoupeEspagne: formatStatsForCompetition(superEspagneStats).standings
     }
   };
 };
