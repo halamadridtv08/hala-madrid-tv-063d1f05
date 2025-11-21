@@ -72,6 +72,9 @@ import { BatchMatchImporter } from "@/components/admin/BatchMatchImporter";
 import { StatsEvolutionChart } from "@/components/admin/StatsEvolutionChart";
 import { StatsExporter } from "@/components/admin/StatsExporter";
 import { PlayerStatsAlerts } from "@/components/admin/PlayerStatsAlerts";
+import { PlayerObjectivesManager } from "@/components/admin/PlayerObjectivesManager";
+import { SeasonComparison } from "@/components/admin/SeasonComparison";
+import { CompetitionReports } from "@/components/admin/CompetitionReports";
 import { useNavigate } from "react-router-dom";
 
 interface StatsData {
@@ -446,13 +449,30 @@ const Admin = () => {
         <AdminStatsOverview />
       )}
       
-      <div className="mt-8">
-        <h3 className="text-xl font-semibold mb-4">Évolution et Export des Statistiques</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <StatsEvolutionChart />
-          <StatsExporter />
+      <div className="mt-8 space-y-8">
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Évolution et Export des Statistiques</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <StatsEvolutionChart />
+            <StatsExporter />
+          </div>
+          <PlayerStatsAlerts />
         </div>
-        <PlayerStatsAlerts />
+
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Objectifs et Performance</h3>
+          <PlayerObjectivesManager />
+        </div>
+
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Comparaison par Saison</h3>
+          <SeasonComparison />
+        </div>
+
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Rapports par Compétition</h3>
+          <CompetitionReports />
+        </div>
       </div>
     </div>
   );
