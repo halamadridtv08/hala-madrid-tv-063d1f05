@@ -1083,6 +1083,65 @@ export type Database = {
           },
         ]
       }
+      player_objectives: {
+        Row: {
+          achieved_at: string | null
+          competition: string | null
+          created_at: string
+          created_by: string | null
+          current_value: number | null
+          deadline: string | null
+          description: string | null
+          id: string
+          is_achieved: boolean | null
+          objective_type: string
+          player_id: string
+          season: string
+          target_value: number
+          updated_at: string
+        }
+        Insert: {
+          achieved_at?: string | null
+          competition?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_value?: number | null
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          is_achieved?: boolean | null
+          objective_type: string
+          player_id: string
+          season: string
+          target_value: number
+          updated_at?: string
+        }
+        Update: {
+          achieved_at?: string | null
+          competition?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_value?: number | null
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          is_achieved?: boolean | null
+          objective_type?: string
+          player_id?: string
+          season?: string
+          target_value?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_objectives_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       player_stats: {
         Row: {
           assists: number | null
@@ -1271,6 +1330,72 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: []
+      }
+      season_statistics: {
+        Row: {
+          clean_sheets: number | null
+          competition: string | null
+          created_at: string
+          goals_conceded: number | null
+          goals_scored: number | null
+          id: string
+          matches_drawn: number | null
+          matches_lost: number | null
+          matches_won: number | null
+          season: string
+          top_assister_id: string | null
+          top_scorer_id: string | null
+          total_matches: number | null
+          updated_at: string
+        }
+        Insert: {
+          clean_sheets?: number | null
+          competition?: string | null
+          created_at?: string
+          goals_conceded?: number | null
+          goals_scored?: number | null
+          id?: string
+          matches_drawn?: number | null
+          matches_lost?: number | null
+          matches_won?: number | null
+          season: string
+          top_assister_id?: string | null
+          top_scorer_id?: string | null
+          total_matches?: number | null
+          updated_at?: string
+        }
+        Update: {
+          clean_sheets?: number | null
+          competition?: string | null
+          created_at?: string
+          goals_conceded?: number | null
+          goals_scored?: number | null
+          id?: string
+          matches_drawn?: number | null
+          matches_lost?: number | null
+          matches_won?: number | null
+          season?: string
+          top_assister_id?: string | null
+          top_scorer_id?: string | null
+          total_matches?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "season_statistics_top_assister_id_fkey"
+            columns: ["top_assister_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "season_statistics_top_scorer_id_fkey"
+            columns: ["top_scorer_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_settings: {
         Row: {
@@ -1585,6 +1710,7 @@ export type Database = {
       }
       publish_scheduled_flash_news: { Args: never; Returns: undefined }
       update_all_players_ages: { Args: never; Returns: undefined }
+      update_player_objectives_progress: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user" | "moderator"
