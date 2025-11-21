@@ -7,15 +7,26 @@ import { Trophy, TrendingUp, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 export function PlayerSpotlight() {
   const [featuredPlayers, setFeaturedPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [api, setApi] = useState<any>(null);
   const [progress, setProgress] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
   useEffect(() => {
     fetchFeaturedPlayers();
   }, []);
+
+  // Suivre l'index actuel du carousel
+  useEffect(() => {
+    if (!api) return;
+    
+    api.on('select', () => {
+      setCurrentIndex(api.selectedScrollSnap());
+      setProgress(0);
+    });
+  }, [api]);
 
   // Auto-play avec barre de progression
   useEffect(() => {
@@ -170,12 +181,23 @@ export function PlayerSpotlight() {
           loop: true
         }}>
               <CarouselContent>
-                {featuredPlayers.map(player => <CarouselItem key={player.id}>
-                    <Card className="overflow-hidden bg-white/10 backdrop-blur border-white/20">
-                      <CardContent className="p-0">
-                        {renderPlayerCard(player)}
-                      </CardContent>
-                    </Card>
+                {featuredPlayers.map((player, index) => <CarouselItem key={player.id}>
+                    <AnimatePresence mode="wait">
+                      {currentIndex === index && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 1.05 }}
+                          transition={{ duration: 0.5, ease: "easeInOut" }}
+                        >
+                          <Card className="overflow-hidden bg-white/10 backdrop-blur border-white/20">
+                            <CardContent className="p-0">
+                              {renderPlayerCard(player)}
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </CarouselItem>)}
               </CarouselContent>
               <div className="absolute bottom-4 right-4 flex gap-2 z-10">
