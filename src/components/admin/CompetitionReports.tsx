@@ -7,6 +7,7 @@ import { Trophy, Award, Target, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { normalizeCompetitionName } from "@/utils/competitionNormalizer";
 
 interface CompetitionStats {
   competition: string;
@@ -41,14 +42,6 @@ export const CompetitionReports = () => {
     }
   }, [selectedCompetition, selectedSeason]);
 
-  const normalizeCompetitionName = (competition: string): string => {
-    // Normalize competition names to avoid duplicates
-    if (competition.toLowerCase().includes('champions league')) {
-      return 'UEFA CHAMPIONS LEAGUE';
-    }
-    return competition;
-  };
-
   const loadCompetitionsAndSeasons = async () => {
     try {
       const { data: matches, error } = await supabase
@@ -61,14 +54,14 @@ export const CompetitionReports = () => {
       const uniqueCompetitions = new Set<string>();
       const uniqueSeasons = new Set<string>();
       
-      matches?.forEach(match => {
+      for (const match of matches || []) {
         if (match.competition) {
-          const normalized = normalizeCompetitionName(match.competition);
+          const normalized = await normalizeCompetitionName(match.competition);
           uniqueCompetitions.add(normalized);
         }
         const year = new Date(match.match_date).getFullYear();
         uniqueSeasons.add(year.toString());
-      });
+      }
 
       const sortedCompetitions = Array.from(uniqueCompetitions).sort();
       const sortedSeasons = Array.from(uniqueSeasons).sort((a, b) => parseInt(b) - parseInt(a));
@@ -96,8 +89,15 @@ export const CompetitionReports = () => {
       if (matchError) throw matchError;
 
       // Filter matches by normalized competition name
-      const matches = allMatches?.filter(match => 
-        normalizeCompetitionName(match.competition || '') === selectedCompetition
+      const matchesWithNormalized = await Promise.all(
+        (allMatches || []).map(async (match) => ({
+          ...match,
+          normalizedCompetition: await normalizeCompetitionName(match.competition || '')
+        }))
+      );
+
+      const matches = matchesWithNormalized.filter(
+        match => match.normalizedCompetition === selectedCompetition
       );
 
       const totalMatches = matches?.length || 0;

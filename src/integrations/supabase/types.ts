@@ -199,6 +199,33 @@ export type Database = {
         }
         Relationships: []
       }
+      competition_aliases: {
+        Row: {
+          aliases: string[]
+          canonical_name: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          aliases?: string[]
+          canonical_name: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          aliases?: string[]
+          canonical_name?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       flash_news: {
         Row: {
           approved_at: string | null
@@ -1707,6 +1734,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      normalize_competition_name: {
+        Args: { input_name: string }
+        Returns: string
       }
       publish_scheduled_flash_news: { Args: never; Returns: undefined }
       update_all_players_ages: { Args: never; Returns: undefined }

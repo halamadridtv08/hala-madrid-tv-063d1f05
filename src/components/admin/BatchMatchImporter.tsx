@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { normalizeCompetitionName } from "@/utils/competitionNormalizer";
 
 interface BatchImportResult {
   matchName: string;
@@ -61,8 +62,8 @@ export const BatchMatchImporter = () => {
         ));
 
         try {
-          // Transformer le JSON
-          const matchData = transformMatchJson(match);
+          // Transformer le JSON avec normalisation
+          const matchData = await transformMatchJson(match);
           
           // Chercher un match existant avec ces équipes et cette date
           const { data: existingMatch, error: findError } = await supabase
@@ -129,9 +130,13 @@ export const BatchMatchImporter = () => {
     }
   };
 
-  const transformMatchJson = (imported: any) => {
+  const transformMatchJson = async (imported: any) => {
     const homeTeam = imported.match.teams.home;
     const awayTeam = imported.match.teams.away;
+    
+    // Normalize competition name
+    const competitionRaw = imported.match.competition.replace(/_/g, ' ').toUpperCase();
+    const normalizedCompetition = await normalizeCompetitionName(competitionRaw);
     
     return {
       home_team: homeTeam === "real_madrid" ? "Real Madrid" : homeTeam.charAt(0).toUpperCase() + homeTeam.slice(1),
@@ -140,7 +145,7 @@ export const BatchMatchImporter = () => {
       away_score: imported.match.score[awayTeam] || 0,
       match_date: `${imported.match.date}T${imported.match.time}:00Z`,
       venue: imported.match.venue,
-      competition: imported.match.competition.replace(/_/g, ' ').toUpperCase(),
+      competition: normalizedCompetition,
       status: imported.match.status === "termine" ? "finished" : imported.match.status,
       match_details: {
         possession: imported.match.possession,

@@ -75,6 +75,8 @@ import { PlayerStatsAlerts } from "@/components/admin/PlayerStatsAlerts";
 import { PlayerObjectivesManager } from "@/components/admin/PlayerObjectivesManager";
 import { SeasonComparison } from "@/components/admin/SeasonComparison";
 import { CompetitionReports } from "@/components/admin/CompetitionReports";
+import { CompetitionAliasManager } from "@/components/admin/CompetitionAliasManager";
+import { DataInconsistencyDetector } from "@/components/admin/DataInconsistencyDetector";
 import { useNavigate } from "react-router-dom";
 
 interface StatsData {
@@ -488,6 +490,8 @@ const Admin = () => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-4">Paramètres</h2>
       <UserRolesManager />
+      <CompetitionAliasManager />
+      <DataInconsistencyDetector />
       <FlashNewsCategoryManager />
       <FlashNewsSourceManager />
       <AuthImageManager />
