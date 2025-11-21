@@ -1217,6 +1217,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_role_history: {
+        Row: {
+          changed_by: string
+          changed_by_email: string | null
+          created_at: string
+          id: string
+          new_role: Database["public"]["Enums"]["app_role"]
+          old_role: Database["public"]["Enums"]["app_role"] | null
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_by: string
+          changed_by_email?: string | null
+          created_at?: string
+          id?: string
+          new_role: Database["public"]["Enums"]["app_role"]
+          old_role?: Database["public"]["Enums"]["app_role"] | null
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_by?: string
+          changed_by_email?: string | null
+          created_at?: string
+          id?: string
+          new_role?: Database["public"]["Enums"]["app_role"]
+          old_role?: Database["public"]["Enums"]["app_role"] | null
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -1395,6 +1428,20 @@ export type Database = {
       }
     }
     Functions: {
+      get_role_history: {
+        Args: { p_user_id?: string }
+        Returns: {
+          changed_by: string
+          changed_by_email: string
+          created_at: string
+          id: string
+          new_role: Database["public"]["Enums"]["app_role"]
+          old_role: Database["public"]["Enums"]["app_role"]
+          reason: string
+          user_email: string
+          user_id: string
+        }[]
+      }
       get_users_with_roles: {
         Args: never
         Returns: {
