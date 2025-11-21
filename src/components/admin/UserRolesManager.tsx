@@ -22,40 +22,25 @@ import { Button } from "@/components/ui/button";
 import { Shield, UserCog } from "lucide-react";
 
 interface UserRole {
-  id: string;
   user_id: string;
+  email: string;
   role: 'admin' | 'moderator' | 'user';
   created_at: string;
-  email?: string;
 }
 
 export const UserRolesManager = () => {
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchUserRoles();
-    fetchUsers();
   }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const { data, error } = await supabase.auth.admin.listUsers();
-      if (error) throw error;
-      setUsers(data.users || []);
-    } catch (error: any) {
-      console.error('Error fetching users:', error);
-    }
-  };
 
   const fetchUserRoles = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .rpc('get_users_with_roles');
 
       if (error) throw error;
       setUserRoles(data || []);
@@ -123,11 +108,6 @@ export const UserRolesManager = () => {
     return variants[role] || "outline";
   };
 
-  const getUserEmail = (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    return user?.email || userId;
-  };
-
   if (loading) {
     return <div>Chargement...</div>;
   }
@@ -152,9 +132,9 @@ export const UserRolesManager = () => {
           </TableHeader>
           <TableBody>
             {userRoles.map((userRole) => (
-              <TableRow key={userRole.id}>
+              <TableRow key={userRole.user_id}>
                 <TableCell className="font-medium">
-                  {getUserEmail(userRole.user_id)}
+                  {userRole.email}
                 </TableCell>
                 <TableCell>
                   <Badge variant={getRoleBadgeVariant(userRole.role)}>
