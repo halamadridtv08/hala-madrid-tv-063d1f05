@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -125,15 +126,35 @@ const CalendarPage = () => {
 
           {/* Section Prochain Match */}
           {nextMatch && (
-            <div className="mb-6 sm:mb-8">
+            <motion.div 
+              className="mb-6 sm:mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
               <Card className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
                 <CardHeader className="pb-3 sm:pb-6">
-                  <CardTitle className="text-lg sm:text-xl">Prochain Match</CardTitle>
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                  >
+                    <CardTitle className="text-lg sm:text-xl">Prochain Match</CardTitle>
+                  </motion.div>
                 </CardHeader>
                 <CardContent className="space-y-3 sm:space-y-0">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-                    <div className="flex items-center gap-2 sm:gap-4 justify-center flex-wrap sm:flex-nowrap w-full sm:w-auto">
-                      <div className="flex items-center gap-2">
+                    <motion.div 
+                      className="flex items-center gap-2 sm:gap-4 justify-center flex-wrap sm:flex-nowrap w-full sm:w-auto"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5, delay: 0.4 }}
+                    >
+                      <motion.div 
+                        className="flex items-center gap-2"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
                         {nextMatch.home_team_logo && (
                           <img 
                             src={nextMatch.home_team_logo} 
@@ -145,9 +166,25 @@ const CalendarPage = () => {
                           />
                         )}
                         <span className="font-semibold text-sm sm:text-base whitespace-nowrap">{nextMatch.home_team}</span>
-                      </div>
-                      <span className="text-xl sm:text-2xl font-bold flex-shrink-0">VS</span>
-                      <div className="flex items-center gap-2">
+                      </motion.div>
+                      <motion.span 
+                        className="text-xl sm:text-2xl font-bold flex-shrink-0"
+                        animate={{ 
+                          scale: [1, 1.1, 1],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          repeatType: "reverse"
+                        }}
+                      >
+                        VS
+                      </motion.span>
+                      <motion.div 
+                        className="flex items-center gap-2"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
                         <span className="font-semibold text-sm sm:text-base whitespace-nowrap">{nextMatch.away_team}</span>
                         {nextMatch.away_team_logo && (
                           <img 
@@ -159,9 +196,14 @@ const CalendarPage = () => {
                             }}
                           />
                         )}
-                      </div>
-                    </div>
-                    <div className="text-center w-full sm:w-auto">
+                      </motion.div>
+                    </motion.div>
+                    <motion.div 
+                      className="text-center w-full sm:w-auto"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.5 }}
+                    >
                       <div className="text-sm sm:text-base font-semibold">
                         {new Date(nextMatch.match_date).toLocaleDateString('fr-FR', {
                           weekday: 'long',
@@ -173,11 +215,11 @@ const CalendarPage = () => {
                       {nextMatch.venue && (
                         <div className="text-xs sm:text-sm opacity-90 mt-1">{nextMatch.venue}</div>
                       )}
-                    </div>
+                    </motion.div>
                   </div>
                 </CardContent>
               </Card>
-            </div>
+            </motion.div>
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
