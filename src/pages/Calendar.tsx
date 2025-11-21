@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -224,7 +224,12 @@ const CalendarPage = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Calendrier */}
-            <div className="lg:col-span-1">
+            <motion.div 
+              className="lg:col-span-1"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
               <Card>
                 <CardHeader className="pb-3 sm:pb-6">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
@@ -233,33 +238,48 @@ const CalendarPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="px-2 sm:px-6">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    month={currentMonth}
-                    onMonthChange={setCurrentMonth}
-                    modifiers={{
-                      hasMatch: matchDates
-                    }}
-                    modifiersStyles={{
-                      hasMatch: { 
-                        backgroundColor: '#1a365d', 
-                        color: 'white',
-                        fontWeight: 'bold'
-                      }
-                    }}
-                    className="rounded-md border w-full pointer-events-auto"
-                  />
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={`${currentMonth.getMonth()}-${currentMonth.getFullYear()}`}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        month={currentMonth}
+                        onMonthChange={setCurrentMonth}
+                        modifiers={{
+                          hasMatch: matchDates
+                        }}
+                        modifiersStyles={{
+                          hasMatch: { 
+                            backgroundColor: '#1a365d', 
+                            color: 'white',
+                            fontWeight: 'bold'
+                          }
+                        }}
+                        className="rounded-md border w-full pointer-events-auto"
+                      />
+                    </motion.div>
+                  </AnimatePresence>
                   <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500">
                     <p>• Les dates en bleu indiquent des matchs programmés</p>
                   </div>
                 </CardContent>
               </Card>
-            </div>
+            </motion.div>
 
             {/* Liste des matchs de la date sélectionnée */}
-            <div className="lg:col-span-2">
+            <motion.div 
+              className="lg:col-span-2"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
               <Card>
                 <CardHeader className="pb-3 sm:pb-6">
                   <CardTitle className="text-base sm:text-lg">
@@ -279,85 +299,112 @@ const CalendarPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {(selectedDate ? matchesForSelectedDate : monthMatches).length > 0 ? (
-                    <div className="space-y-3 sm:space-y-4">
-                      {(selectedDate ? matchesForSelectedDate : monthMatches).map((match) => (
-                        <div key={match.id} className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-shadow">
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
-                            <div className="flex flex-col items-start gap-2 w-full sm:w-auto">
-                              <div className="flex items-center gap-2">
-                                {match.home_team_logo && (
-                                  <img 
-                                    src={match.home_team_logo} 
-                                    alt={match.home_team}
-                                    className="w-6 h-6 object-contain"
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = 'none';
-                                    }}
-                                  />
-                                )}
-                                <span className="font-semibold text-sm">{match.home_team}</span>
+                  <AnimatePresence mode="wait">
+                    {(selectedDate ? matchesForSelectedDate : monthMatches).length > 0 ? (
+                      <motion.div 
+                        key={selectedDate ? selectedDate.toISOString() : currentMonth.toISOString()}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-3 sm:space-y-4"
+                      >
+                        {(selectedDate ? matchesForSelectedDate : monthMatches).map((match, index) => (
+                          <motion.div 
+                            key={match.id} 
+                            className="p-3 sm:p-4 border rounded-lg hover:shadow-md transition-shadow"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ 
+                              duration: 0.4, 
+                              delay: index * 0.1,
+                              ease: "easeOut"
+                            }}
+                            whileHover={{ scale: 1.02 }}
+                          >
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
+                              <div className="flex flex-col items-start gap-2 w-full sm:w-auto">
+                                <div className="flex items-center gap-2">
+                                  {match.home_team_logo && (
+                                    <img 
+                                      src={match.home_team_logo} 
+                                      alt={match.home_team}
+                                      className="w-6 h-6 object-contain"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                      }}
+                                    />
+                                  )}
+                                  <span className="font-semibold text-sm">{match.home_team}</span>
+                                </div>
+                                <span className="text-gray-500 text-xs">vs</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold text-sm">{match.away_team}</span>
+                                  {match.away_team_logo && (
+                                    <img 
+                                      src={match.away_team_logo} 
+                                      alt={match.away_team}
+                                      className="w-6 h-6 object-contain"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                      }}
+                                    />
+                                  )}
+                                </div>
                               </div>
-                              <span className="text-gray-500 text-xs">vs</span>
-                              <div className="flex items-center gap-2">
-                                <span className="font-semibold text-sm">{match.away_team}</span>
-                                {match.away_team_logo && (
-                                  <img 
-                                    src={match.away_team_logo} 
-                                    alt={match.away_team}
-                                    className="w-6 h-6 object-contain"
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = 'none';
-                                    }}
-                                  />
-                                )}
-                              </div>
+                              {getStatusBadge(match.status)}
                             </div>
-                            {getStatusBadge(match.status)}
-                          </div>
-                          
-                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-gray-600 dark:text-gray-300">
-                            <div className="flex items-center gap-1">
-                              <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-                              {new Date(match.match_date).toLocaleDateString('fr-FR')}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
-                              {formatTime(match.match_date)}
-                            </div>
-                            {match.venue && (
+                            
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-gray-600 dark:text-gray-300">
                               <div className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
-                                <span className="truncate max-w-[150px] sm:max-w-none">{match.venue}</span>
+                                <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4" />
+                                {new Date(match.match_date).toLocaleDateString('fr-FR')}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+                                {formatTime(match.match_date)}
+                              </div>
+                              {match.venue && (
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
+                                  <span className="truncate max-w-[150px] sm:max-w-none">{match.venue}</span>
+                                </div>
+                              )}
+                              {match.competition && (
+                                <Badge variant="outline" className="text-xs">{match.competition}</Badge>
+                              )}
+                            </div>
+
+                            {match.status === 'finished' && (
+                              <div className="mt-2 text-base sm:text-lg font-bold">
+                                Score: {match.home_score} - {match.away_score}
                               </div>
                             )}
-                            {match.competition && (
-                              <Badge variant="outline" className="text-xs">{match.competition}</Badge>
-                            )}
-                          </div>
-
-                          {match.status === 'finished' && (
-                            <div className="mt-2 text-base sm:text-lg font-bold">
-                              Score: {match.home_score} - {match.away_score}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 sm:py-8 text-gray-500">
-                      <CalendarIcon className="mx-auto h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4 opacity-50" />
-                      <p className="text-sm sm:text-base">
-                        {selectedDate 
-                          ? "Aucun match programmé pour cette date" 
-                          : "Aucun match programmé pour ce mois"
-                        }
-                      </p>
-                    </div>
-                  )}
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    ) : (
+                      <motion.div 
+                        key="no-matches"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.3 }}
+                        className="text-center py-6 sm:py-8 text-gray-500"
+                      >
+                        <CalendarIcon className="mx-auto h-10 w-10 sm:h-12 sm:w-12 mb-3 sm:mb-4 opacity-50" />
+                        <p className="text-sm sm:text-base">
+                          {selectedDate 
+                            ? "Aucun match programmé pour cette date" 
+                            : "Aucun match programmé pour ce mois"
+                          }
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </CardContent>
               </Card>
-            </div>
+            </motion.div>
           </div>
         </div>
       </main>
