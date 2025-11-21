@@ -27,7 +27,7 @@ export function PlayerSpotlight() {
     if (!api || featuredPlayers.length <= 1) return;
     const intervalId = setInterval(() => {
       api.scrollNext();
-    }, 5000);
+    }, 7000); // Change automatique toutes les 7 secondes
     return () => clearInterval(intervalId);
   }, [api, featuredPlayers.length]);
   const fetchFeaturedPlayers = async () => {
