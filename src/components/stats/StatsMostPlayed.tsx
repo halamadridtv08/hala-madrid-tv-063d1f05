@@ -29,7 +29,7 @@ export const StatsMostPlayed = ({ mostPlayed }: StatsMostPlayedProps) => {
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2 whitespace-nowrap">
                         <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
-                          <img src={player.image} alt={player.name} className="w-full h-full object-cover" />
+                          <img src={player.image_url} alt={player.name} className="w-full h-full object-cover" />
                         </div>
                         <span className="truncate">{player.name}</span>
                       </div>
