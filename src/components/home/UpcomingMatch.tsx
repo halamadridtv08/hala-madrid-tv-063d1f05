@@ -99,63 +99,68 @@ export function UpcomingMatch() {
             </div>
             
             <div className="p-6 md:p-8">
-              <div className="flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0">
-                <div className="flex flex-col items-center">
-                  <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden bg-white">
-                    {upcomingMatch.home_team_logo ? (
-                      <img 
-                        src={upcomingMatch.home_team_logo} 
-                        alt={`Logo ${upcomingMatch.home_team}`}
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-madrid-blue rounded-full flex items-center justify-center text-white font-bold text-xl">
-                        {upcomingMatch.home_team.slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
+              <div className="flex flex-col lg:flex-row justify-between items-center gap-8">
+                {/* Équipes côte à côte sur grands écrans */}
+                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
+                  <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center overflow-hidden bg-white">
+                      {upcomingMatch.home_team_logo ? (
+                        <img 
+                          src={upcomingMatch.home_team_logo} 
+                          alt={`Logo ${upcomingMatch.home_team}`}
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-madrid-blue rounded-full flex items-center justify-center text-white font-bold text-xl">
+                          {upcomingMatch.home_team.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="text-lg lg:text-xl font-bold mt-2">{upcomingMatch.home_team}</h3>
                   </div>
-                  <h3 className="text-xl font-bold mt-2">{upcomingMatch.home_team}</h3>
+                  
+                  <div className="text-4xl lg:text-5xl font-bold text-madrid-gold">VS</div>
+                  
+                  <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center overflow-hidden bg-white">
+                      {upcomingMatch.away_team_logo ? (
+                        <img 
+                          src={upcomingMatch.away_team_logo} 
+                          alt={`Logo ${upcomingMatch.away_team}`}
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                          {upcomingMatch.away_team.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="text-lg lg:text-xl font-bold mt-2">{upcomingMatch.away_team}</h3>
+                  </div>
                 </div>
                 
-                <div className="text-center">
-                  <div className="text-5xl font-bold text-madrid-gold">VS</div>
-                  <div className="flex items-center justify-center mt-4 space-x-2">
+                {/* Informations date/heure/lieu */}
+                <div className="text-center lg:text-right">
+                  <div className="flex items-center justify-center lg:justify-end space-x-2">
                     <Calendar className="h-5 w-5 text-gray-500" />
-                    <span>{formatMatchDate(upcomingMatch.match_date)}</span>
+                    <span className="font-medium">{formatMatchDate(upcomingMatch.match_date)}</span>
                   </div>
-                  <div className="flex items-center justify-center mt-2 space-x-2">
+                  <div className="flex items-center justify-center lg:justify-end mt-2 space-x-2">
                     <Clock className="h-5 w-5 text-gray-500" />
-                    <span>{formatMatchTime(upcomingMatch.match_date)}</span>
+                    <span className="text-2xl font-bold">{formatMatchTime(upcomingMatch.match_date)}</span>
                   </div>
                   {upcomingMatch.venue && (
-                    <div className="flex items-center justify-center mt-2 space-x-2">
+                    <div className="flex items-center justify-center lg:justify-end mt-2 space-x-2">
                       <MapPin className="h-5 w-5 text-gray-500" />
-                      <span>{upcomingMatch.venue}</span>
+                      <span className="text-sm">{upcomingMatch.venue}</span>
                     </div>
                   )}
-                </div>
-                
-                <div className="flex flex-col items-center">
-                  <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden bg-white">
-                    {upcomingMatch.away_team_logo ? (
-                      <img 
-                        src={upcomingMatch.away_team_logo} 
-                        alt={`Logo ${upcomingMatch.away_team}`}
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                        {upcomingMatch.away_team.slice(0, 2).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  <h3 className="text-xl font-bold mt-2">{upcomingMatch.away_team}</h3>
                 </div>
               </div>
               
