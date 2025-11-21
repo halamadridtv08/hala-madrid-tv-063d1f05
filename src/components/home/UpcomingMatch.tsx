@@ -101,7 +101,7 @@ export function UpcomingMatch() {
             <div className="p-6 md:p-8">
               <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
                 {/* Les deux équipes alignées horizontalement sur la même ligne */}
-                <div className="flex items-center gap-3 sm:gap-6 flex-wrap lg:flex-nowrap justify-center">
+                <div className="flex items-center gap-3 sm:gap-6 justify-center flex-nowrap">
                   {/* Équipe 1 - Logo à gauche du nom */}
                   <div className="flex items-center gap-2">
                     <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center overflow-hidden bg-white flex-shrink-0">

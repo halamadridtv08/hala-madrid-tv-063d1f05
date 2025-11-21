@@ -65,7 +65,6 @@ export function Navbar() {
               className="h-8 w-8 md:h-12 md:w-12 object-contain"
               width="48"
               height="48"
-              fetchPriority="high"
             />
           </div>
           <span className="font-montserrat font-bold text-sm sm:text-lg md:text-xl lg:text-2xl tracking-tight">
