@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Player } from "@/types/Player";
 import PlayerPositionManager from "./PlayerPositionManager";
+import PlayerSimpleList from "./PlayerSimpleList";
 import { List, Grid, BarChart3 } from "lucide-react";
 import { PlayerStatsManager } from "./PlayerStatsManager";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -37,9 +38,7 @@ const PlayerTable = ({ players, setPlayers }: PlayerTableProps) => {
       </TabsContent>
 
       <TabsContent value="list">
-        <div className="text-center py-8 text-gray-500">
-          Vue liste simple - À implémenter si nécessaire
-        </div>
+        <PlayerSimpleList players={players} setPlayers={setPlayers} />
       </TabsContent>
 
       <TabsContent value="stats">
