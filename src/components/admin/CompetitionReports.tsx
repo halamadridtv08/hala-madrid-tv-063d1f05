@@ -41,6 +41,14 @@ export const CompetitionReports = () => {
     }
   }, [selectedCompetition, selectedSeason]);
 
+  const normalizeCompetitionName = (competition: string): string => {
+    // Normalize competition names to avoid duplicates
+    if (competition.toLowerCase().includes('champions league')) {
+      return 'UEFA CHAMPIONS LEAGUE';
+    }
+    return competition;
+  };
+
   const loadCompetitionsAndSeasons = async () => {
     try {
       const { data: matches, error } = await supabase
@@ -49,12 +57,15 @@ export const CompetitionReports = () => {
 
       if (error) throw error;
 
-      // Extract unique competitions
+      // Extract unique competitions with normalization
       const uniqueCompetitions = new Set<string>();
       const uniqueSeasons = new Set<string>();
       
       matches?.forEach(match => {
-        if (match.competition) uniqueCompetitions.add(match.competition);
+        if (match.competition) {
+          const normalized = normalizeCompetitionName(match.competition);
+          uniqueCompetitions.add(normalized);
+        }
         const year = new Date(match.match_date).getFullYear();
         uniqueSeasons.add(year.toString());
       });
@@ -75,15 +86,19 @@ export const CompetitionReports = () => {
   const loadCompetitionStats = async () => {
     setIsLoading(true);
     try {
-      // Get matches for this competition and season
-      const { data: matches, error: matchError } = await supabase
+      // Get all matches for this season
+      const { data: allMatches, error: matchError } = await supabase
         .from('matches')
         .select('*')
-        .eq('competition', selectedCompetition)
         .gte('match_date', `${selectedSeason}-01-01`)
         .lte('match_date', `${selectedSeason}-12-31`);
 
       if (matchError) throw matchError;
+
+      // Filter matches by normalized competition name
+      const matches = allMatches?.filter(match => 
+        normalizeCompetitionName(match.competition || '') === selectedCompetition
+      );
 
       const totalMatches = matches?.length || 0;
       let wins = 0, draws = 0, losses = 0, goalsScored = 0, goalsConceded = 0, cleanSheets = 0;
