@@ -113,60 +113,51 @@ const PressConferenceTable = ({ pressConferences, setPressConferences }: PressCo
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Titre</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Durée</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pressConferences.map((conference) => (
-              <TableRow key={conference.id}>
-                <TableCell className="font-medium">
-                  {conference.title}
-                </TableCell>
-                <TableCell>
-                  {new Date(conference.conference_date).toLocaleDateString('fr-FR')}
-                </TableCell>
-                <TableCell>{conference.duration || 'N/A'}</TableCell>
-                <TableCell>
-                  <Badge 
+        <div className="space-y-3">
+          {pressConferences.map((conference) => (
+            <div key={conference.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded gap-3">
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium text-sm sm:text-base truncate">{conference.title}</h4>
+                <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                  <span className="text-xs sm:text-sm text-muted-foreground">
+                    {new Date(conference.conference_date).toLocaleDateString('fr-FR')}
+                  </span>
+                  {conference.duration && (
+                    <span className="text-xs text-muted-foreground hidden sm:inline">• {conference.duration}</span>
+                  )}
+                  <Badge
                     variant={conference.is_published ? "default" : "secondary"}
-                    className="cursor-pointer"
+                    className="cursor-pointer text-xs"
                     onClick={() => handleTogglePublish(conference)}
                   >
-                    {conference.is_published ? 'Publié' : 'Brouillon'}
+                    {conference.is_published ? "Publié" : "Brouillon"}
                   </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => {
-                        setEditingConference(conference);
-                        setIsFormOpen(true);
-                      }}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleDelete(conference.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 sm:gap-2 justify-end sm:justify-start">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setEditingConference(conference);
+                    setIsFormOpen(true);
+                  }}
+                  className="h-8 w-8 sm:h-9 sm:w-9 p-0"
+                >
+                  <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDelete(conference.id)}
+                  className="h-8 w-8 sm:h-9 sm:w-9 p-0"
+                >
+                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

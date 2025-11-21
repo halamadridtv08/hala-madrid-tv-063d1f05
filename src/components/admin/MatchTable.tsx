@@ -115,14 +115,14 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
             </div>
           </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {matches.map((match) => (
-              <div key={match.id} className="flex items-center justify-between p-4 border rounded">
+              <div key={match.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded gap-3">
                 <div className="flex-1">
-                  <h3 className="font-semibold">
+                  <h3 className="font-semibold text-sm sm:text-base">
                     {match.home_team} vs {match.away_team}
                   </h3>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                     {new Date(match.match_date).toLocaleDateString('fr-FR', {
                       day: 'numeric',
                       month: 'long',
@@ -131,35 +131,37 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
                       minute: '2-digit'
                     })}
                   </p>
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2">
                     {getStatusBadge(match.status)}
-                    {match.competition && <Badge variant="outline">{match.competition}</Badge>}
+                    {match.competition && <Badge variant="outline" className="text-xs">{match.competition}</Badge>}
                     {match.venue && (
-                      <span className="text-xs text-gray-500">{match.venue}</span>
+                      <span className="text-xs text-muted-foreground hidden sm:inline">{match.venue}</span>
                     )}
                     {match.status === 'finished' && (
-                      <span className="text-sm font-medium">
+                      <span className="text-xs sm:text-sm font-medium">
                         {match.home_score} - {match.away_score}
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 justify-end sm:justify-start">
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => handleViewDetails(match)}
                     title="Voir les détails"
+                    className="h-8 w-8 sm:h-9 sm:w-9 p-0"
                   >
-                    <Calendar className="h-4 w-4" />
+                    <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => handleEditMatch(match)}
                     title="Modifier le match"
+                    className="h-8 w-8 sm:h-9 sm:w-9 p-0"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                   <Button
                     variant="destructive"
@@ -167,8 +169,9 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
                     onClick={() => handleDelete(match.id)}
                     disabled={loading}
                     title="Supprimer le match"
+                    className="h-8 w-8 sm:h-9 sm:w-9 p-0"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
               </div>
