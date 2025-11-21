@@ -99,11 +99,12 @@ export function UpcomingMatch() {
             </div>
             
             <div className="p-6 md:p-8">
-              <div className="flex flex-col lg:flex-row justify-between items-center gap-8">
-                {/* Équipes côte à côte sur grands écrans */}
-                <div className="flex flex-col sm:flex-row items-end gap-4 sm:gap-8">
-                  <div className="flex flex-col items-center min-h-[120px] justify-end">
-                    <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center overflow-hidden bg-white mb-2">
+              <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
+                {/* Les deux équipes alignées horizontalement sur la même ligne */}
+                <div className="flex items-center gap-3 sm:gap-6 flex-wrap lg:flex-nowrap justify-center">
+                  {/* Équipe 1 - Logo à gauche du nom */}
+                  <div className="flex items-center gap-2">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center overflow-hidden bg-white flex-shrink-0">
                       {upcomingMatch.home_team_logo ? (
                         <img 
                           src={upcomingMatch.home_team_logo} 
@@ -114,18 +115,21 @@ export function UpcomingMatch() {
                           }}
                         />
                       ) : (
-                        <div className="w-full h-full bg-madrid-blue rounded-full flex items-center justify-center text-white font-bold text-xl">
+                        <div className="w-full h-full bg-madrid-blue rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-xl">
                           {upcomingMatch.home_team.slice(0, 2).toUpperCase()}
                         </div>
                       )}
                     </div>
-                    <h3 className="text-lg lg:text-xl font-bold text-center">{upcomingMatch.home_team}</h3>
+                    <h3 className="text-base sm:text-lg lg:text-xl font-bold whitespace-nowrap">{upcomingMatch.home_team}</h3>
                   </div>
                   
-                  <div className="text-4xl lg:text-5xl font-bold text-madrid-gold pb-2">VS</div>
+                  {/* VS */}
+                  <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-madrid-gold flex-shrink-0">VS</div>
                   
-                  <div className="flex flex-col items-center min-h-[120px] justify-end">
-                    <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full flex items-center justify-center overflow-hidden bg-white mb-2">
+                  {/* Équipe 2 - Nom à gauche du logo */}
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base sm:text-lg lg:text-xl font-bold whitespace-nowrap">{upcomingMatch.away_team}</h3>
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center overflow-hidden bg-white flex-shrink-0">
                       {upcomingMatch.away_team_logo ? (
                         <img 
                           src={upcomingMatch.away_team_logo} 
@@ -136,12 +140,11 @@ export function UpcomingMatch() {
                           }}
                         />
                       ) : (
-                        <div className="w-full h-full bg-gray-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                        <div className="w-full h-full bg-gray-600 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-xl">
                           {upcomingMatch.away_team.slice(0, 2).toUpperCase()}
                         </div>
                       )}
                     </div>
-                    <h3 className="text-lg lg:text-xl font-bold text-center">{upcomingMatch.away_team}</h3>
                   </div>
                 </div>
                 
