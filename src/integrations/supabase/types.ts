@@ -639,6 +639,53 @@ export type Database = {
         }
         Relationships: []
       }
+      match_import_history: {
+        Row: {
+          created_at: string
+          id: string
+          imported_at: string
+          imported_by: string
+          json_data: Json
+          match_id: string
+          players_updated: number | null
+          previous_match_data: Json
+          previous_stats_data: Json | null
+          stats_summary: Json | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          imported_at?: string
+          imported_by: string
+          json_data: Json
+          match_id: string
+          players_updated?: number | null
+          previous_match_data: Json
+          previous_stats_data?: Json | null
+          stats_summary?: Json | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          imported_at?: string
+          imported_by?: string
+          json_data?: Json
+          match_id?: string
+          players_updated?: number | null
+          previous_match_data?: Json
+          previous_stats_data?: Json | null
+          stats_summary?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_import_history_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_lineups: {
         Row: {
           created_at: string
