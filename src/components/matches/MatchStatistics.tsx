@@ -29,6 +29,18 @@ export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStati
     return parseInt(possessionStr.replace('%', '').trim());
   };
 
+  // Parse card data - count occurrences in text if it's a string with player names
+  const parseCardCount = (cardData: any): number => {
+    if (!cardData) return 0;
+    if (typeof cardData === 'number') return cardData;
+    if (typeof cardData === 'string') {
+      // Count the number of minutes in parentheses (each represents one card)
+      const matches = cardData.match(/\(\d+('|\+\d+)?\)/g);
+      return matches ? matches.length : 0;
+    }
+    return 0;
+  };
+
   const homePossession = parsePossession(possession[homeKey] || '0%');
   const awayPossession = parsePossession(possession[awayKey] || '0%');
 
@@ -78,12 +90,12 @@ export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStati
         away: statistics.fouls?.[awayKey] || 0 
       },
       yellowCards: { 
-        home: cards.yellow?.[homeKey] || 0, 
-        away: cards.yellow?.[awayKey] || 0 
+        home: parseCardCount(cards.yellow?.[homeKey]), 
+        away: parseCardCount(cards.yellow?.[awayKey])
       },
       redCards: { 
-        home: cards.red?.[homeKey] || 0, 
-        away: cards.red?.[awayKey] || 0 
+        home: parseCardCount(cards.red?.[homeKey]), 
+        away: parseCardCount(cards.red?.[awayKey])
       }
     }
   };
