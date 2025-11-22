@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Match } from "@/types/Match";
 import { MatchForm } from "./MatchForm";
 import { MatchJsonImporter } from "./MatchJsonImporter";
-import { MatchEventsManager } from "./MatchEventsManager";
 import { Plus, Edit, Trash2, Calendar } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,9 +19,7 @@ interface MatchTableProps {
 const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
   const [loading, setLoading] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isEventsDialogOpen, setIsEventsDialogOpen] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | undefined>(undefined);
-  const [selectedMatch, setSelectedMatch] = useState<Match | undefined>(undefined);
 
   const refreshMatches = async () => {
     try {
@@ -98,8 +95,8 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
   };
 
   const handleViewDetails = (match: Match) => {
-    setSelectedMatch(match);
-    setIsEventsDialogOpen(true);
+    toast.info(`Détails du match ${match.home_team} vs ${match.away_team}`);
+    console.log("Affichage des détails du match:", match);
   };
 
   return (
@@ -201,23 +198,6 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
             onSuccess={handleFormSuccess}
             onCancel={handleFormCancel}
           />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isEventsDialogOpen} onOpenChange={setIsEventsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              Événements du match: {selectedMatch?.home_team} vs {selectedMatch?.away_team}
-            </DialogTitle>
-          </DialogHeader>
-          {selectedMatch && (
-            <MatchEventsManager
-              matchId={selectedMatch.id}
-              matchDetails={selectedMatch.match_details}
-              onUpdate={refreshMatches}
-            />
-          )}
         </DialogContent>
       </Dialog>
     </>

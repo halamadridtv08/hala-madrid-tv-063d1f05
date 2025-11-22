@@ -32,17 +32,6 @@ export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStati
   const homePossession = parsePossession(possession[homeKey] || '0%');
   const awayPossession = parsePossession(possession[awayKey] || '0%');
 
-  // Fonction pour compter les cartons depuis une chaîne de joueurs
-  const countCards = (cardData: any) => {
-    if (typeof cardData === 'number') return cardData;
-    if (typeof cardData === 'string') {
-      // Compter le nombre de parenthèses (minutes) pour déterminer le nombre de cartons
-      const matches = cardData.match(/\(\d+['"]?\)/g);
-      return matches ? matches.length : 0;
-    }
-    return 0;
-  };
-
   // Get statistics data
   const stats = {
     attack: {
@@ -89,12 +78,12 @@ export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStati
         away: statistics.fouls?.[awayKey] || 0 
       },
       yellowCards: { 
-        home: countCards(cards.yellow?.[homeKey]), 
-        away: countCards(cards.yellow?.[awayKey])
+        home: cards.yellow?.[homeKey] || 0, 
+        away: cards.yellow?.[awayKey] || 0 
       },
       redCards: { 
-        home: countCards(cards.red?.[homeKey]), 
-        away: countCards(cards.red?.[awayKey])
+        home: cards.red?.[homeKey] || 0, 
+        away: cards.red?.[awayKey] || 0 
       }
     }
   };
