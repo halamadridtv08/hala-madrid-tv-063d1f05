@@ -368,8 +368,16 @@ export const MatchJsonImporter = () => {
   };
 
   const generatePreview = async (jsonData: any, matchData: MatchJsonData) => {
-    // Rechercher automatiquement un match existant
-    await findExistingMatch(matchData);
+    // Rechercher automatiquement un match existant SEULEMENT si aucun n'est sélectionné manuellement
+    if (!selectedMatchId) {
+      await findExistingMatch(matchData);
+    } else {
+      // Un match est déjà sélectionné manuellement
+      const selectedMatch = matches.find(m => m.id === selectedMatchId);
+      if (selectedMatch) {
+        toast.info(`Mise à jour du match : ${selectedMatch.home_team} vs ${selectedMatch.away_team}`);
+      }
+    }
     
     // Générer l'aperçu des stats
     const playerStatsPreview: any[] = [];
