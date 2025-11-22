@@ -227,7 +227,7 @@ export const MatchJsonImporter = () => {
         setShowPlayerValidation(true);
       } else {
         // Pas de joueurs à valider, passer directement à la prévisualisation
-        generatePreview(jsonData);
+        generatePreview(jsonData, parsedResult);
       }
     }
   };
@@ -238,10 +238,12 @@ export const MatchJsonImporter = () => {
     
     // Générer la prévisualisation avec les noms validés
     const jsonData = JSON.parse(jsonInput);
-    generatePreview(jsonData);
+    if (parsedData) {
+      generatePreview(jsonData, parsedData);
+    }
   };
 
-  const generatePreview = (jsonData: any) => {
+  const generatePreview = (jsonData: any, matchData: MatchJsonData) => {
     // Générer l'aperçu des stats
     const playerStatsPreview: any[] = [];
     const playerStatsMap = new Map<string, any>();
@@ -344,7 +346,7 @@ export const MatchJsonImporter = () => {
     }
 
     setPreviewData({
-      matchData: parsedData,
+      matchData: matchData,
       playerStats: Array.from(playerStatsMap.values())
     });
     setShowPreview(true);
