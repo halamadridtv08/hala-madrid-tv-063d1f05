@@ -1,10 +1,8 @@
-
-import React, { useState } from "react";
-import { Textarea } from "@/components/ui/textarea";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { MediaUploader } from "./MediaUploader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bold, Italic, AlignLeft, AlignCenter, AlignRight, Link, Video, Image as ImageIcon, Table, Twitter, Instagram, Youtube, Quote } from "lucide-react";
+import { Bold, Italic, AlignLeft, AlignCenter, AlignRight, Link, Video, Image as ImageIcon, Table, Twitter, Instagram, Youtube, Quote, List, ListOrdered } from "lucide-react";
 import DOMPurify from "dompurify";
 
 interface RichTextEditorProps {
@@ -24,98 +22,81 @@ export function RichTextEditor({
 }: RichTextEditorProps) {
   const [showMediaUploader, setShowMediaUploader] = useState(false);
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-  
-  const insertAtCursor = (textToInsert: string) => {
-    if (!textareaRef.current) return;
-    
-    const textarea = textareaRef.current;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    
-    const textBefore = value.substring(0, start);
-    const textAfter = value.substring(end);
-    
-    onChange(textBefore + textToInsert + textAfter);
-    
-    // Reposition cursor after the inserted text
-    setTimeout(() => {
-      textarea.focus();
-      textarea.selectionStart = start + textToInsert.length;
-      textarea.selectionEnd = start + textToInsert.length;
-    }, 0);
-  };
-  
-  const insertTag = (openTag: string, closeTag: string) => {
-    if (!textareaRef.current) return;
-    
-    const textarea = textareaRef.current;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    
-    if (start === end) {
-      // No selection, just insert the tags
-      insertAtCursor(openTag + closeTag);
-    } else {
-      // Wrap the selection with tags
-      const selectedText = value.substring(start, end);
-      const textBefore = value.substring(0, start);
-      const textAfter = value.substring(end);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const isUpdatingRef = useRef(false);
+
+  // Initialize editor with sanitized HTML
+  useEffect(() => {
+    if (editorRef.current && !isUpdatingRef.current) {
+      const sanitized = DOMPurify.sanitize(value, {
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'iframe', 'blockquote', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'script', 'section'],
+        ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'width', 'height', 'controls', 'class', 'target', 'rel', 'style', 'frameborder', 'allow', 'allowfullscreen', 'scrolling', 'allowtransparency', 'data-theme', 'cite', 'data-video-id', 'async', 'charset']
+      });
       
-      onChange(textBefore + openTag + selectedText + closeTag + textAfter);
+      if (editorRef.current.innerHTML !== sanitized) {
+        editorRef.current.innerHTML = sanitized;
+      }
+    }
+  }, [value]);
+
+  const handleInput = () => {
+    if (editorRef.current && !isUpdatingRef.current) {
+      isUpdatingRef.current = true;
+      const content = editorRef.current.innerHTML;
+      onChange(content);
+      setTimeout(() => {
+        isUpdatingRef.current = false;
+      }, 0);
     }
   };
-  
-  const insertBold = () => insertTag("<strong>", "</strong>");
-  const insertItalic = () => insertTag("<em>", "</em>");
-  const insertParagraph = () => insertTag("<p>", "</p>");
-  const insertCenterAlign = () => insertTag('<div style="text-align: center;">', '</div>');
-  const insertLeftAlign = () => insertTag('<div style="text-align: left;">', '</div>');
-  const insertRightAlign = () => insertTag('<div style="text-align: right;">', '</div>');
-  
+
+  const execCommand = (command: string, value: string | undefined = undefined) => {
+    document.execCommand(command, false, value);
+    editorRef.current?.focus();
+    handleInput();
+  };
+
+  const insertBold = () => execCommand('bold');
+  const insertItalic = () => execCommand('italic');
+  const insertUnderline = () => execCommand('underline');
+  const insertLeftAlign = () => execCommand('justifyLeft');
+  const insertCenterAlign = () => execCommand('justifyCenter');
+  const insertRightAlign = () => execCommand('justifyRight');
+  const insertUnorderedList = () => execCommand('insertUnorderedList');
+  const insertOrderedList = () => execCommand('insertOrderedList');
+
   const validateUrl = (url: string): boolean => {
-    // Only allow http:// and https:// protocols
     const urlPattern = /^https?:\/\/.+/i;
     return urlPattern.test(url.trim());
   };
-  
+
   const insertLink = () => {
     const url = prompt("Entrez l'URL du lien:", "https://");
     if (url) {
       const trimmedUrl = url.trim();
-      
-      // Validate URL to prevent XSS attacks
       if (!validateUrl(trimmedUrl)) {
         alert("URL invalide. Veuillez utiliser une URL commençant par http:// ou https://");
         return;
       }
-      
-      if (textareaRef.current) {
-        const textarea = textareaRef.current;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        
-        if (start === end) {
-          // No text selected
-          insertAtCursor(`<a href="${trimmedUrl}" target="_blank">lien</a>`);
-        } else {
-          // Use selected text as link text
-          const selectedText = value.substring(start, end);
-          insertTag(`<a href="${trimmedUrl}" target="_blank">`, `</a>`);
-        }
-      }
+      execCommand('createLink', trimmedUrl);
     }
   };
-  
+
   const handleMediaUploadSuccess = (url: string, type: string) => {
-    if (type === 'image') {
-      insertAtCursor(`\n<img src="${url}" alt="Image" style="max-width: 100%; height: auto;" />\n`);
-    } else if (type === 'video') {
-      insertAtCursor(`\n<video controls src="${url}" style="max-width: 100%;"></video>\n`);
+    if (editorRef.current) {
+      let html = '';
+      if (type === 'image') {
+        html = `<img src="${url}" alt="Image" style="max-width: 100%; height: auto;" />`;
+      } else if (type === 'video') {
+        html = `<video controls src="${url}" style="max-width: 100%;"></video>`;
+      }
+      
+      document.execCommand('insertHTML', false, html);
+      handleInput();
     }
     setShowMediaUploader(false);
   };
-  
+
   const insertTable = () => {
     const rows = prompt("Nombre de lignes:", "3");
     const cols = prompt("Nombre de colonnes:", "3");
@@ -130,41 +111,39 @@ export function RichTextEditor({
       return;
     }
     
-    let tableHTML = '\n<table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">\n';
-    
-    // Header row
-    tableHTML += '  <thead>\n    <tr>\n';
+    let tableHTML = '<table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">';
+    tableHTML += '<thead><tr>';
     for (let j = 0; j < numCols; j++) {
-      tableHTML += '      <th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">En-tête ' + (j + 1) + '</th>\n';
+      tableHTML += '<th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">En-tête ' + (j + 1) + '</th>';
     }
-    tableHTML += '    </tr>\n  </thead>\n';
+    tableHTML += '</tr></thead>';
     
-    // Body rows
-    tableHTML += '  <tbody>\n';
+    tableHTML += '<tbody>';
     for (let i = 1; i < numRows; i++) {
-      tableHTML += '    <tr>\n';
+      tableHTML += '<tr>';
       for (let j = 0; j < numCols; j++) {
-        tableHTML += '      <td style="border: 1px solid #ddd; padding: 8px;">Cellule ' + i + '-' + (j + 1) + '</td>\n';
+        tableHTML += '<td style="border: 1px solid #ddd; padding: 8px;">Cellule ' + i + '-' + (j + 1) + '</td>';
       }
-      tableHTML += '    </tr>\n';
+      tableHTML += '</tr>';
     }
-    tableHTML += '  </tbody>\n';
-    tableHTML += '</table>\n';
+    tableHTML += '</tbody></table>';
     
-    insertAtCursor(tableHTML);
+    document.execCommand('insertHTML', false, tableHTML);
+    handleInput();
   };
-  
+
   const insertTwitterEmbed = () => {
     const url = prompt("Entrez l'URL du tweet:", "https://twitter.com/");
-    if (!url || !url.includes('twitter.com') && !url.includes('x.com')) {
+    if (!url || (!url.includes('twitter.com') && !url.includes('x.com'))) {
       if (url) alert("URL Twitter/X invalide");
       return;
     }
     
-    const embedHTML = `\n<blockquote class="twitter-tweet" data-theme="dark"><a href="${url}"></a></blockquote>\n<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>\n`;
-    insertAtCursor(embedHTML);
+    const embedHTML = `<blockquote class="twitter-tweet" data-theme="dark"><a href="${url}"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>`;
+    document.execCommand('insertHTML', false, embedHTML);
+    handleInput();
   };
-  
+
   const insertInstagramEmbed = () => {
     const url = prompt("Entrez l'URL du post Instagram:", "https://www.instagram.com/p/");
     if (!url || !url.includes('instagram.com')) {
@@ -173,10 +152,11 @@ export function RichTextEditor({
     }
     
     const embedUrl = url.endsWith('/') ? url + 'embed' : url + '/embed';
-    const embedHTML = `\n<iframe src="${embedUrl}" width="100%" height="600" frameborder="0" scrolling="no" allowtransparency="true" style="max-width: 540px; margin: 1rem auto; display: block;"></iframe>\n`;
-    insertAtCursor(embedHTML);
+    const embedHTML = `<iframe src="${embedUrl}" width="100%" height="600" frameborder="0" scrolling="no" allowtransparency="true" style="max-width: 540px; margin: 1rem auto; display: block;"></iframe>`;
+    document.execCommand('insertHTML', false, embedHTML);
+    handleInput();
   };
-  
+
   const insertTikTokEmbed = () => {
     const url = prompt("Entrez l'URL de la vidéo TikTok:", "https://www.tiktok.com/@");
     if (!url || !url.includes('tiktok.com')) {
@@ -184,81 +164,69 @@ export function RichTextEditor({
       return;
     }
     
-    const embedHTML = `\n<blockquote class="tiktok-embed" cite="${url}" data-video-id="" style="max-width: 605px; min-width: 325px; margin: 1rem auto;"><section><a href="${url}">Voir sur TikTok</a></section></blockquote>\n<script async src="https://www.tiktok.com/embed.js"></script>\n`;
-    insertAtCursor(embedHTML);
+    const embedHTML = `<blockquote class="tiktok-embed" cite="${url}" data-video-id="" style="max-width: 605px; min-width: 325px; margin: 1rem auto;"><section><a href="${url}">Voir sur TikTok</a></section></blockquote><script async src="https://www.tiktok.com/embed.js"></script>`;
+    document.execCommand('insertHTML', false, embedHTML);
+    handleInput();
   };
-  
+
   const insertBlockquote = () => {
-    if (textareaRef.current) {
-      const textarea = textareaRef.current;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      
-      if (start === end) {
-        // No text selected
-        insertAtCursor(`\n<blockquote>\n  <p>Votre citation ici...</p>\n</blockquote>\n`);
-      } else {
-        // Wrap selected text in blockquote
-        const selectedText = value.substring(start, end);
-        insertTag(`<blockquote>\n  <p>`, `</p>\n</blockquote>`);
-      }
+    const selection = window.getSelection();
+    if (selection && selection.toString()) {
+      const html = `<blockquote><p>${selection.toString()}</p></blockquote>`;
+      document.execCommand('insertHTML', false, html);
+    } else {
+      document.execCommand('insertHTML', false, '<blockquote><p>Votre citation ici...</p></blockquote>');
     }
+    handleInput();
   };
-  
+
   const renderPreview = () => {
-    // Convert newlines to HTML paragraphs if no HTML tags are present
-    let content = value;
-    
-    // If content has no HTML tags, convert newlines to <p> tags
-    if (!/<[^>]+>/.test(content)) {
-      content = content
-        .split('\n\n')
-        .filter(p => p.trim())
-        .map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`)
-        .join('');
-    }
-    
-    const sanitized = DOMPurify.sanitize(content, {
+    const sanitized = DOMPurify.sanitize(value, {
       ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'iframe', 'blockquote', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'script', 'section'],
       ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'width', 'height', 'controls', 'class', 'target', 'rel', 'style', 'frameborder', 'allow', 'allowfullscreen', 'scrolling', 'allowtransparency', 'data-theme', 'cite', 'data-video-id', 'async', 'charset']
     });
     
     return { __html: sanitized };
   };
-  
+
+  const minHeight = `${minRows * 24}px`;
+
   if (!showPreview) {
     return (
       <div className="space-y-2">
         <div className="flex flex-wrap items-center gap-1 p-1 border rounded-md bg-muted/30">
-          <Button type="button" variant="ghost" size="sm" onClick={insertBold} className="h-8 px-2">
+          <Button type="button" variant="ghost" size="sm" onClick={insertBold} className="h-8 px-2" title="Gras">
             <Bold className="h-4 w-4" />
           </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertItalic} className="h-8 px-2">
+          <Button type="button" variant="ghost" size="sm" onClick={insertItalic} className="h-8 px-2" title="Italique">
             <Italic className="h-4 w-4" />
           </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertLeftAlign} className="h-8 px-2">
+          <Button type="button" variant="ghost" size="sm" onClick={insertLeftAlign} className="h-8 px-2" title="Aligner à gauche">
             <AlignLeft className="h-4 w-4" />
           </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertCenterAlign} className="h-8 px-2">
+          <Button type="button" variant="ghost" size="sm" onClick={insertCenterAlign} className="h-8 px-2" title="Centrer">
             <AlignCenter className="h-4 w-4" />
           </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertRightAlign} className="h-8 px-2">
+          <Button type="button" variant="ghost" size="sm" onClick={insertRightAlign} className="h-8 px-2" title="Aligner à droite">
             <AlignRight className="h-4 w-4" />
           </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertLink} className="h-8 px-2">
+          <Button type="button" variant="ghost" size="sm" onClick={insertLink} className="h-8 px-2" title="Insérer un lien">
             <Link className="h-4 w-4" />
           </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertTable} className="h-8 px-2">
+          <Button type="button" variant="ghost" size="sm" onClick={insertUnorderedList} className="h-8 px-2" title="Liste à puces">
+            <List className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={insertOrderedList} className="h-8 px-2" title="Liste numérotée">
+            <ListOrdered className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={insertTable} className="h-8 px-2" title="Tableau">
             <Table className="h-4 w-4" />
           </Button>
           <Button type="button" variant="ghost" size="sm" onClick={insertBlockquote} className="h-8 px-2" title="Citation">
             <Quote className="h-4 w-4" />
           </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={() => setShowMediaUploader(prev => !prev)} className="h-8 px-2">
+          <Button type="button" variant="ghost" size="sm" onClick={() => setShowMediaUploader(prev => !prev)} className="h-8 px-2" title="Image/Vidéo">
             <ImageIcon className="h-4 w-4" />
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={() => setShowMediaUploader(prev => !prev)} className="h-8 px-2">
-            <Video className="h-4 w-4" />
           </Button>
           <div className="h-6 w-px bg-border mx-1" />
           <Button type="button" variant="ghost" size="sm" onClick={insertTwitterEmbed} className="h-8 px-2" title="Twitter/X">
@@ -282,13 +250,13 @@ export function RichTextEditor({
           </div>
         )}
         
-        <Textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          rows={minRows}
-          className="font-mono"
+        <div
+          ref={editorRef}
+          contentEditable
+          onInput={handleInput}
+          className="w-full p-3 border rounded-md bg-background prose dark:prose-invert max-w-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          style={{ minHeight }}
+          suppressContentEditableWarning
         />
       </div>
     );
@@ -314,6 +282,12 @@ export function RichTextEditor({
         </Button>
         <Button type="button" variant="ghost" size="sm" onClick={insertLink} className="h-8 px-2" title="Insérer un lien">
           <Link className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={insertUnorderedList} className="h-8 px-2" title="Liste à puces">
+          <List className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={insertOrderedList} className="h-8 px-2" title="Liste numérotée">
+          <ListOrdered className="h-4 w-4" />
         </Button>
         <Button type="button" variant="ghost" size="sm" onClick={insertTable} className="h-8 px-2" title="Insérer un tableau">
           <Table className="h-4 w-4" />
@@ -353,13 +327,13 @@ export function RichTextEditor({
         </TabsList>
         
         <TabsContent value="edit" className="mt-2">
-          <Textarea
-            ref={textareaRef}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            rows={minRows}
-            className="font-mono"
+          <div
+            ref={editorRef}
+            contentEditable
+            onInput={handleInput}
+            className="w-full p-3 border rounded-md bg-background prose dark:prose-invert max-w-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            style={{ minHeight }}
+            suppressContentEditableWarning
           />
         </TabsContent>
         
