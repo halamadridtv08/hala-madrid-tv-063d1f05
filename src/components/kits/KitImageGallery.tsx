@@ -5,7 +5,6 @@ import { ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { KitImage } from "@/types/Kit";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 interface KitImageGalleryProps {
   images: KitImage[];
   kitTitle: string;
@@ -79,7 +78,7 @@ export const KitImageGallery = ({
           <div className="flex h-full">
             {sortedImages.map((image, index) => <div key={image.id} className="relative flex-[0_0_100%] min-w-0 h-full">
                 <div className="h-full w-full flex items-center justify-center p-2 sm:p-4">
-                  <OptimizedImage src={image.image_url} alt={`${kitTitle} - Image ${index + 1}`} size="medium" className="max-h-full max-w-full w-auto h-auto object-contain" onError={e => {
+                  <img src={image.image_url} alt={`${kitTitle} - Image ${index + 1}`} className="max-h-full max-w-full w-auto h-auto object-contain" onError={e => {
                 e.currentTarget.style.display = 'none';
                 const parent = e.currentTarget.parentElement;
                 if (parent) {
@@ -120,7 +119,7 @@ export const KitImageGallery = ({
           <div className="flex gap-2 sm:gap-3 py-2">
             {sortedImages.map((image, index) => <button key={image.id} onClick={() => onThumbClick(index)} className={cn("relative flex-[0_0_60px] sm:flex-[0_0_80px] min-w-0 rounded-md overflow-hidden border-2 transition-all shrink-0", index === selectedIndex ? "border-primary opacity-100 scale-105" : "border-border opacity-60 hover:opacity-100 hover:scale-105")}>
                 <div className="aspect-square bg-muted/20">
-                  <OptimizedImage src={image.image_url} alt={`Thumbnail ${index + 1}`} size="thumbnail" className="w-full h-full object-cover" onError={e => {
+                  <img src={image.image_url} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" onError={e => {
               e.currentTarget.src = '/placeholder.svg';
             }} />
                 </div>
@@ -136,7 +135,7 @@ export const KitImageGallery = ({
             <div className="overflow-hidden h-full w-full" ref={zoomViewportRef}>
               <div className="flex h-full w-full">
                 {sortedImages.map((image, index) => <div key={image.id} className="relative flex-[0_0_100%] min-w-0 h-full flex items-center justify-center px-16 py-12">
-                    <OptimizedImage src={image.image_url} alt={`${kitTitle} - Image ${index + 1}`} size="full" className="max-w-full max-h-full w-auto h-auto object-contain" style={{
+                    <img src={image.image_url} alt={`${kitTitle} - Image ${index + 1}`} className="max-w-full max-h-full w-auto h-auto object-contain" style={{
                   maxHeight: 'calc(98vh - 6rem)'
                 }} onError={e => {
                   e.currentTarget.src = '/placeholder.svg';

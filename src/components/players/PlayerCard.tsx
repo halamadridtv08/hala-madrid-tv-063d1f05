@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Award, Flag, Shield, Star, User, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 
 interface PlayerCardProps {
   id: string;
@@ -88,10 +87,9 @@ export function PlayerCard({
         <div className="hidden lg:block">
           <div className="relative">
             <div className="aspect-[4/5] overflow-hidden rounded-t-lg">
-              <OptimizedImage
+              <img
                 src={image || `https://placehold.co/300x375/1a365d/ffffff/?text=${name.charAt(0)}`}
                 alt={name}
-                size="card"
                 className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
               />
             </div>
@@ -182,10 +180,9 @@ export function PlayerCard({
         <div className="lg:hidden flex flex-row">
           <div className="relative w-32 sm:w-40 flex-shrink-0">
             <div className="aspect-[3/4] overflow-hidden rounded-l-lg">
-              <OptimizedImage
+              <img
                 src={image || `https://placehold.co/300x375/1a365d/ffffff/?text=${name.charAt(0)}`}
                 alt={name}
-                size="card"
                 className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
               />
             </div>
