@@ -5,16 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { Article } from "@/types/Article";
-import { Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ArticleForm } from "./ArticleForm";
 
 interface ArticleTableProps {
   articles: Article[];
   setArticles: (articles: Article[]) => void;
+  onManageEngagement?: (articleId: string) => void;
 }
 
-const ArticleTable = ({ articles, setArticles }: ArticleTableProps) => {
+const ArticleTable = ({ articles, setArticles, onManageEngagement }: ArticleTableProps) => {
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingArticle, setEditingArticle] = useState<Article | undefined>();
@@ -135,6 +136,16 @@ const ArticleTable = ({ articles, setArticles }: ArticleTableProps) => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                {onManageEngagement && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => onManageEngagement(article.id)}
+                    title="Gérer engagement"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
