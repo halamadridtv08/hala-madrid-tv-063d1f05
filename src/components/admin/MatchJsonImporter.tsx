@@ -314,49 +314,27 @@ export const MatchJsonImporter = () => {
     try {
       // Rechercher un match avec les mêmes équipes et une date proche (même jour)
       const matchDate = new Date(matchData.match_date);
-      const startOfDay = new Date(matchDate);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(matchDate);
-      endOfDay.setHours(23, 59, 59, 999);
+      const startOfDay = new Date(matchDate.setHours(0, 0, 0, 0)).toISOString();
+      const endOfDay = new Date(matchDate.setHours(23, 59, 59, 999)).toISOString();
 
-      // Récupérer tous les matchs du jour
-      const { data: allMatches, error } = await supabase
+      const { data: existingMatches, error } = await supabase
         .from('matches')
         .select('*')
-        .gte('match_date', startOfDay.toISOString())
-        .lte('match_date', endOfDay.toISOString());
+        .gte('match_date', startOfDay)
+        .lte('match_date', endOfDay)
+        .or(`and(home_team.ilike.%${matchData.home_team}%,away_team.ilike.%${matchData.away_team}%),and(home_team.ilike.%${matchData.away_team}%,away_team.ilike.%${matchData.home_team}%)`)
+        .limit(1);
 
       if (error) {
         console.error('Erreur recherche match:', error);
         return null;
       }
 
-      // Normaliser les noms pour la comparaison
-      const normalizeTeamName = (name: string) => 
-        name.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
-
-      const homeTeamNormalized = normalizeTeamName(matchData.home_team);
-      const awayTeamNormalized = normalizeTeamName(matchData.away_team);
-
-      // Filtrer côté client pour trouver le match correspondant
-      const existingMatch = allMatches?.find(match => {
-        const matchHomeNormalized = normalizeTeamName(match.home_team);
-        const matchAwayNormalized = normalizeTeamName(match.away_team);
-        
-        // Vérifier les deux configurations possibles (home/away ou away/home)
-        return (
-          (matchHomeNormalized.includes(homeTeamNormalized) || homeTeamNormalized.includes(matchHomeNormalized)) &&
-          (matchAwayNormalized.includes(awayTeamNormalized) || awayTeamNormalized.includes(matchAwayNormalized))
-        ) || (
-          (matchHomeNormalized.includes(awayTeamNormalized) || awayTeamNormalized.includes(matchHomeNormalized)) &&
-          (matchAwayNormalized.includes(homeTeamNormalized) || homeTeamNormalized.includes(matchAwayNormalized))
-        );
-      });
-
-      if (existingMatch) {
-        setSelectedMatchId(existingMatch.id);
-        toast.success(`Match existant détecté : ${existingMatch.home_team} vs ${existingMatch.away_team}`);
-        return existingMatch.id;
+      if (existingMatches && existingMatches.length > 0) {
+        const match = existingMatches[0];
+        setSelectedMatchId(match.id);
+        toast.success(`Match existant détecté : ${match.home_team} vs ${match.away_team}`);
+        return match.id;
       }
 
       toast.info("Aucun match existant détecté - un nouveau match sera créé");
@@ -368,16 +346,8 @@ export const MatchJsonImporter = () => {
   };
 
   const generatePreview = async (jsonData: any, matchData: MatchJsonData) => {
-    // Rechercher automatiquement un match existant SEULEMENT si aucun n'est sélectionné manuellement
-    if (!selectedMatchId) {
-      await findExistingMatch(matchData);
-    } else {
-      // Un match est déjà sélectionné manuellement
-      const selectedMatch = matches.find(m => m.id === selectedMatchId);
-      if (selectedMatch) {
-        toast.info(`Mise à jour du match : ${selectedMatch.home_team} vs ${selectedMatch.away_team}`);
-      }
-    }
+    // Rechercher automatiquement un match existant
+    await findExistingMatch(matchData);
     
     // Générer l'aperçu des stats
     const playerStatsPreview: any[] = [];
