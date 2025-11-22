@@ -29,9 +29,10 @@ interface MatchImportPreviewProps {
     status?: string;
   };
   playerStats: PlayerStatPreview[];
+  isUpdate?: boolean;
 }
 
-export const MatchImportPreview = ({ matchData, playerStats }: MatchImportPreviewProps) => {
+export const MatchImportPreview = ({ matchData, playerStats, isUpdate = false }: MatchImportPreviewProps) => {
   const totalGoals = playerStats.reduce((sum, p) => sum + (p.goals || 0), 0);
   const totalAssists = playerStats.reduce((sum, p) => sum + (p.assists || 0), 0);
   const totalYellowCards = playerStats.reduce((sum, p) => sum + (p.yellowCards || 0), 0);
@@ -40,7 +41,12 @@ export const MatchImportPreview = ({ matchData, playerStats }: MatchImportPrevie
   return (
     <Card className="w-full border-primary/50">
       <CardHeader>
-        <CardTitle className="text-xl">📋 Aperçu de l'import</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xl">📋 Aperçu de l'import</CardTitle>
+          <Badge variant={isUpdate ? "default" : "secondary"} className="text-sm">
+            {isUpdate ? "🔄 Mise à jour" : "✨ Nouveau match"}
+          </Badge>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Info du match */}
