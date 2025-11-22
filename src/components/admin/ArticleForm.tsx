@@ -3,13 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Article } from "@/types/Article";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArticleImageManager } from "./ArticleImageManager";
+import { RichTextEditor } from "./RichTextEditor";
 
 interface ArticleFormProps {
   article?: Article;
@@ -106,22 +106,21 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
           
           <div>
             <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
+            <RichTextEditor
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              required
+              onChange={(value) => setFormData({ ...formData, description: value })}
+              placeholder="Description de l'article (avec formatage HTML)..."
+              minRows={5}
             />
           </div>
           
           <div>
             <Label htmlFor="content">Contenu</Label>
-            <Textarea
-              id="content"
+            <RichTextEditor
               value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              className="min-h-[200px]"
-              required
+              onChange={(value) => setFormData({ ...formData, content: value })}
+              placeholder="Contenu de l'article (avec formatage HTML)..."
+              minRows={15}
             />
           </div>
           

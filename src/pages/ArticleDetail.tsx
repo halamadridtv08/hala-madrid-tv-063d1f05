@@ -162,8 +162,8 @@ const ArticleDetail = () => {
 
       // Sanitize the HTML to prevent XSS attacks
       const sanitized = DOMPurify.sanitize(formattedContent, {
-        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'iframe', 'blockquote'],
-        ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'width', 'height', 'controls', 'class', 'target', 'rel']
+        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'iframe', 'blockquote', 'div', 'span'],
+        ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'width', 'height', 'controls', 'class', 'target', 'rel', 'style', 'frameborder', 'allow', 'allowfullscreen']
       });
       
       return {
@@ -184,7 +184,15 @@ const ArticleDetail = () => {
                   {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
                 </Badge>
                 <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
-                <p className="text-xl text-gray-500 dark:text-gray-400 mb-4">{article.description}</p>
+                <div 
+                  className="text-xl text-muted-foreground mb-4 prose dark:prose-invert max-w-none" 
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(article.description, {
+                      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'img', 'video', 'iframe', 'div', 'span'],
+                      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'width', 'height', 'controls', 'class', 'target', 'rel', 'style', 'frameborder', 'allow', 'allowfullscreen']
+                    })
+                  }}
+                />
                 
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-6">
                   <div className="flex items-center">
