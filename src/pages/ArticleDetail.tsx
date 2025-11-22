@@ -14,6 +14,11 @@ import { PhotoType } from "@/types/Photo";
 import { VideoType } from "@/types/Video";
 import { ArticleVideoPlayer } from "@/components/articles/ArticleVideoPlayer";
 import { ArticleImageGallery } from "@/components/articles/ArticleImageGallery";
+import { ArticleComments } from "@/components/articles/ArticleComments";
+import { ArticlePoll } from "@/components/articles/ArticlePoll";
+import { ArticleQuiz } from "@/components/articles/ArticleQuiz";
+import { ArticleTweets } from "@/components/articles/ArticleTweets";
+import { RelatedArticles } from "@/components/articles/RelatedArticles";
 import DOMPurify from "dompurify";
 
 interface Article {
@@ -224,6 +229,21 @@ const ArticleDetail = () => {
               {articleImages.length > 0 && (
                 <ArticleImageGallery images={articleImages} />
               )}
+
+              {/* Interactive Sections */}
+              <div className="mt-12 space-y-8">
+                {/* Poll */}
+                <ArticlePoll articleId={id!} />
+
+                {/* Quiz */}
+                <ArticleQuiz articleId={id!} />
+
+                {/* Tweets */}
+                <ArticleTweets articleId={id!} />
+
+                {/* Comments */}
+                <ArticleComments articleId={id!} />
+              </div>
             </div>
 
             {/* Widget des dernières infos */}
@@ -231,6 +251,9 @@ const ArticleDetail = () => {
               <LatestNewsWidget />
             </div>
           </div>
+
+          {/* Related Articles Section */}
+          <RelatedArticles currentArticleId={id!} category={article.category} />
         </div>
       </main>
       <Footer />

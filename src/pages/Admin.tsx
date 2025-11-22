@@ -44,6 +44,7 @@ import { TrainingSession } from "@/types/TrainingSession";
 import { Kit } from "@/types/Kit";
 import { YouTubeVideo } from "@/types/YouTubeVideo";
 import ArticleTable from "@/components/admin/ArticleTable";
+import { ArticleEngagementManager } from "@/components/admin/ArticleEngagementManager";
 import VideoTable from "@/components/admin/VideoTable";
 import PhotoTable from "@/components/admin/PhotoTable";
 import PlayerTable from "@/components/admin/PlayerTable";
@@ -375,12 +376,36 @@ const Admin = () => {
     </div>
   );
 
-  const renderArticles = () => (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">Gestion des Articles</h2>
-      <ArticleTable articles={articles} setArticles={setArticles} />
-    </div>
-  );
+  const renderArticles = () => {
+    const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
+    
+    if (selectedArticleId) {
+      return (
+        <div>
+          <Button 
+            variant="ghost" 
+            onClick={() => setSelectedArticleId(null)}
+            className="mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Retour aux articles
+          </Button>
+          <ArticleEngagementManager articleId={selectedArticleId} />
+        </div>
+      );
+    }
+    
+    return (
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Gestion des Articles</h2>
+        <ArticleTable 
+          articles={articles} 
+          setArticles={setArticles}
+          onManageEngagement={setSelectedArticleId}
+        />
+      </div>
+    );
+  };
 
   const renderVideos = () => (
     <div>

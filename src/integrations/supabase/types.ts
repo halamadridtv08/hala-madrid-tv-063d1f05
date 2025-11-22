@@ -65,6 +65,50 @@ export type Database = {
         }
         Relationships: []
       }
+      article_comments: {
+        Row: {
+          article_id: string
+          content: string
+          created_at: string | null
+          id: string
+          is_approved: boolean | null
+          is_published: boolean | null
+          updated_at: string | null
+          user_email: string | null
+          user_name: string
+        }
+        Insert: {
+          article_id: string
+          content: string
+          created_at?: string | null
+          id?: string
+          is_approved?: boolean | null
+          is_published?: boolean | null
+          updated_at?: string | null
+          user_email?: string | null
+          user_name: string
+        }
+        Update: {
+          article_id?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_approved?: boolean | null
+          is_published?: boolean | null
+          updated_at?: string | null
+          user_email?: string | null
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_comments_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       article_images: {
         Row: {
           article_id: string
@@ -93,6 +137,120 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "article_images_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_polls: {
+        Row: {
+          article_id: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          question: string
+          updated_at: string | null
+        }
+        Insert: {
+          article_id: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          question: string
+          updated_at?: string | null
+        }
+        Update: {
+          article_id?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          question?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_polls_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_quizzes: {
+        Row: {
+          article_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          article_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          article_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_quizzes_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      article_tweets: {
+        Row: {
+          article_id: string
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_published: boolean | null
+          tweet_html: string | null
+          tweet_url: string
+          updated_at: string | null
+        }
+        Insert: {
+          article_id: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_published?: boolean | null
+          tweet_html?: string | null
+          tweet_url: string
+          updated_at?: string | null
+        }
+        Update: {
+          article_id?: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_published?: boolean | null
+          tweet_html?: string | null
+          tweet_url?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_tweets_article_id_fkey"
             columns: ["article_id"]
             isOneToOne: false
             referencedRelation: "articles"
@@ -1316,6 +1474,77 @@ export type Database = {
         }
         Relationships: []
       }
+      poll_options: {
+        Row: {
+          created_at: string | null
+          id: string
+          option_text: string
+          poll_id: string
+          vote_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          option_text: string
+          poll_id: string
+          vote_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          option_text?: string
+          poll_id?: string
+          vote_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_options_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "article_polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_votes: {
+        Row: {
+          created_at: string | null
+          id: string
+          option_id: string
+          poll_id: string
+          user_identifier: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          option_id: string
+          poll_id: string
+          user_identifier: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          option_id?: string
+          poll_id?: string
+          user_identifier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "poll_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "article_polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       press_conferences: {
         Row: {
           category: string | null
@@ -1357,6 +1586,44 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: []
+      }
+      quiz_questions: {
+        Row: {
+          correct_answer: string
+          created_at: string | null
+          display_order: number | null
+          id: string
+          question: string
+          quiz_id: string
+          wrong_answers: string[]
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          question: string
+          quiz_id: string
+          wrong_answers: string[]
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          question?: string
+          quiz_id?: string
+          wrong_answers?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "article_quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       season_statistics: {
         Row: {
