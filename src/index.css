@@ -131,4 +131,27 @@
   .hover-scale {
     @apply transition-transform duration-200 hover:scale-105;
   }
+  
+  /* Article content styles */
+  .prose table {
+    @apply w-full border-collapse my-4;
+  }
+  .prose table th {
+    @apply border border-border bg-muted px-3 py-2 text-left font-semibold;
+  }
+  .prose table td {
+    @apply border border-border px-3 py-2;
+  }
+  .prose table tr:hover {
+    @apply bg-muted/50;
+  }
+  
+  /* Social media embeds */
+  .prose .twitter-tweet,
+  .prose .tiktok-embed {
+    @apply mx-auto my-6;
+  }
+  .prose iframe[src*="instagram.com"] {
+    @apply mx-auto my-6 rounded-lg;
+  }
 }
