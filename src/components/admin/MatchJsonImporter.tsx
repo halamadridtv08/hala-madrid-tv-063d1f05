@@ -248,6 +248,11 @@ export const MatchJsonImporter = () => {
       return;
     }
     
+    if (!selectedMatchId) {
+      toast.error("Veuillez d'abord sélectionner un match");
+      return;
+    }
+    
     const parsedResult = await validateJson(jsonInput);
     
     if (parsedResult) {
@@ -310,57 +315,14 @@ export const MatchJsonImporter = () => {
     }
   };
 
-  const findExistingMatch = async (matchData: MatchJsonData) => {
-    try {
-      // Rechercher un match avec les mêmes équipes et une date proche (même jour)
-      const matchDate = new Date(matchData.match_date);
-      const startOfDay = new Date(matchDate.setHours(0, 0, 0, 0)).toISOString();
-      const endOfDay = new Date(matchDate.setHours(23, 59, 59, 999)).toISOString();
-
-      const { data: existingMatches, error } = await supabase
-        .from('matches')
-        .select('*')
-        .gte('match_date', startOfDay)
-        .lte('match_date', endOfDay)
-        .or(`and(home_team.ilike.%${matchData.home_team}%,away_team.ilike.%${matchData.away_team}%),and(home_team.ilike.%${matchData.away_team}%,away_team.ilike.%${matchData.home_team}%)`)
-        .limit(1);
-
-      if (error) {
-        console.error('Erreur recherche match:', error);
-        return null;
-      }
-
-      if (existingMatches && existingMatches.length > 0) {
-        const match = existingMatches[0];
-        setSelectedMatchId(match.id);
-        toast.success(`Match existant détecté : ${match.home_team} vs ${match.away_team}`);
-        return match.id;
-      }
-
-      toast.info("Aucun match existant détecté - un nouveau match sera créé");
-      return null;
-    } catch (error) {
-      console.error('Erreur lors de la recherche du match:', error);
-      return null;
-    }
-  };
-
-  const generatePreview = async (jsonData: any, matchData: MatchJsonData) => {
-    // Rechercher automatiquement un match existant
-    await findExistingMatch(matchData);
-    
+  const generatePreview = (jsonData: any, matchData: MatchJsonData) => {
     // Générer l'aperçu des stats
     const playerStatsPreview: any[] = [];
     const playerStatsMap = new Map<string, any>();
 
-    // Détecter le format des données
-    const goalsData = jsonData.goals || jsonData.events?.goals;
-    const cardsData = jsonData.cards || jsonData.events?.cards;
-    const substitutionsData = jsonData.substitutions || jsonData.events?.substitutions;
-
     // 1. Buts et passes
-    if (goalsData) {
-      for (const goal of goalsData) {
+    if (jsonData.events?.goals) {
+      for (const goal of jsonData.events.goals) {
         const scorerName = goal.scorer || goal.player;
         if (scorerName) {
           const key = scorerName;
@@ -381,12 +343,12 @@ export const MatchJsonImporter = () => {
     }
 
     // 2. Cartons
-    if (cardsData) {
-      if (cardsData.yellow) {
-        for (const [team, cards] of Object.entries(cardsData.yellow)) {
+    if (jsonData.events?.cards) {
+      if (jsonData.events.cards.yellow) {
+        for (const [team, cards] of Object.entries(jsonData.events.cards.yellow)) {
           if (Array.isArray(cards)) {
             for (const card of cards) {
-              const playerName = typeof card === 'string' ? card.split('(')[0].trim() : card.player;
+              const playerName = typeof card === 'string' ? card : card.player;
               if (playerName) {
                 const key = playerName;
                 if (!playerStatsMap.has(key)) {
@@ -399,11 +361,11 @@ export const MatchJsonImporter = () => {
         }
       }
       
-      if (cardsData.red) {
-        for (const [team, cards] of Object.entries(cardsData.red)) {
+      if (jsonData.events.cards.red) {
+        for (const [team, cards] of Object.entries(jsonData.events.cards.red)) {
           if (Array.isArray(cards)) {
             for (const card of cards) {
-              const playerName = typeof card === 'string' ? card.split('(')[0].trim() : card.player;
+              const playerName = typeof card === 'string' ? card : card.player;
               if (playerName) {
                 const key = playerName;
                 if (!playerStatsMap.has(key)) {
@@ -418,8 +380,8 @@ export const MatchJsonImporter = () => {
     }
 
     // 3. Substitutions (minutes jouées)
-    if (substitutionsData) {
-      for (const sub of substitutionsData) {
+    if (jsonData.events?.substitutions) {
+      for (const sub of jsonData.events.substitutions) {
         if (sub.out) {
           const key = sub.out;
           if (!playerStatsMap.has(key)) {
@@ -463,6 +425,11 @@ export const MatchJsonImporter = () => {
   };
 
   const handleImport = async () => {
+    if (!selectedMatchId) {
+      toast.error("Veuillez sélectionner un match à mettre à jour");
+      return;
+    }
+
     if (!parsedData) {
       toast.error("Veuillez d'abord valider le JSON");
       return;
@@ -471,29 +438,21 @@ export const MatchJsonImporter = () => {
     setIsProcessing(true);
 
     try {
-      let matchId = selectedMatchId;
-      let currentMatch = null;
-      let currentStats = null;
+      // Sauvegarder l'état actuel avant modification
+      const { data: currentMatch, error: fetchError } = await supabase
+        .from('matches')
+        .select('*')
+        .eq('id', selectedMatchId)
+        .single();
 
-      // Si un match est sélectionné, récupérer son état actuel
-      if (selectedMatchId) {
-        const { data: fetchedMatch, error: fetchError } = await supabase
-          .from('matches')
-          .select('*')
-          .eq('id', selectedMatchId)
-          .single();
+      if (fetchError) throw fetchError;
 
-        if (fetchError) throw fetchError;
-        currentMatch = fetchedMatch;
+      const { data: currentStats, error: statsError } = await supabase
+        .from('player_stats')
+        .select('*')
+        .eq('match_id', selectedMatchId);
 
-        const { data: fetchedStats, error: statsError } = await supabase
-          .from('player_stats')
-          .select('*')
-          .eq('match_id', selectedMatchId);
-
-        if (statsError) throw statsError;
-        currentStats = fetchedStats;
-      }
+      if (statsError) throw statsError;
 
       const matchData = {
         home_team: parsedData.home_team,
@@ -509,28 +468,16 @@ export const MatchJsonImporter = () => {
         match_details: parsedData.match_details || {}
       };
 
-      if (selectedMatchId) {
-        // Mise à jour du match existant
-        const result = await supabase
-          .from('matches')
-          .update(matchData)
-          .eq('id', selectedMatchId)
-          .select();
+      // Mise à jour du match
+      const result = await supabase
+        .from('matches')
+        .update(matchData)
+        .eq('id', selectedMatchId)
+        .select();
 
-        if (result.error) throw result.error;
-        toast.success("Match existant mis à jour");
-      } else {
-        // Création d'un nouveau match
-        const result = await supabase
-          .from('matches')
-          .insert(matchData)
-          .select()
-          .single();
+      if (result.error) throw result.error;
 
-        if (result.error) throw result.error;
-        matchId = result.data.id;
-        toast.success("Nouveau match créé");
-      }
+      const matchId = selectedMatchId;
       const { data: { user } } = await supabase.auth.getUser();
 
       // Mise à jour des statistiques des joueurs
@@ -618,17 +565,13 @@ export const MatchJsonImporter = () => {
           for (const [team, cards] of Object.entries(yellow)) {
             if (Array.isArray(cards)) {
               for (const card of cards) {
-                // Extraire le nom du joueur (peut être "nom (minute')" dans le format simple)
-                let playerName = typeof card === 'string' ? card : (card as any).player;
+                const playerName = typeof card === 'string' ? card : (card as any).player;
                 if (!playerName) continue;
-                
-                // Retirer la minute entre parenthèses si présente
-                playerName = String(playerName).split('(')[0].trim();
 
                 const { data: playerData } = await supabase
                   .from('players')
                   .select('id')
-                  .ilike('name', `%${playerName.replace(/_/g, ' ')}%`)
+                  .ilike('name', `%${String(playerName).replace(/_/g, ' ')}%`)
                   .maybeSingle();
 
                 if (playerData) {
@@ -658,17 +601,13 @@ export const MatchJsonImporter = () => {
           for (const [team, cards] of Object.entries(red)) {
             if (Array.isArray(cards)) {
               for (const card of cards) {
-                // Extraire le nom du joueur (peut être "nom (minute')" dans le format simple)
-                let playerName = typeof card === 'string' ? card : (card as any).player;
+                const playerName = typeof card === 'string' ? card : (card as any).player;
                 if (!playerName) continue;
-                
-                // Retirer la minute entre parenthèses si présente
-                playerName = String(playerName).split('(')[0].trim();
 
                 const { data: playerData } = await supabase
                   .from('players')
                   .select('id')
-                  .ilike('name', `%${playerName.replace(/_/g, ' ')}%`)
+                  .ilike('name', `%${String(playerName).replace(/_/g, ' ')}%`)
                   .maybeSingle();
 
                 if (playerData) {
@@ -905,13 +844,10 @@ export const MatchJsonImporter = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium">1. Sélectionner un match existant (optionnel)</label>
-          <p className="text-xs text-muted-foreground">
-            Si non sélectionné, le système détectera automatiquement un match existant ou en créera un nouveau
-          </p>
+          <label className="text-sm font-medium">1. Sélectionner le match à mettre à jour</label>
           <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
             <SelectTrigger>
-              <SelectValue placeholder="Laisser vide pour détection automatique..." />
+              <SelectValue placeholder="Choisir un match..." />
             </SelectTrigger>
             <SelectContent>
               {isLoadingMatches ? (
@@ -970,7 +906,7 @@ export const MatchJsonImporter = () => {
           <Button 
             onClick={handleValidate}
             variant="outline"
-            disabled={!jsonInput.trim() || showPreview || showPlayerValidation}
+            disabled={!jsonInput.trim() || !selectedMatchId || showPreview || showPlayerValidation}
           >
             <Eye className="h-4 w-4 mr-2" />
             Valider et Prévisualiser
@@ -978,7 +914,7 @@ export const MatchJsonImporter = () => {
           
           <Button 
             onClick={handleImport}
-            disabled={!showPreview || isProcessing}
+            disabled={!selectedMatchId || !showPreview || isProcessing}
           >
             <Upload className="h-4 w-4 mr-2" />
             {isProcessing ? "Mise à jour en cours..." : "Confirmer l'import"}
@@ -1004,7 +940,6 @@ export const MatchJsonImporter = () => {
           <MatchImportPreview
             matchData={previewData.matchData}
             playerStats={previewData.playerStats}
-            isUpdate={!!selectedMatchId}
           />
         )}
 
