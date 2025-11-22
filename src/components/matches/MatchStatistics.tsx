@@ -18,8 +18,8 @@ export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStati
   const homeKey = normalizeTeamName(homeTeam);
   const awayKey = normalizeTeamName(awayTeam);
 
-  // Extraire les statistiques depuis la structure JSON correcte
-  const statistics = matchDetails.statistics || {};
+  // Support both formats: old (statistics.*) and new (direct)
+  const statistics = matchDetails.statistics || matchDetails;
   const possession = matchDetails.possession || {};
   const cards = matchDetails.cards || {};
 
@@ -32,7 +32,15 @@ export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStati
   const homePossession = parsePossession(possession[homeKey] || '0%');
   const awayPossession = parsePossession(possession[awayKey] || '0%');
 
-  // Get statistics data
+  // Helper to count cards from array format
+  const countCards = (cardsData: any, team: string) => {
+    if (Array.isArray(cardsData?.[team])) {
+      return cardsData[team].length;
+    }
+    return cardsData?.[team] || 0;
+  };
+
+  // Get statistics data - support both nested and direct format
   const stats = {
     attack: {
       totalShots: { 
@@ -78,12 +86,12 @@ export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStati
         away: statistics.fouls?.[awayKey] || 0 
       },
       yellowCards: { 
-        home: cards.yellow?.[homeKey] || 0, 
-        away: cards.yellow?.[awayKey] || 0 
+        home: countCards(cards.yellow, homeKey),
+        away: countCards(cards.yellow, awayKey)
       },
       redCards: { 
-        home: cards.red?.[homeKey] || 0, 
-        away: cards.red?.[awayKey] || 0 
+        home: countCards(cards.red, homeKey),
+        away: countCards(cards.red, awayKey)
       }
     }
   };
