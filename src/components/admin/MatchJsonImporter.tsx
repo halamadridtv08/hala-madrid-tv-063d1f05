@@ -135,7 +135,7 @@ export const MatchJsonImporter = () => {
     try {
       const data = JSON.parse(input);
       
-      // Check if it's the new format (with match.teams structure)
+      // Check if it's the new format
       if (data.match && data.match.teams) {
         const transformed = await transformImportedJson(data as ImportedMatchJson);
         setParsedData(transformed);
@@ -143,47 +143,23 @@ export const MatchJsonImporter = () => {
         return transformed;
       }
       
-      // Check if it's the full format (with home_team, away_team, match_date)
-      if (data.home_team && data.away_team && data.match_date) {
-        // Normalize competition name
-        if (data.competition) {
-          data.competition = await normalizeCompetitionName(data.competition);
-        }
-        setParsedData(data);
-        setValidationStatus("valid");
-        return data;
-      }
-      
-      // Accept short format (with any valid JSON containing match data)
-      // This format only contains statistics, goals, cards, etc.
-      if (data.statistics || data.goals || data.score || data.cards || data.substitutions) {
-        // Create a minimal structure for short format
-        const minimalData: MatchJsonData = {
-          home_team: data.home_team || "Real Madrid",
-          away_team: data.away_team || "Équipe adverse",
-          match_date: data.match_date || new Date().toISOString(),
-          competition: data.competition || "Match",
-          home_score: data.score?.real_madrid || 0,
-          away_score: data.score?.mallorca || 0,
-          status: data.status || "completed",
-          venue: data.venue || ""
-        };
-        
-        // Normalize competition name if present
-        if (data.competition) {
-          minimalData.competition = await normalizeCompetitionName(data.competition);
-        }
-        
-        setParsedData(minimalData);
-        setValidationStatus("valid");
-        return minimalData;
+      // Check if it's the old format
+      if (!data.home_team || !data.away_team || !data.match_date) {
+        toast.error("Format JSON invalide. Vérifiez la structure.");
+        return null;
       }
 
-      toast.error("Format JSON invalide. Le JSON doit contenir des données de match.");
-      return null;
+      // Normalize competition name for old format too
+      if (data.competition) {
+        data.competition = await normalizeCompetitionName(data.competition);
+      }
+
+      setParsedData(data);
+      setValidationStatus("valid");
+      return data;
     } catch (error) {
       setValidationStatus("invalid");
-      toast.error("JSON invalide - Vérifiez la syntaxe");
+      toast.error("JSON invalide");
       return null;
     }
   };
