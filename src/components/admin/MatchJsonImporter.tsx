@@ -131,7 +131,7 @@ export const MatchJsonImporter = () => {
     };
   };
 
-  const validateJson = async (input: string): Promise<boolean> => {
+  const validateJson = async (input: string): Promise<MatchJsonData | null> => {
     try {
       const data = JSON.parse(input);
       
@@ -140,13 +140,13 @@ export const MatchJsonImporter = () => {
         const transformed = await transformImportedJson(data as ImportedMatchJson);
         setParsedData(transformed);
         setValidationStatus("valid");
-        return true;
+        return transformed;
       }
       
       // Check if it's the old format
       if (!data.home_team || !data.away_team || !data.match_date) {
         toast.error("Format JSON invalide. Vérifiez la structure.");
-        return false;
+        return null;
       }
 
       // Normalize competition name for old format too
@@ -156,11 +156,11 @@ export const MatchJsonImporter = () => {
 
       setParsedData(data);
       setValidationStatus("valid");
-      return true;
+      return data;
     } catch (error) {
       setValidationStatus("invalid");
       toast.error("JSON invalide");
-      return false;
+      return null;
     }
   };
 
@@ -181,9 +181,9 @@ export const MatchJsonImporter = () => {
       return;
     }
     
-    const isValid = validateJson(jsonInput);
+    const parsedResult = await validateJson(jsonInput);
     
-    if (isValid && parsedData) {
+    if (parsedResult) {
       // Extraire tous les noms de joueurs du JSON
       const jsonData = JSON.parse(jsonInput);
       const playerNames = new Set<string>();
