@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { motion, AnimatePresence } from "framer-motion";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 export function PlayerSpotlight() {
   const [featuredPlayers, setFeaturedPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,7 +108,13 @@ export function PlayerSpotlight() {
   const renderPlayerCard = (player: Player) => <div className="grid md:grid-cols-2 gap-0">
       {/* Player Image */}
       <div className="relative h-[500px] bg-gradient-to-br from-blue-600 to-blue-800 dark:from-gray-700 dark:to-gray-900">
-        <img src={player.image_url || "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=400&h=600&fit=crop"} alt={player.name} className="w-full h-full object-cover object-top" loading="lazy" width="400" height="500" />
+        <OptimizedImage
+          src={player.image_url}
+          alt={player.name}
+          size="medium"
+          className="w-full h-full object-cover object-top"
+          fallbackSrc="https://images.unsplash.com/photo-1543269865-cbf427effbad?w=400&h=600&fit=crop"
+        />
         <div className="absolute top-4 left-4 bg-madrid-gold text-black px-4 py-2 rounded-full font-bold text-lg">
           #{player.jersey_number || "10"}
         </div>

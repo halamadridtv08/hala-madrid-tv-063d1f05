@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 interface ArticleImage {
   id: string;
@@ -58,9 +59,10 @@ export const ArticleImageGallery = ({ images }: ArticleImageGalleryProps) => {
                 className="relative aspect-video rounded-2xl overflow-hidden shadow-lg cursor-pointer group"
                 onClick={() => openImage(index)}
               >
-                <img
+                <OptimizedImage
                   src={image.image_url}
                   alt={`Photo ${index + 1}`}
+                  size="card"
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
@@ -105,10 +107,12 @@ export const ArticleImageGallery = ({ images }: ArticleImageGalleryProps) => {
                   </Button>
                 )}
 
-                <img
+                <OptimizedImage
                   src={sortedImages[selectedImage].image_url}
                   alt={`Photo ${selectedImage + 1}`}
+                  size="full"
                   className="max-w-full max-h-full object-contain"
+                  loading="eager"
                 />
 
                 {selectedImage < sortedImages.length - 1 && (

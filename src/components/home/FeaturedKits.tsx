@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 import {
   Carousel,
   CarouselContent,
@@ -101,20 +102,11 @@ const FeaturedKits = () => {
                     <CardContent className="p-0 relative">
                       <div className="aspect-[3/4] overflow-hidden bg-gradient-to-br from-background to-muted">
                         {kit.image_url ? (
-                          <img
+                          <OptimizedImage
                             src={kit.image_url}
                             alt={kit.title}
+                            size="card"
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const parent = e.currentTarget.parentElement;
-                              if (parent) {
-                                const placeholder = document.createElement('div');
-                                placeholder.className = 'flex flex-col items-center justify-center h-full text-muted-foreground bg-muted';
-                                placeholder.innerHTML = '<div class="text-6xl mb-4">👕</div><div class="text-lg font-semibold">IMAGE COMING SOON</div>';
-                                parent.appendChild(placeholder);
-                              }
-                            }}
                           />
                         ) : (
                           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
@@ -154,20 +146,11 @@ const FeaturedKits = () => {
               <CardContent className="p-0 relative">
                 <div className="aspect-[3/4] overflow-hidden bg-gradient-to-br from-background to-muted">
                   {kit.image_url ? (
-                    <img
+                    <OptimizedImage
                       src={kit.image_url}
                       alt={kit.title}
+                      size="card"
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        const parent = e.currentTarget.parentElement;
-                        if (parent) {
-                          const placeholder = document.createElement('div');
-                          placeholder.className = 'flex flex-col items-center justify-center h-full text-muted-foreground bg-muted';
-                          placeholder.innerHTML = '<div class="text-6xl mb-4">👕</div><div class="text-lg font-semibold">IMAGE COMING SOON</div>';
-                          parent.appendChild(placeholder);
-                        }
-                      }}
                     />
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full text-muted-foreground bg-muted">
