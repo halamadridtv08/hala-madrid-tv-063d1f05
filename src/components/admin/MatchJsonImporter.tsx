@@ -149,6 +149,44 @@ export const MatchJsonImporter = () => {
     return normalized;
   };
 
+  const transformSimpleFormat = async (data: any): Promise<MatchJsonData> => {
+    // Déterminer les équipes à partir de score ou possession
+    const teams = Object.keys(data.score || data.possession || {});
+    const realMadridKey = teams.find(t => t.includes('real_madrid') || t.includes('realmadrid'));
+    const opponentKey = teams.find(t => t !== realMadridKey);
+    
+    const isHome = realMadridKey === teams[0];
+    
+    return {
+      home_team: isHome ? "Real Madrid" : opponentKey?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Équipe adverse",
+      away_team: isHome ? opponentKey?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Équipe adverse" : "Real Madrid",
+      home_score: isHome ? (data.score?.[realMadridKey] || 0) : (data.score?.[opponentKey] || 0),
+      away_score: isHome ? (data.score?.[opponentKey] || 0) : (data.score?.[realMadridKey] || 0),
+      match_date: data.date || new Date().toISOString(),
+      venue: data.venue || "Santiago Bernabéu",
+      competition: data.competition ? await normalizeCompetitionName(data.competition) : "La Liga",
+      status: data.status || "finished",
+      match_details: {
+        // Sauvegarder toutes les données brutes
+        raw: data,
+        // Données structurées
+        possession: data.possession,
+        goals: data.goals,
+        cards: data.cards,
+        substitutions: data.substitutions,
+        fouls: data.fouls,
+        penalties_committed: data.penalties_committed,
+        injuries: data.injuries,
+        shots: data.shots,
+        offsides: data.offsides,
+        corners: data.corners,
+        goalkeeper_saves: data.goalkeeper_saves,
+        tackles: data.tackles,
+        passes: data.passes
+      }
+    };
+  };
+
   const validateJson = async (input: string): Promise<MatchJsonData | null> => {
     try {
       let data = JSON.parse(input);
@@ -156,7 +194,7 @@ export const MatchJsonImporter = () => {
       // Normaliser toutes les clés en minuscules
       data = normalizeJsonKeys(data);
       
-      // Check if it's the new format
+      // Check if it's the new format (with match.teams)
       if (data.match && data.match.teams) {
         const transformed = await transformImportedJson(data as ImportedMatchJson);
         setParsedData(transformed);
@@ -164,7 +202,15 @@ export const MatchJsonImporter = () => {
         return transformed;
       }
       
-      // Check if it's the old format
+      // Check if it's the simple format (with score/possession/goals at root)
+      if (data.score || (data.possession && data.goals)) {
+        const transformed = await transformSimpleFormat(data);
+        setParsedData(transformed);
+        setValidationStatus("valid");
+        return transformed;
+      }
+      
+      // Check if it's the old format (direct match data)
       if (!data.home_team || !data.away_team || !data.match_date) {
         toast.error("Format JSON invalide. Vérifiez la structure.");
         return null;
