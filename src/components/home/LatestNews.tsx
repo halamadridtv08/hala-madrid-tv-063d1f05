@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 interface Article {
   id: string;
   title: string;
@@ -87,13 +88,12 @@ export function LatestNews() {
           </div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {articles.map(article => <Card key={article.id} className="overflow-hidden card-hover">
                 <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src={article.image_url || "https://via.placeholder.com/400x200?text=Real+Madrid"} 
-                    alt={article.title} 
+                  <OptimizedImage
+                    src={article.image_url}
+                    alt={article.title}
+                    size="card"
                     className="w-full h-full object-cover object-center transition-transform duration-500 hover:scale-105"
-                    width="400"
-                    height="192"
-                    loading="lazy"
+                    fallbackSrc="https://via.placeholder.com/400x200?text=Real+Madrid"
                   />
                   {article.read_time && <div className="absolute top-2 right-2">
                       <Badge className="bg-white text-gray-800 font-medium">
