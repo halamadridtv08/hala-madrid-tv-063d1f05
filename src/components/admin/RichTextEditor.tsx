@@ -25,19 +25,37 @@ export function RichTextEditor({
   const editorRef = useRef<HTMLDivElement>(null);
   const isUpdatingRef = useRef(false);
 
-  // Initialize editor with sanitized HTML
+  // Synchronize editor content when switching back to edit tab
   useEffect(() => {
-    if (editorRef.current && !isUpdatingRef.current) {
-      const sanitized = DOMPurify.sanitize(value, {
+    if (editorRef.current && activeTab === "edit" && !isUpdatingRef.current) {
+      const sanitized = DOMPurify.sanitize(value || '', {
         ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'iframe', 'blockquote', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'script', 'section'],
         ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'width', 'height', 'controls', 'class', 'target', 'rel', 'style', 'frameborder', 'allow', 'allowfullscreen', 'scrolling', 'allowtransparency', 'data-theme', 'cite', 'data-video-id', 'async', 'charset']
       });
       
+      // Always update content when returning to edit tab
       if (editorRef.current.innerHTML !== sanitized) {
+        const selection = window.getSelection();
+        const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+        const startOffset = range?.startOffset || 0;
+        
         editorRef.current.innerHTML = sanitized;
+        
+        // Restore cursor position if possible
+        if (range && editorRef.current.firstChild) {
+          try {
+            const newRange = document.createRange();
+            newRange.setStart(editorRef.current.firstChild, Math.min(startOffset, editorRef.current.firstChild.textContent?.length || 0));
+            newRange.collapse(true);
+            selection?.removeAllRanges();
+            selection?.addRange(newRange);
+          } catch (e) {
+            // Cursor restoration failed, ignore
+          }
+        }
       }
     }
-  }, [value]);
+  }, [value, activeTab]);
 
   const handleInput = () => {
     if (editorRef.current && !isUpdatingRef.current) {
