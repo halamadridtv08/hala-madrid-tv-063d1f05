@@ -353,9 +353,14 @@ export const MatchJsonImporter = () => {
     const playerStatsPreview: any[] = [];
     const playerStatsMap = new Map<string, any>();
 
+    // Détecter le format des données
+    const goalsData = jsonData.goals || jsonData.events?.goals;
+    const cardsData = jsonData.cards || jsonData.events?.cards;
+    const substitutionsData = jsonData.substitutions || jsonData.events?.substitutions;
+
     // 1. Buts et passes
-    if (jsonData.events?.goals) {
-      for (const goal of jsonData.events.goals) {
+    if (goalsData) {
+      for (const goal of goalsData) {
         const scorerName = goal.scorer || goal.player;
         if (scorerName) {
           const key = scorerName;
@@ -376,12 +381,12 @@ export const MatchJsonImporter = () => {
     }
 
     // 2. Cartons
-    if (jsonData.events?.cards) {
-      if (jsonData.events.cards.yellow) {
-        for (const [team, cards] of Object.entries(jsonData.events.cards.yellow)) {
+    if (cardsData) {
+      if (cardsData.yellow) {
+        for (const [team, cards] of Object.entries(cardsData.yellow)) {
           if (Array.isArray(cards)) {
             for (const card of cards) {
-              const playerName = typeof card === 'string' ? card : card.player;
+              const playerName = typeof card === 'string' ? card.split('(')[0].trim() : card.player;
               if (playerName) {
                 const key = playerName;
                 if (!playerStatsMap.has(key)) {
@@ -394,11 +399,11 @@ export const MatchJsonImporter = () => {
         }
       }
       
-      if (jsonData.events.cards.red) {
-        for (const [team, cards] of Object.entries(jsonData.events.cards.red)) {
+      if (cardsData.red) {
+        for (const [team, cards] of Object.entries(cardsData.red)) {
           if (Array.isArray(cards)) {
             for (const card of cards) {
-              const playerName = typeof card === 'string' ? card : card.player;
+              const playerName = typeof card === 'string' ? card.split('(')[0].trim() : card.player;
               if (playerName) {
                 const key = playerName;
                 if (!playerStatsMap.has(key)) {
@@ -413,8 +418,8 @@ export const MatchJsonImporter = () => {
     }
 
     // 3. Substitutions (minutes jouées)
-    if (jsonData.events?.substitutions) {
-      for (const sub of jsonData.events.substitutions) {
+    if (substitutionsData) {
+      for (const sub of substitutionsData) {
         if (sub.out) {
           const key = sub.out;
           if (!playerStatsMap.has(key)) {
@@ -613,13 +618,17 @@ export const MatchJsonImporter = () => {
           for (const [team, cards] of Object.entries(yellow)) {
             if (Array.isArray(cards)) {
               for (const card of cards) {
-                const playerName = typeof card === 'string' ? card : (card as any).player;
+                // Extraire le nom du joueur (peut être "nom (minute')" dans le format simple)
+                let playerName = typeof card === 'string' ? card : (card as any).player;
                 if (!playerName) continue;
+                
+                // Retirer la minute entre parenthèses si présente
+                playerName = String(playerName).split('(')[0].trim();
 
                 const { data: playerData } = await supabase
                   .from('players')
                   .select('id')
-                  .ilike('name', `%${String(playerName).replace(/_/g, ' ')}%`)
+                  .ilike('name', `%${playerName.replace(/_/g, ' ')}%`)
                   .maybeSingle();
 
                 if (playerData) {
@@ -649,13 +658,17 @@ export const MatchJsonImporter = () => {
           for (const [team, cards] of Object.entries(red)) {
             if (Array.isArray(cards)) {
               for (const card of cards) {
-                const playerName = typeof card === 'string' ? card : (card as any).player;
+                // Extraire le nom du joueur (peut être "nom (minute')" dans le format simple)
+                let playerName = typeof card === 'string' ? card : (card as any).player;
                 if (!playerName) continue;
+                
+                // Retirer la minute entre parenthèses si présente
+                playerName = String(playerName).split('(')[0].trim();
 
                 const { data: playerData } = await supabase
                   .from('players')
                   .select('id')
-                  .ilike('name', `%${String(playerName).replace(/_/g, ' ')}%`)
+                  .ilike('name', `%${playerName.replace(/_/g, ' ')}%`)
                   .maybeSingle();
 
                 if (playerData) {
