@@ -187,7 +187,7 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
   const goals = matchDetails.goals || [];
   const substitutions = matchDetails.substitutions || [];
   const cards = matchDetails.cards || { yellow: {}, red: {} };
-  const fouls = matchDetails.fouls || [];
+  const fouls = Array.isArray(matchDetails.fouls) ? matchDetails.fouls : [];
 
   // Créer les événements de cartons à partir des fautes (cartons jaunes)
   const yellowCardEvents = fouls.map((foul: any) => ({
