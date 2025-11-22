@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArticleImageManager } from "./ArticleImageManager";
 import { RichTextEditor } from "./RichTextEditor";
+import { ArticleTemplates } from "./ArticleTemplates";
 
 interface ArticleFormProps {
   article?: Article;
@@ -77,6 +78,17 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
       setLoading(false);
     }
   };
+  
+  const handleTemplateSelect = (template: any) => {
+    setFormData({
+      ...formData,
+      title: template.titleTemplate,
+      description: template.descriptionTemplate,
+      content: template.contentTemplate,
+      category: template.category
+    });
+    toast.success(`Template "${template.name}" appliqué`);
+  };
 
   return (
     <Card>
@@ -93,6 +105,12 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
           </TabsList>
 
           <TabsContent value="content">
+            {!article && (
+              <div className="mb-4">
+                <ArticleTemplates onSelectTemplate={handleTemplateSelect} />
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="title">Titre</Label>
