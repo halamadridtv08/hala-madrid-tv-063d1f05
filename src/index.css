@@ -146,6 +146,20 @@
     @apply bg-muted/50;
   }
   
+  .prose blockquote {
+    @apply border-l-4 border-primary pl-4 py-2 my-4 italic bg-muted/30 rounded-r-md;
+  }
+  .prose blockquote p {
+    @apply text-muted-foreground;
+  }
+  
+  .prose h2 {
+    @apply text-2xl font-bold mt-8 mb-4 text-foreground;
+  }
+  .prose h3 {
+    @apply text-xl font-semibold mt-6 mb-3 text-foreground;
+  }
+  
   /* Social media embeds */
   .prose .twitter-tweet,
   .prose .tiktok-embed {

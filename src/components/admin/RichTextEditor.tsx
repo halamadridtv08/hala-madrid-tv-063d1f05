@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { MediaUploader } from "./MediaUploader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Bold, Italic, AlignLeft, AlignCenter, AlignRight, Link, Video, Image as ImageIcon, Table, Twitter, Instagram, Youtube } from "lucide-react";
+import { Bold, Italic, AlignLeft, AlignCenter, AlignRight, Link, Video, Image as ImageIcon, Table, Twitter, Instagram, Youtube, Quote } from "lucide-react";
 import DOMPurify from "dompurify";
 
 interface RichTextEditorProps {
@@ -188,9 +188,38 @@ export function RichTextEditor({
     insertAtCursor(embedHTML);
   };
   
+  const insertBlockquote = () => {
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      
+      if (start === end) {
+        // No text selected
+        insertAtCursor(`\n<blockquote>\n  <p>Votre citation ici...</p>\n</blockquote>\n`);
+      } else {
+        // Wrap selected text in blockquote
+        const selectedText = value.substring(start, end);
+        insertTag(`<blockquote>\n  <p>`, `</p>\n</blockquote>`);
+      }
+    }
+  };
+  
   const renderPreview = () => {
-    const sanitized = DOMPurify.sanitize(value, {
-      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'iframe', 'blockquote', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'script'],
+    // Convert newlines to HTML paragraphs if no HTML tags are present
+    let content = value;
+    
+    // If content has no HTML tags, convert newlines to <p> tags
+    if (!/<[^>]+>/.test(content)) {
+      content = content
+        .split('\n\n')
+        .filter(p => p.trim())
+        .map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`)
+        .join('');
+    }
+    
+    const sanitized = DOMPurify.sanitize(content, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'iframe', 'blockquote', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'script', 'section'],
       ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'width', 'height', 'controls', 'class', 'target', 'rel', 'style', 'frameborder', 'allow', 'allowfullscreen', 'scrolling', 'allowtransparency', 'data-theme', 'cite', 'data-video-id', 'async', 'charset']
     });
     
@@ -221,6 +250,9 @@ export function RichTextEditor({
           </Button>
           <Button type="button" variant="ghost" size="sm" onClick={insertTable} className="h-8 px-2">
             <Table className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={insertBlockquote} className="h-8 px-2" title="Citation">
+            <Quote className="h-4 w-4" />
           </Button>
           <Button type="button" variant="ghost" size="sm" onClick={() => setShowMediaUploader(prev => !prev)} className="h-8 px-2">
             <ImageIcon className="h-4 w-4" />
@@ -285,6 +317,9 @@ export function RichTextEditor({
         </Button>
         <Button type="button" variant="ghost" size="sm" onClick={insertTable} className="h-8 px-2" title="Insérer un tableau">
           <Table className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={insertBlockquote} className="h-8 px-2" title="Insérer une citation">
+          <Quote className="h-4 w-4" />
         </Button>
         <Button type="button" variant="ghost" size="sm" onClick={() => setShowMediaUploader(prev => !prev)} className="h-8 px-2" title="Image/Vidéo">
           <ImageIcon className="h-4 w-4" />
