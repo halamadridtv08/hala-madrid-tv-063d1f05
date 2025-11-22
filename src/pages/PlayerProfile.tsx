@@ -10,7 +10,6 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
-import { OptimizedImage } from "@/components/ui/optimized-image";
 
 const PlayerProfile = () => {
   const { id } = useParams();
@@ -203,12 +202,10 @@ const PlayerProfile = () => {
                   </div>
                   <div className="p-4">
                     <div className="aspect-[3/4] overflow-hidden">
-                      <OptimizedImage
-                        src={player.image_url}
+                      <img
+                        src={player.image_url || `https://placehold.co/300x400/1a365d/ffffff/?text=${player.name.charAt(0)}`}
                         alt={player.name}
-                        size="card"
                         className="w-full h-full object-cover object-top"
-                        fallbackSrc={`https://placehold.co/300x400/1a365d/ffffff/?text=${player.name.charAt(0)}`}
                       />
                     </div>
                     
