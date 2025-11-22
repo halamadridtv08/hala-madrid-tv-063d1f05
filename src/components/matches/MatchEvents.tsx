@@ -47,8 +47,6 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
     setRealMadridPlayers(data || []);
   };
 
-  if (!matchDetails) return null;
-
   const formatPlayerName = (name: string) => {
     if (!name) return '';
     return name.replace(/_/g, ' ').split(' ').map(word => 
@@ -409,6 +407,21 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
         return null;
     }
   };
+
+  // Si pas de données de match
+  if (!matchDetails) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="text-center py-12 text-muted-foreground">
+            <FileWarning className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-medium">Aucune donnée disponible</p>
+            <p className="text-sm mt-2">Les événements du match seront disponibles après le début du match.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
