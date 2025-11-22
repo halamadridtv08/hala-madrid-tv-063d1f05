@@ -157,24 +157,12 @@ export const MatchJsonImporter = () => {
     
     const isHome = realMadridKey === teams[0];
     
-    // Utiliser la date du match sélectionné si disponible
-    let matchDate = data.date || data.match_date;
-    if (!matchDate && selectedMatchId) {
-      const selectedMatch = matches.find(m => m.id === selectedMatchId);
-      if (selectedMatch) {
-        matchDate = selectedMatch.match_date;
-      }
-    }
-    if (!matchDate) {
-      matchDate = new Date().toISOString();
-    }
-    
     return {
       home_team: isHome ? "Real Madrid" : opponentKey?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Équipe adverse",
       away_team: isHome ? opponentKey?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Équipe adverse" : "Real Madrid",
       home_score: isHome ? (data.score?.[realMadridKey] || 0) : (data.score?.[opponentKey] || 0),
       away_score: isHome ? (data.score?.[opponentKey] || 0) : (data.score?.[realMadridKey] || 0),
-      match_date: matchDate,
+      match_date: data.date || new Date().toISOString(),
       venue: data.venue || "Santiago Bernabéu",
       competition: data.competition ? await normalizeCompetitionName(data.competition) : "La Liga",
       status: data.status || "finished",
