@@ -121,19 +121,40 @@ export const MatchJsonImporter = () => {
       competition: normalizedCompetition,
       status: imported.match.status === "termine" ? "finished" : imported.match.status,
       match_details: {
+        // Sauvegarder TOUTES les données brutes du JSON
+        match: imported.match,
+        events: imported.events,
+        statistics: imported.statistics,
+        // Données normalisées pour l'usage dans l'app
         possession: imported.match.possession,
         goals: imported.events?.goals,
         cards: imported.events?.cards,
         substitutions: imported.events?.substitutions,
-        fouls: imported.events?.fouls,
-        statistics: imported.statistics
+        fouls: imported.events?.fouls
       }
     };
   };
 
+  const normalizeJsonKeys = (obj: any): any => {
+    if (obj === null || obj === undefined) return obj;
+    if (typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(item => normalizeJsonKeys(item));
+    
+    const normalized: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      // Normaliser la clé en minuscules et sans espaces
+      const normalizedKey = key.toLowerCase().trim();
+      normalized[normalizedKey] = normalizeJsonKeys(value);
+    }
+    return normalized;
+  };
+
   const validateJson = async (input: string): Promise<MatchJsonData | null> => {
     try {
-      const data = JSON.parse(input);
+      let data = JSON.parse(input);
+      
+      // Normaliser toutes les clés en minuscules
+      data = normalizeJsonKeys(data);
       
       // Check if it's the new format
       if (data.match && data.match.teams) {
@@ -152,6 +173,11 @@ export const MatchJsonImporter = () => {
       // Normalize competition name for old format too
       if (data.competition) {
         data.competition = await normalizeCompetitionName(data.competition);
+      }
+
+      // S'assurer que match_details est présent
+      if (!data.match_details) {
+        data.match_details = {};
       }
 
       setParsedData(data);
