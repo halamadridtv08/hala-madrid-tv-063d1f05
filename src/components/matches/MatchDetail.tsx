@@ -365,7 +365,7 @@ export const MatchDetail = ({
                         {renderLineup(realMadridLineup, realMadridSubs, "Real Madrid")}
                       </>}
                     {opposingPlayers.length === 0 && <div className="text-center text-gray-500 mt-4">
-                        <p>Composition de l'équipe adverse non disponible.</p>
+                        
                         
                       </div>}
                   </>}
