@@ -28,6 +28,8 @@ import { DraggablePlayer } from './DraggablePlayer';
 import { DroppableFieldPlayer } from './DroppableFieldPlayer';
 import { FORMATION_TEMPLATES, snapToGrid } from './FormationTemplates';
 import { Copy } from 'lucide-react';
+import { EmptyPositionSlot } from './EmptyPositionSlot';
+import { PlayerSearchDialog } from './PlayerSearchDialog';
 
 interface Match {
   id: string;
@@ -98,6 +100,8 @@ export const FormationManagerV2: React.FC = () => {
   }>>([]);
   const [lockedPlayers, setLockedPlayers] = useState<Set<string>>(new Set());
   const [dragPreviewPosition, setDragPreviewPosition] = useState<{ x: number; y: number } | null>(null);
+  const [showPlayerSearch, setShowPlayerSearch] = useState(false);
+  const [selectedPositionSlot, setSelectedPositionSlot] = useState<{ position: string; x: number; y: number } | null>(null);
   const [activeDragPlayer, setActiveDragPlayer] = useState<FormationPlayer | Player | null>(null);
   
   const [availablePlayers, setAvailablePlayers] = useState<Player[]>([]);
@@ -739,6 +743,49 @@ export const FormationManagerV2: React.FC = () => {
     toast.success(`${playersToUpdate.length} image(s) synchronisée(s)`);
   };
 
+  const handleOpenPlayerSearch = (position: string, x: number, y: number) => {
+    setSelectedPositionSlot({ position, x, y });
+    setShowPlayerSearch(true);
+  };
+
+  const handleAddPlayerToPosition = async (player: Player) => {
+    if (!formationId || !selectedPositionSlot) return;
+
+    if (fieldPlayers.length >= 11) {
+      toast.error("Maximum 11 joueurs sur le terrain");
+      return;
+    }
+
+    // Vérifier si le joueur est déjà sur le terrain
+    if (fieldPlayers.some(fp => fp.player_id === player.id)) {
+      toast.error("Ce joueur est déjà sur le terrain");
+      return;
+    }
+
+    const { error } = await supabase
+      .from('match_formation_players')
+      .insert({
+        formation_id: formationId,
+        player_id: activeTeam === "real_madrid" ? player.id : null,
+        opposing_player_id: activeTeam === "opposing" ? player.id : null,
+        player_name: player.name,
+        player_position: player.position,
+        jersey_number: player.jersey_number,
+        player_image_url: activeTeam === "real_madrid" ? (player.profile_image_url || player.image_url) : null,
+        position_x: selectedPositionSlot.x,
+        position_y: selectedPositionSlot.y,
+        is_starter: true,
+        player_rating: 0
+      });
+
+    if (!error) {
+      await fetchFormation();
+      toast.success(`${player.name} ajouté au poste ${selectedPositionSlot.position}`);
+    } else {
+      toast.error("Erreur lors de l'ajout du joueur");
+    }
+  };
+
   const deletePlayer = async (playerId: string) => {
     await supabase
       .from('match_formation_players')
@@ -1103,8 +1150,56 @@ export const FormationManagerV2: React.FC = () => {
                                     </div>
                                   )}
 
-                                  {/* Joueurs sur le terrain */}
-                                  {fieldPlayers.map((player) => (
+                                  {/* Slots de positions selon le template */}
+                                  {(() => {
+                                    const template = FORMATION_TEMPLATES.find(t => t.formation === selectedFormation);
+                                    if (!template) return null;
+
+                                    return template.positions.map((pos, idx) => {
+                                      // Vérifier si un joueur occupe déjà cette position (tolérance de ±3%)
+                                      const occupiedPlayer = fieldPlayers.find(
+                                        p => Math.abs(p.position_x - pos.x) < 3 && Math.abs(p.position_y - pos.y) < 3
+                                      );
+
+                                      if (occupiedPlayer) {
+                                        return (
+                                          <DroppableFieldPlayer
+                                            key={occupiedPlayer.id}
+                                            player={occupiedPlayer}
+                                            onDelete={() => deletePlayer(occupiedPlayer.id!)}
+                                            onToggleLock={() => togglePlayerLock(occupiedPlayer.id || occupiedPlayer.player_id)}
+                                            isLocked={lockedPlayers.has(occupiedPlayer.id || occupiedPlayer.player_id)}
+                                            style={{
+                                              left: `${occupiedPlayer.position_x}%`,
+                                              top: `${occupiedPlayer.position_y}%`,
+                                              zIndex: 10
+                                            }}
+                                          />
+                                        );
+                                      }
+
+                                      // Sinon, afficher un slot vide
+                                      return (
+                                        <EmptyPositionSlot
+                                          key={`slot-${idx}`}
+                                          position={pos.position}
+                                          x={pos.x}
+                                          y={pos.y}
+                                          onClick={() => handleOpenPlayerSearch(pos.position, pos.x, pos.y)}
+                                        />
+                                      );
+                                    });
+                                  })()}
+
+                                  {/* Joueurs hors-template (positionnés manuellement) */}
+                                  {fieldPlayers.filter(player => {
+                                    const template = FORMATION_TEMPLATES.find(t => t.formation === selectedFormation);
+                                    if (!template) return true;
+                                    
+                                    return !template.positions.some(
+                                      pos => Math.abs(player.position_x - pos.x) < 3 && Math.abs(player.position_y - pos.y) < 3
+                                    );
+                                  }).map((player) => (
                                     <DroppableFieldPlayer
                                       key={player.id}
                                       player={player}
@@ -1231,8 +1326,56 @@ export const FormationManagerV2: React.FC = () => {
                                   </div>
                                 )}
 
-                                {/* Joueurs sur le terrain */}
-                                {fieldPlayers.map((player) => (
+                                {/* Slots de positions selon le template */}
+                                {(() => {
+                                  const template = FORMATION_TEMPLATES.find(t => t.formation === selectedFormation);
+                                  if (!template) return null;
+
+                                  return template.positions.map((pos, idx) => {
+                                    // Vérifier si un joueur occupe déjà cette position (tolérance de ±3%)
+                                    const occupiedPlayer = fieldPlayers.find(
+                                      p => Math.abs(p.position_x - pos.x) < 3 && Math.abs(p.position_y - pos.y) < 3
+                                    );
+
+                                    if (occupiedPlayer) {
+                                      return (
+                                        <DroppableFieldPlayer
+                                          key={occupiedPlayer.id}
+                                          player={occupiedPlayer}
+                                          onDelete={() => deletePlayer(occupiedPlayer.id!)}
+                                          onToggleLock={() => togglePlayerLock(occupiedPlayer.id || occupiedPlayer.player_id)}
+                                          isLocked={lockedPlayers.has(occupiedPlayer.id || occupiedPlayer.player_id)}
+                                          style={{
+                                            left: `${occupiedPlayer.position_x}%`,
+                                            top: `${occupiedPlayer.position_y}%`,
+                                            zIndex: 10
+                                          }}
+                                        />
+                                      );
+                                    }
+
+                                    // Sinon, afficher un slot vide
+                                    return (
+                                      <EmptyPositionSlot
+                                        key={`slot-${idx}`}
+                                        position={pos.position}
+                                        x={pos.x}
+                                        y={pos.y}
+                                        onClick={() => handleOpenPlayerSearch(pos.position, pos.x, pos.y)}
+                                      />
+                                    );
+                                  });
+                                })()}
+
+                                {/* Joueurs hors-template (positionnés manuellement) */}
+                                {fieldPlayers.filter(player => {
+                                  const template = FORMATION_TEMPLATES.find(t => t.formation === selectedFormation);
+                                  if (!template) return true;
+                                  
+                                  return !template.positions.some(
+                                    pos => Math.abs(player.position_x - pos.x) < 3 && Math.abs(player.position_y - pos.y) < 3
+                                  );
+                                }).map((player) => (
                                   <DroppableFieldPlayer
                                     key={player.id}
                                     player={player}
@@ -1307,6 +1450,18 @@ export const FormationManagerV2: React.FC = () => {
           </div>
         )}
       </DragOverlay>
+
+      {/* Player Search Dialog */}
+      <PlayerSearchDialog
+        open={showPlayerSearch}
+        onOpenChange={setShowPlayerSearch}
+        players={availablePlayers.filter(p => 
+          !fieldPlayers.some(fp => fp.player_id === p.id) &&
+          !substitutes.some(sp => sp.player_id === p.id)
+        )}
+        onSelectPlayer={handleAddPlayerToPosition}
+        selectedPosition={selectedPositionSlot?.position || ''}
+      />
     </DndContext>
   );
 };
