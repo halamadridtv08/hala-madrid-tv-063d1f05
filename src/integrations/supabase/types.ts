@@ -564,6 +564,42 @@ export type Database = {
           },
         ]
       }
+      formation_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          formation: string
+          id: string
+          is_default: boolean | null
+          name: string
+          positions: Json
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          formation: string
+          id?: string
+          is_default?: boolean | null
+          name: string
+          positions: Json
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          formation?: string
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          positions?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       kit_images: {
         Row: {
           created_at: string
