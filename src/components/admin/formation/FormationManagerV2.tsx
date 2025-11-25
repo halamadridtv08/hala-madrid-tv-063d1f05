@@ -25,6 +25,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DraggablePlayer } from './DraggablePlayer';
+import { DroppableFieldPlayer } from './DroppableFieldPlayer';
 import { FORMATION_TEMPLATES, snapToGrid } from './FormationTemplates';
 import { Copy } from 'lucide-react';
 
@@ -1104,15 +1105,9 @@ export const FormationManagerV2: React.FC = () => {
 
                                   {/* Joueurs sur le terrain */}
                                   {fieldPlayers.map((player) => (
-                                    <DraggablePlayer
+                                    <DroppableFieldPlayer
                                       key={player.id}
-                                      id={player.id || player.player_id}
-                                      name={player.player_name}
-                                      position={player.player_position}
-                                      jerseyNumber={player.jersey_number}
-                                      imageUrl={player.player_image_url}
-                                      variant="field"
-                                      showDelete
+                                      player={player}
                                       onDelete={() => deletePlayer(player.id!)}
                                       onToggleLock={() => togglePlayerLock(player.id || player.player_id)}
                                       isLocked={lockedPlayers.has(player.id || player.player_id)}
@@ -1238,15 +1233,9 @@ export const FormationManagerV2: React.FC = () => {
 
                                 {/* Joueurs sur le terrain */}
                                 {fieldPlayers.map((player) => (
-                                  <DraggablePlayer
+                                  <DroppableFieldPlayer
                                     key={player.id}
-                                    id={player.id || player.player_id}
-                                    name={player.player_name}
-                                    position={player.player_position}
-                                    jerseyNumber={player.jersey_number}
-                                    imageUrl={player.player_image_url}
-                                    variant="field"
-                                    showDelete
+                                    player={player}
                                     onDelete={() => deletePlayer(player.id!)}
                                     onToggleLock={() => togglePlayerLock(player.id || player.player_id)}
                                     isLocked={lockedPlayers.has(player.id || player.player_id)}

@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { FootballPitch } from '@/components/admin/formation/FootballPitch';
 import { DraggablePlayerCard } from '@/components/formation/DraggablePlayerCard';
+import { DroppableFieldPlayer } from '@/components/admin/formation/DroppableFieldPlayer';
 import { Users, RotateCcw, Save } from 'lucide-react';
 import { Player } from '@/types/Player';
 import { Match } from '@/types/Match';
@@ -201,17 +202,27 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="relative">
             <FootballPitch>
-              {starters.map((player: FormationPlayer) => <DraggablePlayerCard key={player.id} player={{
-              id: player.id,
-              player_name: player.player_name,
-              player_position: player.player_position,
-              jersey_number: player.jersey_number,
-              player_image_url: player.player_image_url,
-              player_rating: player.player_rating
-            }} position={{
-              x: player.position_x,
-              y: player.position_y
-            }} />)}
+              {starters.map((player: FormationPlayer) => (
+                <DroppableFieldPlayer
+                  key={player.id}
+                  player={{
+                    id: player.id,
+                    player_id: player.player_id || '',
+                    player_name: player.player_name,
+                    player_position: player.player_position,
+                    jersey_number: player.jersey_number,
+                    player_image_url: player.player_image_url,
+                    position_x: player.position_x,
+                    position_y: player.position_y
+                  }}
+                  onDelete={() => {}}
+                  style={{
+                    left: `${player.position_x}%`,
+                    top: `${player.position_y}%`,
+                    zIndex: 10
+                  }}
+                />
+              ))}
             </FootballPitch>
 
             <DragOverlay>
