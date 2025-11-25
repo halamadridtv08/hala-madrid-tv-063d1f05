@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,7 @@ export const OpposingTeamManager = () => {
   const [isPlayerDialogOpen, setIsPlayerDialogOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<OpposingTeam | null>(null);
   const [editingPlayer, setEditingPlayer] = useState<OpposingPlayer | null>(null);
+  const playersCardRef = useRef<HTMLDivElement>(null);
 
   const [teamForm, setTeamForm] = useState({
     name: "",
@@ -60,6 +61,10 @@ export const OpposingTeamManager = () => {
   useEffect(() => {
     if (selectedTeam) {
       fetchPlayers(selectedTeam);
+      // Scroll vers la section des joueurs après un court délai
+      setTimeout(() => {
+        playersCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     }
   }, [selectedTeam]);
 
@@ -501,7 +506,7 @@ export const OpposingTeamManager = () => {
       </Card>
 
       {selectedTeam && (
-        <Card>
+        <Card ref={playersCardRef}>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               Joueurs de {teams.find(t => t.id === selectedTeam)?.name}
