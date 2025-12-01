@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { stripHtml } from "@/utils/stripHtml";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -111,7 +112,7 @@ export function LatestNews() {
                     </span>
                   </div>
                   <CardTitle className="line-clamp-2 text-base">{article.title}</CardTitle>
-                  <CardDescription className="line-clamp-1 text-sm">{article.description}</CardDescription>
+                  <CardDescription className="line-clamp-1 text-sm">{stripHtml(article.description)}</CardDescription>
                 </CardHeader>
                 <CardFooter className="flex justify-between items-center">
                   

@@ -86,7 +86,12 @@ export const DraggablePlayer = ({
           }}>
                 {isLocked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
               </Button>}
-            {showDelete && onDelete}
+            {showDelete && onDelete && <Button size="icon" variant="ghost" className="absolute -top-1 -right-1 h-5 w-5 z-10 bg-red-500 hover:bg-red-600" onClick={e => {
+              e.stopPropagation();
+              onDelete();
+            }}>
+              <Trash2 className="h-3 w-3 text-white" />
+            </Button>}
           </div>
           
           {/* Nom du joueur */}

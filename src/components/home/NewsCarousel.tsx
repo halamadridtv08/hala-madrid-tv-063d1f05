@@ -1,5 +1,5 @@
-
 import { useEffect, useState } from "react";
+import { stripHtml } from "@/utils/stripHtml";
 import { 
   Carousel,
   CarouselContent,
@@ -161,7 +161,7 @@ export function NewsCarousel() {
                           </span>
                         </div>
                         <h2 className="text-xl md:text-2xl font-bold mb-1 line-clamp-2">{slide.title}</h2>
-                        <p className="text-sm mb-3 opacity-90 line-clamp-2">{slide.description}</p>
+                        <p className="text-sm mb-3 opacity-90 line-clamp-2">{stripHtml(slide.description)}</p>
                         <Button asChild className="bg-madrid-gold text-black hover:bg-yellow-400 text-sm py-1 h-8">
                           <Link to={`/news/${slide.id}`}>Lire l'article</Link>
                         </Button>

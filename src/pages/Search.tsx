@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Users, FileText, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { stripHtml } from "@/utils/stripHtml";
 
 export default function Search() {
   const [searchParams] = useSearchParams();
@@ -172,7 +173,7 @@ export default function Search() {
                             )}
                             <Badge className="mb-2">{article.category}</Badge>
                             <h3 className="font-semibold line-clamp-2 mb-2">{article.title}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-2">{article.description}</p>
+                            <p className="text-sm text-muted-foreground line-clamp-2">{stripHtml(article.description)}</p>
                             {article.published_at && (
                               <p className="text-xs text-muted-foreground mt-2">
                                 {format(new Date(article.published_at), "d MMMM yyyy", { locale: fr })}
@@ -268,7 +269,7 @@ export default function Search() {
                           )}
                           <Badge className="mb-2">{article.category}</Badge>
                           <h3 className="font-semibold line-clamp-2 mb-2">{article.title}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-2">{article.description}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{stripHtml(article.description)}</p>
                           {article.published_at && (
                             <p className="text-xs text-muted-foreground mt-2">
                               {format(new Date(article.published_at), "d MMMM yyyy", { locale: fr })}
