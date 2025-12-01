@@ -179,16 +179,7 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
           <Badge variant="default" className="text-lg px-3 py-1">
             {formation.formation}
           </Badge>
-          <div className="flex gap-2">
-            <Button onClick={resetFormation} variant="outline" size="sm">
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Réinitialiser
-            </Button>
-            <Button onClick={saveFormation} variant="default" size="sm">
-              <Save className="h-4 w-4 mr-2" />
-              Sauvegarder
-            </Button>
-          </div>
+          
         </div>
 
         {/* Formation name */}
@@ -202,27 +193,20 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="relative">
             <FootballPitch>
-              {starters.map((player: FormationPlayer) => (
-                <DroppableFieldPlayer
-                  key={player.id}
-                  player={{
-                    id: player.id,
-                    player_id: player.player_id || '',
-                    player_name: player.player_name,
-                    player_position: player.player_position,
-                    jersey_number: player.jersey_number,
-                    player_image_url: player.player_image_url,
-                    position_x: player.position_x,
-                    position_y: player.position_y
-                  }}
-                  onDelete={() => {}}
-                  style={{
-                    left: `${player.position_x}%`,
-                    top: `${player.position_y}%`,
-                    zIndex: 10
-                  }}
-                />
-              ))}
+              {starters.map((player: FormationPlayer) => <DroppableFieldPlayer key={player.id} player={{
+              id: player.id,
+              player_id: player.player_id || '',
+              player_name: player.player_name,
+              player_position: player.player_position,
+              jersey_number: player.jersey_number,
+              player_image_url: player.player_image_url,
+              position_x: player.position_x,
+              position_y: player.position_y
+            }} onDelete={() => {}} style={{
+              left: `${player.position_x}%`,
+              top: `${player.position_y}%`,
+              zIndex: 10
+            }} />)}
             </FootballPitch>
 
             <DragOverlay>
