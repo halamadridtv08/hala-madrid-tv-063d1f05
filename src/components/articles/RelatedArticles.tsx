@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { stripHtml } from "@/utils/stripHtml";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -95,7 +96,7 @@ export const RelatedArticles = ({ currentArticleId, category }: RelatedArticlesP
                   {article.title}
                 </h4>
                 <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                  {article.description}
+                  {stripHtml(article.description)}
                 </p>
                 <Button variant="outline" size="sm" className="w-full">
                   Lire l'article

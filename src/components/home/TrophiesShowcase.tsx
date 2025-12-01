@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Link } from "react-router-dom";
 import type { CarouselApi } from "@/components/ui/carousel";
+import { stripHtml } from "@/utils/stripHtml";
 
 export const TrophiesShowcase = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -131,7 +132,7 @@ export const TrophiesShowcase = () => {
               <h2 className="text-white font-['Playfair_Display'] text-2xl md:text-4xl lg:text-6xl mb-2">
                 {mainArticle.title}
               </h2>
-              <p className="text-white/70 text-sm md:text-lg">{mainArticle.description}</p>
+              <p className="text-white/70 text-sm md:text-lg">{stripHtml(mainArticle.description)}</p>
             </div>
 
             <Carousel setApi={setApi} opts={{
@@ -155,7 +156,7 @@ export const TrophiesShowcase = () => {
                             {article.title}
                           </h3>
                           <p className="text-white/70 text-sm line-clamp-2">
-                            {article.description}
+                            {stripHtml(article.description)}
                           </p>
                         </div>
                       </Card>

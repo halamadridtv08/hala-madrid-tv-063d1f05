@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ArticleForm } from "./ArticleForm";
+import { stripHtml } from "@/utils/stripHtml";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -186,7 +187,7 @@ export const SpecialArticlesManager = () => {
               <CardHeader>
                 <CardTitle className="line-clamp-2">{article.title}</CardTitle>
                 <p className="text-sm text-muted-foreground line-clamp-2">
-                  {article.description}
+                  {stripHtml(article.description)}
                 </p>
               </CardHeader>
               <CardContent>

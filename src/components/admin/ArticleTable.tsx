@@ -8,6 +8,7 @@ import { Article } from "@/types/Article";
 import { Plus, Edit, Trash2, Eye, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { ArticleForm } from "./ArticleForm";
+import { stripHtml } from "@/utils/stripHtml";
 
 interface ArticleTableProps {
   articles: Article[];
@@ -127,7 +128,7 @@ const ArticleTable = ({ articles, setArticles, onManageEngagement }: ArticleTabl
             <div key={article.id} className="flex items-center justify-between p-4 border rounded">
               <div className="flex-1">
                 <h3 className="font-semibold">{article.title}</h3>
-                <p className="text-sm text-gray-600 mt-1">{article.description}</p>
+                <p className="text-sm text-gray-600 mt-1">{stripHtml(article.description)}</p>
                 <div className="flex items-center gap-2 mt-2">
                   <Badge variant={article.is_published ? "default" : "secondary"}>
                     {article.is_published ? "Publié" : "Brouillon"}

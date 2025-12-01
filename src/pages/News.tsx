@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from "react";
+import { stripHtml } from "@/utils/stripHtml";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -161,7 +161,7 @@ const News = () => {
                   )}
                   <CardHeader>
                     <CardTitle className="line-clamp-2">{article.title}</CardTitle>
-                    <CardDescription className="line-clamp-3">{article.description}</CardDescription>
+                    <CardDescription className="line-clamp-3">{stripHtml(article.description)}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
