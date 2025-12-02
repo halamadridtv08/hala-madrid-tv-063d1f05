@@ -18,10 +18,10 @@ export const PlayerOnField: React.FC<PlayerOnFieldProps> = ({ player, style }) =
       className="absolute transform -translate-x-1/2 -translate-y-1/2"
       style={style}
     >
-      <div className="flex flex-col items-center gap-1">
+      <div className="flex flex-col items-center gap-0.5 md:gap-1">
         {/* Photo du joueur */}
         <div className="relative">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full border-2 border-white shadow-lg overflow-hidden bg-muted">
+          <div className="w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full border-2 border-white shadow-lg overflow-hidden bg-muted">
             {player.player_image_url ? (
               <img 
                 src={player.player_image_url} 
@@ -30,7 +30,7 @@ export const PlayerOnField: React.FC<PlayerOnFieldProps> = ({ player, style }) =
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <span className="text-sm font-bold text-primary-foreground">
+                <span className="text-xs sm:text-sm font-bold text-primary-foreground">
                   {player.player_name.split(' ').map(n => n[0]).join('').substring(0, 2)}
                 </span>
               </div>
@@ -38,16 +38,16 @@ export const PlayerOnField: React.FC<PlayerOnFieldProps> = ({ player, style }) =
           </div>
           
           {/* Numéro de maillot */}
-          <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center border-2 border-white shadow-md">
-            <span className="text-xs font-bold text-white">
+          <div className="absolute -top-0.5 -right-0.5 md:-top-1 md:-right-1 w-5 h-5 md:w-6 md:h-6 bg-blue-600 rounded-full flex items-center justify-center border-2 border-white shadow-md">
+            <span className="text-[10px] md:text-xs font-bold text-white">
               {player.jersey_number}
             </span>
           </div>
         </div>
 
         {/* Nom du joueur */}
-        <div className="bg-black/80 px-2 py-0.5 rounded text-center">
-          <p className="text-xs font-semibold text-white whitespace-nowrap">
+        <div className="bg-black/80 px-1.5 md:px-2 py-0.5 rounded text-center">
+          <p className="text-[10px] md:text-xs font-semibold text-white whitespace-nowrap">
             {player.player_name.split(' ').pop()}
           </p>
         </div>
