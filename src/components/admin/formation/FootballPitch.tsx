@@ -6,7 +6,7 @@ interface FootballPitchProps {
 
 export const FootballPitch: React.FC<FootballPitchProps> = ({ children }) => {
   return (
-    <div className="relative w-full h-[600px] bg-gradient-to-b from-green-400 to-green-500 rounded-lg overflow-hidden shadow-lg">
+    <div className="relative w-full h-[400px] sm:h-[500px] md:h-[600px] bg-gradient-to-b from-green-400 to-green-500 rounded-lg overflow-hidden shadow-lg">
       {/* Terrain de football avec lignes */}
       <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
         {/* Lignes de touche */}

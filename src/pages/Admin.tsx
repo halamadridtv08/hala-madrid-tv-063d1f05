@@ -9,6 +9,7 @@ import {
 import { QuickStatsCard } from "@/components/admin/QuickStatsCard";
 import { AdminMenuBar } from "@/components/layout/AdminMenuBar";
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
+import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
 import { AdminStatsManager } from "@/components/admin/AdminStatsManager";
 import { 
@@ -606,33 +607,38 @@ const Admin = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="madrid-container py-4 md:py-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
-          <div className="flex items-center gap-3 md:gap-4">
-            <AdminMobileNav activeTab={activeTab} onTabChange={setActiveTab} />
-            <Button
-              onClick={() => navigate('/')}
-              variant="outline"
-              size="sm"
-              className="w-fit"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Retour au site</span>
-            </Button>
-            <div className="flex-1">
-              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
-                Administration HALA MADRID TV
-              </h1>
-              <p className="hidden md:block text-sm md:text-base text-gray-600 dark:text-gray-300 mt-1 md:mt-2">
-                Gérez le contenu et les paramètres du site
-              </p>
+    <div className="min-h-screen bg-background flex">
+      {/* Sidebar desktop */}
+      <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      
+      {/* Main content */}
+      <div className="flex-1 lg:ml-64">
+        <div className="madrid-container py-4 md:py-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
+            <div className="flex items-center gap-3 md:gap-4">
+              <AdminMobileNav activeTab={activeTab} onTabChange={setActiveTab} />
+              <Button
+                onClick={() => navigate('/')}
+                variant="outline"
+                size="sm"
+                className="w-fit"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Retour au site</span>
+              </Button>
+              <div className="flex-1">
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+                  Administration HALA MADRID TV
+                </h1>
+                <p className="hidden md:block text-sm md:text-base text-gray-600 dark:text-gray-300 mt-1 md:mt-2">
+                  Gérez le contenu et les paramètres du site
+                </p>
+              </div>
             </div>
+            <Badge variant="outline" className="px-3 py-1 w-fit">
+              Version 2.0
+            </Badge>
           </div>
-          <Badge variant="outline" className="px-3 py-1 w-fit">
-            Version 2.0
-          </Badge>
-        </div>
 
         <AdminMenuBar activeTab={activeTab} onTabChange={setActiveTab} />
 
@@ -733,6 +739,7 @@ const Admin = () => {
           <TabsContent value="flash-news">{renderFlashNews()}</TabsContent>
           <TabsContent value="settings">{renderSettings()}</TabsContent>
         </Tabs>
+      </div>
       </div>
     </div>
   );

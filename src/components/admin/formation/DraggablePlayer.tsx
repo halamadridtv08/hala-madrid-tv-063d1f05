@@ -62,22 +62,30 @@ export const DraggablePlayer = ({
         <div className="relative flex flex-col items-center" style={{
         transform: 'translate(-50%, -50%)'
       }}>
-          {/* Maillot SVG avec numéro */}
+          {/* Photo du joueur au lieu du maillot */}
           <div className="relative">
-            <svg width="40" height="48" viewBox="0 0 40 48" className={`drop-shadow-lg ${isLocked ? 'opacity-75' : ''}`}>
-              {/* Corps du maillot */}
-              <path d="M8 8 L8 2 L12 0 L16 2 L24 2 L28 0 L32 2 L32 8 L32 44 L28 48 L12 48 L8 44 Z" fill={isLocked ? '#f97316' : '#1e40af'} stroke="white" strokeWidth="1" />
-              {/* Col en V */}
-              <path d="M12 2 L16 8 L20 2 L24 8 L28 2" fill="none" stroke="white" strokeWidth="1" />
-              {/* Manches */}
-              <ellipse cx="8" cy="12" rx="6" ry="8" fill={isLocked ? '#f97316' : '#1e40af'} stroke="white" strokeWidth="1" />
-              <ellipse cx="32" cy="12" rx="6" ry="8" fill={isLocked ? '#f97316' : '#1e40af'} stroke="white" strokeWidth="1" />
-              
-              {/* Numéro du joueur */}
-              <text x="20" y="30" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold" fontFamily="Arial, sans-serif">
+            <div className={`w-12 h-12 rounded-full border-2 ${isLocked ? 'border-orange-500' : 'border-white'} shadow-lg overflow-hidden bg-muted ${isLocked ? 'opacity-75' : ''}`}>
+              {imageUrl ? (
+                <img 
+                  src={imageUrl} 
+                  alt={name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                  <span className="text-sm font-bold text-primary-foreground">
+                    {name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                  </span>
+                </div>
+              )}
+            </div>
+            
+            {/* Numéro de maillot */}
+            <div className={`absolute -top-1 -right-1 w-6 h-6 ${isLocked ? 'bg-orange-500' : 'bg-blue-600'} rounded-full flex items-center justify-center border-2 border-white shadow-md`}>
+              <span className="text-xs font-bold text-white">
                 {jerseyNumber}
-              </text>
-            </svg>
+              </span>
+            </div>
             
             {/* Boutons d'action */}
             {onToggleLock && <Button size="icon" variant={isLocked ? "default" : "secondary"} className="absolute -top-1 -left-9 h-5 w-5 z-10" onClick={e => {
@@ -86,7 +94,7 @@ export const DraggablePlayer = ({
           }}>
                 {isLocked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
               </Button>}
-            {showDelete && onDelete && <Button size="icon" variant="ghost" className="absolute -top-1 -right-1 h-5 w-5 z-10 bg-red-500 hover:bg-red-600" onClick={e => {
+            {showDelete && onDelete && <Button size="icon" variant="ghost" className="absolute -top-1 -right-8 h-5 w-5 z-10 bg-red-500 hover:bg-red-600" onClick={e => {
               e.stopPropagation();
               onDelete();
             }}>

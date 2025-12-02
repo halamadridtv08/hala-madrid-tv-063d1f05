@@ -38,6 +38,7 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
 
   const fetchFormations = async () => {
     if (!match?.id) return;
+    setLoading(true);
     const {
       data,
       error
@@ -61,6 +62,7 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
       `).eq('match_id', match.id);
     if (error) {
       console.error('Error fetching formations:', error);
+      setLoading(false);
       return;
     }
     const formationsData: any = {};
@@ -72,6 +74,11 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
       };
     });
     setFormations(formationsData);
+    setLoading(false);
+  };
+
+  const getOpposingTeamName = () => {
+    return match.home_team === 'Real Madrid' ? match.away_team : match.home_team;
   };
   const renderFormation = (teamType: "real_madrid" | "opposing") => {
     const formation = formations[teamType];
@@ -92,40 +99,42 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
         </div>
 
         {/* Football pitch with players */}
-        <div className="relative">
-          <FootballPitch>
-            {starters.map((player: FormationPlayer) => (
-              <PlayerOnField 
-                key={player.id} 
-                player={{
-                  id: player.id,
-                  player_name: player.player_name,
-                  player_position: player.player_position,
-                  jersey_number: player.jersey_number,
-                  player_image_url: player.player_image_url,
-                  player_rating: player.player_rating
-                }} 
-                style={{
-                  left: `${player.position_x}%`,
-                  top: `${player.position_y}%`,
-                  zIndex: 10
-                }} 
-              />
-            ))}
-          </FootballPitch>
+        <div className="relative w-full overflow-x-auto">
+          <div className="min-w-[320px]">
+            <FootballPitch>
+              {starters.map((player: FormationPlayer) => (
+                <PlayerOnField 
+                  key={player.id} 
+                  player={{
+                    id: player.id,
+                    player_name: player.player_name,
+                    player_position: player.player_position,
+                    jersey_number: player.jersey_number,
+                    player_image_url: player.player_image_url,
+                    player_rating: player.player_rating
+                  }} 
+                  style={{
+                    left: `${player.position_x}%`,
+                    top: `${player.position_y}%`,
+                    zIndex: 10
+                  }} 
+                />
+              ))}
+            </FootballPitch>
+          </div>
         </div>
 
         {/* Remplaçants - Affichage horizontal */}
         {substitutes.length > 0 && <div className="space-y-3">
-            <h4 className="font-semibold text-muted-foreground flex items-center gap-2">
+            <h4 className="font-semibold text-muted-foreground flex items-center gap-2 text-sm md:text-base">
               <Users className="h-4 w-4" />
               Remplaçants ({substitutes.length})
             </h4>
-            <div className="flex flex-wrap gap-3 p-4 bg-muted/50 rounded-lg">
+            <div className="flex flex-wrap gap-2 md:gap-3 p-3 md:p-4 bg-muted/50 rounded-lg">
               {substitutes.map((player: FormationPlayer) => (
-                <div key={player.id} className="flex items-center gap-3 bg-background p-2 rounded-lg border min-w-0">
+                <div key={player.id} className="flex items-center gap-2 md:gap-3 bg-background p-2 rounded-lg border min-w-0 flex-shrink-0">
                   {/* Photo du joueur */}
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-600 flex-shrink-0">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-blue-600 flex-shrink-0">
                     {player.player_image_url ? (
                       <img 
                         src={player.player_image_url} 
@@ -142,24 +151,26 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
                   </div>
                   
                   {/* Numéro */}
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-sm font-bold text-white">
+                  <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs md:text-sm font-bold text-white">
                       {player.jersey_number}
                     </span>
                   </div>
                   
                   {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{player.player_name}</p>
-                    <p className="text-xs text-muted-foreground">{player.player_position}</p>
+                  <div className="flex-1 min-w-0 hidden sm:block">
+                    <p className="text-xs md:text-sm font-medium truncate">{player.player_name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{player.player_position}</p>
                   </div>
                   
                   {/* Note */}
-                  <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-sm font-bold text-gray-900">
-                      {player.player_rating?.toFixed(1) || '0.0'}
-                    </span>
-                  </div>
+                  {player.player_rating > 0 && (
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-yellow-400 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs md:text-sm font-bold text-gray-900">
+                        {player.player_rating?.toFixed(1)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -189,9 +200,9 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
       <CardContent>
         <Tabs value={activeTeam} onValueChange={value => setActiveTeam(value as "real_madrid" | "opposing")}>
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="real_madrid">Real Madrid</TabsTrigger>
-            <TabsTrigger value="opposing">
-              {match.away_team !== 'Real Madrid' ? match.away_team : match.home_team}
+            <TabsTrigger value="real_madrid" className="text-xs sm:text-sm">Real Madrid</TabsTrigger>
+            <TabsTrigger value="opposing" className="text-xs sm:text-sm">
+              {getOpposingTeamName()}
             </TabsTrigger>
           </TabsList>
 
