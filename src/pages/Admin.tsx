@@ -8,6 +8,7 @@ import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
 import { AdminStatsManager } from "@/components/admin/AdminStatsManager";
 import { FileText, Video, Users, Calendar, Settings, LayoutDashboard, User, Camera, BarChart3, ArrowLeft, Mic, PlayCircle, Shirt, Target, Trophy, Twitter } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,7 @@ interface StatsData {
 const Admin = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [articles, setArticles] = useState<Article[]>([]);
   const [videos, setVideos] = useState<VideoType[]>([]);
   const [photos, setPhotos] = useState<PhotoType[]>([]);
@@ -481,10 +483,15 @@ const Admin = () => {
   const renderSpecialArticles = () => <SpecialArticlesManager />;
   return <div className="min-h-screen bg-background flex">
       {/* Sidebar desktop */}
-      <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <AdminSidebar 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab}
+        collapsed={sidebarCollapsed}
+        onCollapsedChange={setSidebarCollapsed}
+      />
       
       {/* Main content */}
-      <div className="flex-1 lg:ml-64">
+      <div className={cn("flex-1 transition-all duration-300", sidebarCollapsed ? "lg:ml-[72px]" : "lg:ml-64")}>
         <div className="madrid-container py-4 md:py-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
             <div className="flex items-center gap-3 md:gap-4">
