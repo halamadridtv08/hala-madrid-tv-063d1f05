@@ -270,6 +270,8 @@ export type Database = {
           is_published: boolean | null
           published_at: string | null
           read_time: string | null
+          scheduled_at: string | null
+          thumbnail_url: string | null
           title: string
           updated_at: string | null
           video_url: string | null
@@ -285,6 +287,8 @@ export type Database = {
           is_published?: boolean | null
           published_at?: string | null
           read_time?: string | null
+          scheduled_at?: string | null
+          thumbnail_url?: string | null
           title: string
           updated_at?: string | null
           video_url?: string | null
@@ -300,6 +304,8 @@ export type Database = {
           is_published?: boolean | null
           published_at?: string | null
           read_time?: string | null
+          scheduled_at?: string | null
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string | null
           video_url?: string | null
@@ -1754,6 +1760,39 @@ export type Database = {
         }
         Relationships: []
       }
+      site_visibility: {
+        Row: {
+          created_at: string
+          display_order: number | null
+          id: string
+          is_visible: boolean
+          parent_key: string | null
+          section_key: string
+          section_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          is_visible?: boolean
+          parent_key?: string | null
+          section_key: string
+          section_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          is_visible?: boolean
+          parent_key?: string | null
+          section_key?: string
+          section_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       training_sessions: {
         Row: {
           category: string | null
@@ -2042,6 +2081,7 @@ export type Database = {
         Args: { input_name: string }
         Returns: string
       }
+      publish_scheduled_articles: { Args: never; Returns: undefined }
       publish_scheduled_flash_news: { Args: never; Returns: undefined }
       update_all_players_ages: { Args: never; Returns: undefined }
       update_player_objectives_progress: { Args: never; Returns: undefined }

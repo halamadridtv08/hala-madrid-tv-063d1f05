@@ -48,6 +48,7 @@ import { FlashNewsForm } from "@/components/admin/FlashNewsForm";
 import { FlashNewsTable } from "@/components/admin/FlashNewsTable";
 import { FlashNewsDashboard } from "@/components/admin/FlashNewsDashboard";
 import { UserRolesManager } from "@/components/admin/UserRolesManager";
+import { SiteVisibilityManager } from "@/components/admin/SiteVisibilityManager";
 import { FlashNewsCategoryManager } from "@/components/admin/FlashNewsCategoryManager";
 import { FlashNewsSourceManager } from "@/components/admin/FlashNewsSourceManager";
 import { BatchMatchImporter } from "@/components/admin/BatchMatchImporter";
@@ -422,6 +423,7 @@ const Admin = () => {
     </div>;
   const renderSettings = () => <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-4">Paramètres</h2>
+      <SiteVisibilityManager />
       <UserRolesManager />
       <CompetitionAliasManager />
       <DataInconsistencyDetector />

@@ -12,6 +12,7 @@ import { Player } from "@/types/Player";
 import { Coach } from "@/types/Coach";
 import { Achievement } from "@/types/Achievement";
 import { useNavigate } from "react-router-dom";
+import { useAllPlayersStats } from "@/hooks/usePlayerStats";
 const Players = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -23,6 +24,7 @@ const Players = () => {
   const [loading, setLoading] = useState(true);
   const [showAllStaff, setShowAllStaff] = useState(false);
   const [positionGroups, setPositionGroups] = useState<any[]>([]);
+  const { statsMap, loading: statsLoading } = useAllPlayersStats();
 
   // Organiser les joueurs par position comme dans l'admin
   const organizePlayersByPosition = () => {
@@ -287,13 +289,14 @@ const Players = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                           {filteredGroupPlayers.map(player => {
                       const secondaryPosition = player.stats?.secondaryPosition || player.stats?.secondary_position;
+                      const playerStats = statsMap[player.id];
                       return <PlayerCard key={player.id} id={player.id} name={player.name} number={player.jersey_number || 0} position={player.position} secondaryPosition={secondaryPosition} nationality={player.nationality} image={player.image_url} stats={{
-                        matches: player.stats?.matches || 0,
-                        goals: player.stats?.goals || 0,
-                        assists: player.stats?.assists || 0,
-                        cleanSheets: player.stats?.cleanSheets || 0,
-                        goalsConceded: player.stats?.goalsConceded || 0,
-                        minutesPlayed: player.stats?.minutesPlayed || 0
+                        matches: playerStats?.matches || player.stats?.matches || 0,
+                        goals: playerStats?.goals || player.stats?.goals || 0,
+                        assists: playerStats?.assists || player.stats?.assists || 0,
+                        cleanSheets: playerStats?.cleanSheets || player.stats?.cleanSheets || 0,
+                        goalsConceded: playerStats?.goalsConceded || player.stats?.goalsConceded || 0,
+                        minutesPlayed: playerStats?.minutesPlayed || player.stats?.minutesPlayed || 0
                       }} />;
                     })}
                         </div>
