@@ -21,6 +21,7 @@ interface PlayerSearchDialogProps {
   players: Player[];
   onSelectPlayer: (player: Player) => void;
   selectedPosition: string;
+  teamName?: string;
 }
 
 export const PlayerSearchDialog = ({
@@ -28,7 +29,8 @@ export const PlayerSearchDialog = ({
   onOpenChange,
   players,
   onSelectPlayer,
-  selectedPosition
+  selectedPosition,
+  teamName = 'Real Madrid'
 }: PlayerSearchDialogProps) => {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -95,7 +97,7 @@ export const PlayerSearchDialog = ({
                   <div className="flex-1 min-w-0">
                     <div className="font-medium">{player.name}</div>
                     <div className="text-sm text-muted-foreground">
-                      Real Madrid
+                      {teamName}
                     </div>
                   </div>
                   <div className="text-sm text-muted-foreground">

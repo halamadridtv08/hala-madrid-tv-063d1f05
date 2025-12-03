@@ -1461,6 +1461,11 @@ export const FormationManagerV2: React.FC = () => {
         )}
         onSelectPlayer={handleAddPlayerToPosition}
         selectedPosition={selectedPositionSlot?.position || ''}
+        teamName={activeTeam === 'real_madrid' ? 'Real Madrid' : (() => {
+          const match = matches.find(m => m.id === selectedMatch);
+          if (!match) return 'Équipe adverse';
+          return match.home_team === 'Real Madrid' ? match.away_team : match.home_team;
+        })()}
       />
     </DndContext>
   );
