@@ -1,35 +1,13 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { 
-  Tabs, 
-  TabsList, 
-  TabsTrigger, 
-  TabsContent 
-} from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { QuickStatsCard } from "@/components/admin/QuickStatsCard";
 import { AdminMenuBar } from "@/components/layout/AdminMenuBar";
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
 import { AdminStatsManager } from "@/components/admin/AdminStatsManager";
-import { 
-  FileText, 
-  Video, 
-  Users, 
-  Calendar, 
-  Settings, 
-  LayoutDashboard, 
-  User, 
-  Camera,
-  BarChart3,
-  ArrowLeft,
-  Mic,
-  PlayCircle,
-  Shirt,
-  Target,
-  Trophy,
-  Twitter
-} from "lucide-react";
+import { FileText, Video, Users, Calendar, Settings, LayoutDashboard, User, Camera, BarChart3, ArrowLeft, Mic, PlayCircle, Shirt, Target, Trophy, Twitter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -81,7 +59,6 @@ import { CompetitionReports } from "@/components/admin/CompetitionReports";
 import { CompetitionAliasManager } from "@/components/admin/CompetitionAliasManager";
 import { DataInconsistencyDetector } from "@/components/admin/DataInconsistencyDetector";
 import { useNavigate } from "react-router-dom";
-
 interface StatsData {
   totalPlayers: number;
   activePlayers: number;
@@ -92,7 +69,6 @@ interface StatsData {
   totalPressConferences: number;
   totalTrainingSessions: number;
 }
-
 const Admin = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -109,14 +85,13 @@ const Admin = () => {
   const [selectedFlashNews, setSelectedFlashNews] = useState<any>(null);
   const [refreshFlashNews, setRefreshFlashNews] = useState(false);
   const flashNewsFormRef = React.useRef<HTMLDivElement>(null);
-  
   const handleEditFlashNews = (flashNews: any) => {
     setSelectedFlashNews(flashNews);
     // Scroll to form after a short delay to ensure it's rendered
     setTimeout(() => {
-      flashNewsFormRef.current?.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
+      flashNewsFormRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
       });
     }, 100);
   };
@@ -128,121 +103,114 @@ const Admin = () => {
     totalVideos: 0,
     upcomingMatches: 0,
     totalPressConferences: 0,
-    totalTrainingSessions: 0,
+    totalTrainingSessions: 0
   });
-
   useEffect(() => {
     const fetchArticles = async () => {
-      const { data, error } = await supabase
-        .from('articles')
-        .select('*');
-
+      const {
+        data,
+        error
+      } = await supabase.from('articles').select('*');
       if (error) {
         console.error("Error fetching articles:", error);
       } else {
         setArticles(data || []);
       }
     };
-
     const fetchVideos = async () => {
-      const { data, error } = await supabase
-        .from('videos')
-        .select('*');
-
+      const {
+        data,
+        error
+      } = await supabase.from('videos').select('*');
       if (error) {
         console.error("Error fetching videos:", error);
       } else {
         setVideos(data || []);
       }
     };
-
     const fetchPhotos = async () => {
-      const { data, error } = await supabase
-        .from('photos')
-        .select('*');
-
+      const {
+        data,
+        error
+      } = await supabase.from('photos').select('*');
       if (error) {
         console.error("Error fetching photos:", error);
       } else {
         setPhotos(data || []);
       }
     };
-
     const fetchPlayers = async () => {
-      const { data, error } = await supabase
-        .from('players')
-        .select('*');
-
+      const {
+        data,
+        error
+      } = await supabase.from('players').select('*');
       if (error) {
         console.error("Error fetching players:", error);
       } else {
         setPlayers(data || []);
       }
     };
-
     const fetchCoaches = async () => {
-      const { data, error } = await supabase
-        .from('coaches')
-        .select('*');
-
+      const {
+        data,
+        error
+      } = await supabase.from('coaches').select('*');
       if (error) {
         console.error("Error fetching coaches:", error);
       } else {
         setCoaches(data || []);
       }
     };
-
     const fetchMatches = async () => {
-      const { data, error } = await supabase
-        .from('matches')
-        .select('*');
-
+      const {
+        data,
+        error
+      } = await supabase.from('matches').select('*');
       if (error) {
         console.error("Error fetching matches:", error);
       } else {
         setMatches(data || []);
       }
     };
-
     const fetchPressConferences = async () => {
-      const { data, error } = await supabase
-        .from('press_conferences')
-        .select('*')
-        .order('conference_date', { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from('press_conferences').select('*').order('conference_date', {
+        ascending: false
+      });
       if (error) {
         console.error("Error fetching press conferences:", error);
       } else {
         setPressConferences(data || []);
       }
     };
-
     const fetchTrainingSessions = async () => {
-      const { data, error } = await supabase
-        .from('training_sessions')
-        .select('*')
-        .order('training_date', { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from('training_sessions').select('*').order('training_date', {
+        ascending: false
+      });
       if (error) {
         console.error("Error fetching training sessions:", error);
       } else {
         setTrainingSessions(data || []);
       }
     };
-
     const fetchKits = async () => {
-      const { data, error } = await supabase
-        .from('kits')
-        .select('*')
-        .order('display_order', { ascending: true });
-
+      const {
+        data,
+        error
+      } = await supabase.from('kits').select('*').order('display_order', {
+        ascending: true
+      });
       if (error) {
         console.error("Error fetching kits:", error);
       } else {
         setKits((data || []) as Kit[]);
       }
     };
-
     fetchArticles();
     fetchVideos();
     fetchPhotos();
@@ -253,7 +221,6 @@ const Admin = () => {
     fetchTrainingSessions();
     fetchKits();
   }, []);
-
   useEffect(() => {
     setStats({
       totalPlayers: players.length,
@@ -263,19 +230,11 @@ const Admin = () => {
       totalVideos: videos.length,
       upcomingMatches: matches.filter(m => m.status === 'upcoming').length,
       totalPressConferences: pressConferences.length,
-      totalTrainingSessions: trainingSessions.length,
+      totalTrainingSessions: trainingSessions.length
     });
   }, [players, coaches, articles, videos, matches, pressConferences, trainingSessions]);
-
-  const renderDashboard = () => (
-    <div className="space-y-4 md:space-y-6">
-      <QuickStatsCard 
-        playersCount={players.length}
-        coachesCount={coaches.length}
-        articlesCount={articles.length}
-        videosCount={videos.length}
-        matchesCount={matches.length}
-      />
+  const renderDashboard = () => <div className="space-y-4 md:space-y-6">
+      <QuickStatsCard playersCount={players.length} coachesCount={coaches.length} articlesCount={articles.length} videosCount={videos.length} matchesCount={matches.length} />
       
       {/* Ajout du synchroniseur de données */}
       <DataSynchronizer />
@@ -375,70 +334,40 @@ const Admin = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
-
+    </div>;
   const renderArticles = () => {
     const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
-    
     if (selectedArticleId) {
-      return (
-        <div>
-          <Button 
-            variant="ghost" 
-            onClick={() => setSelectedArticleId(null)}
-            className="mb-4"
-          >
+      return <div>
+          <Button variant="ghost" onClick={() => setSelectedArticleId(null)} className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Retour aux articles
           </Button>
           <ArticleEngagementManager articleId={selectedArticleId} />
-        </div>
-      );
+        </div>;
     }
-    
-    return (
-      <div>
+    return <div>
         <h2 className="text-2xl font-bold mb-4">Gestion des Articles</h2>
-        <ArticleTable 
-          articles={articles} 
-          setArticles={setArticles}
-          onManageEngagement={setSelectedArticleId}
-        />
-      </div>
-    );
+        <ArticleTable articles={articles} setArticles={setArticles} onManageEngagement={setSelectedArticleId} />
+      </div>;
   };
-
-  const renderVideos = () => (
-    <div>
+  const renderVideos = () => <div>
       <h2 className="text-2xl font-bold mb-4">Gestion des Vidéos</h2>
       <VideoTable videos={videos} setVideos={setVideos} />
-    </div>
-  );
-
-  const renderPhotos = () => (
-    <div>
+    </div>;
+  const renderPhotos = () => <div>
       <h2 className="text-2xl font-bold mb-4">Gestion des Photos</h2>
       <PhotoTable photos={photos} setPhotos={setPhotos} />
-    </div>
-  );
-
-  const renderPlayers = () => (
-    <div>
+    </div>;
+  const renderPlayers = () => <div>
       <h2 className="text-2xl font-bold mb-4">Gestion des Joueurs</h2>
       <PlayerTable players={players} setPlayers={setPlayers} />
-    </div>
-  );
-
-  const renderCoaches = () => (
-    <div>
+    </div>;
+  const renderCoaches = () => <div>
       <h2 className="text-2xl font-bold mb-4">Gestion des Entraîneurs</h2>
       <CoachTable coaches={coaches} setCoaches={setCoaches} />
-    </div>
-  );
-
-  const renderMatches = () => (
-    <div className="space-y-6">
+    </div>;
+  const renderMatches = () => <div className="space-y-6">
       <h2 className="text-2xl font-bold">Gestion des Matchs</h2>
       <MatchTable matches={matches} setMatches={setMatches} />
       
@@ -446,37 +375,18 @@ const Admin = () => {
         <h3 className="text-xl font-semibold mb-4">Import par lots</h3>
         <BatchMatchImporter />
       </div>
-    </div>
-  );
-
-  const renderPressConferences = () => (
-    <div>
+    </div>;
+  const renderPressConferences = () => <div>
       <h2 className="text-2xl font-bold mb-4">Gestion des Conférences de Presse</h2>
-      <PressConferenceTable 
-        pressConferences={pressConferences} 
-        setPressConferences={setPressConferences} 
-      />
-    </div>
-  );
-
-  const renderTrainingSessions = () => (
-    <div>
+      <PressConferenceTable pressConferences={pressConferences} setPressConferences={setPressConferences} />
+    </div>;
+  const renderTrainingSessions = () => <div>
       <h2 className="text-2xl font-bold mb-4">Gestion des Séances d'Entraînement</h2>
-      <TrainingSessionTable 
-        trainingSessions={trainingSessions} 
-        setTrainingSessions={setTrainingSessions} 
-      />
-    </div>
-  );
-
-  const renderStats = () => (
-    <div className="space-y-6">
+      <TrainingSessionTable trainingSessions={trainingSessions} setTrainingSessions={setTrainingSessions} />
+    </div>;
+  const renderStats = () => <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-6">Statistiques en Temps Réel</h2>
-      {window.location.hash === '#stats-manager' ? (
-        <AdminStatsManager />
-      ) : (
-        <AdminStatsOverview />
-      )}
+      {window.location.hash === '#stats-manager' ? <AdminStatsManager /> : <AdminStatsOverview />}
       
       <div className="mt-8 space-y-8">
         <div>
@@ -503,18 +413,12 @@ const Admin = () => {
           <CompetitionReports />
         </div>
       </div>
-    </div>
-  );
-
-  const renderOpponents = () => (
-    <div>
+    </div>;
+  const renderOpponents = () => <div>
       <h2 className="text-2xl font-bold mb-4">Gestion des Équipes Adverses</h2>
       <OpposingTeamManager />
-    </div>
-  );
-
-  const renderSettings = () => (
-    <div className="space-y-6">
+    </div>;
+  const renderSettings = () => <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-4">Paramètres</h2>
       <UserRolesManager />
       <CompetitionAliasManager />
@@ -523,50 +427,30 @@ const Admin = () => {
       <FlashNewsSourceManager />
       <AuthImageManager />
       <SettingsDashboard />
-    </div>
-  );
-
-  const renderKits = () => (
-    <div>
+    </div>;
+  const renderKits = () => <div>
       <h2 className="text-2xl font-bold mb-4">Gestion des Maillots</h2>
       <KitTable kits={kits} setKits={setKits} />
-    </div>
-  );
-
-  const renderFormations = () => (
-    <div className="space-y-6">
+    </div>;
+  const renderFormations = () => <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-4">Gestion des Formations Tactiques</h2>
       <FormationTemplateManager />
       <FormationManagerV2 />
-    </div>
-  );
-
-  const renderLineups = () => (
-    <div>
+    </div>;
+  const renderLineups = () => <div>
       <h2 className="text-2xl font-bold mb-4">Gestion des Compositions et Joueurs Absents</h2>
       <MatchLineupManager />
-    </div>
-  );
-
-  const renderYouTubeVideos = () => (
-    <div>
+    </div>;
+  const renderYouTubeVideos = () => <div>
       <h2 className="text-2xl font-bold mb-4">Gestion des Vidéos YouTube</h2>
       <YouTubeVideoTable videos={youtubeVideos} setVideos={setYoutubeVideos} />
-    </div>
-  );
-
-  const renderFlashNews = () => (
-    <div className="space-y-6">
+    </div>;
+  const renderFlashNews = () => <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gestion des Infos Flash</h2>
-        {selectedFlashNews && (
-          <Button
-            variant="outline"
-            onClick={() => setSelectedFlashNews(null)}
-          >
+        {selectedFlashNews && <Button variant="outline" onClick={() => setSelectedFlashNews(null)}>
             Nouvelle Info
-          </Button>
-        )}
+          </Button>}
       </div>
 
       <FlashNewsDashboard />
@@ -578,13 +462,10 @@ const Admin = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <FlashNewsForm
-            flashNews={selectedFlashNews}
-            onSuccess={() => {
-              setSelectedFlashNews(null);
-              setRefreshFlashNews(!refreshFlashNews);
-            }}
-          />
+          <FlashNewsForm flashNews={selectedFlashNews} onSuccess={() => {
+          setSelectedFlashNews(null);
+          setRefreshFlashNews(!refreshFlashNews);
+        }} />
         </CardContent>
       </Card>
 
@@ -593,21 +474,12 @@ const Admin = () => {
           <CardTitle>Liste des Infos Flash</CardTitle>
         </CardHeader>
         <CardContent>
-          <FlashNewsTable
-            onEdit={handleEditFlashNews}
-            refresh={refreshFlashNews}
-          />
+          <FlashNewsTable onEdit={handleEditFlashNews} refresh={refreshFlashNews} />
         </CardContent>
       </Card>
-    </div>
-  );
-
-  const renderSpecialArticles = () => (
-    <SpecialArticlesManager />
-  );
-
-  return (
-    <div className="min-h-screen bg-background flex">
+    </div>;
+  const renderSpecialArticles = () => <SpecialArticlesManager />;
+  return <div className="min-h-screen bg-background flex">
       {/* Sidebar desktop */}
       <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
       
@@ -617,12 +489,7 @@ const Admin = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
             <div className="flex items-center gap-3 md:gap-4">
               <AdminMobileNav activeTab={activeTab} onTabChange={setActiveTab} />
-              <Button
-                onClick={() => navigate('/')}
-                variant="outline"
-                size="sm"
-                className="w-fit"
-              >
+              <Button onClick={() => navigate('/')} variant="outline" size="sm" className="w-fit">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Retour au site</span>
               </Button>
@@ -640,7 +507,7 @@ const Admin = () => {
             </Badge>
           </div>
 
-        <AdminMenuBar activeTab={activeTab} onTabChange={setActiveTab} />
+        
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
           <div className="hidden lg:block overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-thin">
@@ -741,8 +608,6 @@ const Admin = () => {
         </Tabs>
       </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Admin;
