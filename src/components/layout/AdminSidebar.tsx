@@ -14,14 +14,20 @@ import {
   Shirt,
   Target,
   Trophy,
-  Twitter
+  Twitter,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface AdminSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  collapsed: boolean;
+  onCollapsedChange: (collapsed: boolean) => void;
 }
 
 const navigationItems = [
@@ -45,38 +51,78 @@ const navigationItems = [
   { value: "settings", label: "Paramètres", icon: Settings },
 ];
 
-export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
+export function AdminSidebar({ activeTab, onTabChange, collapsed, onCollapsedChange }: AdminSidebarProps) {
   return (
-    <div className="hidden lg:flex w-64 flex-col fixed left-0 top-0 h-screen bg-background border-r z-40">
-      <div className="p-6 border-b">
-        <h2 className="text-xl font-bold text-foreground">Admin Panel</h2>
-      </div>
-      <ScrollArea className="flex-1">
-        <div className="p-4 space-y-1">
-          {navigationItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.value;
-            
-            return (
-              <button
-                key={item.value}
-                onClick={() => onTabChange(item.value)}
-                className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 rounded-md text-left",
-                  "transition-all duration-200 ease-out",
-                  "hover-scale",
-                  isActive 
-                    ? "bg-primary text-primary-foreground font-medium shadow-sm" 
-                    : "hover:bg-muted text-foreground hover:translate-x-1"
-                )}
-              >
-                <Icon className={cn("h-5 w-5 shrink-0 transition-transform duration-200", isActive ? "scale-110" : "")} />
-                <span className="text-sm">{item.label}</span>
-              </button>
-            );
-          })}
+    <TooltipProvider delayDuration={0}>
+      <div className={cn(
+        "hidden lg:flex flex-col fixed left-0 top-0 h-screen bg-background border-r z-40 transition-all duration-300 ease-in-out",
+        collapsed ? "w-[72px]" : "w-64"
+      )}>
+        <div className={cn(
+          "p-4 border-b flex items-center",
+          collapsed ? "justify-center" : "justify-between"
+        )}>
+          {!collapsed && (
+            <h2 className="text-lg font-bold text-foreground">Admin Panel</h2>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onCollapsedChange(!collapsed)}
+            className={cn(
+              "h-8 w-8 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-all duration-300",
+              "hover:scale-110 active:scale-95",
+              collapsed && "rotate-180"
+            )}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
         </div>
-      </ScrollArea>
-    </div>
+        <ScrollArea className="flex-1">
+          <div className="p-2 space-y-1">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.value;
+              
+              const button = (
+                <button
+                  key={item.value}
+                  onClick={() => onTabChange(item.value)}
+                  className={cn(
+                    "w-full flex items-center gap-3 rounded-lg text-left",
+                    "transition-all duration-200 ease-out",
+                    collapsed ? "px-3 py-3 justify-center" : "px-4 py-3",
+                    isActive 
+                      ? "bg-primary text-primary-foreground font-medium shadow-md" 
+                      : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Icon className={cn(
+                    "h-5 w-5 shrink-0 transition-transform duration-200", 
+                    isActive ? "scale-110" : ""
+                  )} />
+                  {!collapsed && <span className="text-sm truncate">{item.label}</span>}
+                </button>
+              );
+
+              if (collapsed) {
+                return (
+                  <Tooltip key={item.value}>
+                    <TooltipTrigger asChild>
+                      {button}
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="font-medium">
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              }
+
+              return button;
+            })}
+          </div>
+        </ScrollArea>
+      </div>
+    </TooltipProvider>
   );
 }
