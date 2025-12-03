@@ -78,10 +78,14 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
   };
 
   const getOpposingTeamName = () => {
-    if (match.home_team === 'Real Madrid') {
-      return match.away_team || 'Équipe adverse';
+    // Support both formats: direct properties and nested object format
+    const homeTeam = match.home_team || (match as any).homeTeam?.name;
+    const awayTeam = match.away_team || (match as any).awayTeam?.name;
+    
+    if (homeTeam === 'Real Madrid') {
+      return awayTeam || 'Équipe adverse';
     }
-    return match.home_team || 'Équipe adverse';
+    return homeTeam || 'Équipe adverse';
   };
   const renderFormation = (teamType: "real_madrid" | "opposing") => {
     const formation = formations[teamType];
