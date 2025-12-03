@@ -3,13 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Upload, FileJson, Download, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface OpposingTeam {
   id: string;
@@ -37,8 +39,12 @@ export const OpposingTeamManager = () => {
   const [selectedTeam, setSelectedTeam] = useState<string>("");
   const [isTeamDialogOpen, setIsTeamDialogOpen] = useState(false);
   const [isPlayerDialogOpen, setIsPlayerDialogOpen] = useState(false);
+  const [isJsonImportDialogOpen, setIsJsonImportDialogOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<OpposingTeam | null>(null);
   const [editingPlayer, setEditingPlayer] = useState<OpposingPlayer | null>(null);
+  const [jsonInput, setJsonInput] = useState("");
+  const [jsonError, setJsonError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
   const playersCardRef = useRef<HTMLDivElement>(null);
 
   const [teamForm, setTeamForm] = useState({
@@ -228,6 +234,140 @@ export const OpposingTeamManager = () => {
     } catch (error) {
       toast.error("Erreur lors de la suppression");
     }
+  };
+
+  // JSON Import functionality
+  const handleJsonImport = async () => {
+    if (!selectedTeam || !jsonInput.trim()) {
+      toast.error("Sélectionnez une équipe et entrez du JSON");
+      return;
+    }
+
+    setJsonError(null);
+    setIsImporting(true);
+
+    try {
+      // Parse JSON - support both array and object with players array
+      let playersData: any[];
+      const parsed = JSON.parse(jsonInput);
+      
+      if (Array.isArray(parsed)) {
+        playersData = parsed;
+      } else if (parsed.players && Array.isArray(parsed.players)) {
+        playersData = parsed.players;
+      } else if (parsed.squad && Array.isArray(parsed.squad)) {
+        playersData = parsed.squad;
+      } else {
+        throw new Error("Format JSON invalide. Attendu: un tableau de joueurs ou un objet avec 'players' ou 'squad'");
+      }
+
+      // Validate and transform players
+      const validPlayers = playersData.map((p: any, index: number) => {
+        if (!p.name && !p.nom) {
+          throw new Error(`Joueur ${index + 1}: nom manquant`);
+        }
+        
+        return {
+          team_id: selectedTeam,
+          name: p.name || p.nom || `Joueur ${index + 1}`,
+          position: normalizePosition(p.position || p.poste || "CM"),
+          jersey_number: p.jersey_number || p.number || p.numero || p.numéro || null,
+          is_starter: p.is_starter ?? p.titulaire ?? p.starter ?? true
+        };
+      });
+
+      // Option: clear existing players before import
+      const shouldReplace = confirm(`Importer ${validPlayers.length} joueurs. Voulez-vous remplacer les joueurs existants ? (OK = Remplacer, Annuler = Ajouter)`);
+      
+      if (shouldReplace) {
+        // Delete existing players
+        const { error: deleteError } = await supabase
+          .from('opposing_players')
+          .delete()
+          .eq('team_id', selectedTeam);
+        
+        if (deleteError) throw deleteError;
+      }
+
+      // Insert new players
+      const { error: insertError } = await supabase
+        .from('opposing_players')
+        .insert(validPlayers);
+
+      if (insertError) throw insertError;
+
+      toast.success(`${validPlayers.length} joueurs importés avec succès`);
+      setIsJsonImportDialogOpen(false);
+      setJsonInput("");
+      fetchPlayers(selectedTeam);
+    } catch (error: any) {
+      const message = error.message || "Erreur lors de l'import";
+      setJsonError(message);
+      toast.error(message);
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  // Normalize position names
+  const normalizePosition = (pos: string): string => {
+    const positionMap: Record<string, string> = {
+      'gardien': 'GK', 'goalkeeper': 'GK', 'portero': 'GK', 'gk': 'GK',
+      'défenseur central': 'CB', 'central defender': 'CB', 'defensa central': 'CB', 'cb': 'CB', 'dc': 'CB',
+      'arrière droit': 'RB', 'right back': 'RB', 'lateral derecho': 'RB', 'rb': 'RB', 'ad': 'RB',
+      'arrière gauche': 'LB', 'left back': 'LB', 'lateral izquierdo': 'LB', 'lb': 'LB',
+      'milieu défensif': 'CDM', 'defensive midfielder': 'CDM', 'mediocentro defensivo': 'CDM', 'cdm': 'CDM', 'mdf': 'CDM', 'md': 'CDM',
+      'milieu': 'CM', 'midfielder': 'CM', 'centrocampista': 'CM', 'cm': 'CM', 'mc': 'CM',
+      'milieu offensif': 'AM', 'attacking midfielder': 'AM', 'mediapunta': 'AM', 'am': 'AM', 'cam': 'AM', 'mo': 'AM',
+      'ailier droit': 'RW', 'right winger': 'RW', 'extremo derecho': 'RW', 'rw': 'RW',
+      'ailier gauche': 'LW', 'left winger': 'LW', 'extremo izquierdo': 'LW', 'lw': 'LW', 'ag': 'LW',
+      'attaquant': 'ST', 'striker': 'ST', 'delantero': 'ST', 'st': 'ST', 'cf': 'ST', 'fw': 'ST', 'att': 'ST'
+    };
+    
+    const normalized = pos.toLowerCase().trim();
+    return positionMap[normalized] || pos.toUpperCase().slice(0, 3);
+  };
+
+  // Generate example JSON
+  const getExampleJson = () => {
+    return JSON.stringify({
+      players: [
+        { name: "Nom du joueur", position: "GK", jersey_number: 1, is_starter: true },
+        { name: "Défenseur 1", position: "CB", jersey_number: 4, is_starter: true },
+        { name: "Défenseur 2", position: "CB", jersey_number: 5, is_starter: true },
+        { name: "Arrière droit", position: "RB", jersey_number: 2, is_starter: true },
+        { name: "Arrière gauche", position: "LB", jersey_number: 3, is_starter: true },
+        { name: "Milieu 1", position: "CM", jersey_number: 6, is_starter: true },
+        { name: "Milieu 2", position: "CM", jersey_number: 8, is_starter: true },
+        { name: "Ailier droit", position: "RW", jersey_number: 7, is_starter: true },
+        { name: "Ailier gauche", position: "LW", jersey_number: 11, is_starter: true },
+        { name: "Attaquant", position: "ST", jersey_number: 9, is_starter: true },
+        { name: "Milieu offensif", position: "AM", jersey_number: 10, is_starter: true },
+        { name: "Remplaçant 1", position: "GK", jersey_number: 13, is_starter: false },
+        { name: "Remplaçant 2", position: "CB", jersey_number: 15, is_starter: false }
+      ]
+    }, null, 2);
+  };
+
+  // Export current players as JSON
+  const exportPlayersJson = () => {
+    const exportData = {
+      team: teams.find(t => t.id === selectedTeam)?.name,
+      players: players.map(p => ({
+        name: p.name,
+        position: p.position,
+        jersey_number: p.jersey_number,
+        is_starter: p.is_starter
+      }))
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${teams.find(t => t.id === selectedTeam)?.name || 'equipe'}_joueurs.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const openTeamDialog = (team?: OpposingTeam) => {
@@ -508,16 +648,102 @@ export const OpposingTeamManager = () => {
       {selectedTeam && (
         <Card ref={playersCardRef}>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              Joueurs de {teams.find(t => t.id === selectedTeam)?.name}
-              <Dialog open={isPlayerDialogOpen} onOpenChange={setIsPlayerDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={() => openPlayerDialog()}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nouveau Joueur
+            <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <span>Joueurs de {teams.find(t => t.id === selectedTeam)?.name}</span>
+              <div className="flex flex-wrap gap-2">
+                {/* JSON Import Button */}
+                <Dialog open={isJsonImportDialogOpen} onOpenChange={setIsJsonImportDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" onClick={() => {
+                      setJsonInput("");
+                      setJsonError(null);
+                    }}>
+                      <FileJson className="w-4 h-4 mr-2" />
+                      Import JSON
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Importer des joueurs depuis JSON</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          Formats acceptés: tableau de joueurs ou objet avec clé "players" ou "squad".<br />
+                          Champs: name/nom, position/poste, jersey_number/numero, is_starter/titulaire
+                        </AlertDescription>
+                      </Alert>
+                      
+                      <div>
+                        <label className="text-sm font-medium">JSON des joueurs</label>
+                        <Textarea
+                          value={jsonInput}
+                          onChange={(e) => {
+                            setJsonInput(e.target.value);
+                            setJsonError(null);
+                          }}
+                          placeholder="Collez votre JSON ici..."
+                          className="font-mono text-xs min-h-[200px]"
+                        />
+                      </div>
+                      
+                      {jsonError && (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>{jsonError}</AlertDescription>
+                        </Alert>
+                      )}
+                      
+                      <div className="flex gap-2 flex-wrap">
+                        <Button onClick={handleJsonImport} disabled={isImporting || !jsonInput.trim()}>
+                          <Upload className="w-4 h-4 mr-2" />
+                          {isImporting ? "Import en cours..." : "Importer"}
+                        </Button>
+                        <Button variant="outline" onClick={() => setJsonInput(getExampleJson())}>
+                          Voir exemple
+                        </Button>
+                        <Button variant="ghost" onClick={() => setIsJsonImportDialogOpen(false)}>
+                          Annuler
+                        </Button>
+                      </div>
+                      
+                      <div className="border-t pt-4">
+                        <p className="text-sm text-muted-foreground mb-2">Exemple de format JSON:</p>
+                        <pre className="text-xs bg-muted p-3 rounded-md overflow-x-auto">
+{`{
+  "players": [
+    { "name": "Unai Simón", "position": "GK", "jersey_number": 1, "is_starter": true },
+    { "name": "Dani Vivian", "position": "CB", "jersey_number": 4, "is_starter": true },
+    { "name": "Oihan Sancet", "position": "CM", "jersey_number": 8, "is_starter": true },
+    { "name": "Nico Williams", "position": "LW", "jersey_number": 11, "is_starter": true },
+    { "name": "Gorka Guruzeta", "position": "ST", "jersey_number": 9, "is_starter": true },
+    { "name": "Remplaçant 1", "position": "GK", "jersey_number": 13, "is_starter": false }
+  ]
+}`}
+                        </pre>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Export Button */}
+                {players.length > 0 && (
+                  <Button variant="outline" onClick={exportPlayersJson}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Exporter
                   </Button>
-                </DialogTrigger>
-                <DialogContent>
+                )}
+
+                {/* New Player Button */}
+                <Dialog open={isPlayerDialogOpen} onOpenChange={setIsPlayerDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => openPlayerDialog()}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Nouveau Joueur
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
                   <DialogHeader>
                     <DialogTitle>
                       {editingPlayer ? "Modifier le joueur" : "Nouveau joueur"}
@@ -588,6 +814,7 @@ export const OpposingTeamManager = () => {
                   </div>
                 </DialogContent>
               </Dialog>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent>
