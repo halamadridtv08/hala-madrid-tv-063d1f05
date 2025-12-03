@@ -14,20 +14,26 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, FileText, Video, Users, Image } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useSiteVisibility } from "@/hooks/useSiteVisibility";
+import { useLiveMatchNotifications } from "@/hooks/useMatchNotifications";
+
 const Index = () => {
+  const { isVisible } = useSiteVisibility();
+  useLiveMatchNotifications(); // Active les notifications de match en temps réel
+  
   return <>
       <Navbar />
       <main>
-      <HeroSection />
-      <FeaturedYouTubeVideo />
-      <LatestNews />
-      <TwitterFlashCarousel />
+      {isVisible('hero_section') && <HeroSection />}
+      {isVisible('youtube_videos') && <FeaturedYouTubeVideo />}
+      {isVisible('latest_news') && <LatestNews />}
+      {isVisible('flash_news') && <TwitterFlashCarousel />}
       
-      <YouTubeVideos />
-      <TrophiesShowcase />
-      <UpcomingMatch />
-      <PlayerSpotlight />
-      <FeaturedKits />
+      {isVisible('youtube_videos') && <YouTubeVideos />}
+      {isVisible('trophies') && <TrophiesShowcase />}
+      {isVisible('upcoming_match') && <UpcomingMatch />}
+      {isVisible('player_spotlight') && <PlayerSpotlight />}
+      {isVisible('featured_kits') && <FeaturedKits />}
         
         {/* Section pour les liens rapides vers les nouvelles sections */}
         <section className="py-6 sm:py-8 md:py-12 bg-gray-50 dark:bg-gray-900">

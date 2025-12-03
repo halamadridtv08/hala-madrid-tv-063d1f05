@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
+import { usePlayerStats } from "@/hooks/usePlayerStats";
 
 const PlayerProfile = () => {
   const { id } = useParams();
@@ -17,6 +18,7 @@ const PlayerProfile = () => {
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
+  const { stats: aggregatedStats, loading: statsLoading } = usePlayerStats(id);
   
   useEffect(() => {
     const fetchPlayer = async () => {
@@ -154,9 +156,9 @@ const PlayerProfile = () => {
     );
   }
 
-  // Extract stats from player data
-  const playerStats = player.stats || {};
-  const secondaryPosition = playerStats.secondaryPosition || playerStats.secondary_position;
+  // Use aggregated stats from player_stats table, fallback to player.stats JSON
+  const playerStats = aggregatedStats || player.stats || {};
+  const secondaryPosition = player.stats?.secondaryPosition || player.stats?.secondary_position;
 
   return (
     <>
