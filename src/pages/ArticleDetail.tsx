@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { SEOHead } from "@/components/SEOHead";
 import { LatestNewsWidget } from "@/components/home/LatestNewsWidget";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import { ArticleQuiz } from "@/components/articles/ArticleQuiz";
 import { ArticleTweets } from "@/components/articles/ArticleTweets";
 import { RelatedArticles } from "@/components/articles/RelatedArticles";
 import DOMPurify from "dompurify";
+import { stripHtml } from "@/utils/stripHtml";
 
 interface Article {
   id: string;
@@ -178,6 +180,16 @@ const ArticleDetail = () => {
     return <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={formatContent(article.content)} />;
   };
   return <>
+      <SEOHead 
+        title={article.title}
+        description={stripHtml(article.description).slice(0, 160)}
+        image={article.image_url || undefined}
+        url={`/news/${id}`}
+        type="article"
+        publishedTime={article.published_at}
+        section={article.category}
+        tags={[article.category, 'Real Madrid', 'Football']}
+      />
       <Navbar />
       <main>
         <div className="madrid-container py-8">

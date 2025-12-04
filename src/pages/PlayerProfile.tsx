@@ -1,6 +1,7 @@
 
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { SEOHead } from "@/components/SEOHead";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,13 +12,14 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
 import { usePlayerStats } from "@/hooks/usePlayerStats";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const PlayerProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const { isFavorite, toggleFavorite } = useFavorites('player');
   const { stats: aggregatedStats, loading: statsLoading } = usePlayerStats(id);
   
   useEffect(() => {
@@ -37,10 +39,6 @@ const PlayerProfile = () => {
           setPlayer(null);
         } else {
           setPlayer(playerData);
-          
-          // Check if this player is in favorites
-          const favoritePlayers = JSON.parse(localStorage.getItem('favoritePlayers') || '[]');
-          setIsFavorite(favoritePlayers.includes(id));
         }
       } catch (error) {
         console.error('Error fetching player:', error);
@@ -91,24 +89,9 @@ const PlayerProfile = () => {
     return <User className="h-5 w-5" />;
   };
 
-  const toggleFavorite = () => {
+  const handleToggleFavorite = () => {
     if (!player) return;
-    
-    // Get current favorites from localStorage
-    const favoritePlayers = JSON.parse(localStorage.getItem('favoritePlayers') || '[]');
-    
-    let updatedFavorites;
-    if (isFavorite) {
-      // Remove player from favorites
-      updatedFavorites = favoritePlayers.filter((playerId: string) => playerId !== player.id);
-    } else {
-      // Add player to favorites
-      updatedFavorites = [...favoritePlayers, player.id];
-    }
-    
-    // Update localStorage
-    localStorage.setItem('favoritePlayers', JSON.stringify(updatedFavorites));
-    setIsFavorite(!isFavorite);
+    toggleFavorite(player.id, 'player');
   };
 
   if (loading) {
@@ -156,12 +139,21 @@ const PlayerProfile = () => {
     );
   }
 
+  const isPlayerFavorite = player ? isFavorite(player.id) : false;
+  
   // Use aggregated stats from player_stats table, fallback to player.stats JSON
   const playerStats = aggregatedStats || player.stats || {};
   const secondaryPosition = player.stats?.secondaryPosition || player.stats?.secondary_position;
 
   return (
     <>
+      <SEOHead 
+        title={player.name}
+        description={`Profil de ${player.name} - ${player.position} du Real Madrid. Statistiques, biographie et médias.`}
+        image={player.image_url || undefined}
+        url={`/players/${id}`}
+        type="profile"
+      />
       <Navbar />
       <main>
         <div className="madrid-container py-8">
@@ -183,13 +175,13 @@ const PlayerProfile = () => {
                     <div className="flex justify-between items-center">
                       <h1 className="text-2xl font-bold">{player.name}</h1>
                       <Button 
-                        onClick={toggleFavorite} 
+                        onClick={handleToggleFavorite} 
                         variant="ghost" 
                         size="sm"
-                        className={`text-white hover:bg-blue-700 p-2 h-8 w-8 ${isFavorite ? 'bg-blue-700' : ''}`}
+                        className={`text-white hover:bg-blue-700 p-2 h-8 w-8 ${isPlayerFavorite ? 'bg-blue-700' : ''}`}
                       >
-                        <Heart className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'fill-transparent'}`} />
-                        <span className="sr-only">{isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}</span>
+                        <Heart className={`h-5 w-5 ${isPlayerFavorite ? 'fill-red-500 text-red-500' : 'fill-transparent'}`} />
+                        <span className="sr-only">{isPlayerFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}</span>
                       </Button>
                     </div>
                     <div className="flex items-center gap-2 mt-1">

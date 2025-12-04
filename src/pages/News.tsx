@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { stripHtml } from "@/utils/stripHtml";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { SEOHead } from "@/components/SEOHead";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -93,6 +94,11 @@ const News = () => {
 
   return (
     <>
+      <SEOHead 
+        title="Actualités"
+        description="Toutes les actualités du Real Madrid : matchs, transferts, conférences de presse et plus encore."
+        url="/news"
+      />
       <Navbar />
       <main className="min-h-screen">
         <div className="bg-madrid-blue py-10">
