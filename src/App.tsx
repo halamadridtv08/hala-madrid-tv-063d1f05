@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { ScrollToTop } from "./components/ScrollToTop";
+import { HelmetProvider } from "react-helmet-async";
 import Index from "./pages/Index";
 import News from "./pages/News";
 import Players from "./pages/Players";
@@ -23,47 +24,51 @@ import Admin from "./pages/Admin";
 import ArticleDetail from "./pages/ArticleDetail";
 import Videos from "./pages/Videos";
 import Search from "./pages/Search";
+import Favorites from "./pages/Favorites";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/news" element={<News />} />
-            <Route path="/news/:id" element={<ArticleDetail />} />
-            <Route path="/players" element={<Players />} />
-            <Route path="/players/:id" element={<PlayerProfile />} />
-            <Route path="/matches" element={<Matches />} />
-            <Route path="/training" element={<Training />} />
-            <Route path="/press" element={<Press />} />
-            <Route path="/kits" element={<Kits />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/stats" element={<Stats />} />
-            <Route path="/videos" element={<Videos />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route 
-              path="/admin" 
-              element={
-                <ProtectedRoute>
-                  <Admin />
-                </ProtectedRoute>
-              } 
-            />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <ScrollToTop />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/news" element={<News />} />
+              <Route path="/news/:id" element={<ArticleDetail />} />
+              <Route path="/players" element={<Players />} />
+              <Route path="/players/:id" element={<PlayerProfile />} />
+              <Route path="/matches" element={<Matches />} />
+              <Route path="/training" element={<Training />} />
+              <Route path="/press" element={<Press />} />
+              <Route path="/kits" element={<Kits />} />
+              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/stats" element={<Stats />} />
+              <Route path="/videos" element={<Videos />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/favorites" element={<Favorites />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute>
+                    <Admin />
+                  </ProtectedRoute>
+                } 
+              />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;

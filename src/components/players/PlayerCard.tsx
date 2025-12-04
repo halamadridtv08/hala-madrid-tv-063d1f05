@@ -1,10 +1,10 @@
 
-import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Award, Flag, Shield, Star, User, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useFavorites } from "@/hooks/useFavorites";
 
 interface PlayerCardProps {
   id: string;
@@ -35,10 +35,8 @@ export function PlayerCard({
   stats 
 }: PlayerCardProps) {
   const navigate = useNavigate();
-  const [isFavorite, setIsFavorite] = useState(() => {
-    const favorites = JSON.parse(localStorage.getItem('favoritePlayers') || '[]');
-    return favorites.includes(id);
-  });
+  const { isFavorite, toggleFavorite } = useFavorites('player');
+  const isPlayerFavorite = isFavorite(id);
 
   const getPositionColor = (pos: string) => {
     if (pos.includes("Gardien")) return "bg-yellow-600 hover:bg-yellow-700";
@@ -56,21 +54,10 @@ export function PlayerCard({
     return <User className="h-5 w-5" />;
   };
 
-  const toggleFavorite = (e: React.MouseEvent) => {
+  const handleToggleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    
-    const favorites = JSON.parse(localStorage.getItem('favoritePlayers') || '[]');
-    let updatedFavorites;
-    
-    if (isFavorite) {
-      updatedFavorites = favorites.filter((favId: string) => favId !== id);
-    } else {
-      updatedFavorites = [...favorites, id];
-    }
-    
-    localStorage.setItem('favoritePlayers', JSON.stringify(updatedFavorites));
-    setIsFavorite(!isFavorite);
+    toggleFavorite(id, 'player');
   };
 
   const handleCardClick = () => {
@@ -101,12 +88,12 @@ export function PlayerCard({
             
             {/* Favorite button */}
             <Button
-              onClick={toggleFavorite}
+              onClick={handleToggleFavorite}
               variant="ghost"
               size="sm"
               className="absolute top-2 right-2 bg-white/80 hover:bg-white text-gray-700 p-2 h-8 w-8"
             >
-              <Heart className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'fill-transparent'}`} />
+              <Heart className={`h-4 w-4 ${isPlayerFavorite ? 'fill-red-500 text-red-500' : 'fill-transparent'}`} />
             </Button>
           </div>
           
@@ -202,12 +189,12 @@ export function PlayerCard({
                 
                 {/* Favorite button */}
                 <Button
-                  onClick={toggleFavorite}
+                  onClick={handleToggleFavorite}
                   variant="ghost"
                   size="sm"
                   className="bg-white/80 hover:bg-white text-gray-700 p-1 h-7 w-7 flex-shrink-0"
                 >
-                  <Heart className={`h-3 w-3 ${isFavorite ? 'fill-red-500 text-red-500' : 'fill-transparent'}`} />
+                  <Heart className={`h-3 w-3 ${isPlayerFavorite ? 'fill-red-500 text-red-500' : 'fill-transparent'}`} />
                 </Button>
               </div>
               

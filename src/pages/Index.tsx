@@ -10,6 +10,7 @@ import { TrophiesShowcase } from "@/components/home/TrophiesShowcase";
 import { TwitterFlashCarousel } from "@/components/home/TwitterFlashCarousel";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, FileText, Video, Users, Image } from "lucide-react";
@@ -19,9 +20,14 @@ import { useLiveMatchNotifications } from "@/hooks/useMatchNotifications";
 
 const Index = () => {
   const { isVisible } = useSiteVisibility();
-  useLiveMatchNotifications(); // Active les notifications de match en temps réel
+  useLiveMatchNotifications();
   
   return <>
+      <SEOHead 
+        title="Accueil"
+        description="Toute l'actualité du Real Madrid en direct : matchs, transferts, joueurs, statistiques. Suivez les Merengues avec HALA MADRID TV."
+        url="/"
+      />
       <Navbar />
       <main>
       {isVisible('hero_section') && <HeroSection />}
