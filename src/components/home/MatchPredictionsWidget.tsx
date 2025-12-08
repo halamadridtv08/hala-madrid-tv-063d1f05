@@ -7,11 +7,13 @@ import { useMatches } from '@/hooks/useMatches';
 import { useMatchPredictions } from '@/hooks/useMatchPredictions';
 import { MatchPredictionCard } from '@/components/predictions/MatchPredictionCard';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const MatchPredictionsWidget = () => {
   const { upcomingMatches, loading } = useMatches();
   const { predictions, leaderboard, userRank } = useMatchPredictions();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   // Get next 2 upcoming matches
   const nextMatches = upcomingMatches?.slice(0, 2) || [];
@@ -36,11 +38,11 @@ export const MatchPredictionsWidget = () => {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Target className="w-5 h-5 text-secondary" />
-            Prédictions
+            {t('predictions.title')}
           </CardTitle>
           <Link to="/predictions">
             <Button variant="ghost" size="sm">
-              Voir tout <ChevronRight className="w-4 h-4 ml-1" />
+              {t('home.viewAll')} <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </Link>
         </div>
@@ -50,7 +52,7 @@ export const MatchPredictionsWidget = () => {
         <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
           <div className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-secondary" />
-            <span className="text-sm font-medium">Top 3</span>
+            <span className="text-sm font-medium">{t('predictions.top3')}</span>
           </div>
           <div className="flex items-center gap-2">
             {topPredictors.map((entry, index) => (
@@ -68,7 +70,7 @@ export const MatchPredictionsWidget = () => {
         {/* User rank if logged in */}
         {user && userRank && (
           <div className="text-center text-sm">
-            Votre classement: <span className="font-bold text-primary">#{userRank}</span>
+            {t('predictions.yourRank')}: <span className="font-bold text-primary">#{userRank}</span>
           </div>
         )}
 
@@ -76,7 +78,7 @@ export const MatchPredictionsWidget = () => {
         {nextMatches.length > 0 ? (
           <div className="space-y-3">
             <h4 className="text-sm font-medium text-muted-foreground">
-              Prochains matchs à pronostiquer
+              {t('predictions.nextMatches')}
             </h4>
             {nextMatches.map((match) => (
               <MatchPredictionCard 
@@ -88,14 +90,14 @@ export const MatchPredictionsWidget = () => {
           </div>
         ) : (
           <div className="text-center py-4 text-muted-foreground">
-            <p>Aucun match à venir pour le moment</p>
+            <p>{t('predictions.noMatches')}</p>
           </div>
         )}
 
         <Link to="/predictions" className="block">
           <Button className="w-full" variant="outline">
             <Trophy className="w-4 h-4 mr-2" />
-            Voir le classement complet
+            {t('predictions.viewLeaderboard')}
           </Button>
         </Link>
       </CardContent>

@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   TrendingUp, 
-  Eye, 
   Clock, 
   ChevronRight,
   Flame,
@@ -13,8 +12,9 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr, enUS, es } from 'date-fns/locale';
 import { stripHtml } from '@/utils/stripHtml';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TrendingArticle {
   id: string;
@@ -27,6 +27,9 @@ interface TrendingArticle {
 export const StickyContent = () => {
   const [trendingArticles, setTrendingArticles] = useState<TrendingArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { t, language } = useLanguage();
+  
+  const dateLocale = language === 'es' ? es : language === 'en' ? enUS : fr;
 
   useEffect(() => {
     const fetchTrending = async () => {
@@ -72,10 +75,10 @@ export const StickyContent = () => {
         {/* Header */}
         <div className="flex items-center gap-2 p-4 border-b bg-gradient-to-r from-destructive/10 to-secondary/10">
           <Flame className="w-5 h-5 text-destructive" />
-          <h3 className="font-bold">Tendances</h3>
+          <h3 className="font-bold">{t('trending.title')}</h3>
           <Badge variant="secondary" className="ml-auto">
             <TrendingUp className="w-3 h-3 mr-1" />
-            Hot
+            {t('trending.hot')}
           </Badge>
         </div>
 
@@ -94,13 +97,13 @@ export const StickyContent = () => {
                 <h4 className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
                   {article.title}
                 </h4>
-                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                  <Badge variant="outline" className="text-xs px-1.5">
-                    {article.category}
-                  </Badge>
-                  <span className="flex items-center">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {format(new Date(article.published_at), 'dd MMM', { locale: fr })}
+                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                    <Badge variant="outline" className="text-xs px-1.5">
+                      {article.category}
+                    </Badge>
+                    <span className="flex items-center">
+                      <Clock className="w-3 h-3 mr-1" />
+                      {format(new Date(article.published_at), 'dd MMM', { locale: dateLocale })}
                   </span>
                 </div>
               </div>
@@ -121,7 +124,7 @@ export const StickyContent = () => {
           <Link to="/news">
             <Button variant="ghost" size="sm" className="w-full">
               <BookOpen className="w-4 h-4 mr-2" />
-              Voir toutes les actualités
+              {t('trending.viewAll')}
               <ChevronRight className="w-4 h-4 ml-auto" />
             </Button>
           </Link>
