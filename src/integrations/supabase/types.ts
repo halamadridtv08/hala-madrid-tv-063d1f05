@@ -958,6 +958,47 @@ export type Database = {
           },
         ]
       }
+      match_predictions: {
+        Row: {
+          away_score_prediction: number
+          created_at: string | null
+          home_score_prediction: number
+          id: string
+          match_id: string
+          points_earned: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          away_score_prediction?: number
+          created_at?: string | null
+          home_score_prediction?: number
+          id?: string
+          match_id: string
+          points_earned?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          away_score_prediction?: number
+          created_at?: string | null
+          home_score_prediction?: number
+          id?: string
+          match_id?: string
+          points_earned?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_predictions_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_probable_lineups: {
         Row: {
           created_at: string | null
@@ -1587,6 +1628,48 @@ export type Database = {
           },
         ]
       }
+      prediction_leaderboard: {
+        Row: {
+          best_streak: number | null
+          correct_outcomes: number | null
+          correct_scores: number | null
+          created_at: string | null
+          current_streak: number | null
+          id: string
+          total_points: number | null
+          total_predictions: number | null
+          updated_at: string | null
+          user_email: string | null
+          user_id: string
+        }
+        Insert: {
+          best_streak?: number | null
+          correct_outcomes?: number | null
+          correct_scores?: number | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          total_points?: number | null
+          total_predictions?: number | null
+          updated_at?: string | null
+          user_email?: string | null
+          user_id: string
+        }
+        Update: {
+          best_streak?: number | null
+          correct_outcomes?: number | null
+          correct_scores?: number | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          total_points?: number | null
+          total_predictions?: number | null
+          updated_at?: string | null
+          user_email?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       press_conferences: {
         Row: {
           category: string | null
@@ -1626,6 +1709,36 @@ export type Database = {
           title?: string
           updated_at?: string
           video_url?: string | null
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          p256dh: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auth: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          p256dh: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auth?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
