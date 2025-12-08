@@ -16,7 +16,8 @@ import {
   Trophy,
   Twitter,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Puzzle
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,7 @@ const navigationItems = [
   { value: "kits", label: "Maillots", icon: Shirt },
   { value: "youtube", label: "YouTube", icon: PlayCircle },
   { value: "flash-news", label: "Infos Flash", icon: Twitter },
+  { value: "integrations", label: "Intégrations", icon: Puzzle },
   { value: "settings", label: "Paramètres", icon: Settings },
 ];
 
