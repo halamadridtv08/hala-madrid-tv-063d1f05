@@ -2,3 +2,15 @@ project_id = "qjnppcfbywfazwolfppo"
 
 [functions.sitemap]
 verify_jwt = false
+
+[functions.publish-scheduled-articles]
+verify_jwt = false
+
+[functions.publish-scheduled-flash-news]
+verify_jwt = false
+
+[functions.sync-matches]
+verify_jwt = false
+
+[functions.send-push-notification]
+verify_jwt = false
