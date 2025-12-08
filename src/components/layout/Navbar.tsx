@@ -1,12 +1,13 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageSelector } from "./LanguageSelector";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu, X, Calendar, Users, Video, FileText, Image, Search, Plus } from "lucide-react";
 import { AuthButtons } from "./AuthButtons";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { AddContentMenu } from "./AddContentMenu";
 import { AnimatedSearchBar } from "./AnimatedSearchBar";
 import {
@@ -25,6 +26,7 @@ export function Navbar() {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
+  const { t } = useLanguage();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -114,12 +116,12 @@ export function Navbar() {
             <NavigationMenuList className="gap-1 lg:gap-2">
               <NavigationMenuItem>
                 <Link to="/" className="text-foreground hover:text-madrid-blue font-medium transition-colors text-sm lg:text-base px-2 py-1">
-                  Accueil
+                  {t('nav.home')}
                 </Link>
               </NavigationMenuItem>
               
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-sm lg:text-base px-2 py-1">Actualités</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-sm lg:text-base px-2 py-1">{t('nav.news')}</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul className="grid gap-3 p-4 w-[320px] md:w-[400px] md:grid-cols-2">
                     <li className="row-span-3">
@@ -258,6 +260,7 @@ export function Navbar() {
             </div>
           )}
           
+          <LanguageSelector />
           <ThemeToggle />
           <AuthButtons />
         </nav>
@@ -280,67 +283,68 @@ export function Navbar() {
                   className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 text-sm"
                   onClick={closeMenu}
                 >
-                  Accueil
+                  {t('nav.home')}
                 </Link>
                 <Link 
                   to="/news" 
                   className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2 text-sm"
                   onClick={closeMenu}
                 >
-                  <FileText className="h-4 w-4" /> Actualités
+                  <FileText className="h-4 w-4" /> {t('nav.news')}
                 </Link>
                 <Link 
                   to="/players" 
                   className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2 text-sm"
                   onClick={closeMenu}
                 >
-                  <Users className="h-4 w-4" /> Effectif
+                  <Users className="h-4 w-4" /> {t('nav.players')}
                 </Link>
                 <Link 
                   to="/matches" 
                   className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 text-sm"
                   onClick={closeMenu}
                 >
-                  Matchs
+                  {t('nav.matches')}
                 </Link>
                 <Link 
                   to="/training" 
                   className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2 text-sm"
                   onClick={closeMenu}
                 >
-                  <Video className="h-4 w-4" /> Entrainement
+                  <Video className="h-4 w-4" /> {t('nav.training')}
                 </Link>
                 <Link 
                   to="/press" 
                   className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 text-sm"
                   onClick={closeMenu}
                 >
-                  Conférences
+                  {t('nav.press')}
                 </Link>
                 <Link 
                   to="/kits" 
                   className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2 text-sm"
                   onClick={closeMenu}
                 >
-                  <Image className="h-4 w-4" /> Maillots
+                  <Image className="h-4 w-4" /> {t('nav.kits')}
                 </Link>
                 <Link 
                   to="/calendar" 
                   className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 flex items-center gap-2 text-sm"
                   onClick={closeMenu}
                 >
-                  <Calendar className="h-4 w-4" /> Calendrier
+                  <Calendar className="h-4 w-4" /> {t('nav.calendar')}
                 </Link>
                 <Link 
                   to="/stats" 
                   className="text-foreground hover:text-madrid-blue font-medium transition-colors py-2 text-sm"
                   onClick={closeMenu}
                 >
-                  Stats
+                  {t('nav.stats')}
                 </Link>
               </div>
               
-              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 block xs:hidden">
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <LanguageSelector />
                 <AuthButtons />
               </div>
             </div>

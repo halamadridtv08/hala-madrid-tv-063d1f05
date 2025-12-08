@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { HelmetProvider } from "react-helmet-async";
@@ -51,46 +52,48 @@ const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <ScrollToTop />
-            <InstallPrompt />
-            <IntegrationScripts />
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/news" element={<News />} />
-                <Route path="/news/:id" element={<ArticleDetail />} />
-                <Route path="/article/:id" element={<ArticleDetail />} />
-                <Route path="/players" element={<Players />} />
-                <Route path="/players/:id" element={<PlayerProfile />} />
-                <Route path="/matches" element={<Matches />} />
-                <Route path="/training" element={<Training />} />
-                <Route path="/press" element={<Press />} />
-                <Route path="/kits" element={<Kits />} />
-                <Route path="/calendar" element={<Calendar />} />
-                <Route path="/stats" element={<Stats />} />
-                <Route path="/videos" element={<Videos />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/favorites" element={<Favorites />} />
-                <Route path="/predictions" element={<Predictions />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route 
-                  path="/admin" 
-                  element={
-                    <ProtectedRoute>
-                      <Admin />
-                    </ProtectedRoute>
-                  } 
-                />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </TooltipProvider>
+        <LanguageProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ScrollToTop />
+              <InstallPrompt />
+              <IntegrationScripts />
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/news" element={<News />} />
+                  <Route path="/news/:id" element={<ArticleDetail />} />
+                  <Route path="/article/:id" element={<ArticleDetail />} />
+                  <Route path="/players" element={<Players />} />
+                  <Route path="/players/:id" element={<PlayerProfile />} />
+                  <Route path="/matches" element={<Matches />} />
+                  <Route path="/training" element={<Training />} />
+                  <Route path="/press" element={<Press />} />
+                  <Route path="/kits" element={<Kits />} />
+                  <Route path="/calendar" element={<Calendar />} />
+                  <Route path="/stats" element={<Stats />} />
+                  <Route path="/videos" element={<Videos />} />
+                  <Route path="/search" element={<Search />} />
+                  <Route path="/favorites" element={<Favorites />} />
+                  <Route path="/predictions" element={<Predictions />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route 
+                    path="/admin" 
+                    element={
+                      <ProtectedRoute>
+                        <Admin />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </TooltipProvider>
+        </LanguageProvider>
       </AuthProvider>
     </QueryClientProvider>
   </HelmetProvider>
