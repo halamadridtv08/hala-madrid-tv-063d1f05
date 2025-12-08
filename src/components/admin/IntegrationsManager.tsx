@@ -125,7 +125,14 @@ const IntegrationsManager = () => {
   };
 
   const handleToggle = async (integration: Integration) => {
-    await toggleIntegration(integration.id, !integration.is_enabled);
+    const newEnabledState = !integration.is_enabled;
+    const success = await toggleIntegration(integration.id, newEnabledState);
+    if (success && selectedIntegration?.id === integration.id) {
+      setSelectedIntegration({
+        ...selectedIntegration,
+        is_enabled: newEnabledState
+      });
+    }
   };
 
   const getConfigFields = (key: string): { name: string; label: string; type: string; placeholder: string }[] => {
