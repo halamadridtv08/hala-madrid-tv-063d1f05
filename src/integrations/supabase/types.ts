@@ -606,6 +606,48 @@ export type Database = {
         }
         Relationships: []
       }
+      integrations: {
+        Row: {
+          category: string
+          config: Json | null
+          created_at: string
+          description: string | null
+          documentation_url: string | null
+          icon: string
+          id: string
+          integration_key: string
+          is_enabled: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          config?: Json | null
+          created_at?: string
+          description?: string | null
+          documentation_url?: string | null
+          icon: string
+          id?: string
+          integration_key: string
+          is_enabled?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          config?: Json | null
+          created_at?: string
+          description?: string | null
+          documentation_url?: string | null
+          icon?: string
+          id?: string
+          integration_key?: string
+          is_enabled?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       kit_images: {
         Row: {
           created_at: string

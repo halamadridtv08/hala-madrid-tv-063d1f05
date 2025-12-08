@@ -60,6 +60,7 @@ import { SeasonComparison } from "@/components/admin/SeasonComparison";
 import { CompetitionReports } from "@/components/admin/CompetitionReports";
 import { CompetitionAliasManager } from "@/components/admin/CompetitionAliasManager";
 import { DataInconsistencyDetector } from "@/components/admin/DataInconsistencyDetector";
+import IntegrationsManager from "@/components/admin/IntegrationsManager";
 import { useNavigate } from "react-router-dom";
 interface StatsData {
   totalPlayers: number;
@@ -537,6 +538,9 @@ const Admin = () => {
           <TabsContent value="kits">{renderKits()}</TabsContent>
           <TabsContent value="youtube">{renderYouTubeVideos()}</TabsContent>
           <TabsContent value="flash-news">{renderFlashNews()}</TabsContent>
+          <TabsContent value="integrations">
+            <IntegrationsManager />
+          </TabsContent>
           <TabsContent value="settings">{renderSettings()}</TabsContent>
         </Tabs>
       </div>
