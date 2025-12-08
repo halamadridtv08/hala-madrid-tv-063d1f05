@@ -405,7 +405,7 @@ export const OpposingTeamManager = () => {
       case "CB": return "bg-blue-500";
       case "CM":
       case "CDM":
-      case "LB": return "bg-green-500";
+      case "CAM": return "bg-green-500";
       case "RW":
       case "LW":
       case "ST": return "bg-red-500";
