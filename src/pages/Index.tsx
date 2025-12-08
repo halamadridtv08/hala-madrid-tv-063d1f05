@@ -3,17 +3,18 @@ import { LatestNews } from "@/components/home/LatestNews";
 import { UpcomingMatch } from "@/components/home/UpcomingMatch";
 import { PlayerSpotlight } from "@/components/home/PlayerSpotlight";
 import FeaturedKits from "@/components/home/FeaturedKits";
-import { VideoSection } from "@/components/home/VideoSection";
 import YouTubeVideos from "@/components/home/YouTubeVideos";
 import FeaturedYouTubeVideo from "@/components/home/FeaturedYouTubeVideo";
 import { TrophiesShowcase } from "@/components/home/TrophiesShowcase";
 import { TwitterFlashCarousel } from "@/components/home/TwitterFlashCarousel";
+import { MatchPredictionsWidget } from "@/components/home/MatchPredictionsWidget";
+import { StickyContent } from "@/components/home/StickyContent";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, FileText, Video, Users, Image } from "lucide-react";
+import { Calendar, FileText, Video, Users, Image, Target } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 import { useLiveMatchNotifications } from "@/hooks/useMatchNotifications";
@@ -38,6 +39,21 @@ const Index = () => {
       {isVisible('youtube_videos') && <YouTubeVideos />}
       {isVisible('trophies') && <TrophiesShowcase />}
       {isVisible('upcoming_match') && <UpcomingMatch />}
+      
+      {/* Predictions & Sticky Content Section */}
+      <section className="py-8 bg-muted/30">
+        <div className="madrid-container">
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <MatchPredictionsWidget />
+            </div>
+            <div>
+              <StickyContent />
+            </div>
+          </div>
+        </div>
+      </section>
+      
       {isVisible('player_spotlight') && <PlayerSpotlight />}
       {isVisible('featured_kits') && <FeaturedKits />}
         
