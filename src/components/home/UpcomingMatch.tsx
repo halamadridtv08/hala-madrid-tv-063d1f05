@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock, MapPin, Ticket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Match } from "@/types/Match";
+import { MatchNotifications } from "@/components/notifications/MatchNotifications";
 
 interface TimeLeft {
   days: number;
@@ -321,7 +322,7 @@ export function UpcomingMatch() {
                 </div>
                 
                 <motion.div 
-                  className="mt-8 text-center"
+                  className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4"
                   variants={itemVariants}
                 >
                   <motion.div
@@ -333,6 +334,7 @@ export function UpcomingMatch() {
                       Voir les détails du match
                     </Button>
                   </motion.div>
+                  <MatchNotifications />
                 </motion.div>
               </div>
             </CardContent>
