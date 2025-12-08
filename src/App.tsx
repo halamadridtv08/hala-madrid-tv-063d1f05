@@ -9,6 +9,7 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { HelmetProvider } from "react-helmet-async";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
+import { IntegrationScripts } from "./components/IntegrationScripts";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -56,6 +57,7 @@ const App = () => (
           <BrowserRouter>
             <ScrollToTop />
             <InstallPrompt />
+            <IntegrationScripts />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
