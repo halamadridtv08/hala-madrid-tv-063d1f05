@@ -9,6 +9,7 @@ import { TrophiesShowcase } from "@/components/home/TrophiesShowcase";
 import { TwitterFlashCarousel } from "@/components/home/TwitterFlashCarousel";
 import { MatchPredictionsWidget } from "@/components/home/MatchPredictionsWidget";
 import { StickyContent } from "@/components/home/StickyContent";
+import { LiveMatchBar } from "@/components/home/LiveMatchBar";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SEOHead } from "@/components/SEOHead";
@@ -31,6 +32,7 @@ const Index = () => {
         description="Toute l'actualité du Real Madrid en direct : matchs, transferts, joueurs, statistiques. Suivez les Merengues avec HALA MADRID TV."
         url="/"
       />
+      <LiveMatchBar />
       <Navbar />
       <main>
       {isVisible('hero_section') && <HeroSection />}
