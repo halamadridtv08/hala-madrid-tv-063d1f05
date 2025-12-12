@@ -1888,6 +1888,33 @@ export type Database = {
           },
         ]
       }
+      secure_totp_secrets: {
+        Row: {
+          backup_codes_encrypted: string[] | null
+          created_at: string | null
+          encrypted_secret: string
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          backup_codes_encrypted?: string[] | null
+          created_at?: string | null
+          encrypted_secret: string
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          backup_codes_encrypted?: string[] | null
+          created_at?: string | null
+          encrypted_secret?: string
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           created_at: string
@@ -2306,6 +2333,7 @@ export type Database = {
     }
     Functions: {
       check_player_stats_alerts: { Args: never; Returns: undefined }
+      delete_totp_secret: { Args: { p_user_id: string }; Returns: boolean }
       get_role_history: {
         Args: { p_user_id?: string }
         Returns: {
@@ -2319,6 +2347,10 @@ export type Database = {
           user_email: string
           user_id: string
         }[]
+      }
+      get_totp_secret: {
+        Args: { p_encryption_key: string; p_user_id: string }
+        Returns: string
       }
       get_users_with_roles: {
         Args: never
@@ -2342,6 +2374,14 @@ export type Database = {
       }
       publish_scheduled_articles: { Args: never; Returns: undefined }
       publish_scheduled_flash_news: { Args: never; Returns: undefined }
+      save_backup_codes: {
+        Args: { p_codes: string[]; p_encryption_key: string; p_user_id: string }
+        Returns: boolean
+      }
+      save_totp_secret: {
+        Args: { p_encryption_key: string; p_secret: string; p_user_id: string }
+        Returns: string
+      }
       update_all_players_ages: { Args: never; Returns: undefined }
       update_player_objectives_progress: { Args: never; Returns: undefined }
     }
