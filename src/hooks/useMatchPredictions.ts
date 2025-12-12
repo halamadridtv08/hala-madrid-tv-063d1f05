@@ -16,7 +16,6 @@ export interface MatchPrediction {
 export interface LeaderboardEntry {
   id: string;
   user_id: string;
-  user_email: string | null;
   total_points: number;
   correct_scores: number;
   correct_outcomes: number;
@@ -56,8 +55,9 @@ export const useMatchPredictions = () => {
 
   const fetchLeaderboard = async () => {
     try {
+      // Use the secure public view that excludes email addresses
       const { data, error } = await supabase
-        .from('prediction_leaderboard')
+        .from('prediction_leaderboard_public')
         .select('*')
         .order('total_points', { ascending: false })
         .limit(50);
