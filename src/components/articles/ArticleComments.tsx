@@ -25,12 +25,11 @@ export const ArticleComments = ({ articleId }: ArticleCommentsProps) => {
   }, [articleId]);
 
   const fetchComments = async () => {
+    // Use the secure public view that excludes email addresses
     const { data, error } = await supabase
-      .from("article_comments")
+      .from("article_comments_public")
       .select("*")
       .eq("article_id", articleId)
-      .eq("is_approved", true)
-      .eq("is_published", true)
       .order("created_at", { ascending: false });
 
     if (error) {

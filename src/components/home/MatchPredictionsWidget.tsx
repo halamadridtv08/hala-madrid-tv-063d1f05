@@ -61,7 +61,7 @@ export const MatchPredictionsWidget = () => {
                 variant={index === 0 ? 'default' : 'secondary'}
                 className="text-xs"
               >
-                {index + 1}. {entry.user_email?.split('@')[0]?.slice(0, 8) || 'User'} ({entry.total_points}pts)
+                {index + 1}. {`Player ${entry.user_id.slice(0, 4)}`} ({entry.total_points}pts)
               </Badge>
             ))}
           </div>

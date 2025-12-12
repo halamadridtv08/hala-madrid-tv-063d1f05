@@ -2175,6 +2175,86 @@ export type Database = {
       }
     }
     Views: {
+      article_comments_public: {
+        Row: {
+          article_id: string | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          is_approved: boolean | null
+          is_published: boolean | null
+          updated_at: string | null
+          user_name: string | null
+        }
+        Insert: {
+          article_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_approved?: boolean | null
+          is_published?: boolean | null
+          updated_at?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          article_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_approved?: boolean | null
+          is_published?: boolean | null
+          updated_at?: string | null
+          user_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_comments_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prediction_leaderboard_public: {
+        Row: {
+          best_streak: number | null
+          correct_outcomes: number | null
+          correct_scores: number | null
+          created_at: string | null
+          current_streak: number | null
+          id: string | null
+          total_points: number | null
+          total_predictions: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          best_streak?: number | null
+          correct_outcomes?: number | null
+          correct_scores?: number | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string | null
+          total_points?: number | null
+          total_predictions?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          best_streak?: number | null
+          correct_outcomes?: number | null
+          correct_scores?: number | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string | null
+          total_points?: number | null
+          total_predictions?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       published_flash_news: {
         Row: {
           approved_at: string | null
