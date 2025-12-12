@@ -20,6 +20,7 @@ import { ArticlePoll } from "@/components/articles/ArticlePoll";
 import { ArticleQuiz } from "@/components/articles/ArticleQuiz";
 import { ArticleTweets } from "@/components/articles/ArticleTweets";
 import { RelatedArticles } from "@/components/articles/RelatedArticles";
+import { ArticleAds } from "@/components/articles/ArticleAds";
 import DOMPurify from "dompurify";
 import { stripHtml } from "@/utils/stripHtml";
 
@@ -261,6 +262,7 @@ const ArticleDetail = () => {
             {/* Widget des dernières infos */}
             <div className="lg:col-span-1">
               <LatestNewsWidget />
+              <ArticleAds position="sidebar" />
             </div>
           </div>
 
