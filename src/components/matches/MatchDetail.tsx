@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { TacticalFormation } from "./TacticalFormation";
 import { MatchEvents } from "./MatchEvents";
 import { MatchStatistics } from "./MatchStatistics";
+import { ProbableLineupFormation } from "./ProbableLineupFormation";
 interface PlayerType {
   name: string;
   position: string;
@@ -242,51 +243,7 @@ export const MatchDetail = ({
         return "bg-gray-600";
     }
   };
-  const renderLineup = (lineup: PlayerType[], subs: PlayerType[], teamName: string) => {
-    return <div className="py-4">
-        <h4 className="font-bold text-center mb-4">{teamName}</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h5 className="font-semibold mb-2">Titulaires</h5>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>No</TableHead>
-                  <TableHead>Joueur</TableHead>
-                  <TableHead>Pos</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {lineup.map(player => <TableRow key={player.name}>
-                    <TableCell>{player.number}</TableCell>
-                    <TableCell>{player.name}</TableCell>
-                    <TableCell>{player.position}</TableCell>
-                  </TableRow>)}
-              </TableBody>
-            </Table>
-          </div>
-          <div>
-            <h5 className="font-semibold mb-2">Remplaçants</h5>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>No</TableHead>
-                  <TableHead>Joueur</TableHead>
-                  <TableHead>Pos</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {subs.map(player => <TableRow key={player.name}>
-                    <TableCell>{player.number}</TableCell>
-                    <TableCell>{player.name}</TableCell>
-                    <TableCell>{player.position}</TableCell>
-                  </TableRow>)}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-      </div>;
-  };
+  
   return <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -352,23 +309,20 @@ export const MatchDetail = ({
           <TabsContent value="lineups">
             <Card>
               <CardContent className="pt-6">
-                {loading ? <div className="text-center py-8">
+                {loading ? (
+                  <div className="text-center py-8">
                     Chargement des compositions...
-                  </div> : <>
-                    {match.homeTeam.name === 'Real Madrid' ? <>
-                        {renderLineup(realMadridLineup, realMadridSubs, "Real Madrid")}
-                        <hr className="my-4" />
-                        {renderLineup(finalOpposingLineup, finalOpposingSubs, match.awayTeam.name)}
-                      </> : <>
-                        {renderLineup(finalOpposingLineup, finalOpposingSubs, match.homeTeam.name)}
-                        <hr className="my-4" />
-                        {renderLineup(realMadridLineup, realMadridSubs, "Real Madrid")}
-                      </>}
-                    {opposingPlayers.length === 0 && <div className="text-center text-gray-500 mt-4">
-                        
-                        
-                      </div>}
-                  </>}
+                  </div>
+                ) : (
+                  <ProbableLineupFormation
+                    realMadridLineup={realMadridLineup}
+                    realMadridSubs={realMadridSubs}
+                    opposingLineup={finalOpposingLineup}
+                    opposingSubs={finalOpposingSubs}
+                    opposingTeamName={match.homeTeam.name === 'Real Madrid' ? match.awayTeam.name : match.homeTeam.name}
+                    homeTeamName={match.homeTeam.name}
+                  />
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -381,24 +335,30 @@ export const MatchDetail = ({
                   <h3 className="font-bold">Joueurs absents ou incertains</h3>
                 </div>
                 
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Joueur</TableHead>
-                      <TableHead>Équipe</TableHead>
-                      <TableHead>Raison</TableHead>
-                      <TableHead>Retour prévu</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {absentPlayers.map(player => <TableRow key={player.name}>
-                        <TableCell className="font-medium">{player.name}</TableCell>
-                        <TableCell>{player.team}</TableCell>
-                        <TableCell>{player.reason}</TableCell>
-                        <TableCell>{player.return}</TableCell>
-                      </TableRow>)}
-                  </TableBody>
-                </Table>
+                {absentPlayers.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">Aucun joueur absent pour ce match</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Joueur</TableHead>
+                        <TableHead>Équipe</TableHead>
+                        <TableHead>Raison</TableHead>
+                        <TableHead>Retour prévu</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {absentPlayers.map(player => (
+                        <TableRow key={player.id}>
+                          <TableCell className="font-medium">{player.player_name}</TableCell>
+                          <TableCell>{player.team_type === 'real_madrid' ? 'Real Madrid' : 'Équipe adverse'}</TableCell>
+                          <TableCell>{player.reason}</TableCell>
+                          <TableCell>{player.return_date ? new Date(player.return_date).toLocaleDateString('fr-FR') : 'Non défini'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

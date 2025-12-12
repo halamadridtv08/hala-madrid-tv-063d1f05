@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ interface TimeLeft {
 }
 
 export function UpcomingMatch() {
+  const navigate = useNavigate();
   const [upcomingMatch, setUpcomingMatch] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -329,7 +331,10 @@ export function UpcomingMatch() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Button className="bg-madrid-blue hover:bg-blue-700 text-white">
+                    <Button 
+                      className="bg-madrid-blue hover:bg-blue-700 text-white"
+                      onClick={() => navigate('/matches')}
+                    >
                       <Ticket className="mr-2 h-4 w-4" />
                       Voir les détails du match
                     </Button>
