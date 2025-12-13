@@ -7,6 +7,7 @@ import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Cookie, FileText, Mail, Shield, HelpCircle } from "lucide-react";
+import { FooterNewsletterForm } from "@/components/newsletter/FooterNewsletterForm";
 
 const iconMap: Record<string, React.ReactNode> = {
   cookie: <Cookie className="h-4 w-4" />,
@@ -165,23 +166,7 @@ export function Footer() {
             {/* Newsletter */}
             <div>
               <h3 className="text-xl font-bold mb-4">Newsletter</h3>
-              <p className="text-gray-300 mb-4">
-                {t('footer.subscribeText') || "Inscrivez-vous pour recevoir les dernières actualités"}
-              </p>
-              <form className="flex flex-col lg:flex-row gap-2">
-                <input
-                  type="email"
-                  placeholder={t('common.email') || "Votre email"}
-                  className="px-4 py-2 rounded text-black flex-1"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="bg-madrid-gold text-black font-medium px-4 py-2 rounded hover:bg-yellow-400 transition-colors whitespace-nowrap"
-                >
-                  {t('footer.subscribe') || "S'inscrire"}
-                </button>
-              </form>
+              <FooterNewsletterForm />
             </div>
           </div>
           
