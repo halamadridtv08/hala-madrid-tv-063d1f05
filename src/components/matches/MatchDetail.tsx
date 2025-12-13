@@ -4,13 +4,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, MapPin, AlertCircle } from "lucide-react";
+import { Calendar, Clock, MapPin, AlertCircle, Radio } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TacticalFormation } from "./TacticalFormation";
 import { MatchEvents } from "./MatchEvents";
 import { MatchStatistics } from "./MatchStatistics";
 import { ProbableLineupFormation } from "./ProbableLineupFormation";
+import { LiveBlog } from "./LiveBlog";
 interface PlayerType {
   name: string;
   position: string;
@@ -286,16 +287,24 @@ export const MatchDetail = ({
         </div>
 
         <Tabs defaultValue="tactical" className="mt-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="tactical">Compositions officielles</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="tactical">Compositions</TabsTrigger>
+            <TabsTrigger value="live-blog" className="flex items-center gap-1">
+              {match.status === 'live' && <Radio className="h-3 w-3 text-red-500 animate-pulse" />}
+              Live Blog
+            </TabsTrigger>
             <TabsTrigger value="events">Événements</TabsTrigger>
-            <TabsTrigger value="stats">Statistiques</TabsTrigger>
-            <TabsTrigger value="lineups">Compositions probables</TabsTrigger>
-            <TabsTrigger value="absents">Joueurs absents</TabsTrigger>
+            <TabsTrigger value="stats">Stats</TabsTrigger>
+            <TabsTrigger value="lineups">Probables</TabsTrigger>
+            <TabsTrigger value="absents">Absents</TabsTrigger>
           </TabsList>
           
           <TabsContent value="tactical">
             <TacticalFormation matchId={match.id} matchData={match} />
+          </TabsContent>
+
+          <TabsContent value="live-blog">
+            <LiveBlog matchId={match.id} />
           </TabsContent>
 
           <TabsContent value="events">

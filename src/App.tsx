@@ -32,6 +32,7 @@ const Videos = lazy(() => import("./pages/Videos"));
 const Search = lazy(() => import("./pages/Search"));
 const Favorites = lazy(() => import("./pages/Favorites"));
 const Predictions = lazy(() => import("./pages/Predictions"));
+const DreamTeam = lazy(() => import("./pages/DreamTeam"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -80,6 +81,7 @@ const App = () => (
                   <Route path="/search" element={<Search />} />
                   <Route path="/favorites" element={<Favorites />} />
                   <Route path="/predictions" element={<Predictions />} />
+                  <Route path="/dream-team" element={<DreamTeam />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route 
                     path="/admin" 

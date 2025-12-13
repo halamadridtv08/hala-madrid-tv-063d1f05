@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "./LanguageSelector";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, X, Calendar, Users, Video, FileText, Image, Search, Plus } from "lucide-react";
+import { Menu, X, Calendar, Users, Video, FileText, Image, Search, Plus, Star } from "lucide-react";
 import { AuthButtons } from "./AuthButtons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -241,6 +241,13 @@ export function Navbar() {
                   Stats
                 </Link>
               </NavigationMenuItem>
+              
+              <NavigationMenuItem>
+                <Link to="/dream-team" className="text-foreground hover:text-madrid-gold font-medium transition-colors flex items-center gap-1 text-sm lg:text-base px-2 py-1">
+                  <Star className="h-3 w-3 lg:h-4 lg:w-4 text-madrid-gold" />
+                  <span className="hidden lg:inline">Dream Team</span>
+                </Link>
+              </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
           
@@ -340,6 +347,13 @@ export function Navbar() {
                   onClick={closeMenu}
                 >
                   {t('nav.stats')}
+                </Link>
+                <Link 
+                  to="/dream-team" 
+                  className="text-foreground hover:text-madrid-gold font-medium transition-colors py-2 flex items-center gap-2 text-sm"
+                  onClick={closeMenu}
+                >
+                  <Star className="h-4 w-4 text-madrid-gold" /> Dream Team
                 </Link>
               </div>
               
