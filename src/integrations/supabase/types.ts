@@ -447,6 +447,45 @@ export type Database = {
         }
         Relationships: []
       }
+      dream_teams: {
+        Row: {
+          created_at: string
+          formation: string
+          id: string
+          likes_count: number | null
+          players: Json
+          share_token: string | null
+          team_name: string
+          total_budget_used: number | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          formation?: string
+          id?: string
+          likes_count?: number | null
+          players?: Json
+          share_token?: string | null
+          team_name?: string
+          total_budget_used?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          formation?: string
+          id?: string
+          likes_count?: number | null
+          players?: Json
+          share_token?: string | null
+          team_name?: string
+          total_budget_used?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       flash_news: {
         Row: {
           approved_at: string | null
@@ -829,6 +868,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      live_blog_entries: {
+        Row: {
+          author_id: string | null
+          content: string
+          created_at: string
+          entry_type: string
+          id: string
+          is_important: boolean | null
+          match_id: string
+          minute: number | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          created_at?: string
+          entry_type?: string
+          id?: string
+          is_important?: boolean | null
+          match_id: string
+          minute?: number | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          created_at?: string
+          entry_type?: string
+          id?: string
+          is_important?: boolean | null
+          match_id?: string
+          minute?: number | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_blog_entries_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       login_attempts: {
         Row: {
@@ -1311,6 +1397,45 @@ export type Database = {
         }
         Relationships: []
       }
+      newsletter_subscribers: {
+        Row: {
+          confirmation_token: string | null
+          confirmed_at: string | null
+          email: string
+          id: string
+          is_active: boolean | null
+          is_confirmed: boolean | null
+          name: string | null
+          subscribed_at: string
+          subscription_type: string
+          unsubscribed_at: string | null
+        }
+        Insert: {
+          confirmation_token?: string | null
+          confirmed_at?: string | null
+          email: string
+          id?: string
+          is_active?: boolean | null
+          is_confirmed?: boolean | null
+          name?: string | null
+          subscribed_at?: string
+          subscription_type?: string
+          unsubscribed_at?: string | null
+        }
+        Update: {
+          confirmation_token?: string | null
+          confirmed_at?: string | null
+          email?: string
+          id?: string
+          is_active?: boolean | null
+          is_confirmed?: boolean | null
+          name?: string | null
+          subscribed_at?: string
+          subscription_type?: string
+          unsubscribed_at?: string | null
+        }
+        Relationships: []
+      }
       opposing_players: {
         Row: {
           created_at: string
@@ -1676,6 +1801,7 @@ export type Database = {
           is_active: boolean | null
           is_featured: boolean | null
           jersey_number: number | null
+          market_value: number | null
           name: string
           nationality: string | null
           position: string
@@ -1699,6 +1825,7 @@ export type Database = {
           is_active?: boolean | null
           is_featured?: boolean | null
           jersey_number?: number | null
+          market_value?: number | null
           name: string
           nationality?: string | null
           position: string
@@ -1722,6 +1849,7 @@ export type Database = {
           is_active?: boolean | null
           is_featured?: boolean | null
           jersey_number?: number | null
+          market_value?: number | null
           name?: string
           nationality?: string | null
           position?: string
