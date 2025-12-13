@@ -10,6 +10,7 @@ import { TwitterFlashCarousel } from "@/components/home/TwitterFlashCarousel";
 import { MatchPredictionsWidget } from "@/components/home/MatchPredictionsWidget";
 import { StickyContent } from "@/components/home/StickyContent";
 import { LiveMatchBar } from "@/components/home/LiveMatchBar";
+import { PartnersSection } from "@/components/home/PartnersSection";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SEOHead } from "@/components/SEOHead";
@@ -64,8 +65,11 @@ const Index = () => {
         </section>
       )}
       
-      {isVisible('player_spotlight') && <PlayerSpotlight />}
-      {isVisible('featured_kits') && <FeaturedKits />}
+        {isVisible('player_spotlight') && <PlayerSpotlight />}
+        {isVisible('featured_kits') && <FeaturedKits />}
+        
+        {/* Partners Section */}
+        {isVisible('partners_section') && <PartnersSection />}
         
         {/* Section pour les liens rapides vers les nouvelles sections */}
         <section className="py-6 sm:py-8 md:py-12 bg-gray-50 dark:bg-gray-900">
