@@ -12,6 +12,7 @@ import { MatchEvents } from "./MatchEvents";
 import { MatchStatistics } from "./MatchStatistics";
 import { ProbableLineupFormation } from "./ProbableLineupFormation";
 import { LiveBlog } from "./LiveBlog";
+import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 interface PlayerType {
   name: string;
   position: string;
@@ -39,6 +40,7 @@ export const MatchDetail = ({
   const [probableLineups, setProbableLineups] = useState<any[]>([]);
   const [absentPlayers, setAbsentPlayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const { isVisible } = useSiteVisibility();
   useEffect(() => {
     if (isOpen && match) {
       fetchMatchData();
@@ -287,12 +289,14 @@ export const MatchDetail = ({
         </div>
 
         <Tabs defaultValue="tactical" className="mt-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className={`grid w-full ${isVisible('live_blog_match') ? 'grid-cols-6' : 'grid-cols-5'}`}>
             <TabsTrigger value="tactical">Compositions</TabsTrigger>
-            <TabsTrigger value="live-blog" className="flex items-center gap-1">
-              {match.status === 'live' && <Radio className="h-3 w-3 text-red-500 animate-pulse" />}
-              Live Blog
-            </TabsTrigger>
+            {isVisible('live_blog_match') && (
+              <TabsTrigger value="live-blog" className="flex items-center gap-1">
+                {match.status === 'live' && <Radio className="h-3 w-3 text-red-500 animate-pulse" />}
+                Live Blog
+              </TabsTrigger>
+            )}
             <TabsTrigger value="events">Événements</TabsTrigger>
             <TabsTrigger value="stats">Stats</TabsTrigger>
             <TabsTrigger value="lineups">Probables</TabsTrigger>
@@ -303,9 +307,11 @@ export const MatchDetail = ({
             <TacticalFormation matchId={match.id} matchData={match} />
           </TabsContent>
 
-          <TabsContent value="live-blog">
-            <LiveBlog matchId={match.id} />
-          </TabsContent>
+          {isVisible('live_blog_match') && (
+            <TabsContent value="live-blog">
+              <LiveBlog matchId={match.id} />
+            </TabsContent>
+          )}
 
           <TabsContent value="events">
             <MatchEvents matchDetails={match.match_details} />
