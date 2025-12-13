@@ -149,12 +149,16 @@ export function ArticleAdsManager() {
               </div>
               
               <div>
-                <Label>Image</Label>
+                <Label>Média (Image, GIF, Vidéo)</Label>
                 <MediaUploader
                   onSuccess={(url) => setFormData({ ...formData, image_url: url })}
-                  acceptTypes="image/*"
+                  acceptTypes="image/*,video/*,.gif"
                   currentValue={formData.image_url}
+                  maxSizeMB={100}
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Formats supportés: JPG, PNG, GIF, WebP, MP4, WebM, MOV
+                </p>
               </div>
 
               <div>
@@ -282,10 +286,16 @@ export function ArticleAdsManager() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {ads.map((ad) => (
+              {ads.map((ad) => {
+                const isVideo = ad.image_url && /\.(mp4|webm|ogg|mov)$/i.test(ad.image_url);
+                return (
                 <TableRow key={ad.id}>
                   <TableCell>
-                    <img src={ad.image_url} alt={ad.title} className="h-12 w-20 object-cover rounded" />
+                    {isVideo ? (
+                      <video src={ad.image_url} className="h-12 w-20 object-cover rounded" muted />
+                    ) : (
+                      <img src={ad.image_url} alt={ad.title} className="h-12 w-20 object-cover rounded" />
+                    )}
                   </TableCell>
                   <TableCell className="font-medium">{ad.title}</TableCell>
                   <TableCell>
@@ -328,7 +338,7 @@ export function ArticleAdsManager() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              )})}
             </TableBody>
           </Table>
         )}

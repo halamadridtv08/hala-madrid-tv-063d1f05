@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, FileText, Shield, Cookie, Mail, ScrollText, Link, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, FileText, Shield, Cookie, Mail, ScrollText, Link, ExternalLink, Wand2, Eye } from "lucide-react";
+import DOMPurify from "dompurify";
 
 const iconOptions = [
   { value: 'FileText', label: 'Document', icon: FileText },
@@ -22,11 +24,118 @@ const iconOptions = [
   { value: 'ExternalLink', label: 'Lien externe', icon: ExternalLink },
 ];
 
+// Contenu légal pré-rempli
+const legalContentTemplates: Record<string, string> = {
+  'Mentions légales': `<h2>Mentions Légales</h2>
+<p><strong>Éditeur du site</strong></p>
+<p>Ce site est édité par un fan club dédié au Real Madrid CF. Il s'agit d'un site non officiel, sans affiliation avec le Real Madrid C.F.</p>
+
+<p><strong>Hébergement</strong></p>
+<p>Ce site est hébergé par Lovable (Supabase Inc.).</p>
+
+<p><strong>Propriété intellectuelle</strong></p>
+<p>Tous les contenus présents sur ce site (textes, images, vidéos, logos) sont protégés par le droit d'auteur. Les marques et logos du Real Madrid CF appartiennent à leurs propriétaires respectifs.</p>
+
+<p><strong>Responsabilité</strong></p>
+<p>Les informations fournies sur ce site le sont à titre informatif uniquement. Nous nous efforçons d'assurer l'exactitude des informations, mais nous ne pouvons garantir leur exhaustivité ou leur actualité.</p>
+
+<p><strong>Contact</strong></p>
+<p>Pour toute question concernant ce site, vous pouvez nous contacter via notre formulaire de contact.</p>`,
+
+  'Politique de confidentialité': `<h2>Politique de Confidentialité</h2>
+
+<p><strong>Collecte des données</strong></p>
+<p>Nous collectons les données suivantes : nom, adresse email (lors de l'inscription ou des commentaires), données de navigation (cookies).</p>
+
+<p><strong>Utilisation des données</strong></p>
+<p>Vos données sont utilisées pour :</p>
+<ul>
+<li>Gérer votre compte utilisateur</li>
+<li>Personnaliser votre expérience</li>
+<li>Envoyer des notifications (avec votre consentement)</li>
+<li>Améliorer nos services</li>
+</ul>
+
+<p><strong>Protection des données</strong></p>
+<p>Nous mettons en œuvre des mesures de sécurité appropriées pour protéger vos données personnelles contre tout accès, modification, divulgation ou destruction non autorisée.</p>
+
+<p><strong>Vos droits</strong></p>
+<p>Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, de suppression et de portabilité de vos données. Vous pouvez exercer ces droits en nous contactant.</p>
+
+<p><strong>Conservation des données</strong></p>
+<p>Vos données sont conservées pendant la durée de votre inscription et sont supprimées sur demande.</p>`,
+
+  'Préférences cookies': `<h2>Préférences Cookies</h2>
+
+<p><strong>Qu'est-ce qu'un cookie ?</strong></p>
+<p>Un cookie est un petit fichier texte stocké sur votre appareil lors de votre visite sur notre site.</p>
+
+<p><strong>Types de cookies utilisés</strong></p>
+<ul>
+<li><strong>Cookies essentiels :</strong> Nécessaires au fonctionnement du site (authentification, sécurité)</li>
+<li><strong>Cookies de préférences :</strong> Sauvegardent vos choix (langue, thème sombre/clair)</li>
+<li><strong>Cookies analytiques :</strong> Nous aident à comprendre l'utilisation du site (Google Analytics)</li>
+<li><strong>Cookies publicitaires :</strong> Permettent d'afficher des publicités pertinentes</li>
+</ul>
+
+<p><strong>Gestion des cookies</strong></p>
+<p>Vous pouvez à tout moment modifier vos préférences de cookies via les paramètres de votre navigateur. Notez que le blocage de certains cookies peut affecter votre expérience sur le site.</p>
+
+<p><strong>Durée de conservation</strong></p>
+<p>Les cookies sont conservés pour une durée maximale de 13 mois.</p>`,
+
+  'Contact': `<h2>Contactez-nous</h2>
+
+<p>Nous sommes à votre écoute ! N'hésitez pas à nous contacter pour toute question, suggestion ou demande.</p>
+
+<p><strong>Email</strong></p>
+<p>contact@realmadrid-fans.com</p>
+
+<p><strong>Réseaux sociaux</strong></p>
+<p>Suivez-nous sur nos réseaux sociaux pour rester informé des dernières actualités :</p>
+<ul>
+<li>Twitter/X</li>
+<li>Instagram</li>
+<li>Facebook</li>
+<li>YouTube</li>
+</ul>
+
+<p><strong>Délai de réponse</strong></p>
+<p>Nous nous efforçons de répondre à toutes les demandes dans un délai de 48 heures ouvrées.</p>
+
+<p><strong>Signalement</strong></p>
+<p>Pour signaler un contenu inapproprié ou une erreur sur le site, merci de nous contacter en précisant l'URL de la page concernée.</p>`,
+
+  'CGU': `<h2>Conditions Générales d'Utilisation</h2>
+
+<p><strong>Acceptation des CGU</strong></p>
+<p>En accédant à ce site, vous acceptez les présentes conditions générales d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser ce site.</p>
+
+<p><strong>Utilisation du site</strong></p>
+<p>Ce site est destiné à un usage personnel et non commercial. Vous vous engagez à :</p>
+<ul>
+<li>Ne pas reproduire le contenu sans autorisation</li>
+<li>Ne pas perturber le fonctionnement du site</li>
+<li>Respecter les autres utilisateurs</li>
+<li>Ne pas publier de contenu illégal ou offensant</li>
+</ul>
+
+<p><strong>Compte utilisateur</strong></p>
+<p>Vous êtes responsable de la confidentialité de vos identifiants de connexion. Toute activité effectuée depuis votre compte est sous votre responsabilité.</p>
+
+<p><strong>Contenu utilisateur</strong></p>
+<p>En publiant du contenu (commentaires, prédictions), vous accordez au site une licence non exclusive pour utiliser ce contenu. Nous nous réservons le droit de supprimer tout contenu inapproprié.</p>
+
+<p><strong>Modifications</strong></p>
+<p>Nous nous réservons le droit de modifier ces CGU à tout moment. Les modifications prennent effet dès leur publication.</p>`,
+};
+
 export function FooterLinksManager() {
   const { links, loading, createLink, updateLink, deleteLink } = useFooterLinksAdmin();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLink, setEditingLink] = useState<FooterLink | null>(null);
+  const [previewTab, setPreviewTab] = useState<'edit' | 'preview'>('edit');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -51,6 +160,7 @@ export function FooterLinksManager() {
       content: '',
     });
     setEditingLink(null);
+    setPreviewTab('edit');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,6 +216,16 @@ export function FooterLinksManager() {
     }
   };
 
+  const handleAutoFillContent = () => {
+    const template = legalContentTemplates[formData.title];
+    if (template) {
+      setFormData({ ...formData, content: template });
+      toast({ title: "Contenu généré", description: "Le contenu a été pré-rempli automatiquement" });
+    } else {
+      toast({ variant: "destructive", title: "Pas de modèle", description: "Aucun modèle disponible pour ce titre" });
+    }
+  };
+
   const sectionLabels = {
     legal: 'Légal',
     quick_links: 'Liens rapides',
@@ -130,12 +250,15 @@ export function FooterLinksManager() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Gestion des Liens du Footer</CardTitle>
+        <div>
+          <CardTitle>Gestion des Liens du Footer</CardTitle>
+          <CardDescription>Gérez les liens légaux, CGU, politique de confidentialité, etc.</CardDescription>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" /> Ajouter</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingLink ? 'Modifier' : 'Ajouter'} un lien</DialogTitle>
             </DialogHeader>
@@ -175,14 +298,53 @@ export function FooterLinksManager() {
               )}
 
               {formData.link_type === 'modal' && (
-                <div>
-                  <Label>Contenu (HTML autorisé)</Label>
-                  <Textarea
-                    value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    rows={8}
-                    placeholder="<h2>Mentions légales</h2><p>...</p>"
-                  />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Contenu (HTML)</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAutoFillContent}
+                      className="flex items-center gap-1"
+                    >
+                      <Wand2 className="h-3 w-3" />
+                      Auto-générer
+                    </Button>
+                  </div>
+                  
+                  <Tabs value={previewTab} onValueChange={(v) => setPreviewTab(v as 'edit' | 'preview')}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="edit">Éditer</TabsTrigger>
+                      <TabsTrigger value="preview" className="flex items-center gap-1">
+                        <Eye className="h-3 w-3" />
+                        Aperçu
+                      </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="edit">
+                      <Textarea
+                        value={formData.content}
+                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                        rows={12}
+                        placeholder="<h2>Mentions légales</h2><p>...</p>"
+                        className="font-mono text-sm"
+                      />
+                    </TabsContent>
+                    <TabsContent value="preview">
+                      <div 
+                        className="prose dark:prose-invert max-w-none p-4 border rounded-md bg-background min-h-[200px] max-h-[400px] overflow-y-auto"
+                        dangerouslySetInnerHTML={{ 
+                          __html: DOMPurify.sanitize(formData.content, {
+                            ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'div', 'span'],
+                            ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+                          })
+                        }}
+                      />
+                    </TabsContent>
+                  </Tabs>
+                  <p className="text-xs text-muted-foreground">
+                    Balises supportées: h2, h3, h4, p, ul, ol, li, strong, em, a
+                  </p>
                 </div>
               )}
 
@@ -256,6 +418,7 @@ export function FooterLinksManager() {
                 <TableHead>Titre</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Section</TableHead>
+                <TableHead>Contenu</TableHead>
                 <TableHead>Visible</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -267,6 +430,17 @@ export function FooterLinksManager() {
                   <TableCell className="font-medium">{link.title}</TableCell>
                   <TableCell>{typeLabels[link.link_type]}</TableCell>
                   <TableCell>{sectionLabels[link.section]}</TableCell>
+                  <TableCell>
+                    {link.link_type === 'modal' ? (
+                      link.content ? (
+                        <span className="text-green-600 text-sm">✓ Contenu défini</span>
+                      ) : (
+                        <span className="text-orange-500 text-sm">⚠ Pas de contenu</span>
+                      )
+                    ) : (
+                      <span className="text-muted-foreground text-sm">—</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Switch
                       checked={link.is_visible}

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useArticleAds } from "@/hooks/useArticleAds";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExternalLink } from "lucide-react";
@@ -13,6 +12,18 @@ const aspectRatioClasses: Record<string, string> = {
   '1:1': 'aspect-square',
   '9:16': 'aspect-[9/16]',
   'custom': '',
+};
+
+// Check if URL is a video
+const isVideoUrl = (url: string): boolean => {
+  const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
+  const lowerUrl = url.toLowerCase();
+  return videoExtensions.some(ext => lowerUrl.includes(ext));
+};
+
+// Check if URL is a GIF
+const isGifUrl = (url: string): boolean => {
+  return url.toLowerCase().includes('.gif');
 };
 
 export function ArticleAds({ position = 'sidebar' }: ArticleAdsProps) {
@@ -35,8 +46,15 @@ export function ArticleAds({ position = 'sidebar' }: ArticleAdsProps) {
     }
   };
 
+  // Layout classes based on position
+  const containerClasses = position === 'bottom' 
+    ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8'
+    : position === 'inline'
+    ? 'my-6'
+    : 'space-y-4 mt-6';
+
   return (
-    <div className="space-y-4 mt-6">
+    <div className={containerClasses}>
       {ads.map((ad) => {
         const aspectClass = ad.aspect_ratio === 'custom' && ad.custom_width && ad.custom_height
           ? ''
@@ -46,6 +64,9 @@ export function ArticleAds({ position = 'sidebar' }: ArticleAdsProps) {
           ? { aspectRatio: `${ad.custom_width} / ${ad.custom_height}` }
           : {};
 
+        const isVideo = isVideoUrl(ad.image_url);
+        const isGif = isGifUrl(ad.image_url);
+
         return (
           <div
             key={ad.id}
@@ -53,11 +74,22 @@ export function ArticleAds({ position = 'sidebar' }: ArticleAdsProps) {
             onClick={() => handleClick(ad)}
           >
             <div className={`relative ${aspectClass}`} style={customStyle}>
-              <img
-                src={ad.image_url}
-                alt={ad.title}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
+              {isVideo ? (
+                <video
+                  src={ad.image_url}
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                />
+              ) : (
+                <img
+                  src={ad.image_url}
+                  alt={ad.title}
+                  className={`absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${isGif ? '' : ''}`}
+                />
+              )}
               {ad.link_url && (
                 <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                   <ExternalLink className="h-4 w-4 text-foreground" />
