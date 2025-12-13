@@ -11,6 +11,7 @@ import { ScrollToTop } from "./components/ScrollToTop";
 import { HelmetProvider } from "react-helmet-async";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
 import { IntegrationScripts } from "./components/IntegrationScripts";
+import { MediaProtectionProvider } from "./components/common/MediaProtectionProvider";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -60,6 +61,7 @@ const App = () => (
               <ScrollToTop />
               <InstallPrompt />
               <IntegrationScripts />
+              <MediaProtectionProvider />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
