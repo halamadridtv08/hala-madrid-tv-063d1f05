@@ -64,6 +64,9 @@ import IntegrationsManager from "@/components/admin/IntegrationsManager";
 import { PartnersManager } from "@/components/admin/PartnersManager";
 import { FooterLinksManager } from "@/components/admin/FooterLinksManager";
 import { ArticleAdsManager } from "@/components/admin/ArticleAdsManager";
+import { LiveBlogManager } from "@/components/admin/LiveBlogManager";
+import { NewsletterManager } from "@/components/admin/NewsletterManager";
+import { DreamTeamManager } from "@/components/admin/DreamTeamManager";
 import { useNavigate } from "react-router-dom";
 interface StatsData {
   totalPlayers: number;
@@ -490,6 +493,27 @@ const Admin = () => {
       </Card>
     </div>;
   const renderSpecialArticles = () => <SpecialArticlesManager />;
+
+  const renderLiveBlog = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Live Blog - Mises à jour en direct</h2>
+      <LiveBlogManager />
+    </div>
+  );
+
+  const renderNewsletter = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Gestion de la Newsletter</h2>
+      <NewsletterManager />
+    </div>
+  );
+
+  const renderDreamTeams = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Dream Teams des Utilisateurs</h2>
+      <DreamTeamManager />
+    </div>
+  );
   return <div className="min-h-screen bg-background flex">
       {/* Sidebar desktop */}
       <AdminSidebar 
@@ -544,6 +568,9 @@ const Admin = () => {
           <TabsContent value="kits">{renderKits()}</TabsContent>
           <TabsContent value="youtube">{renderYouTubeVideos()}</TabsContent>
           <TabsContent value="flash-news">{renderFlashNews()}</TabsContent>
+          <TabsContent value="live-blog">{renderLiveBlog()}</TabsContent>
+          <TabsContent value="newsletter">{renderNewsletter()}</TabsContent>
+          <TabsContent value="dream-teams">{renderDreamTeams()}</TabsContent>
           <TabsContent value="integrations">
             <IntegrationsManager />
           </TabsContent>

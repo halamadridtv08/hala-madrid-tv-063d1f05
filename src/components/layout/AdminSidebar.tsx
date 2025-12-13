@@ -17,7 +17,10 @@ import {
   Twitter,
   ChevronLeft,
   ChevronRight,
-  Puzzle
+  Puzzle,
+  Radio,
+  Mail,
+  Star
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -40,6 +43,7 @@ const navigationItems = [
   { value: "players", label: "Joueurs", icon: User },
   { value: "coaches", label: "Entraîneurs", icon: Users },
   { value: "matches", label: "Matchs", icon: Calendar },
+  { value: "live-blog", label: "Live Blog", icon: Radio },
   { value: "opponents", label: "Équipes Adverses", icon: Target },
   { value: "formations", label: "Formations", icon: Target },
   { value: "lineups", label: "Compositions", icon: Users },
@@ -49,6 +53,8 @@ const navigationItems = [
   { value: "kits", label: "Maillots", icon: Shirt },
   { value: "youtube", label: "YouTube", icon: PlayCircle },
   { value: "flash-news", label: "Infos Flash", icon: Twitter },
+  { value: "newsletter", label: "Newsletter", icon: Mail },
+  { value: "dream-teams", label: "Dream Teams", icon: Star },
   { value: "integrations", label: "Intégrations", icon: Puzzle },
   { value: "settings", label: "Paramètres", icon: Settings },
 ];
