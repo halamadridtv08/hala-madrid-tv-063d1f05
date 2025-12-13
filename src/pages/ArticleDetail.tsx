@@ -235,6 +235,9 @@ const ArticleDetail = () => {
                 {renderContent()}
               </div>
 
+              {/* Inline Ads - Dans l'article */}
+              <ArticleAds position="inline" />
+
               {article.video_url && (
                 <ArticleVideoPlayer videoUrl={article.video_url} />
               )}
@@ -257,6 +260,9 @@ const ArticleDetail = () => {
                 {/* Comments */}
                 <ArticleComments articleId={id!} />
               </div>
+
+              {/* Bottom Ads - Bas de l'article */}
+              <ArticleAds position="bottom" />
             </div>
 
             {/* Widget des dernières infos */}
