@@ -61,6 +61,9 @@ import { CompetitionReports } from "@/components/admin/CompetitionReports";
 import { CompetitionAliasManager } from "@/components/admin/CompetitionAliasManager";
 import { DataInconsistencyDetector } from "@/components/admin/DataInconsistencyDetector";
 import IntegrationsManager from "@/components/admin/IntegrationsManager";
+import { PartnersManager } from "@/components/admin/PartnersManager";
+import { FooterLinksManager } from "@/components/admin/FooterLinksManager";
+import { ArticleAdsManager } from "@/components/admin/ArticleAdsManager";
 import { useNavigate } from "react-router-dom";
 interface StatsData {
   totalPlayers: number;
@@ -425,6 +428,9 @@ const Admin = () => {
   const renderSettings = () => <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-4">Paramètres</h2>
       <SiteVisibilityManager />
+      <PartnersManager />
+      <FooterLinksManager />
+      <ArticleAdsManager />
       <UserRolesManager />
       <CompetitionAliasManager />
       <DataInconsistencyDetector />

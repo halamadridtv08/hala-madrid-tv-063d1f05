@@ -81,6 +81,14 @@ const translations: Record<Language, Record<string, string>> = {
     'footer.contact': 'Contact',
     'footer.followUs': 'Suivez-nous',
     'footer.rights': 'Tous droits réservés',
+    'footer.subscribeText': 'Inscrivez-vous pour recevoir les dernières actualités',
+    'footer.subscribe': 'S\'inscrire',
+    
+    // Partners
+    'partners.title': 'Nos Partenaires',
+    'partners.premium': 'Partenaires Premium',
+    'partners.official': 'Partenaires Officiels',
+    'partners.standard': 'Partenaires',
     
     // Language
     'language.select': 'Sélectionner la langue',
@@ -164,6 +172,14 @@ const translations: Record<Language, Record<string, string>> = {
     'footer.contact': 'Contact',
     'footer.followUs': 'Follow us',
     'footer.rights': 'All rights reserved',
+    'footer.subscribeText': 'Subscribe to receive the latest news',
+    'footer.subscribe': 'Subscribe',
+    
+    // Partners
+    'partners.title': 'Our Partners',
+    'partners.premium': 'Premium Partners',
+    'partners.official': 'Official Partners',
+    'partners.standard': 'Partners',
     
     // Language
     'language.select': 'Select language',
@@ -247,6 +263,14 @@ const translations: Record<Language, Record<string, string>> = {
     'footer.contact': 'Contacto',
     'footer.followUs': 'Síguenos',
     'footer.rights': 'Todos los derechos reservados',
+    'footer.subscribeText': 'Suscríbete para recibir las últimas noticias',
+    'footer.subscribe': 'Suscribirse',
+    
+    // Partners
+    'partners.title': 'Nuestros Socios',
+    'partners.premium': 'Socios Premium',
+    'partners.official': 'Socios Oficiales',
+    'partners.standard': 'Socios',
     
     // Language
     'language.select': 'Seleccionar idioma',
