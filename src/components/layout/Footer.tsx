@@ -164,10 +164,12 @@ export function Footer() {
             )}
             
             {/* Newsletter */}
-            <div>
-              <h3 className="text-xl font-bold mb-4">Newsletter</h3>
-              <FooterNewsletterForm />
-            </div>
+            {isVisible('newsletter_footer') && (
+              <div>
+                <h3 className="text-xl font-bold mb-4">Newsletter</h3>
+                <FooterNewsletterForm />
+              </div>
+            )}
           </div>
           
           {/* Bottom bar with additional links */}

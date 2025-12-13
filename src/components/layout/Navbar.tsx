@@ -8,6 +8,7 @@ import { Menu, X, Calendar, Users, Video, FileText, Image, Search, Plus, Star } 
 import { AuthButtons } from "./AuthButtons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 import { AddContentMenu } from "./AddContentMenu";
 import { AnimatedSearchBar } from "./AnimatedSearchBar";
 import {
@@ -27,6 +28,7 @@ export function Navbar() {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const { t } = useLanguage();
+  const { isVisible } = useSiteVisibility();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -242,12 +244,14 @@ export function Navbar() {
                 </Link>
               </NavigationMenuItem>
               
-              <NavigationMenuItem>
-                <Link to="/dream-team" className="text-foreground hover:text-madrid-gold font-medium transition-colors flex items-center gap-1 text-sm lg:text-base px-2 py-1">
-                  <Star className="h-3 w-3 lg:h-4 lg:w-4 text-madrid-gold" />
-                  <span className="hidden lg:inline">Dream Team</span>
-                </Link>
-              </NavigationMenuItem>
+              {isVisible('dream_team_nav') && (
+                <NavigationMenuItem>
+                  <Link to="/dream-team" className="text-foreground hover:text-madrid-gold font-medium transition-colors flex items-center gap-1 text-sm lg:text-base px-2 py-1">
+                    <Star className="h-3 w-3 lg:h-4 lg:w-4 text-madrid-gold" />
+                    <span className="hidden lg:inline">Dream Team</span>
+                  </Link>
+                </NavigationMenuItem>
+              )}
             </NavigationMenuList>
           </NavigationMenu>
           
@@ -348,13 +352,15 @@ export function Navbar() {
                 >
                   {t('nav.stats')}
                 </Link>
-                <Link 
-                  to="/dream-team" 
-                  className="text-foreground hover:text-madrid-gold font-medium transition-colors py-2 flex items-center gap-2 text-sm"
-                  onClick={closeMenu}
-                >
-                  <Star className="h-4 w-4 text-madrid-gold" /> Dream Team
-                </Link>
+                {isVisible('dream_team_nav') && (
+                  <Link 
+                    to="/dream-team" 
+                    className="text-foreground hover:text-madrid-gold font-medium transition-colors py-2 flex items-center gap-2 text-sm"
+                    onClick={closeMenu}
+                  >
+                    <Star className="h-4 w-4 text-madrid-gold" /> Dream Team
+                  </Link>
+                )}
               </div>
               
               <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
