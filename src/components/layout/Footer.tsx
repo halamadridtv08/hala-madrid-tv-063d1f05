@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import DOMPurify from "dompurify";
 import SocialMediaCard from "./SocialMediaCard";
 import { useFooterLinks, FooterLink } from "@/hooks/useFooterLinks";
 import { useSiteVisibility } from "@/hooks/useSiteVisibility";
@@ -210,7 +211,12 @@ export function Footer() {
           </DialogHeader>
           <div 
             className="prose dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: modalContent?.content || '' }}
+            dangerouslySetInnerHTML={{ 
+              __html: DOMPurify.sanitize(modalContent?.content || '', {
+                ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'div', 'span'],
+                ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+              })
+            }}
           />
         </DialogContent>
       </Dialog>
