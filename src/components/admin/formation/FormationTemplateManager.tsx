@@ -42,8 +42,7 @@ export const FormationTemplateManager = () => {
     const { data, error } = await supabase
       .from('formation_templates')
       .select('*')
-      .order('is_default', { ascending: false })
-      .order('name');
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Erreur:', error);
