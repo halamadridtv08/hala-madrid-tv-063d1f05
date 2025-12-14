@@ -33,6 +33,7 @@ const Search = lazy(() => import("./pages/Search"));
 const Favorites = lazy(() => import("./pages/Favorites"));
 const Predictions = lazy(() => import("./pages/Predictions"));
 const DreamTeam = lazy(() => import("./pages/DreamTeam"));
+const LiveBlog = lazy(() => import("./pages/LiveBlog"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -82,6 +83,7 @@ const App = () => (
                   <Route path="/favorites" element={<Favorites />} />
                   <Route path="/predictions" element={<Predictions />} />
                   <Route path="/dream-team" element={<DreamTeam />} />
+                  <Route path="/live-blog/:matchId" element={<LiveBlog />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route 
                     path="/admin" 
