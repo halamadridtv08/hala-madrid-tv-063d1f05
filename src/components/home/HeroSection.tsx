@@ -1,11 +1,13 @@
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { YouTubeChannel } from "@/components/YouTubeChannel";
 import { NewsCarousel } from "@/components/home/NewsCarousel";
 import { motion } from "framer-motion";
 import { useHeroVideo } from "@/hooks/useHeroVideo";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ShinyButton } from "@/components/ui/shiny-button";
+import { VideoButton } from "@/components/ui/video-button";
 export function HeroSection() {
+  const navigate = useNavigate();
   const {
     videoUrl,
     isLoading
@@ -36,13 +38,13 @@ export function HeroSection() {
               <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-gray-100 mb-4 sm:mb-6 md:mb-8 leading-relaxed">
                 Votre chaîne officielle d'actualités, de vidéos et d'informations sur le Real Madrid
               </p>
-              <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 md:gap-4">
-                <Button asChild className="bg-madrid-gold text-black hover:bg-yellow-400 font-bold py-2 px-3 sm:px-4 md:px-6 text-xs sm:text-sm md:text-base lg:text-lg transform transition hover:scale-105 w-full xs:w-auto">
-                  <Link to="/news">Dernières Actualités</Link>
-                </Button>
-                <Button asChild variant="outline" className="bg-transparent text-white border-white hover:bg-white/10 font-bold py-2 px-3 sm:px-4 md:px-6 text-xs sm:text-sm md:text-base lg:text-lg transform transition hover:scale-105 w-full xs:w-auto">
-                  <Link to="/videos">Voir les Vidéos</Link>
-                </Button>
+              <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 md:gap-4 items-center">
+                <ShinyButton onClick={() => navigate('/news')}>
+                  Dernières Actualités
+                </ShinyButton>
+                <VideoButton onClick={() => navigate('/videos')}>
+                  Voir les Vidéos
+                </VideoButton>
               </div>
             </motion.div>
 
