@@ -26,9 +26,12 @@ const ENTRY_TYPES = [
   { value: 'card', label: 'Carton 🟨🟥' },
   { value: 'substitution', label: 'Remplacement 🔄' },
   { value: 'important', label: 'Important ❗' },
-  { value: 'halftime', label: 'Mi-temps' },
-  { value: 'kickoff', label: 'Coup d\'envoi' },
-  { value: 'fulltime', label: 'Fin du match' },
+  { value: 'halftime', label: 'Mi-temps ⏸️' },
+  { value: 'kickoff', label: 'Coup d\'envoi ▶️' },
+  { value: 'fulltime', label: 'Fin du match ⏹️' },
+  { value: 'corner', label: 'Corner 🚩' },
+  { value: 'foul', label: 'Faute ⚠️' },
+  { value: 'chance', label: 'Occasion 🎯' },
 ];
 
 export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) => {
