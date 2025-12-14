@@ -271,7 +271,7 @@ export function Navbar() {
             </div>
           )}
           
-          <LanguageSelector />
+          {isVisible('language_selector') && <LanguageSelector />}
           <ThemeToggle />
           <AuthButtons />
         </nav>
@@ -364,7 +364,7 @@ export function Navbar() {
               </div>
               
               <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <LanguageSelector />
+                {isVisible('language_selector') && <LanguageSelector />}
                 <AuthButtons />
               </div>
             </div>
