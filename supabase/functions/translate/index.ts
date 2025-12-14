@@ -14,12 +14,51 @@ serve(async (req) => {
   try {
     const { text, targetLang, sourceLang } = await req.json();
 
-    if (!text || !targetLang) {
+    // Input validation - prevent abuse
+    const MAX_TEXT_LENGTH = 5000;
+    const VALID_LANGS = ['fr', 'en', 'es', 'FR', 'EN', 'ES'];
+
+    if (!text || typeof text !== 'string') {
+      console.warn("Translation request rejected: missing or invalid text");
       return new Response(
-        JSON.stringify({ error: "Missing text or targetLang" }),
+        JSON.stringify({ error: "Text is required and must be a string" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    if (text.length > MAX_TEXT_LENGTH) {
+      console.warn(`Translation request rejected: text too long (${text.length} chars)`);
+      return new Response(
+        JSON.stringify({ error: `Text must not exceed ${MAX_TEXT_LENGTH} characters` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (text.trim().length === 0) {
+      console.warn("Translation request rejected: empty text");
+      return new Response(
+        JSON.stringify({ error: "Text cannot be empty" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!targetLang || typeof targetLang !== 'string') {
+      console.warn("Translation request rejected: missing targetLang");
+      return new Response(
+        JSON.stringify({ error: "Target language is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!VALID_LANGS.includes(targetLang) && !VALID_LANGS.includes(targetLang.toLowerCase())) {
+      console.warn(`Translation request rejected: invalid targetLang (${targetLang})`);
+      return new Response(
+        JSON.stringify({ error: "Invalid target language. Supported: fr, en, es" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Processing translation: ${text.length} chars to ${targetLang}`);
 
     // Get DeepL API key from integrations table
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
