@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,12 +21,21 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | undefined>(undefined);
 
+  // Trier les matchs par date (plus récent en premier)
+  const sortedMatches = useMemo(() => {
+    return [...matches].sort((a, b) => {
+      const dateA = new Date(a.match_date).getTime();
+      const dateB = new Date(b.match_date).getTime();
+      return dateB - dateA;
+    });
+  }, [matches]);
+
   const refreshMatches = async () => {
     try {
       const { data, error } = await supabase
         .from('matches')
         .select('*')
-        .order('match_date', { ascending: true });
+        .order('match_date', { ascending: false });
 
       if (error) throw error;
       setMatches(data || []);
@@ -116,7 +125,7 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
           </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {matches.map((match) => (
+            {sortedMatches.map((match) => (
               <div key={match.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded gap-3">
                 <div className="flex-1">
                   <h3 className="font-semibold text-sm sm:text-base">
@@ -176,7 +185,7 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
                 </div>
               </div>
             ))}
-            {matches.length === 0 && (
+            {sortedMatches.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 Aucun match trouvé
               </div>

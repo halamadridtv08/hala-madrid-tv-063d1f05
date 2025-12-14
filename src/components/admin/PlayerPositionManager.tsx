@@ -36,10 +36,10 @@ const PlayerPositionManager = ({ players, setPlayers }: PlayerPositionManagerPro
     console.log('Organizing players:', players.map(p => ({ name: p.name, position: p.position })));
     
     const positions = [
-      { id: 'gardien', name: 'Gardiens', color: 'bg-green-100 border-green-300' },
-      { id: 'defenseur', name: 'Défenseurs', color: 'bg-blue-100 border-blue-300' },
-      { id: 'milieu', name: 'Milieux', color: 'bg-yellow-100 border-yellow-300' },
-      { id: 'attaquant', name: 'Attaquants', color: 'bg-red-100 border-red-300' }
+      { id: 'gardien', name: 'Gardiens', color: 'bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700' },
+      { id: 'defenseur', name: 'Défenseurs', color: 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700' },
+      { id: 'milieu', name: 'Milieux', color: 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700' },
+      { id: 'attaquant', name: 'Attaquants', color: 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700' }
     ];
 
     const groups = positions.map(pos => {
@@ -254,7 +254,7 @@ const PlayerPositionManager = ({ players, setPlayers }: PlayerPositionManagerPro
                 
                 <div className="space-y-2">
                   {group.players.map((player) => (
-                    <div key={player.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 sm:p-3 bg-white rounded border gap-2.5">
+                    <div key={player.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 sm:p-3 bg-background rounded border gap-2.5">
                       <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
                         {player.image_url && (
                           <img 
@@ -264,7 +264,7 @@ const PlayerPositionManager = ({ players, setPlayers }: PlayerPositionManagerPro
                           />
                         )}
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm sm:text-base truncate">{player.name}</h4>
+                          <h4 className="font-medium text-sm sm:text-base truncate text-foreground">{player.name}</h4>
                           <p className="text-xs sm:text-sm text-muted-foreground truncate">{player.position}</p>
                           <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
                             <Badge variant={player.is_active ? "default" : "secondary"} className="text-xs">
@@ -313,7 +313,7 @@ const PlayerPositionManager = ({ players, setPlayers }: PlayerPositionManagerPro
                     </div>
                   ))}
                   {group.players.length === 0 && (
-                    <div className="text-center py-4 text-gray-500 bg-white rounded border border-dashed">
+                    <div className="text-center py-4 text-muted-foreground bg-background rounded border border-dashed">
                       Aucun joueur dans cette position
                     </div>
                   )}

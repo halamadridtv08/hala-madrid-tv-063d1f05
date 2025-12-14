@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,11 +21,20 @@ const ArticleTable = ({ articles, setArticles, onManageEngagement }: ArticleTabl
   const [showForm, setShowForm] = useState(false);
   const [editingArticle, setEditingArticle] = useState<Article | undefined>();
 
+  // Trier les articles par date de publication (plus récent en premier)
+  const sortedArticles = useMemo(() => {
+    return [...articles].sort((a, b) => {
+      const dateA = new Date(a.published_at || 0).getTime();
+      const dateB = new Date(b.published_at || 0).getTime();
+      return dateB - dateA;
+    });
+  }, [articles]);
+
   const refreshArticles = async () => {
     const { data, error } = await supabase
       .from('articles')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('published_at', { ascending: false });
 
     if (error) {
       console.error('Erreur lors du rechargement:', error);
@@ -115,7 +124,7 @@ const ArticleTable = ({ articles, setArticles, onManageEngagement }: ArticleTabl
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Articles ({articles.length})</CardTitle>
+          <CardTitle>Articles ({sortedArticles.length})</CardTitle>
           <Button onClick={handleAddArticle}>
             <Plus className="h-4 w-4 mr-2" />
             Nouvel article
@@ -123,65 +132,85 @@ const ArticleTable = ({ articles, setArticles, onManageEngagement }: ArticleTabl
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {articles.map((article) => (
-            <div key={article.id} className="flex items-center justify-between p-4 border rounded">
-              <div className="flex-1">
-                <h3 className="font-semibold">{article.title}</h3>
-                <p className="text-sm text-gray-600 mt-1">{stripHtml(article.description)}</p>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {sortedArticles.map((article) => (
+            <Card key={article.id} className="overflow-hidden group">
+              <div className="relative h-48 overflow-hidden">
+                {article.image_url ? (
+                  <img
+                    src={article.image_url}
+                    alt={article.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <p className="text-muted-foreground">Pas d'image</p>
+                  </div>
+                )}
+                <div className="absolute top-2 right-2 flex gap-2">
+                  <Button
+                    size="icon"
+                    variant={article.is_published ? "default" : "secondary"}
+                    onClick={() => togglePublished(article.id, article.is_published)}
+                    disabled={loading}
+                    className="h-8 w-8"
+                    title={article.is_published ? "Dépublier" : "Publier"}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <CardHeader className="pb-2">
+                <CardTitle className="line-clamp-2 text-base">{article.title}</CardTitle>
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {stripHtml(article.description)}
+                </p>
                 <div className="flex items-center gap-2 mt-2">
                   <Badge variant={article.is_published ? "default" : "secondary"}>
                     {article.is_published ? "Publié" : "Brouillon"}
                   </Badge>
                   <Badge variant="outline">{article.category}</Badge>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {onManageEngagement && (
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2">
+                  {onManageEngagement && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onManageEngagement(article.id)}
+                      title="Gérer engagement"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
-                    variant="secondary"
+                    variant="outline"
                     size="sm"
-                    onClick={() => onManageEngagement(article.id)}
-                    title="Gérer engagement"
+                    className="flex-1"
+                    onClick={() => handleEditArticle(article)}
                   >
-                    <MessageCircle className="h-4 w-4" />
+                    <Edit className="mr-2 h-4 w-4" />
+                    Modifier
                   </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => togglePublished(article.id, article.is_published)}
-                  disabled={loading}
-                  title={article.is_published ? "Dépublier" : "Publier"}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleEditArticle(article)}
-                  title="Modifier l'article"
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleDelete(article.id)}
-                  disabled={loading}
-                  title="Supprimer l'article"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(article.id)}
+                    disabled={loading}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           ))}
-          {articles.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              Aucun article trouvé
-            </div>
-          )}
         </div>
+        {sortedArticles.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            Aucun article trouvé
+          </div>
+        )}
       </CardContent>
     </Card>
   );
