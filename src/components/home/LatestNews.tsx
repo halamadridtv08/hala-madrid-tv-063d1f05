@@ -7,6 +7,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { TranslatedText } from "@/components/common/TranslatedText";
+import { useLanguage } from "@/contexts/LanguageContext";
 interface Article {
   id: string;
   title: string;
@@ -64,12 +66,14 @@ export function LatestNews() {
       year: 'numeric'
     }).format(date);
   };
+  const { t } = useLanguage();
+  
   return <section className="pt-12 pb-0">
       <div className="madrid-container">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="section-title">Dernières Actualités</h2>
+          <h2 className="section-title">{t('home.latestNews')}</h2>
           <Button asChild variant="outline">
-            <Link to="/news">Voir toutes</Link>
+            <Link to="/news">{t('home.viewAll')}</Link>
           </Button>
         </div>
         
@@ -111,13 +115,17 @@ export function LatestNews() {
                       {formatDate(article.published_at)}
                     </span>
                   </div>
-                  <CardTitle className="line-clamp-2 text-base">{article.title}</CardTitle>
-                  <CardDescription className="line-clamp-1 text-sm">{stripHtml(article.description)}</CardDescription>
+                  <CardTitle className="line-clamp-2 text-base">
+                    <TranslatedText text={article.title} as="span" />
+                  </CardTitle>
+                  <CardDescription className="line-clamp-1 text-sm">
+                    <TranslatedText text={stripHtml(article.description)} as="span" />
+                  </CardDescription>
                 </CardHeader>
                 <CardFooter className="flex justify-between items-center">
                   
                   <Button asChild variant="link" className="p-0 text-madrid-blue dark:text-blue-400">
-                    <Link to={`/news/${article.id}`} className="mx-[200px] my-0 py-0 px-0">Lire l'article</Link>
+                    <Link to={`/news/${article.id}`} className="mx-[200px] my-0 py-0 px-0">{t('common.seeMore')}</Link>
                   </Button>
                 </CardFooter>
               </Card>)}

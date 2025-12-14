@@ -13,6 +13,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TranslatedText } from "@/components/common/TranslatedText";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const categoryLabels: Record<FlashNewsCategory, string> = {
   transfer: "Transferts",
@@ -50,6 +52,7 @@ const getCategoryColor = (category: string) => {
 export const TwitterFlashCarousel = () => {
   const { flashNews, loading } = useFlashNewsWithSources();
   const [selectedCategory, setSelectedCategory] = useState<FlashNewsCategory | 'all'>('all');
+  const { t } = useLanguage();
 
   const filteredNews = selectedCategory === 'all' 
     ? flashNews 
@@ -96,10 +99,10 @@ export const TwitterFlashCarousel = () => {
           </div>
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Infos Flash
+              {t('home.flashNews')}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Les dernières actualités en temps réel
+              <TranslatedText text="Les dernières actualités en temps réel" as="span" />
             </p>
           </div>
         </div>
@@ -174,7 +177,7 @@ export const TwitterFlashCarousel = () => {
                         </div>
                       </div>
                       <p className="text-sm text-foreground leading-relaxed mb-3">
-                        {news.content}
+                        <TranslatedText text={news.content} as="span" />
                       </p>
                       <div className="text-xs text-muted-foreground">
                         {getTimestamp(news.created_at)}
@@ -227,7 +230,7 @@ export const TwitterFlashCarousel = () => {
                         </div>
                       </div>
                       <p className="text-sm text-foreground leading-relaxed mb-3">
-                        {news.content}
+                        <TranslatedText text={news.content} as="span" />
                       </p>
                       <div className="text-xs text-muted-foreground">
                         {getTimestamp(news.created_at)}

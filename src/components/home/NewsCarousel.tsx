@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { TranslatedText } from "@/components/common/TranslatedText";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Article {
   id: string;
@@ -32,6 +34,7 @@ export function NewsCarousel() {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const fetchFeaturedArticles = async () => {
@@ -160,10 +163,14 @@ export function NewsCarousel() {
                             {formatDate(slide.published_at)} {slide.read_time && `| ${slide.read_time} de lecture`}
                           </span>
                         </div>
-                        <h2 className="text-xl md:text-2xl font-bold mb-1 line-clamp-2">{slide.title}</h2>
-                        <p className="text-sm mb-3 opacity-90 line-clamp-2">{stripHtml(slide.description)}</p>
+                        <h2 className="text-xl md:text-2xl font-bold mb-1 line-clamp-2">
+                          <TranslatedText text={slide.title} as="span" />
+                        </h2>
+                        <p className="text-sm mb-3 opacity-90 line-clamp-2">
+                          <TranslatedText text={stripHtml(slide.description)} as="span" />
+                        </p>
                         <Button asChild className="bg-madrid-gold text-black hover:bg-yellow-400 text-sm py-1 h-8">
-                          <Link to={`/news/${slide.id}`}>Lire l'article</Link>
+                          <Link to={`/news/${slide.id}`}>{t('common.seeMore')}</Link>
                         </Button>
                       </div>
                     </div>
@@ -230,7 +237,7 @@ export function NewsCarousel() {
                   {slide.category}
                 </Badge>
                 <p className="text-xs font-medium line-clamp-2 text-foreground">
-                  {slide.title}
+                  <TranslatedText text={slide.title} as="span" />
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {formatDate(slide.published_at).split(' ').slice(0, 2).join(' ')}

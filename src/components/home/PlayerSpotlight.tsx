@@ -8,12 +8,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { motion, AnimatePresence } from "framer-motion";
+import { TranslatedText } from "@/components/common/TranslatedText";
+import { useLanguage } from "@/contexts/LanguageContext";
 export function PlayerSpotlight() {
   const [featuredPlayers, setFeaturedPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [api, setApi] = useState<any>(null);
   const [progress, setProgress] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { t } = useLanguage();
   useEffect(() => {
     fetchFeaturedPlayers();
   }, []);
@@ -96,7 +99,7 @@ export function PlayerSpotlight() {
   if (loading) {
     return <section className="py-12 bg-gradient-to-br from-madrid-blue to-blue-900 dark:from-gray-900 dark:to-gray-800">
         <div className="madrid-container">
-          <h2 className="section-title text-white mb-8">Joueur en Vedette</h2>
+          <h2 className="section-title text-white mb-8">{t('home.playerSpotlight')}</h2>
           <Skeleton className="h-[500px] w-full" />
         </div>
       </section>;
@@ -121,7 +124,9 @@ export function PlayerSpotlight() {
       <div className="p-8 flex flex-col justify-between text-white bg-gradient-to-br from-madrid-blue/95 to-blue-900/95 dark:from-gray-800/95 dark:to-gray-900/95">
         <div>
           <h3 className="text-4xl font-bold mb-2">{player.name}</h3>
-          <p className="text-xl text-blue-200 dark:text-blue-300 mb-2">{player.position}</p>
+          <p className="text-xl text-blue-200 dark:text-blue-300 mb-2">
+            <TranslatedText text={player.position} as="span" />
+          </p>
           <p className="text-lg text-blue-300 dark:text-blue-400">{player.nationality}</p>
 
           <div className="mt-8">
@@ -133,19 +138,19 @@ export function PlayerSpotlight() {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
                 <div className="text-3xl font-bold text-madrid-gold">{player.stats?.goals || 0}</div>
-                <div className="text-sm text-blue-200 dark:text-blue-300">Buts</div>
+                <div className="text-sm text-blue-200 dark:text-blue-300"><TranslatedText text="Buts" as="span" /></div>
               </div>
               <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
                 <div className="text-3xl font-bold text-madrid-gold">{player.stats?.assists || 0}</div>
-                <div className="text-sm text-blue-200 dark:text-blue-300">Passes D.</div>
+                <div className="text-sm text-blue-200 dark:text-blue-300"><TranslatedText text="Passes D." as="span" /></div>
               </div>
               <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
                 <div className="text-3xl font-bold text-madrid-gold">{player.stats?.matches || 0}</div>
-                <div className="text-sm text-blue-200 dark:text-blue-300">Matchs</div>
+                <div className="text-sm text-blue-200 dark:text-blue-300"><TranslatedText text="Matchs" as="span" /></div>
               </div>
               <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
                 <div className="text-3xl font-bold text-madrid-gold">{Math.round((player.stats?.minutesPlayed || 0) / 60)}</div>
-                <div className="text-sm text-blue-200 dark:text-blue-300">Heures</div>
+                <div className="text-sm text-blue-200 dark:text-blue-300"><TranslatedText text="Heures" as="span" /></div>
               </div>
             </div>
           </div>
@@ -155,12 +160,12 @@ export function PlayerSpotlight() {
           <Button asChild className="flex-1 bg-madrid-gold text-black hover:bg-yellow-400">
             <Link to={`/players/${player.id}`}>
               <Trophy className="mr-2 h-4 w-4" />
-              Voir le Profil
+              <TranslatedText text="Voir le Profil" as="span" />
             </Link>
           </Button>
           <Button asChild variant="outline" className="flex-1 bg-transparent border-white/30 text-white hover:bg-white/10">
             <Link to="/players">
-              Tout l'Effectif
+              {t('home.viewPlayers')}
             </Link>
           </Button>
         </div>
@@ -169,7 +174,7 @@ export function PlayerSpotlight() {
   return <section className="py-12 bg-gradient-to-br from-madrid-blue to-blue-900 dark:from-gray-900 dark:to-gray-800">
       <div className="madrid-container">
         <h2 className="section-title text-white mb-8">
-          {featuredPlayers.length > 1 ? "Joueurs en Vedette" : "Joueur en Vedette"}
+          {t('home.playerSpotlight')}
         </h2>
         
         {featuredPlayers.length === 1 ? <Card className="overflow-hidden bg-white/10 backdrop-blur border-white/20">
