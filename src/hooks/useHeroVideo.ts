@@ -17,7 +17,9 @@ export function useHeroVideo() {
           .getPublicUrl(HERO_VIDEO_FILENAME);
         
         if (data?.publicUrl) {
-          setVideoUrl(data.publicUrl);
+          // Add cache-busting parameter to bypass service worker cache
+          const urlWithCacheBust = `${data.publicUrl}?t=${Date.now()}`;
+          setVideoUrl(urlWithCacheBust);
         }
       } catch (error) {
         console.error('Erreur lors du chargement de la vidéo:', error);
