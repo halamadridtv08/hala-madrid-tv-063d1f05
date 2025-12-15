@@ -58,7 +58,7 @@ export function HeroSection() {
             duration: 0.5,
             delay: 0.4
           }}>
-              {isLoading ? <Skeleton className="w-full h-full rounded-xl" /> : videoUrl ? <video 
+              {videoUrl ? <video 
                   className="w-full h-full rounded-xl object-cover shadow-2xl" 
                   autoPlay 
                   muted 
@@ -67,12 +67,13 @@ export function HeroSection() {
                   disablePictureInPicture
                   controlsList="nodownload noplaybackrate nofullscreen"
                   onContextMenu={(e) => e.preventDefault()}
+                  preload="auto"
                   key={videoUrl}
                 >
                   <source src={videoUrl} type="video/mp4" />
                   Votre navigateur ne supporte pas la lecture vidéo.
-                </video> : <div className="w-full h-full rounded-xl bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
-                  <p className="text-gray-500">Vidéo non disponible</p>
+                </video> : <div className="w-full h-full rounded-xl bg-gradient-to-br from-madrid-blue/30 to-madrid-gold/20 flex items-center justify-center animate-pulse">
+                  <div className="w-16 h-16 border-4 border-madrid-gold border-t-transparent rounded-full animate-spin" />
                 </div>}
             </motion.div>
           </div>
