@@ -53,6 +53,10 @@ export default defineConfig(({ mode }) => ({
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
+            urlPattern: /^https:\/\/qjnppcfbywfazwolfppo\.supabase\.co\/storage\/.*/i,
+            handler: 'NetworkOnly',
+          },
+          {
             urlPattern: /^https:\/\/qjnppcfbywfazwolfppo\.supabase\.co\/.*/i,
             handler: 'NetworkFirst',
             options: {
