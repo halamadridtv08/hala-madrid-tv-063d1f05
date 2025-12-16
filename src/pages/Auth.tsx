@@ -18,6 +18,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingPassword, setCheckingPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showTwoFactor, setShowTwoFactor] = useState(false);
@@ -27,6 +28,28 @@ const Auth = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const { imageUrl: heroImageFromDb, isLoading: isLoadingHeroImage } = useAuthHeroImage();
+
+  // Vérifier si un mot de passe est compromis via Have I Been Pwned API
+  const isPasswordPwned = async (pwd: string): Promise<boolean> => {
+    try {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(pwd);
+      const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+      
+      const prefix = hashHex.substring(0, 5);
+      const suffix = hashHex.substring(5);
+      
+      const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
+      const text = await response.text();
+      
+      return text.split('\n').some(line => line.startsWith(suffix));
+    } catch (error) {
+      console.error('Erreur vérification mot de passe:', error);
+      return false; // En cas d'erreur, on autorise quand même
+    }
+  };
   
   // Use Supabase image if available, otherwise fallback to local image
   const heroImage = heroImageFromDb || authHeroImage;
@@ -152,6 +175,17 @@ const Auth = () => {
     setError(null);
 
     try {
+      // Vérifier si le mot de passe est compromis
+      setCheckingPassword(true);
+      const isPwned = await isPasswordPwned(password);
+      setCheckingPassword(false);
+      
+      if (isPwned) {
+        setError("⚠️ Ce mot de passe a été trouvé dans des fuites de données. Veuillez en choisir un autre plus sécurisé.");
+        setLoading(false);
+        return;
+      }
+
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
@@ -172,6 +206,7 @@ const Auth = () => {
       setError(error.message || "Erreur lors de l'inscription");
     } finally {
       setLoading(false);
+      setCheckingPassword(false);
     }
   };
 
@@ -321,9 +356,9 @@ const Auth = () => {
                   <Button 
                     type="submit" 
                     className="w-full h-12 bg-[#001F54] hover:bg-[#002D72] text-white font-semibold text-lg"
-                    disabled={loading}
+                    disabled={loading || checkingPassword}
                   >
-                    {loading ? "Chargement..." : (isLogin ? "Se connecter" : "S'inscrire")}
+                    {checkingPassword ? "Vérification du mot de passe..." : loading ? "Chargement..." : (isLogin ? "Se connecter" : "S'inscrire")}
                   </Button>
                 </form>
 
