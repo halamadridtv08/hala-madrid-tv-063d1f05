@@ -67,8 +67,12 @@ export function RichTextEditor({
   const insertOrderedList = () => execCommand('insertOrderedList');
 
   const validateUrl = (url: string): boolean => {
-    const urlPattern = /^https?:\/\/.+/i;
-    return urlPattern.test(url.trim());
+    try {
+      const parsed = new URL(url.trim());
+      return ['http:', 'https:'].includes(parsed.protocol);
+    } catch {
+      return false;
+    }
   };
 
   const insertLink = () => {
