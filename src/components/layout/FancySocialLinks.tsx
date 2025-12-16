@@ -6,13 +6,13 @@ interface FancySocialLinksProps {
 
 const FancySocialLinks: React.FC<FancySocialLinksProps> = ({ className = '' }) => {
   return (
-    <div className={`grid grid-cols-2 gap-6 max-w-md mx-auto ${className}`}>
+    <div className={`grid grid-cols-2 gap-6 max-w-[200px] mx-auto ${className}`}>
       {/* YouTube */}
       <a 
         href="https://www.youtube.com/@HALAMADRIDTV10" 
         target="_blank" 
         rel="noopener noreferrer"
-        className="p-5 rounded-full backdrop-blur-lg border border-red-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-red-500/30 hover:scale-110 hover:rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer hover:border-red-500/50 hover:bg-gradient-to-tr hover:from-red-500/10 hover:to-black/40 group relative overflow-hidden flex items-center justify-center"
+        className="w-[70px] h-[70px] rounded-full backdrop-blur-lg border border-red-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-red-500/30 hover:scale-110 hover:rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer hover:border-red-500/50 hover:bg-gradient-to-tr hover:from-red-500/10 hover:to-black/40 group relative overflow-hidden flex items-center justify-center"
       >
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
         <div className="relative z-10">
@@ -27,7 +27,7 @@ const FancySocialLinks: React.FC<FancySocialLinksProps> = ({ className = '' }) =
         href="https://www.facebook.com/RealMadrid" 
         target="_blank" 
         rel="noopener noreferrer"
-        className="p-5 rounded-full backdrop-blur-lg border border-blue-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-blue-500/30 hover:scale-110 hover:-rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer hover:border-blue-500/50 hover:bg-gradient-to-tr hover:from-blue-500/10 hover:to-black/40 group relative overflow-hidden flex items-center justify-center"
+        className="w-[70px] h-[70px] rounded-full backdrop-blur-lg border border-blue-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-blue-500/30 hover:scale-110 hover:-rotate-2 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer hover:border-blue-500/50 hover:bg-gradient-to-tr hover:from-blue-500/10 hover:to-black/40 group relative overflow-hidden flex items-center justify-center"
       >
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
         <div className="relative z-10">
@@ -42,7 +42,7 @@ const FancySocialLinks: React.FC<FancySocialLinksProps> = ({ className = '' }) =
         href="https://www.instagram.com/realmadrid" 
         target="_blank" 
         rel="noopener noreferrer"
-        className="p-5 rounded-full backdrop-blur-lg border border-pink-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-pink-500/30 hover:scale-110 hover:rotate-3 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer hover:border-pink-500/50 hover:bg-gradient-to-tr hover:from-pink-500/10 hover:to-black/40 group relative overflow-hidden flex items-center justify-center"
+        className="w-[70px] h-[70px] rounded-full backdrop-blur-lg border border-pink-500/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-pink-500/30 hover:scale-110 hover:rotate-3 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer hover:border-pink-500/50 hover:bg-gradient-to-tr hover:from-pink-500/10 hover:to-black/40 group relative overflow-hidden flex items-center justify-center"
       >
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-pink-400/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
         <div className="relative z-10">
@@ -57,7 +57,7 @@ const FancySocialLinks: React.FC<FancySocialLinksProps> = ({ className = '' }) =
         href="https://www.tiktok.com/@realmadrid" 
         target="_blank" 
         rel="noopener noreferrer"
-        className="p-5 rounded-full backdrop-blur-lg border border-white/10 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-white/20 hover:scale-110 hover:-rotate-3 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer hover:border-white/30 hover:bg-gradient-to-tr hover:from-white/10 hover:to-black/40 group relative overflow-hidden flex items-center justify-center"
+        className="w-[70px] h-[70px] rounded-full backdrop-blur-lg border border-white/10 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg hover:shadow-2xl hover:shadow-white/20 hover:scale-110 hover:-rotate-3 active:scale-95 active:rotate-0 transition-all duration-300 ease-out cursor-pointer hover:border-white/30 hover:bg-gradient-to-tr hover:from-white/10 hover:to-black/40 group relative overflow-hidden flex items-center justify-center"
       >
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out" />
         <div className="relative z-10">
