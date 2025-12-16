@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import DOMPurify from "dompurify";
 import SocialMediaCard from "./SocialMediaCard";
+import FancySocialLinks from "./FancySocialLinks";
 import { useFooterLinks, FooterLink } from "@/hooks/useFooterLinks";
 import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -107,7 +108,11 @@ export function Footer() {
                 {t('footer.aboutText')}
               </p>
               <div className="mt-6">
-                <SocialMediaCard />
+                {isVisible('fancy_social_links') ? (
+                  <FancySocialLinks />
+                ) : (
+                  <SocialMediaCard />
+                )}
               </div>
             </div>
             
