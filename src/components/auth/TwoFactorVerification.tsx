@@ -142,11 +142,11 @@ export function TwoFactorVerification({ email, onVerificationSuccess, onCancel }
 
   const logLoginAttempt = async (email: string, success: boolean) => {
     try {
-      await supabase.from('login_attempts').insert({
-        email,
-        success,
-        ip_address: await getClientIP(),
-        user_agent: navigator.userAgent
+      await supabase.rpc('log_login_attempt', {
+        p_email: email,
+        p_success: success,
+        p_ip_address: await getClientIP(),
+        p_user_agent: navigator.userAgent
       });
     } catch (error) {
       console.error('Error logging login attempt:', error);
