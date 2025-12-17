@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import DOMPurify from 'dompurify';
 
 interface TranslationCache {
   [key: string]: {
@@ -82,10 +83,14 @@ export function TranslatedText({ text, as: Component = 'span', className, html =
   }, [text, language]);
 
   if (html) {
+    const sanitizedHtml = DOMPurify.sanitize(translatedText, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'span', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+      ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+    });
     return (
       <Component 
         className={`${className || ''} ${isLoading ? 'opacity-70' : ''}`}
-        dangerouslySetInnerHTML={{ __html: translatedText }}
+        dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
       />
     );
   }

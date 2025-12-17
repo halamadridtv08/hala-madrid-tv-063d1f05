@@ -107,11 +107,11 @@ const Auth = () => {
   const logLoginAttempt = async (email: string, success: boolean) => {
     try {
       const ip = await getClientIP();
-      await supabase.from('login_attempts').insert({
-        email,
-        success,
-        ip_address: ip,
-        user_agent: navigator.userAgent
+      await supabase.rpc('log_login_attempt', {
+        p_email: email,
+        p_success: success,
+        p_ip_address: ip,
+        p_user_agent: navigator.userAgent
       });
     } catch (error) {
       console.error('Error logging login attempt:', error);

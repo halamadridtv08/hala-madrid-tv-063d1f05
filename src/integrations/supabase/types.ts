@@ -2631,6 +2631,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      log_login_attempt: {
+        Args: {
+          p_email: string
+          p_ip_address?: string
+          p_success: boolean
+          p_user_agent?: string
+        }
+        Returns: undefined
+      }
       normalize_competition_name: {
         Args: { input_name: string }
         Returns: string
