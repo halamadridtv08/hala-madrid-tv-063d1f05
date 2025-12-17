@@ -2596,6 +2596,10 @@ export type Database = {
     }
     Functions: {
       check_player_stats_alerts: { Args: never; Returns: undefined }
+      confirm_newsletter_subscription: {
+        Args: { p_confirmation_token: string; p_email: string }
+        Returns: boolean
+      }
       delete_totp_secret: { Args: { p_user_id: string }; Returns: boolean }
       get_role_history: {
         Args: { p_user_id?: string }
@@ -2615,6 +2619,7 @@ export type Database = {
         Args: { p_encryption_key: string; p_user_id: string }
         Returns: string
       }
+      get_user_email_by_id: { Args: { p_user_id: string }; Returns: string }
       get_users_with_roles: {
         Args: never
         Returns: {
@@ -2653,6 +2658,10 @@ export type Database = {
       save_totp_secret: {
         Args: { p_encryption_key: string; p_secret: string; p_user_id: string }
         Returns: string
+      }
+      unsubscribe_newsletter: {
+        Args: { p_confirmation_token: string; p_email: string }
+        Returns: boolean
       }
       update_all_players_ages: { Args: never; Returns: undefined }
       update_player_objectives_progress: { Args: never; Returns: undefined }

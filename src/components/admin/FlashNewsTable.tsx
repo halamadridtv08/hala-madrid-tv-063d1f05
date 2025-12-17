@@ -192,8 +192,9 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
 
   const getApproverEmail = async (approverId: string) => {
     try {
-      const { data } = await supabase.auth.admin.getUserById(approverId);
-      return data?.user?.email || 'Inconnu';
+      const { data, error } = await supabase.rpc('get_user_email_by_id', { p_user_id: approverId });
+      if (error) throw error;
+      return data || 'Inconnu';
     } catch (error) {
       return 'Inconnu';
     }
