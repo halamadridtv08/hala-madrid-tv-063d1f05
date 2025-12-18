@@ -10,7 +10,7 @@ const FOOTBALL_API = {
   BASE_URL: 'https://v3.football.api-sports.io',
   REAL_MADRID_ID: 541,
   LA_LIGA_ID: 140,
-  CURRENT_SEASON: 2024
+  CURRENT_SEASON: 2025
 };
 
 // Simple in-memory cache
@@ -132,9 +132,98 @@ serve(async (req) => {
         }
         break;
 
+      case 'fixture-details':
+        const fixtureId = url.searchParams.get('fixture');
+        if (!fixtureId) {
+          return new Response(
+            JSON.stringify({ error: 'fixture parameter required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        cacheKey = `fixture_details_${fixtureId}`;
+        responseData = getCached(cacheKey);
+        if (!responseData) {
+          const data = await fetchFromApi(`/fixtures?id=${fixtureId}`);
+          responseData = data.response?.[0] || null;
+          setCache(cacheKey, responseData);
+        }
+        break;
+
+      case 'fixture-events':
+        const eventsFixtureId = url.searchParams.get('fixture');
+        if (!eventsFixtureId) {
+          return new Response(
+            JSON.stringify({ error: 'fixture parameter required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        cacheKey = `fixture_events_${eventsFixtureId}`;
+        responseData = getCached(cacheKey);
+        if (!responseData) {
+          const data = await fetchFromApi(`/fixtures/events?fixture=${eventsFixtureId}`);
+          responseData = data.response || [];
+          setCache(cacheKey, responseData);
+        }
+        break;
+
+      case 'fixture-lineups':
+        const lineupsFixtureId = url.searchParams.get('fixture');
+        if (!lineupsFixtureId) {
+          return new Response(
+            JSON.stringify({ error: 'fixture parameter required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        cacheKey = `fixture_lineups_${lineupsFixtureId}`;
+        responseData = getCached(cacheKey);
+        if (!responseData) {
+          const data = await fetchFromApi(`/fixtures/lineups?fixture=${lineupsFixtureId}`);
+          responseData = data.response || [];
+          setCache(cacheKey, responseData);
+        }
+        break;
+
+      case 'fixture-statistics':
+        const statsFixtureId = url.searchParams.get('fixture');
+        if (!statsFixtureId) {
+          return new Response(
+            JSON.stringify({ error: 'fixture parameter required' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        cacheKey = `fixture_statistics_${statsFixtureId}`;
+        responseData = getCached(cacheKey);
+        if (!responseData) {
+          const data = await fetchFromApi(`/fixtures/statistics?fixture=${statsFixtureId}`);
+          responseData = data.response || [];
+          setCache(cacheKey, responseData);
+        }
+        break;
+
+      case 'search-fixtures':
+        const searchTeam = url.searchParams.get('team') || FOOTBALL_API.REAL_MADRID_ID;
+        const fromDate = url.searchParams.get('from');
+        const toDate = url.searchParams.get('to');
+        const season = url.searchParams.get('season'); // Optional season parameter
+        
+        // Build endpoint - if no season specified, don't include it (search by date only)
+        let searchEndpoint = `/fixtures?team=${searchTeam}`;
+        if (season) searchEndpoint += `&season=${season}`;
+        if (fromDate) searchEndpoint += `&from=${fromDate}`;
+        if (toDate) searchEndpoint += `&to=${toDate}`;
+        
+        cacheKey = `search_fixtures_${searchTeam}_${season || 'all'}_${fromDate}_${toDate}`;
+        responseData = getCached(cacheKey);
+        if (!responseData) {
+          const data = await fetchFromApi(searchEndpoint);
+          responseData = data.response || [];
+          setCache(cacheKey, responseData);
+        }
+        break;
+
       default:
         return new Response(
-          JSON.stringify({ error: 'Invalid action. Use: standings, live, team-stats, fixtures, last-matches' }),
+          JSON.stringify({ error: 'Invalid action. Use: standings, live, team-stats, fixtures, last-matches, fixture-details, fixture-events, fixture-lineups, fixture-statistics, search-fixtures' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
     }
@@ -142,7 +231,7 @@ serve(async (req) => {
     console.log(`Action ${action} completed successfully`);
 
     return new Response(
-      JSON.stringify({ data: responseData, cached: !!getCached(cacheKey) }),
+      JSON.stringify({ data: responseData, cached: !!getCached(cacheKey!) }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
