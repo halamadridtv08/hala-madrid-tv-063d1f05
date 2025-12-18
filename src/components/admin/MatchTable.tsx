@@ -140,6 +140,16 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
   const handleSyncAllRecent = async () => {
     setLoading(true);
     try {
+      const futureFinished = matches.filter(
+        (m) => m.status === 'finished' && new Date(m.match_date).getTime() > Date.now() + 24 * 60 * 60 * 1000
+      );
+      if (futureFinished.length > 0) {
+        toast.warning(
+          `Sync API impossible : ${futureFinished.length} match(s) sont marqués "terminé" avec une date future. Corrigez les dates (saison réelle) puis réessayez.`
+        );
+        return;
+      }
+
       const response = await fetch(
         'https://qjnppcfbywfazwolfppo.supabase.co/functions/v1/sync-match-details'
       );
@@ -151,7 +161,9 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
         } else if (result.needsSync === 0) {
           toast.info("Tous les matchs sont déjà synchronisés !");
         } else {
-          toast.warning(`Aucune correspondance API trouvée pour les ${result.needsSync} matchs à synchroniser. Vérifiez que les dates correspondent aux vrais matchs de la saison 2025-2026.`);
+          toast.warning(
+            `Aucune correspondance API trouvée pour les ${result.needsSync} matchs à synchroniser. Vérifiez que les dates correspondent à de vrais matchs.`
+          );
         }
         if (result.errors && result.errors.length > 0) {
           console.log('Sync errors:', result.errors);
