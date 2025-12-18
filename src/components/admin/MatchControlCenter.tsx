@@ -268,7 +268,7 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
     await endFirstHalf(extraTime);
     await addEntry({
       match_id: selectedMatchId,
-      minute: 45,
+      minute: 45 + extraTime,
       entry_type: 'halftime',
       title: '⏸️ Mi-temps',
       content: `Fin de la première période${extraTime > 0 ? ` (+ ${extraTime} min)` : ''}`,
@@ -283,7 +283,7 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
     await startSecondHalf();
     await addEntry({
       match_id: selectedMatchId,
-      minute: 45,
+      minute: 46,
       entry_type: 'kickoff',
       title: '▶️ Reprise!',
       content: 'La seconde période commence!',
@@ -298,7 +298,7 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
     await endMatch(extraTime);
     await addEntry({
       match_id: selectedMatchId,
-      minute: 90,
+      minute: 90 + extraTime,
       entry_type: 'fulltime',
       title: '⏹️ Fin du temps réglementaire!',
       content: `90 minutes terminées!${extraTime > 0 ? ` (+ ${extraTime} min)` : ''}`,
@@ -314,7 +314,7 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
     await startExtraTime1();
     await addEntry({
       match_id: selectedMatchId,
-      minute: 90,
+      minute: 91,
       entry_type: 'kickoff',
       title: '▶️ Début des prolongations!',
       content: 'La première période de prolongation commence (15 min)',
@@ -329,7 +329,7 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
     await endExtraTime1(extraTime);
     await addEntry({
       match_id: selectedMatchId,
-      minute: 105,
+      minute: 105 + extraTime,
       entry_type: 'halftime',
       title: '⏸️ Mi-temps des prolongations',
       content: `Fin de la 1ère période de prolongation${extraTime > 0 ? ` (+ ${extraTime} min)` : ''}`,
@@ -344,7 +344,7 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
     await startExtraTime2();
     await addEntry({
       match_id: selectedMatchId,
-      minute: 105,
+      minute: 106,
       entry_type: 'kickoff',
       title: '▶️ Reprise prolongations!',
       content: 'La 2ème période de prolongation commence (15 min)',
@@ -359,7 +359,7 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
     await endExtraTime2(extraTime);
     await addEntry({
       match_id: selectedMatchId,
-      minute: 120,
+      minute: 120 + extraTime,
       entry_type: 'fulltime',
       title: '⏹️ Fin des prolongations!',
       content: `Les prolongations sont terminées!${extraTime > 0 ? ` (+ ${extraTime} min)` : ''}`,
