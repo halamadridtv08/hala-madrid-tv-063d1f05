@@ -48,26 +48,6 @@ export function AuthButtons() {
       <Button asChild variant="outline" size="sm">
         <Link to="/auth">Connexion</Link>
       </Button>
-      <div className="hidden md:flex items-center gap-1">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="p-1 h-8 w-8 hover:bg-blue-100 dark:hover:bg-blue-900" 
-          onClick={() => signInWithSocial('google')}
-          title="Se connecter avec Gmail"
-        >
-          <Mail size={16} />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm"
-          className="p-1 h-8 w-8 hover:bg-blue-100 dark:hover:bg-blue-900" 
-          onClick={() => signInWithSocial('twitter')}
-          title="Se connecter avec X (Twitter)"
-        >
-          <Twitter size={16} />
-        </Button>
-      </div>
     </div>
   );
 }

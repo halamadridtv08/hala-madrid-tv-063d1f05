@@ -430,19 +430,49 @@ const Admin = () => {
       <h2 className="text-2xl font-bold mb-4">Gestion des Équipes Adverses</h2>
       <OpposingTeamManager />
     </div>;
-  const renderSettings = () => <div className="space-y-6">
-      <h2 className="text-2xl font-bold mb-4">Paramètres</h2>
-      <SiteVisibilityManager />
-      <PartnersManager />
-      <FooterLinksManager />
-      <ArticleAdsManager />
-      <UserRolesManager />
-      <CompetitionAliasManager />
-      <DataInconsistencyDetector />
-      <FlashNewsCategoryManager />
-      <FlashNewsSourceManager />
-      <AuthImageManager />
-      <SettingsDashboard />
+  const renderSettings = () => <div className="space-y-8">
+      <h2 className="text-2xl font-bold mb-6">Paramètres</h2>
+      
+      {/* Section Configuration Générale */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Configuration générale</h3>
+        <SettingsDashboard />
+      </div>
+
+      {/* Section Visibilité & Affichage */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Visibilité & Affichage</h3>
+        <SiteVisibilityManager />
+        <AuthImageManager />
+      </div>
+
+      {/* Section Contenu */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Gestion du contenu</h3>
+        <FlashNewsCategoryManager />
+        <FlashNewsSourceManager />
+        <ArticleAdsManager />
+      </div>
+
+      {/* Section Partenaires & Liens */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Partenaires & Liens</h3>
+        <PartnersManager />
+        <FooterLinksManager />
+      </div>
+
+      {/* Section Utilisateurs & Rôles */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Utilisateurs & Rôles</h3>
+        <UserRolesManager />
+      </div>
+
+      {/* Section Données & Synchronisation */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Données & Synchronisation</h3>
+        <CompetitionAliasManager />
+        <DataInconsistencyDetector />
+      </div>
     </div>;
   const renderKits = () => <div>
       <h2 className="text-2xl font-bold mb-4">Gestion des Maillots</h2>
