@@ -5,19 +5,16 @@ import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { FlashNewsSource } from "@/types/FlashNewsSource";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { FlashNewsSourcePicker } from "./FlashNewsSourcePicker";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Smile, X } from "lucide-react";
+import { RichTextEditor } from "./RichTextEditor";
 import { Card } from "@/components/ui/card";
-import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
+
 const formSchema = z.object({
-  source_id: z.string().optional(),
   author: z.string().min(1, "L'auteur est requis"),
   author_handle: z.string().min(1, "Le handle est requis").regex(/^@/, "Doit commencer par @"),
   content: z.string().min(10, "Le contenu doit faire au moins 10 caractères"),
@@ -27,11 +24,14 @@ const formSchema = z.object({
   status: z.enum(['draft', 'pending', 'approved', 'published']).default('draft'),
   scheduled_at: z.string().optional()
 });
+
 type FormValues = z.infer<typeof formSchema>;
+
 interface FlashNewsFormProps {
   flashNews?: any;
   onSuccess?: () => void;
 }
+
 export const FlashNewsForm = ({
   flashNews,
   onSuccess
@@ -39,30 +39,30 @@ export const FlashNewsForm = ({
   const [loading, setLoading] = useState(false);
   const [sources, setSources] = useState<FlashNewsSource[]>([]);
   const [selectedSource, setSelectedSource] = useState<FlashNewsSource | null>(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const [selectedSourceId, setSelectedSourceId] = useState<string>("");
+  const { toast } = useToast();
+
   useEffect(() => {
     fetchSources();
   }, []);
 
   const fetchSources = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('flash_news_sources').select('*').eq('is_active', true).order('name');
+      const { data, error } = await supabase
+        .from('flash_news_sources')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
       if (error) throw error;
       setSources(data || []);
     } catch (error) {
       console.error('Error fetching sources:', error);
     }
   };
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      source_id: flashNews?.source_id || "",
       author: flashNews?.author || "",
       author_handle: flashNews?.author_handle || "@",
       content: flashNews?.content || "",
@@ -78,7 +78,6 @@ export const FlashNewsForm = ({
   useEffect(() => {
     if (flashNews) {
       form.reset({
-        source_id: flashNews.source_id || "",
         author: flashNews.author || "",
         author_handle: flashNews.author_handle || "@",
         content: flashNews.content || "",
@@ -93,10 +92,10 @@ export const FlashNewsForm = ({
       const source = sources.find(s => s.name === flashNews.author);
       if (source) {
         setSelectedSource(source);
+        setSelectedSourceId(source.id);
       }
     } else {
       form.reset({
-        source_id: "",
         author: "",
         author_handle: "@",
         content: "",
@@ -107,13 +106,15 @@ export const FlashNewsForm = ({
         scheduled_at: ""
       });
       setSelectedSource(null);
+      setSelectedSourceId("");
     }
   }, [flashNews, sources, form]);
+
   const handleSourceSelect = (sourceId: string) => {
     const source = sources.find(s => s.id === sourceId);
     if (source) {
       setSelectedSource(source);
-      form.setValue('source_id', source.id);
+      setSelectedSourceId(source.id);
       form.setValue('author', source.name);
       form.setValue('author_handle', source.handle);
     }
@@ -121,24 +122,13 @@ export const FlashNewsForm = ({
   
   const handleSourcePickerSelect = (source: FlashNewsSource) => {
     setSelectedSource(source);
-    form.setValue('source_id', source.id);
+    setSelectedSourceId(source.id);
     form.setValue('author', source.name);
     form.setValue('author_handle', source.handle);
   };
 
-  const handleEmojiClick = (emojiData: EmojiClickData) => {
-    const currentContent = form.getValues('content');
-    // Use unified code for better emoji support (especially flags)
-    const emojiToInsert = emojiData.unified 
-      ? String.fromCodePoint(...emojiData.unified.split('-').map(u => parseInt(u, 16)))
-      : emojiData.emoji;
-    form.setValue('content', currentContent + emojiToInsert);
-    setShowEmojiPicker(false);
-  };
-
   const handleCancel = () => {
     form.reset({
-      source_id: "",
       author: "",
       author_handle: "@",
       content: "",
@@ -149,39 +139,44 @@ export const FlashNewsForm = ({
       scheduled_at: ""
     });
     setSelectedSource(null);
+    setSelectedSourceId("");
     onSuccess?.();
   };
+
   const onSubmit = async (values: FormValues) => {
     try {
       setLoading(true);
       if (flashNews) {
-        const {
-          error
-        } = await supabase.from('flash_news').update(values).eq('id', flashNews.id);
+        const { error } = await supabase
+          .from('flash_news')
+          .update(values)
+          .eq('id', flashNews.id);
         if (error) throw error;
         toast({
           title: "Info flash mise à jour",
           description: "L'info flash a été mise à jour avec succès."
         });
       } else {
-        const {
-          error
-        } = await supabase.from('flash_news').insert([{
-          author: values.author,
-          author_handle: values.author_handle,
-          content: values.content,
-          category: values.category,
-          verified: values.verified,
-          is_published: values.is_published,
-          status: values.status,
-          scheduled_at: values.scheduled_at || null
-        }]);
+        const { error } = await supabase
+          .from('flash_news')
+          .insert([{
+            author: values.author,
+            author_handle: values.author_handle,
+            content: values.content,
+            category: values.category,
+            verified: values.verified,
+            is_published: values.is_published,
+            status: values.status,
+            scheduled_at: values.scheduled_at || null
+          }]);
         if (error) throw error;
         toast({
           title: "Info flash créée",
           description: "L'info flash a été créée avec succès."
         });
         form.reset();
+        setSelectedSourceId("");
+        setSelectedSource(null);
       }
       onSuccess?.();
     } catch (error: any) {
@@ -194,131 +189,94 @@ export const FlashNewsForm = ({
       setLoading(false);
     }
   };
-  return <Form {...form}>
+
+  return (
+    <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-4">
-          <FormField control={form.control} name="source_id" render={({
-          field
-        }) => <FormItem>
-                <FormLabel>Sélectionner une source rapide</FormLabel>
+          <div>
+            <FormLabel>Sélectionner une source rapide</FormLabel>
+            <FlashNewsSourcePicker 
+              onSelect={handleSourcePickerSelect} 
+              selectedSourceId={selectedSourceId} 
+            />
+            <div className="text-sm text-muted-foreground mt-2">
+              Ou utilisez le menu déroulant ci-dessous pour une recherche par nom
+            </div>
+          </div>
+
+          <div>
+            <FormLabel>Source (recherche par nom)</FormLabel>
+            <Select onValueChange={handleSourceSelect} value={selectedSourceId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner une source..." />
+              </SelectTrigger>
+              <SelectContent>
+                {sources.map((source) => (
+                  <SelectItem key={source.id} value={source.id}>
+                    {source.name} ({source.handle})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField 
+            control={form.control} 
+            name="author" 
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Auteur</FormLabel>
                 <FormControl>
-                  <FlashNewsSourcePicker onSelect={handleSourcePickerSelect} selectedSourceId={field.value} />
+                  <Input placeholder="Fabrizio Romano" {...field} />
                 </FormControl>
-                <div className="text-sm text-muted-foreground">
-                  Ou utilisez le menu déroulant ci-dessous pour une recherche par nom
-                </div>
                 <FormMessage />
-              </FormItem>} />
+              </FormItem>
+            )} 
+          />
 
           <FormField 
             control={form.control} 
-            name="source_id" 
+            name="author_handle" 
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Source (recherche par nom)</FormLabel>
-                <Select onValueChange={handleSourceSelect} value={field.value || ""}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une source..." />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {sources.map((source) => (
-                      <SelectItem key={source.id} value={source.id}>
-                        {source.name} ({source.handle})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormLabel>Handle Twitter</FormLabel>
+                <FormControl>
+                  <Input placeholder="@FabrizioRomano" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )} 
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField control={form.control} name="author" render={({
-          field
-        }) => <FormItem>
-                <FormLabel>Auteur</FormLabel>
-                <FormControl>
-                  <Input placeholder="Fabrizio Romano" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>} />
-
-          <FormField control={form.control} name="author_handle" render={({
-          field
-        }) => <FormItem>
-                <FormLabel>Handle Twitter</FormLabel>
-                <FormControl>
-                  <Input placeholder="@FabrizioRomano" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>} />
-        </div>
-
-        <FormField control={form.control} name="content" render={({
-        field
-      }) => <FormItem>
+        <FormField 
+          control={form.control} 
+          name="content" 
+          render={({ field }) => (
+            <FormItem>
               <FormLabel>Contenu</FormLabel>
-              <div className="relative">
-                <FormControl>
-                  <Textarea 
-                    placeholder="🚨 Dernières nouvelles du Real Madrid..." 
-                    className="min-h-[100px]" 
-                    {...field} 
-                  />
-                </FormControl>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 top-2"
-                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                >
-                  <Smile className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              {showEmojiPicker && (
-                <div className="relative mt-2">
-                  <div className="absolute z-50 right-0">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 z-10"
-                      onClick={() => setShowEmojiPicker(false)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                    <EmojiPicker onEmojiClick={handleEmojiClick} />
-                  </div>
-                </div>
-              )}
-              
-              {field.value && (
-                <Card className="mt-4 p-4">
-                  <div className="text-sm font-medium mb-2">Prévisualisation :</div>
-                  <div 
-                    className="whitespace-pre-wrap break-words"
-                    style={{ 
-                      fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-                      unicodeBidi: 'isolate'
-                    }}
-                  >
-                    {field.value}
-                  </div>
-                </Card>
-              )}
-              
+              <FormControl>
+                <RichTextEditor 
+                  value={field.value} 
+                  onChange={field.onChange}
+                  placeholder="🚨 Dernières nouvelles du Real Madrid..."
+                  minRows={6}
+                  showPreview={true}
+                />
+              </FormControl>
               <FormMessage />
-            </FormItem>} />
+            </FormItem>
+          )} 
+        />
 
-        <FormField control={form.control} name="category" render={({
-        field
-      }) => <FormItem>
+        <FormField 
+          control={form.control} 
+          name="category" 
+          render={({ field }) => (
+            <FormItem>
               <FormLabel>Catégorie</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
@@ -334,11 +292,15 @@ export const FlashNewsForm = ({
                 </SelectContent>
               </Select>
               <FormMessage />
-            </FormItem>} />
+            </FormItem>
+          )} 
+        />
 
-        <FormField control={form.control} name="status" render={({
-        field
-      }) => <FormItem>
+        <FormField 
+          control={form.control} 
+          name="status" 
+          render={({ field }) => (
+            <FormItem>
               <FormLabel>Statut de modération</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
@@ -354,11 +316,15 @@ export const FlashNewsForm = ({
                 </SelectContent>
               </Select>
               <FormMessage />
-            </FormItem>} />
+            </FormItem>
+          )} 
+        />
 
-        <FormField control={form.control} name="scheduled_at" render={({
-        field
-      }) => <FormItem>
+        <FormField 
+          control={form.control} 
+          name="scheduled_at" 
+          render={({ field }) => (
+            <FormItem>
               <FormLabel>Planifier la publication (optionnel)</FormLabel>
               <FormControl>
                 <Input type="datetime-local" {...field} placeholder="Date et heure de publication" />
@@ -367,12 +333,16 @@ export const FlashNewsForm = ({
                 Laisser vide pour une publication immédiate
               </div>
               <FormMessage />
-            </FormItem>} />
+            </FormItem>
+          )} 
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField control={form.control} name="verified" render={({
-          field
-        }) => <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+          <FormField 
+            control={form.control} 
+            name="verified" 
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
                   <FormLabel className="text-base">Vérifié</FormLabel>
                   <div className="text-sm text-muted-foreground">
@@ -382,11 +352,15 @@ export const FlashNewsForm = ({
                 <FormControl>
                   <Switch checked={field.value} onCheckedChange={field.onChange} />
                 </FormControl>
-              </FormItem>} />
+              </FormItem>
+            )} 
+          />
 
-          <FormField control={form.control} name="is_published" render={({
-          field
-        }) => <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+          <FormField 
+            control={form.control} 
+            name="is_published" 
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
                   <FormLabel className="text-base">Publié</FormLabel>
                   <div className="text-sm text-muted-foreground">
@@ -396,7 +370,9 @@ export const FlashNewsForm = ({
                 <FormControl>
                   <Switch checked={field.value} onCheckedChange={field.onChange} />
                 </FormControl>
-              </FormItem>} />
+              </FormItem>
+            )} 
+          />
         </div>
 
         <div className="flex gap-2">
@@ -410,5 +386,6 @@ export const FlashNewsForm = ({
           )}
         </div>
       </form>
-    </Form>;
+    </Form>
+  );
 };
