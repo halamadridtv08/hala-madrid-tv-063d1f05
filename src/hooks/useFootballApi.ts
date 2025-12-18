@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 export interface StandingTeam {
   rank: number;
@@ -79,12 +78,7 @@ const REAL_MADRID_ID = 541;
 async function callFootballApi<T>(action: string, params?: Record<string, string>): Promise<T | null> {
   try {
     const queryParams = new URLSearchParams({ action, ...params });
-    const { data, error } = await supabase.functions.invoke('football-api', {
-      body: null,
-      headers: {},
-    });
-
-    // Use fetch directly since we need query params
+    
     const response = await fetch(
       `https://qjnppcfbywfazwolfppo.supabase.co/functions/v1/football-api?${queryParams}`,
       {
@@ -96,6 +90,8 @@ async function callFootballApi<T>(action: string, params?: Record<string, string
     );
 
     if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error(`Football API error:`, errorData);
       throw new Error(`API call failed: ${response.status}`);
     }
 
