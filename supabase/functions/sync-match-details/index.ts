@@ -147,12 +147,67 @@ function generateLiveBlogEntries(events: any[], matchId: string) {
   });
 }
 
+// Team name aliases for better matching
+const TEAM_ALIASES: Record<string, string[]> = {
+  'real madrid': ['real madrid cf', 'real madrid c.f.', 'real madrid club de futbol'],
+  'alavés': ['deportivo alavés', 'alaves', 'deportivo alaves', 'cd alavés'],
+  'atlético madrid': ['atletico madrid', 'atlético de madrid', 'atletico de madrid', 'club atlético de madrid'],
+  'barcelona': ['fc barcelona', 'barcelona fc', 'barça', 'barca'],
+  'celta': ['rc celta', 'celta vigo', 'celta de vigo', 'real club celta'],
+  'villarreal': ['villarreal cf', 'villarreal club de futbol'],
+  'valencia': ['valencia cf', 'valencia club de futbol'],
+  'sevilla': ['sevilla fc', 'sevilla futbol club'],
+  'betis': ['real betis', 'real betis balompié', 'betis balompie'],
+  'athletic': ['athletic club', 'athletic bilbao', 'athletic de bilbao'],
+  'real sociedad': ['real sociedad de futbol', 'la real'],
+  'getafe': ['getafe cf', 'getafe club de futbol'],
+  'osasuna': ['ca osasuna', 'club atlético osasuna'],
+  'mallorca': ['rcd mallorca', 'real mallorca'],
+  'rayo': ['rayo vallecano', 'rayo vallecano de madrid'],
+  'las palmas': ['ud las palmas', 'union deportiva las palmas'],
+  'girona': ['girona fc', 'girona futbol club'],
+  'cadiz': ['cádiz cf', 'cadiz cf', 'cádiz club de futbol'],
+  'almeria': ['ud almeria', 'almería', 'union deportiva almeria'],
+  'manchester city': ['manchester city fc', 'man city'],
+  'liverpool': ['liverpool fc'],
+  'bayern': ['bayern munich', 'fc bayern', 'bayern münchen', 'fc bayern münchen'],
+  'psg': ['paris saint-germain', 'paris saint germain', 'paris sg'],
+  'juventus': ['juventus fc', 'juve'],
+  'inter': ['inter milan', 'internazionale', 'fc internazionale'],
+  'milan': ['ac milan'],
+  'dortmund': ['borussia dortmund', 'bvb'],
+  'salzburg': ['red bull salzburg', 'rb salzburg', 'fc salzburg'],
+  'atalanta': ['atalanta bc', 'atalanta bergamo'],
+  'brest': ['stade brestois', 'stade brestois 29'],
+  'lille': ['losc lille', 'losc'],
+  'leverkusen': ['bayer leverkusen', 'bayer 04 leverkusen'],
+};
+
 // Normalize team name for comparison
 function normalizeTeamName(name: string): string {
   return name.toLowerCase()
     .replace(/\s*(cf|fc|cd|ud|sd|rcd|rc)\s*/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+// Check if two team names match (using aliases)
+function teamsMatch(dbName: string, apiName: string): boolean {
+  const dbNorm = normalizeTeamName(dbName);
+  const apiNorm = normalizeTeamName(apiName);
+  
+  // Direct match
+  if (dbNorm.includes(apiNorm) || apiNorm.includes(dbNorm)) return true;
+  
+  // Check aliases
+  for (const [key, aliases] of Object.entries(TEAM_ALIASES)) {
+    const allNames = [key, ...aliases].map(n => normalizeTeamName(n));
+    const dbMatches = allNames.some(n => dbNorm.includes(n) || n.includes(dbNorm));
+    const apiMatches = allNames.some(n => apiNorm.includes(n) || n.includes(apiNorm));
+    if (dbMatches && apiMatches) return true;
+  }
+  
+  return false;
 }
 
 serve(async (req) => {
@@ -248,38 +303,45 @@ serve(async (req) => {
 
         console.log(`Searching API fixtures from ${from} to ${to} for: ${match.home_team} vs ${match.away_team}`);
 
-        // Fetch fixtures from API for this date range
-        const fixturesData = await fetchFromFootballApi(
-          `/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&season=${FOOTBALL_API.CURRENT_SEASON}&from=${from}&to=${to}`
-        );
-
-        const fixtures = fixturesData.response || [];
-        console.log(`API returned ${fixtures.length} fixtures for date range`);
+        // Multi-season search: try 2025, then 2024, then no season filter
+        let fixtures: any[] = [];
+        const seasons = ['2025', '2024', null]; // null = no season filter
+        
+        for (const season of seasons) {
+          const seasonParam = season ? `&season=${season}` : '';
+          console.log(`Trying season: ${season || 'none (date only)'}`);
+          
+          const fixturesData = await fetchFromFootballApi(
+            `/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}${seasonParam}&from=${from}&to=${to}`
+          );
+          
+          fixtures = fixturesData.response || [];
+          console.log(`Season ${season || 'none'}: API returned ${fixtures.length} fixtures`);
+          
+          if (fixtures.length > 0) break;
+        }
 
         if (fixtures.length === 0) {
-          console.log(`No fixtures found in API for ${match.home_team} vs ${match.away_team}`);
+          console.log(`No fixtures found in API for ${match.home_team} vs ${match.away_team} in any season`);
           continue;
         }
 
-        // Find matching fixture
-        const homeNorm = normalizeTeamName(match.home_team);
-        const awayNorm = normalizeTeamName(match.away_team);
-
+        // Find matching fixture using improved team matching
         const matchingFixture = fixtures.find((f: any) => {
-          const apiHomeNorm = normalizeTeamName(f.teams.home.name);
-          const apiAwayNorm = normalizeTeamName(f.teams.away.name);
+          const apiHome = f.teams.home.name;
+          const apiAway = f.teams.away.name;
           
           // Check for Real Madrid match with matching opponent
-          const isRealMadridHome = apiHomeNorm.includes('real madrid');
-          const isRealMadridAway = apiAwayNorm.includes('real madrid');
+          const isRealMadridHome = teamsMatch('Real Madrid', apiHome);
+          const isRealMadridAway = teamsMatch('Real Madrid', apiAway);
           
           if (!isRealMadridHome && !isRealMadridAway) return false;
           
-          // Check opponent match
+          // Check opponent match using alias-aware function
           if (isRealMadridHome) {
-            return apiAwayNorm.includes(awayNorm) || awayNorm.includes(apiAwayNorm);
+            return teamsMatch(match.away_team, apiAway);
           } else {
-            return apiHomeNorm.includes(homeNorm) || homeNorm.includes(apiHomeNorm);
+            return teamsMatch(match.home_team, apiHome);
           }
         });
 

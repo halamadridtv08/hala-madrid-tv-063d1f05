@@ -204,11 +204,15 @@ serve(async (req) => {
         const searchTeam = url.searchParams.get('team') || FOOTBALL_API.REAL_MADRID_ID;
         const fromDate = url.searchParams.get('from');
         const toDate = url.searchParams.get('to');
-        let searchEndpoint = `/fixtures?team=${searchTeam}&season=${FOOTBALL_API.CURRENT_SEASON}`;
+        const season = url.searchParams.get('season'); // Optional season parameter
+        
+        // Build endpoint - if no season specified, don't include it (search by date only)
+        let searchEndpoint = `/fixtures?team=${searchTeam}`;
+        if (season) searchEndpoint += `&season=${season}`;
         if (fromDate) searchEndpoint += `&from=${fromDate}`;
         if (toDate) searchEndpoint += `&to=${toDate}`;
         
-        cacheKey = `search_fixtures_${searchTeam}_${fromDate}_${toDate}`;
+        cacheKey = `search_fixtures_${searchTeam}_${season || 'all'}_${fromDate}_${toDate}`;
         responseData = getCached(cacheKey);
         if (!responseData) {
           const data = await fetchFromApi(searchEndpoint);
