@@ -146,7 +146,16 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
       const result = await response.json();
       
       if (result.success) {
-        toast.success(`${result.synced} match(s) synchronisé(s) sur ${result.checked} vérifiés`);
+        if (result.synced > 0) {
+          toast.success(`${result.synced} match(s) synchronisé(s) sur ${result.checked} vérifiés`);
+        } else if (result.needsSync === 0) {
+          toast.info("Tous les matchs sont déjà synchronisés !");
+        } else {
+          toast.warning(`Aucune correspondance API trouvée pour les ${result.needsSync} matchs à synchroniser. Vérifiez que les dates correspondent aux vrais matchs de la saison 2025-2026.`);
+        }
+        if (result.errors && result.errors.length > 0) {
+          console.log('Sync errors:', result.errors);
+        }
         refreshMatches();
       } else {
         throw new Error(result.error);

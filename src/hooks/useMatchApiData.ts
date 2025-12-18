@@ -245,21 +245,62 @@ export function useMatchApiData() {
   const findApiFixtureForMatch = async (homeTeam: string, awayTeam: string, matchDate: string) => {
     try {
       const date = new Date(matchDate);
-      const from = date.toISOString().split('T')[0];
-      const to = from; // Same day
+      // Expand search range to +/- 3 days to account for timezone differences and data inconsistencies
+      const fromDate = new Date(date);
+      fromDate.setDate(fromDate.getDate() - 3);
+      const toDate = new Date(date);
+      toDate.setDate(toDate.getDate() + 3);
+      
+      const from = fromDate.toISOString().split('T')[0];
+      const to = toDate.toISOString().split('T')[0];
 
+      console.log(`Searching fixtures from ${from} to ${to} for ${homeTeam} vs ${awayTeam}`);
+      
       const fixtures = await searchFixtures(from, to);
       
-      if (!fixtures || fixtures.length === 0) return null;
+      if (!fixtures || fixtures.length === 0) {
+        console.log('No fixtures found in API for this date range');
+        return null;
+      }
 
-      // Try to find matching fixture
+      console.log(`Found ${fixtures.length} fixtures, searching for match...`);
+
+      // Normalize team names for comparison
+      const normalizeTeamName = (name: string) => {
+        return name.toLowerCase()
+          .replace(/cf|fc|cd|ud|sd|rcd|rc|/gi, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+      };
+
+      // Try to find matching fixture by comparing both teams
+      const homeNorm = normalizeTeamName(homeTeam);
+      const awayNorm = normalizeTeamName(awayTeam);
+
       const match = fixtures.find(f => {
-        const homeMatch = f.teams.home.name.toLowerCase().includes('real madrid') || 
-                          homeTeam.toLowerCase().includes('real madrid');
-        const awayMatch = f.teams.away.name.toLowerCase().includes('real madrid') || 
-                          awayTeam.toLowerCase().includes('real madrid');
-        return homeMatch || awayMatch;
+        const apiHomeNorm = normalizeTeamName(f.teams.home.name);
+        const apiAwayNorm = normalizeTeamName(f.teams.away.name);
+        
+        // Check if teams match (in either order)
+        const teamsMatch = 
+          (apiHomeNorm.includes(homeNorm) || homeNorm.includes(apiHomeNorm) ||
+           apiHomeNorm.includes('real madrid') && homeNorm.includes('real madrid')) &&
+          (apiAwayNorm.includes(awayNorm) || awayNorm.includes(apiAwayNorm) ||
+           apiAwayNorm.includes('real madrid') && awayNorm.includes('real madrid'));
+        
+        const teamsMatchReverse = 
+          (apiHomeNorm.includes(awayNorm) || awayNorm.includes(apiHomeNorm)) &&
+          (apiAwayNorm.includes(homeNorm) || homeNorm.includes(apiAwayNorm));
+        
+        return teamsMatch || teamsMatchReverse;
       });
+
+      if (match) {
+        console.log(`Found matching fixture: ${match.teams.home.name} vs ${match.teams.away.name} (ID: ${match.fixture.id})`);
+      } else {
+        console.log('No matching fixture found. Available fixtures:', 
+          fixtures.map(f => `${f.teams.home.name} vs ${f.teams.away.name}`));
+      }
 
       return match ? String(match.fixture.id) : null;
     } catch (error) {
