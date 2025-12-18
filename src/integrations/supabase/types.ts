@@ -916,6 +916,68 @@ export type Database = {
           },
         ]
       }
+      live_match_bar_settings: {
+        Row: {
+          active_match_id: string | null
+          background_image_url: string | null
+          created_at: string | null
+          custom_cta_link: string | null
+          custom_cta_text: string | null
+          custom_message: string | null
+          id: string
+          is_forced_active: boolean | null
+          promo_image_url: string | null
+          promo_link: string | null
+          show_scores: boolean | null
+          show_timer: boolean | null
+          theme_color: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          active_match_id?: string | null
+          background_image_url?: string | null
+          created_at?: string | null
+          custom_cta_link?: string | null
+          custom_cta_text?: string | null
+          custom_message?: string | null
+          id?: string
+          is_forced_active?: boolean | null
+          promo_image_url?: string | null
+          promo_link?: string | null
+          show_scores?: boolean | null
+          show_timer?: boolean | null
+          theme_color?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          active_match_id?: string | null
+          background_image_url?: string | null
+          created_at?: string | null
+          custom_cta_link?: string | null
+          custom_cta_text?: string | null
+          custom_message?: string | null
+          id?: string
+          is_forced_active?: boolean | null
+          promo_image_url?: string | null
+          promo_link?: string | null
+          show_scores?: boolean | null
+          show_timer?: boolean | null
+          theme_color?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_match_bar_settings_active_match_id_fkey"
+            columns: ["active_match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       login_attempts: {
         Row: {
           attempted_at: string

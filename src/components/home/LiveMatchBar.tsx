@@ -1,5 +1,6 @@
 import { useMatches } from "@/hooks/useMatches";
 import { useSiteVisibility } from "@/hooks/useSiteVisibility";
+import { useLiveMatchBarSettings } from "@/hooks/useLiveMatchBarSettings";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { format, differenceInMinutes, addMinutes, subMinutes } from "date-fns";
 import { fr, es, enUS } from "date-fns/locale";
@@ -31,20 +32,52 @@ const translations = {
 };
 
 export function LiveMatchBar() {
-  const { upcomingMatches, pastMatches, loading } = useMatches();
+  const { upcomingMatches, pastMatches, matches, loading: matchesLoading } = useMatches();
   const { isVisible } = useSiteVisibility();
+  const { settings, loading: settingsLoading } = useLiveMatchBarSettings();
   const { language } = useLanguage();
   const navigate = useNavigate();
   const t = translations[language];
   
   const dateLocale = language === 'es' ? es : language === 'en' ? enUS : fr;
 
-  // Find a match that should show the bar: live, 15min before, or 15min after
+  // Find the match to display based on settings or auto-detection
   const relevantMatch = useMemo(() => {
     const now = new Date();
     const allMatches = [...(upcomingMatches || []), ...(pastMatches || [])];
     
-    // First priority: live match
+    // If admin selected a specific match, use that
+    if (settings?.active_match_id) {
+      const selectedMatch = allMatches.find(m => m.id === settings.active_match_id);
+      if (selectedMatch) {
+        // Determine state based on match status
+        let state: 'live' | 'upcoming' | 'finished' = 'upcoming';
+        if (selectedMatch.status === 'live') state = 'live';
+        else if (selectedMatch.status === 'finished') state = 'finished';
+        else {
+          const matchDate = new Date(selectedMatch.match_date);
+          if (now >= matchDate) state = 'live'; // Match should have started
+        }
+        return { match: selectedMatch, state };
+      }
+    }
+
+    // If forced active but no match selected, still skip auto-detection
+    // (bar won't show useful content without a match)
+    if (settings?.is_forced_active && !settings?.active_match_id) {
+      // Try to find any ongoing or upcoming match
+      const liveMatch = allMatches.find(m => m.status === 'live');
+      if (liveMatch) return { match: liveMatch, state: 'live' as const };
+      
+      const nextMatch = upcomingMatches?.[0];
+      if (nextMatch) return { match: nextMatch, state: 'upcoming' as const };
+      
+      return null;
+    }
+
+    // Auto-detection logic (improved to stay visible longer)
+    
+    // First priority: live match - always show
     const liveMatch = allMatches.find(m => m.status === 'live');
     if (liveMatch) return { match: liveMatch, state: 'live' as const };
     
@@ -56,21 +89,31 @@ export function LiveMatchBar() {
     });
     if (upcomingMatch) return { match: upcomingMatch, state: 'upcoming' as const };
     
-    // Third priority: match finished within last 15 minutes
+    // Third priority: match that started but hasn't been marked as finished yet
+    // Keep showing for up to 150 minutes (covers 90min + extra time + halftime)
+    const ongoingMatch = allMatches.find(m => {
+      if (m.status === 'finished') return false;
+      const matchDate = new Date(m.match_date);
+      const maxMatchDuration = addMinutes(matchDate, 150);
+      return now >= matchDate && now <= maxMatchDuration;
+    });
+    if (ongoingMatch) return { match: ongoingMatch, state: 'live' as const };
+    
+    // Fourth priority: recently finished match (30 minutes after finish)
     const recentlyFinished = pastMatches?.find(m => {
       if (m.status !== 'finished') return false;
       const matchDate = new Date(m.match_date);
-      // Assume match duration ~105 minutes (90 + 15 min stoppage/halftime)
+      // Estimate end time: start + 105 min
       const estimatedEndTime = addMinutes(matchDate, 105);
-      const fifteenMinAfterEnd = addMinutes(estimatedEndTime, 15);
-      return now >= estimatedEndTime && now <= fifteenMinAfterEnd;
+      const thirtyMinAfterEnd = addMinutes(estimatedEndTime, 30);
+      return now >= estimatedEndTime && now <= thirtyMinAfterEnd;
     });
     if (recentlyFinished) return { match: recentlyFinished, state: 'finished' as const };
     
     return null;
-  }, [upcomingMatches, pastMatches]);
+  }, [upcomingMatches, pastMatches, settings]);
 
-  // Minuteur du match
+  // Match timer
   const [matchMinute, setMatchMinute] = useState(0);
 
   useEffect(() => {
@@ -80,18 +123,29 @@ export function LiveMatchBar() {
       const matchStart = new Date(relevantMatch.match.match_date);
       const now = new Date();
       const minutes = differenceInMinutes(now, matchStart);
-      // Limiter entre 0 et 90+ (avec temps additionnel possible)
       setMatchMinute(Math.max(0, Math.min(minutes, 120)));
     };
 
     calculateMinute();
-    const interval = setInterval(calculateMinute, 60000); // Mise à jour toutes les minutes
+    const interval = setInterval(calculateMinute, 60000);
 
     return () => clearInterval(interval);
   }, [relevantMatch]);
 
-  // Ne pas afficher si masqué depuis l'admin ou si pas de match pertinent
-  if (!isVisible('live_match_bar') || loading || !relevantMatch) {
+  // Don't show if hidden from admin, loading, or no relevant match (unless forced)
+  const loading = matchesLoading || settingsLoading;
+  
+  if (!isVisible('live_match_bar') || loading) {
+    return null;
+  }
+
+  // If forced active, show even without a match (but will be minimal)
+  if (!settings?.is_forced_active && !relevantMatch) {
+    return null;
+  }
+
+  // If forced but no match, don't render
+  if (!relevantMatch) {
     return null;
   }
 
@@ -99,7 +153,16 @@ export function LiveMatchBar() {
   const matchDate = new Date(match.match_date);
 
   const handleFollowMatch = () => {
-    navigate(`/live-blog/${match.id}`);
+    if (settings?.custom_cta_link) {
+      // Handle external or custom links
+      if (settings.custom_cta_link.startsWith('http')) {
+        window.open(settings.custom_cta_link, '_blank');
+      } else {
+        navigate(settings.custom_cta_link);
+      }
+    } else {
+      navigate(`/live-blog/${match.id}`);
+    }
   };
 
   const getStatusLabel = () => {
@@ -118,17 +181,56 @@ export function LiveMatchBar() {
     }
   };
 
+  // Use custom theme color or default
+  const bgColor = settings?.theme_color || '#1e3a5f';
+  const hasBackgroundImage = !!settings?.background_image_url;
+
   return (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="bg-[hsl(222,47%,20%)] text-white border-b border-white/10 cursor-pointer hover:bg-[hsl(222,47%,25%)] transition-colors"
+        className="text-white border-b border-white/10 cursor-pointer transition-all relative overflow-hidden"
+        style={{ 
+          backgroundColor: bgColor,
+          backgroundImage: hasBackgroundImage ? `url(${settings.background_image_url})` : undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
         onClick={handleFollowMatch}
       >
-        <div className="container mx-auto px-4 py-3">
+        {/* Overlay for background image */}
+        {hasBackgroundImage && (
+          <div className="absolute inset-0 bg-black/50" />
+        )}
+        
+        <div className="container mx-auto px-4 py-3 relative">
+          {/* Custom message */}
+          {settings?.custom_message && (
+            <p className="text-sm text-white/90 text-center font-medium mb-2">
+              {settings.custom_message}
+            </p>
+          )}
+
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
+            {/* Promo image */}
+            {settings?.promo_image_url && (
+              <a 
+                href={settings.promo_link || '#'} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="shrink-0 hidden lg:block"
+              >
+                <img 
+                  src={settings.promo_image_url} 
+                  alt="Promo" 
+                  className="h-10 w-auto object-contain"
+                />
+              </a>
+            )}
+
             {/* Info compétition et lieu */}
             <div className="flex flex-col text-sm text-white/70 min-w-0">
               <span className="font-semibold text-white truncate">
@@ -169,20 +271,22 @@ export function LiveMatchBar() {
               </div>
 
               {/* Score et minuteur */}
-              <div className="flex flex-col items-center gap-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl lg:text-3xl font-bold">{match.home_score ?? 0}</span>
-                  <span className="text-xl text-white/50">-</span>
-                  <span className="text-2xl lg:text-3xl font-bold">{match.away_score ?? 0}</span>
-                </div>
-                {state === 'live' && (
-                  <div className="px-3 py-1 bg-red-500/20 border border-red-500/50 rounded-full">
-                    <span className="text-sm font-bold text-red-400 animate-pulse">
-                      {matchMinute}'
-                    </span>
+              {(settings?.show_scores !== false) && (
+                <div className="flex flex-col items-center gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl lg:text-3xl font-bold">{match.home_score ?? 0}</span>
+                    <span className="text-xl text-white/50">-</span>
+                    <span className="text-2xl lg:text-3xl font-bold">{match.away_score ?? 0}</span>
                   </div>
-                )}
-              </div>
+                  {state === 'live' && (settings?.show_timer !== false) && (
+                    <div className="px-3 py-1 bg-red-500/20 border border-red-500/50 rounded-full">
+                      <span className="text-sm font-bold text-red-400 animate-pulse">
+                        {matchMinute}'
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Équipe extérieur */}
               <div className="flex items-center gap-3">
@@ -208,7 +312,7 @@ export function LiveMatchBar() {
               }}
               className="border-white/30 text-white hover:bg-white hover:text-[hsl(222,47%,20%)] transition-colors"
             >
-              {t.followMatch}
+              {settings?.custom_cta_text || t.followMatch}
             </Button>
           </div>
         </div>
