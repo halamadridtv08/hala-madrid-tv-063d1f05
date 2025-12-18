@@ -161,7 +161,7 @@ const TEAM_ALIASES: Record<string, string[]> = {
   'athletic': ['athletic club', 'athletic bilbao', 'athletic de bilbao'],
   'real sociedad': ['real sociedad de futbol', 'la real'],
   'getafe': ['getafe cf', 'getafe club de futbol'],
-  'osasuna': ['ca osasuna', 'club atlético osasuna'],
+  'osasuna': ['ca osasuna', 'club atlético osasuna', 'osasuna pamplona'],
   'mallorca': ['rcd mallorca', 'real mallorca'],
   'rayo': ['rayo vallecano', 'rayo vallecano de madrid'],
   'las palmas': ['ud las palmas', 'union deportiva las palmas'],
@@ -181,6 +181,10 @@ const TEAM_ALIASES: Record<string, string[]> = {
   'brest': ['stade brestois', 'stade brestois 29'],
   'lille': ['losc lille', 'losc'],
   'leverkusen': ['bayer leverkusen', 'bayer 04 leverkusen'],
+  'oviedo': ['real oviedo', 'oviedo fc', 'véritable oviedo', 'veritable oviedo'],
+  'espanyol': ['rcd espanyol', 'espanyol barcelona', 'rcd espanyol de barcelona', 'español'],
+  'leganes': ['leganés', 'cd leganés', 'cd leganes'],
+  'valladolid': ['real valladolid', 'valladolid cf', 'pucela'],
 };
 
 // Normalize team name for comparison
