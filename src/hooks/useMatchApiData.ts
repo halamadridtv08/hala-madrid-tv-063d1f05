@@ -246,42 +246,27 @@ export function useMatchApiData() {
 
   // Team name aliases for better matching
   const TEAM_ALIASES: Record<string, string[]> = {
-    'real madrid': ['real madrid cf', 'real madrid c.f.', 'real madrid club de futbol'],
-    'alavés': ['deportivo alavés', 'alaves', 'deportivo alaves', 'cd alavés'],
-    'atlético madrid': ['atletico madrid', 'atlético de madrid', 'atletico de madrid', 'club atlético de madrid'],
-    'barcelona': ['fc barcelona', 'barcelona fc', 'barça', 'barca'],
-    'celta': ['rc celta', 'celta vigo', 'celta de vigo', 'real club celta'],
-    'villarreal': ['villarreal cf', 'villarreal club de futbol'],
-    'valencia': ['valencia cf', 'valencia club de futbol'],
-    'sevilla': ['sevilla fc', 'sevilla futbol club'],
-    'betis': ['real betis', 'real betis balompié', 'betis balompie'],
-    'athletic': ['athletic club', 'athletic bilbao', 'athletic de bilbao'],
-    'real sociedad': ['real sociedad de futbol', 'la real'],
-    'getafe': ['getafe cf', 'getafe club de futbol'],
-    'osasuna': ['ca osasuna', 'club atlético osasuna', 'osasuna pamplona'],
-    'mallorca': ['rcd mallorca', 'real mallorca'],
-    'rayo': ['rayo vallecano', 'rayo vallecano de madrid'],
-    'las palmas': ['ud las palmas', 'union deportiva las palmas'],
-    'girona': ['girona fc', 'girona futbol club'],
-    'cadiz': ['cádiz cf', 'cadiz cf', 'cádiz club de futbol'],
-    'almeria': ['ud almeria', 'almería', 'union deportiva almeria'],
-    'manchester city': ['manchester city fc', 'man city'],
-    'liverpool': ['liverpool fc'],
-    'bayern': ['bayern munich', 'fc bayern', 'bayern münchen', 'fc bayern münchen'],
-    'psg': ['paris saint-germain', 'paris saint germain', 'paris sg'],
-    'juventus': ['juventus fc', 'juve'],
-    'inter': ['inter milan', 'internazionale', 'fc internazionale'],
-    'milan': ['ac milan'],
-    'dortmund': ['borussia dortmund', 'bvb'],
+    'real madrid': ['real madrid cf', 'real madrid c.f.'],
+    'alavés': ['deportivo alavés', 'alaves', 'deportivo alaves'],
+    'atlético madrid': ['atletico madrid', 'atlético de madrid'],
+    'barcelona': ['fc barcelona', 'barça'],
+    'celta': ['rc celta', 'celta vigo', 'celta de vigo'],
+    'villarreal': ['villarreal cf'],
+    'valencia': ['valencia cf'],
+    'sevilla': ['sevilla fc'],
+    'betis': ['real betis'],
+    'athletic': ['athletic club', 'athletic bilbao'],
+    'real sociedad': ['real sociedad de futbol'],
+    'getafe': ['getafe cf'],
+    'osasuna': ['ca osasuna'],
+    'mallorca': ['rcd mallorca'],
+    'rayo': ['rayo vallecano'],
+    'las palmas': ['ud las palmas'],
+    'girona': ['girona fc'],
     'salzburg': ['red bull salzburg', 'rb salzburg', 'fc salzburg'],
-    'atalanta': ['atalanta bc', 'atalanta bergamo'],
-    'brest': ['stade brestois', 'stade brestois 29'],
+    'atalanta': ['atalanta bc'],
+    'brest': ['stade brestois'],
     'lille': ['losc lille', 'losc'],
-    'leverkusen': ['bayer leverkusen', 'bayer 04 leverkusen'],
-    'oviedo': ['real oviedo', 'oviedo fc', 'véritable oviedo', 'veritable oviedo'],
-    'espanyol': ['rcd espanyol', 'espanyol barcelona', 'rcd espanyol de barcelona', 'español'],
-    'leganes': ['leganés', 'cd leganés', 'cd leganes'],
-    'valladolid': ['real valladolid', 'valladolid cf', 'pucela'],
   };
 
   const normalizeTeamName = (name: string) => {
@@ -314,74 +299,53 @@ export function useMatchApiData() {
       fromDate.setDate(fromDate.getDate() - 5);
       const toDate = new Date(date);
       toDate.setDate(toDate.getDate() + 5);
-
+      
       const from = fromDate.toISOString().split('T')[0];
       const to = toDate.toISOString().split('T')[0];
 
       console.log(`Searching fixtures from ${from} to ${to} for ${homeTeam} vs ${awayTeam}`);
-
-      // 1) Try date-range search first
-      let fixtures = await searchFixtures(from, to, '2025');
-      if (!fixtures || fixtures.length === 0) {
-        fixtures = await searchFixtures(from, to, '2024');
-      }
-      if (!fixtures || fixtures.length === 0) {
-        fixtures = await searchFixtures(from, to);
-      }
-
-      // 2) Fallback: if no results, use last/next fixtures (covers wrong DB dates)
-      if (!fixtures || fixtures.length === 0) {
-        const [lastFixtures, nextFixtures] = await Promise.all([
-          callFootballApi<ApiFixture[]>('last-matches', { team: '541', last: '200' }),
-          callFootballApi<ApiFixture[]>('fixtures', { team: '541', next: '50' }),
-        ]);
-
-        const byId = new Map<number, ApiFixture>();
-        for (const f of [...(lastFixtures || []), ...(nextFixtures || [])]) {
-          if (f?.fixture?.id) byId.set(f.fixture.id, f);
+      
+      // Multi-season search: try 2025, then 2024, then no season filter
+      let fixtures: ApiFixture[] | null = null;
+      const seasons = ['2025', '2024', undefined]; // undefined = no season filter
+      
+      for (const season of seasons) {
+        console.log(`Trying season: ${season || 'none (date only)'}`);
+        fixtures = await searchFixtures(from, to, season);
+        
+        if (fixtures && fixtures.length > 0) {
+          console.log(`Season ${season || 'none'}: Found ${fixtures.length} fixtures`);
+          break;
         }
-        fixtures = Array.from(byId.values());
-        console.log(`Fallback fixtures list: ${fixtures.length}`);
       }
-
+      
       if (!fixtures || fixtures.length === 0) {
-        console.log('No fixtures available from API');
+        console.log('No fixtures found in API for this date range in any season');
         return null;
       }
 
-      const isDbRealMadridHome = teamsMatchLocal('Real Madrid', homeTeam);
-      const isDbRealMadridAway = teamsMatchLocal('Real Madrid', awayTeam);
-      if (!isDbRealMadridHome && !isDbRealMadridAway) {
-        console.log(`Not a Real Madrid match: ${homeTeam} vs ${awayTeam}`);
-        return null;
-      }
-      const opponentName = isDbRealMadridHome ? awayTeam : homeTeam;
-
-      const candidates = fixtures
-        .filter((f) => {
-          const apiHome = f.teams.home.name;
-          const apiAway = f.teams.away.name;
-
-          const isApiRealMadridHome = teamsMatchLocal('Real Madrid', apiHome);
-          const isApiRealMadridAway = teamsMatchLocal('Real Madrid', apiAway);
-          if (!isApiRealMadridHome && !isApiRealMadridAway) return false;
-
-          const apiOpponent = isApiRealMadridHome ? apiAway : apiHome;
-          return teamsMatchLocal(opponentName, apiOpponent);
-        })
-        .map((f) => {
-          const fixtureDate = new Date(f.fixture.date).getTime();
-          const diff = Math.abs(fixtureDate - date.getTime());
-          return { f, diff };
-        })
-        .sort((a, b) => a.diff - b.diff);
-
-      const match = candidates[0]?.f;
+      // Find matching fixture using improved team matching with aliases
+      const match = fixtures.find(f => {
+        const apiHome = f.teams.home.name;
+        const apiAway = f.teams.away.name;
+        
+        const isRealMadridHome = teamsMatchLocal('Real Madrid', apiHome);
+        const isRealMadridAway = teamsMatchLocal('Real Madrid', apiAway);
+        
+        if (!isRealMadridHome && !isRealMadridAway) return false;
+        
+        if (isRealMadridHome) {
+          return teamsMatchLocal(awayTeam, apiAway);
+        } else {
+          return teamsMatchLocal(homeTeam, apiHome);
+        }
+      });
 
       if (match) {
         console.log(`Found matching fixture: ${match.teams.home.name} vs ${match.teams.away.name} (ID: ${match.fixture.id})`);
       } else {
-        console.log('No matching fixture found. Available fixtures:', fixtures.map((f) => `${f.teams.home.name} vs ${f.teams.away.name}`));
+        console.log('No matching fixture found. Available fixtures:', 
+          fixtures.map(f => `${f.teams.home.name} vs ${f.teams.away.name}`));
       }
 
       return match ? String(match.fixture.id) : null;

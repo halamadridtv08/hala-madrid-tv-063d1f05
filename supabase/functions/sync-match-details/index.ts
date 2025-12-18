@@ -11,7 +11,7 @@ const FOOTBALL_API = {
   BASE_URL: 'https://v3.football.api-sports.io',
   REAL_MADRID_ID: 541,
   LA_LIGA_ID: 140,
-  CURRENT_SEASON: 2024
+  CURRENT_SEASON: 2025
 };
 
 async function fetchFromFootballApi(endpoint: string) {
@@ -161,7 +161,7 @@ const TEAM_ALIASES: Record<string, string[]> = {
   'athletic': ['athletic club', 'athletic bilbao', 'athletic de bilbao'],
   'real sociedad': ['real sociedad de futbol', 'la real'],
   'getafe': ['getafe cf', 'getafe club de futbol'],
-  'osasuna': ['ca osasuna', 'club atlético osasuna', 'osasuna pamplona'],
+  'osasuna': ['ca osasuna', 'club atlético osasuna'],
   'mallorca': ['rcd mallorca', 'real mallorca'],
   'rayo': ['rayo vallecano', 'rayo vallecano de madrid'],
   'las palmas': ['ud las palmas', 'union deportiva las palmas'],
@@ -181,10 +181,6 @@ const TEAM_ALIASES: Record<string, string[]> = {
   'brest': ['stade brestois', 'stade brestois 29'],
   'lille': ['losc lille', 'losc'],
   'leverkusen': ['bayer leverkusen', 'bayer 04 leverkusen'],
-  'oviedo': ['real oviedo', 'oviedo fc', 'véritable oviedo', 'veritable oviedo'],
-  'espanyol': ['rcd espanyol', 'espanyol barcelona', 'rcd espanyol de barcelona', 'español'],
-  'leganes': ['leganés', 'cd leganés', 'cd leganes'],
-  'valladolid': ['real valladolid', 'valladolid cf', 'pucela'],
 };
 
 // Normalize team name for comparison
@@ -292,23 +288,6 @@ serve(async (req) => {
     let checkedCount = 0;
     const errors: string[] = [];
 
-    // Prefetch a broader list of Real Madrid fixtures once (helps when DB dates are slightly wrong)
-    let prefetchedFixtures: any[] = [];
-    try {
-      const [lastData, nextData] = await Promise.all([
-        fetchFromFootballApi(`/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&last=200`),
-        fetchFromFootballApi(`/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&next=50`),
-      ]);
-      const byId = new Map<number, any>();
-      for (const f of [...(lastData.response || []), ...(nextData.response || [])]) {
-        if (f?.fixture?.id) byId.set(f.fixture.id, f);
-      }
-      prefetchedFixtures = Array.from(byId.values());
-      console.log(`Prefetched ${prefetchedFixtures.length} fixtures (last+next) for fallback matching`);
-    } catch (err) {
-      console.error('Prefetch fixtures failed (continuing without fallback list):', err);
-    }
-
     for (const match of matchesToSync) {
       checkedCount++;
       try {
@@ -324,74 +303,55 @@ serve(async (req) => {
 
         console.log(`Searching API fixtures from ${from} to ${to} for: ${match.home_team} vs ${match.away_team}`);
 
-        // First attempt: tight date-range search (fast when dates are correct)
+        // Multi-season search: try 2025, then 2024, then no season filter
         let fixtures: any[] = [];
-        try {
+        const seasons = ['2025', '2024', null]; // null = no season filter
+        
+        for (const season of seasons) {
+          const seasonParam = season ? `&season=${season}` : '';
+          console.log(`Trying season: ${season || 'none (date only)'}`);
+          
           const fixturesData = await fetchFromFootballApi(
-            `/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&from=${from}&to=${to}`
+            `/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}${seasonParam}&from=${from}&to=${to}`
           );
+          
           fixtures = fixturesData.response || [];
-          console.log(`Date-range: API returned ${fixtures.length} fixtures`);
-        } catch (err) {
-          console.error('Date-range fixtures fetch failed:', err);
-        }
-
-        // Fallback: if no fixtures, use prefetched fixtures list (covers wrong DB dates)
-        if (fixtures.length === 0 && prefetchedFixtures.length > 0) {
-          fixtures = prefetchedFixtures;
-          console.log(`Fallback: using prefetched fixtures list (${fixtures.length})`);
+          console.log(`Season ${season || 'none'}: API returned ${fixtures.length} fixtures`);
+          
+          if (fixtures.length > 0) break;
         }
 
         if (fixtures.length === 0) {
-          console.log(`No fixtures available to match for ${match.home_team} vs ${match.away_team}`);
+          console.log(`No fixtures found in API for ${match.home_team} vs ${match.away_team} in any season`);
           continue;
         }
 
-        // Determine opponent name (the non-Real Madrid team)
-        const isDbRealMadridHome = teamsMatch('Real Madrid', match.home_team);
-        const isDbRealMadridAway = teamsMatch('Real Madrid', match.away_team);
-        if (!isDbRealMadridHome && !isDbRealMadridAway) {
-          console.log(`Skipping match (does not involve Real Madrid): ${match.home_team} vs ${match.away_team}`);
-          continue;
-        }
-        const opponentName = isDbRealMadridHome ? match.away_team : match.home_team;
-
-        // Find best matching fixture by opponent + closest date
-        const candidates = fixtures
-          .filter((f: any) => {
-            const apiHome = f?.teams?.home?.name;
-            const apiAway = f?.teams?.away?.name;
-            if (!apiHome || !apiAway) return false;
-
-            const isApiRealMadridHome = teamsMatch('Real Madrid', apiHome);
-            const isApiRealMadridAway = teamsMatch('Real Madrid', apiAway);
-            if (!isApiRealMadridHome && !isApiRealMadridAway) return false;
-
-            const apiOpponent = isApiRealMadridHome ? apiAway : apiHome;
-            return teamsMatch(opponentName, apiOpponent);
-          })
-          .map((f: any) => {
-            const fixtureDate = new Date(f.fixture?.date || 0).getTime();
-            const diff = Math.abs(fixtureDate - matchDate.getTime());
-            return { f, diff };
-          })
-          .sort((a: any, b: any) => a.diff - b.diff);
-
-        const matchingFixture = candidates[0]?.f;
+        // Find matching fixture using improved team matching
+        const matchingFixture = fixtures.find((f: any) => {
+          const apiHome = f.teams.home.name;
+          const apiAway = f.teams.away.name;
+          
+          // Check for Real Madrid match with matching opponent
+          const isRealMadridHome = teamsMatch('Real Madrid', apiHome);
+          const isRealMadridAway = teamsMatch('Real Madrid', apiAway);
+          
+          if (!isRealMadridHome && !isRealMadridAway) return false;
+          
+          // Check opponent match using alias-aware function
+          if (isRealMadridHome) {
+            return teamsMatch(match.away_team, apiAway);
+          } else {
+            return teamsMatch(match.home_team, apiHome);
+          }
+        });
 
         if (!matchingFixture) {
-          console.log(
-            `No matching fixture found for opponent "${opponentName}". Available: ${fixtures
-              .slice(0, 10)
-              .map((f: any) => `${f.teams?.home?.name} vs ${f.teams?.away?.name}`)
-              .join(', ')}${fixtures.length > 10 ? '...' : ''}`
-          );
+          console.log(`No matching fixture found. Available: ${fixtures.map((f: any) => `${f.teams.home.name} vs ${f.teams.away.name}`).join(', ')}`);
           continue;
         }
 
-        console.log(
-          `Found matching fixture: ${matchingFixture.teams.home.name} vs ${matchingFixture.teams.away.name} (ID: ${matchingFixture.fixture.id})`
-        );
+        console.log(`Found matching fixture: ${matchingFixture.teams.home.name} vs ${matchingFixture.teams.away.name} (ID: ${matchingFixture.fixture.id})`);
+
         // Fetch events and statistics
         const [eventsData, statsData] = await Promise.all([
           fetchFromFootballApi(`/fixtures/events?fixture=${matchingFixture.fixture.id}`),
