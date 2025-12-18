@@ -305,8 +305,13 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
       is_important: true,
       author_id: user?.id || null,
     });
+
+    // Marquer le match comme terminé (stop du LIVE)
+    await supabase.from('matches').update({ status: 'finished' }).eq('id', selectedMatchId);
+    setMatches((prev) => prev.map((m) => (m.id === selectedMatchId ? ({ ...m, status: 'finished' } as Match) : m)));
+
     setExtraTimeInput('');
-    toast({ title: 'Temps réglementaire terminé!' });
+    toast({ title: 'Match terminé!' });
   };
 
   // Prolongations handlers
@@ -503,7 +508,7 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
                   </Button>
                   <Button 
                     onClick={handleEndMatch}
-                    disabled={!timerSettings?.is_timer_running || timerSettings?.current_half !== 2}
+                    disabled={(timerSettings?.current_half !== 2) || (!timerSettings?.is_timer_running && !timerSettings?.is_paused)}
                     variant="destructive"
                     className="w-full"
                     size="sm"
@@ -552,7 +557,7 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
                   </Button>
                   <Button 
                     onClick={handleEndExtraTime2}
-                    disabled={!timerSettings?.is_timer_running || timerSettings?.current_half !== 4}
+                    disabled={(timerSettings?.current_half !== 4) || (!timerSettings?.is_timer_running && !timerSettings?.is_paused)}
                     variant="destructive"
                     className="w-full"
                     size="sm"
