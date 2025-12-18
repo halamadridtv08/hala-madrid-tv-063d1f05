@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.football-api]
 verify_jwt = false
+
+[functions.sync-match-details]
+verify_jwt = false
