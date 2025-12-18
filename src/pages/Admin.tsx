@@ -67,6 +67,7 @@ import { ArticleAdsManager } from "@/components/admin/ArticleAdsManager";
 import { LiveBlogManager } from "@/components/admin/LiveBlogManager";
 import { NewsletterManager } from "@/components/admin/NewsletterManager";
 import { DreamTeamManager } from "@/components/admin/DreamTeamManager";
+import { LiveMatchBarManager } from "@/components/admin/LiveMatchBarManager";
 import { useNavigate } from "react-router-dom";
 interface StatsData {
   totalPlayers: number;
@@ -501,6 +502,8 @@ const Admin = () => {
     </div>
   );
 
+  const renderLiveBar = () => <LiveMatchBarManager />;
+
   const renderNewsletter = () => (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Gestion de la Newsletter</h2>
@@ -559,6 +562,7 @@ const Admin = () => {
           <TabsContent value="players">{renderPlayers()}</TabsContent>
           <TabsContent value="coaches">{renderCoaches()}</TabsContent>
           <TabsContent value="matches">{renderMatches()}</TabsContent>
+          <TabsContent value="live-bar">{renderLiveBar()}</TabsContent>
           <TabsContent value="opponents">{renderOpponents()}</TabsContent>
           <TabsContent value="formations">{renderFormations()}</TabsContent>
           <TabsContent value="lineups">{renderLineups()}</TabsContent>
