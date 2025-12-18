@@ -64,7 +64,7 @@ import IntegrationsManager from "@/components/admin/IntegrationsManager";
 import { PartnersManager } from "@/components/admin/PartnersManager";
 import { FooterLinksManager } from "@/components/admin/FooterLinksManager";
 import { ArticleAdsManager } from "@/components/admin/ArticleAdsManager";
-import { LiveBlogManager } from "@/components/admin/LiveBlogManager";
+import { MatchControlCenter } from "@/components/admin/MatchControlCenter";
 import { NewsletterManager } from "@/components/admin/NewsletterManager";
 import { DreamTeamManager } from "@/components/admin/DreamTeamManager";
 import { LiveMatchBarManager } from "@/components/admin/LiveMatchBarManager";
@@ -495,10 +495,10 @@ const Admin = () => {
     </div>;
   const renderSpecialArticles = () => <SpecialArticlesManager />;
 
-  const renderLiveBlog = () => (
+  const renderMatchControl = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Live Blog - Mises à jour en direct</h2>
-      <LiveBlogManager />
+      <h2 className="text-2xl font-bold">Centre de Contrôle Match</h2>
+      <MatchControlCenter />
     </div>
   );
 
@@ -572,7 +572,7 @@ const Admin = () => {
           <TabsContent value="kits">{renderKits()}</TabsContent>
           <TabsContent value="youtube">{renderYouTubeVideos()}</TabsContent>
           <TabsContent value="flash-news">{renderFlashNews()}</TabsContent>
-          <TabsContent value="live-blog">{renderLiveBlog()}</TabsContent>
+          <TabsContent value="match-control">{renderMatchControl()}</TabsContent>
           <TabsContent value="newsletter">{renderNewsletter()}</TabsContent>
           <TabsContent value="dream-teams">{renderDreamTeams()}</TabsContent>
           <TabsContent value="integrations">

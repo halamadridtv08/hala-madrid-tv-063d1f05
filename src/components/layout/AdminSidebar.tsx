@@ -45,7 +45,7 @@ const navigationItems = [
   { value: "coaches", label: "Entraîneurs", icon: Users },
   { value: "matches", label: "Matchs", icon: Calendar },
   { value: "live-bar", label: "Barre Live", icon: Tv },
-  { value: "live-blog", label: "Live Blog", icon: Radio },
+  { value: "match-control", label: "Centre Match", icon: Radio },
   { value: "opponents", label: "Équipes Adverses", icon: Target },
   { value: "formations", label: "Formations", icon: Target },
   { value: "lineups", label: "Compositions", icon: Users },

@@ -1,6 +1,7 @@
 import { useMatches } from "@/hooks/useMatches";
 import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 import { useLiveMatchBarSettings } from "@/hooks/useLiveMatchBarSettings";
+import { useMatchTimer } from "@/hooks/useMatchTimer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { format, differenceInMinutes, addMinutes, subMinutes } from "date-fns";
 import { fr, es, enUS } from "date-fns/locale";
@@ -113,24 +114,30 @@ export function LiveMatchBar() {
     return null;
   }, [upcomingMatches, pastMatches, settings]);
 
-  // Match timer
-  const [matchMinute, setMatchMinute] = useState(0);
+  // Use manual timer from match_timer_settings
+  const { currentMinute: manualMinute, timerSettings } = useMatchTimer(relevantMatch?.match?.id || '');
+
+  // Fallback to automatic calculation if no manual timer
+  const [autoMatchMinute, setAutoMatchMinute] = useState(0);
 
   useEffect(() => {
-    if (!relevantMatch || relevantMatch.state !== 'live') return;
+    if (!relevantMatch || relevantMatch.state !== 'live' || timerSettings?.is_timer_running) return;
 
     const calculateMinute = () => {
       const matchStart = new Date(relevantMatch.match.match_date);
       const now = new Date();
       const minutes = differenceInMinutes(now, matchStart);
-      setMatchMinute(Math.max(0, Math.min(minutes, 120)));
+      setAutoMatchMinute(Math.max(0, Math.min(minutes, 120)));
     };
 
     calculateMinute();
     const interval = setInterval(calculateMinute, 60000);
 
     return () => clearInterval(interval);
-  }, [relevantMatch]);
+  }, [relevantMatch, timerSettings]);
+
+  // Determine which minute to display
+  const displayMinute = timerSettings?.timer_started_at ? manualMinute : `${autoMatchMinute}`;
 
   // Don't show if hidden from admin, loading, or no relevant match (unless forced)
   const loading = matchesLoading || settingsLoading;
@@ -281,7 +288,7 @@ export function LiveMatchBar() {
                   {state === 'live' && (settings?.show_timer !== false) && (
                     <div className="px-3 py-1 bg-red-500/20 border border-red-500/50 rounded-full">
                       <span className="text-sm font-bold text-red-400 animate-pulse">
-                        {matchMinute}'
+                        {displayMinute}'
                       </span>
                     </div>
                   )}

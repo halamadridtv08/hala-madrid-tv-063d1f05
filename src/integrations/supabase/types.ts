@@ -876,9 +876,11 @@ export type Database = {
           created_at: string
           entry_type: string
           id: string
+          image_url: string | null
           is_important: boolean | null
           match_id: string
           minute: number | null
+          player_id: string | null
           title: string | null
           updated_at: string
         }
@@ -888,9 +890,11 @@ export type Database = {
           created_at?: string
           entry_type?: string
           id?: string
+          image_url?: string | null
           is_important?: boolean | null
           match_id: string
           minute?: number | null
+          player_id?: string | null
           title?: string | null
           updated_at?: string
         }
@@ -900,9 +904,11 @@ export type Database = {
           created_at?: string
           entry_type?: string
           id?: string
+          image_url?: string | null
           is_important?: boolean | null
           match_id?: string
           minute?: number | null
+          player_id?: string | null
           title?: string | null
           updated_at?: string
         }
@@ -912,6 +918,13 @@ export type Database = {
             columns: ["match_id"]
             isOneToOne: false
             referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_blog_entries_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
             referencedColumns: ["id"]
           },
         ]
@@ -1348,6 +1361,62 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_timer_settings: {
+        Row: {
+          created_at: string | null
+          current_half: number | null
+          first_half_extra_time: number | null
+          half_started_at: string | null
+          id: string
+          is_extra_time: boolean | null
+          is_paused: boolean | null
+          is_timer_running: boolean | null
+          match_id: string | null
+          paused_at_minute: number | null
+          second_half_extra_time: number | null
+          timer_started_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_half?: number | null
+          first_half_extra_time?: number | null
+          half_started_at?: string | null
+          id?: string
+          is_extra_time?: boolean | null
+          is_paused?: boolean | null
+          is_timer_running?: boolean | null
+          match_id?: string | null
+          paused_at_minute?: number | null
+          second_half_extra_time?: number | null
+          timer_started_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_half?: number | null
+          first_half_extra_time?: number | null
+          half_started_at?: string | null
+          id?: string
+          is_extra_time?: boolean | null
+          is_paused?: boolean | null
+          is_timer_running?: boolean | null
+          match_id?: string | null
+          paused_at_minute?: number | null
+          second_half_extra_time?: number | null
+          timer_started_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_timer_settings_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: true
+            referencedRelation: "matches"
             referencedColumns: ["id"]
           },
         ]
