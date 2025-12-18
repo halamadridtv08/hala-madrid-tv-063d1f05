@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLiveBlog, LiveBlogEntry } from '@/hooks/useLiveBlog';
+import { useMatchTimer } from '@/hooks/useMatchTimer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Match } from '@/types/Match';
@@ -142,6 +143,7 @@ const LiveBlog = () => {
   const [matchMinute, setMatchMinute] = useState(0);
   
   const { entries, loading: entriesLoading } = useLiveBlog(matchId);
+  const { currentMinute: manualMinute, timerSettings } = useMatchTimer(matchId || '');
 
   useEffect(() => {
     const fetchMatch = async () => {
@@ -185,9 +187,9 @@ const LiveBlog = () => {
     };
   }, [matchId]);
 
-  // Calculate match minute
+  // Calculate match minute (fallback only if no manual timer)
   useEffect(() => {
-    if (!match || match.status !== 'live') return;
+    if (!match || match.status !== 'live' || timerSettings?.timer_started_at) return;
 
     const calculateMinute = () => {
       const matchStart = new Date(match.match_date);
@@ -200,7 +202,7 @@ const LiveBlog = () => {
     const interval = setInterval(calculateMinute, 60000);
 
     return () => clearInterval(interval);
-  }, [match]);
+  }, [match, timerSettings?.timer_started_at]);
 
   if (loading) {
     return (
@@ -235,6 +237,13 @@ const LiveBlog = () => {
   const matchDate = new Date(match.match_date);
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
+
+  const formatMinuteLabel = (minute: string | number) => {
+    const s = String(minute);
+    return s.includes("'") ? s : `${s}'`;
+  };
+
+  const displayMinute = timerSettings?.timer_started_at ? manualMinute : `${matchMinute}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -316,7 +325,7 @@ const LiveBlog = () => {
               {isLive && (
                 <div className="px-4 py-1 bg-red-500/20 border border-red-500/50 rounded-full">
                   <span className="text-sm font-bold text-red-400 animate-pulse">
-                    {matchMinute}'
+                    {formatMinuteLabel(displayMinute)}
                   </span>
                 </div>
               )}
