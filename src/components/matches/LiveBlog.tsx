@@ -156,6 +156,13 @@ const LiveBlogEntryCard = ({ entry, index, locale }: LiveBlogEntryCardProps) => 
             <h4 className="font-semibold text-foreground mb-1">{entry.title}</h4>
           )}
           <p className="text-sm text-muted-foreground">{entry.content}</p>
+          {entry.image_url && (
+            <img 
+              src={entry.image_url} 
+              alt={entry.title || 'Live blog image'}
+              className="mt-2 rounded-lg max-h-48 w-auto object-cover"
+            />
+          )}
         </div>
       </div>
     </motion.div>

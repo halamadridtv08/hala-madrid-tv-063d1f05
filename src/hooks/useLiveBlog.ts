@@ -12,6 +12,8 @@ export interface LiveBlogEntry {
   is_important: boolean;
   created_at: string;
   author_id: string | null;
+  image_url: string | null;
+  player_id: string | null;
 }
 
 export const useLiveBlog = (matchId: string | undefined) => {
@@ -84,7 +86,7 @@ export const useLiveBlog = (matchId: string | undefined) => {
     };
   }, [matchId, toast]);
 
-  const addEntry = async (entry: Omit<LiveBlogEntry, 'id' | 'created_at'>) => {
+  const addEntry = async (entry: Omit<LiveBlogEntry, 'id' | 'created_at' | 'image_url' | 'player_id'> & { image_url?: string | null; player_id?: string | null }) => {
     const { data, error } = await supabase
       .from('live_blog_entries')
       .insert(entry)

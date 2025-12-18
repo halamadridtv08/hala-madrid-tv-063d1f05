@@ -403,6 +403,13 @@ const LiveBlog = () => {
                               <h3 className="font-semibold text-foreground mb-1 text-lg">{entry.title}</h3>
                             )}
                             <p className="text-muted-foreground">{entry.content}</p>
+                            {entry.image_url && (
+                              <img 
+                                src={entry.image_url} 
+                                alt={entry.title || 'Live blog image'}
+                                className="mt-3 rounded-lg max-h-64 w-auto object-cover"
+                              />
+                            )}
                           </div>
                         </div>
                       </CardContent>
