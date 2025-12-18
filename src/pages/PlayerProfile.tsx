@@ -303,7 +303,7 @@ const PlayerProfile = () => {
                 <TabsContent value="stats">
                   <Card>
                     <CardHeader>
-                      <h2 className="text-2xl font-bold">Statistiques détaillées 2024/2025</h2>
+                      <h2 className="text-2xl font-bold">Statistiques détaillées 2025/2026</h2>
                     </CardHeader>
                     <CardContent>
                       {playerStats.matches > 0 ? (

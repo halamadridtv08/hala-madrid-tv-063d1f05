@@ -47,7 +47,7 @@ export const StatsGlobalOverview = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-madrid-blue" />
-            Statistiques Globales - Saison 2024/2025
+            Statistiques Globales - Saison 2025/2026
           </CardTitle>
         </CardHeader>
         <CardContent>
