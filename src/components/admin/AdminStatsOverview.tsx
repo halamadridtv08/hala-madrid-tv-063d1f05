@@ -128,7 +128,7 @@ export const AdminStatsOverview = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-madrid-blue" />
-            Statistiques Détaillées - Saison 2025/2026
+            Statistiques Détaillées - Saison 2024/2025
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -175,7 +175,7 @@ export const AdminStatsOverview = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Star className="h-5 w-5 text-madrid-gold" />
-            Top Buteurs (Saison 2025/2026)
+            Top Buteurs (Saison 2024/2025)
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -229,7 +229,7 @@ export const AdminStatsOverview = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-madrid-blue" />
-            Top Passeurs (Saison 2025/2026)
+            Top Passeurs (Saison 2024/2025)
           </CardTitle>
         </CardHeader>
         <CardContent>

@@ -81,7 +81,7 @@ export const TeamStatsLive = () => {
           />
           <div>
             <CardTitle>{stats.team.name}</CardTitle>
-            <p className="text-sm text-muted-foreground">Statistiques La Liga 2025/26</p>
+            <p className="text-sm text-muted-foreground">Statistiques La Liga 2024/25</p>
           </div>
         </div>
         <Button onClick={refetch} variant="ghost" size="sm">

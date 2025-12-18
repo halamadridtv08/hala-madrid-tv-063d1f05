@@ -14,7 +14,7 @@ export const LaLigaStandings = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-primary" />
-            Classement La Liga 2025/26
+            Classement La Liga 2024/25
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -53,7 +53,7 @@ export const LaLigaStandings = () => {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-primary" />
-          Classement La Liga 2025/26
+          Classement La Liga 2024/25
         </CardTitle>
         <Button onClick={refetch} variant="ghost" size="sm">
           <RefreshCw className="h-4 w-4" />
