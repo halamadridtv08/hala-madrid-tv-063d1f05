@@ -71,8 +71,10 @@ export function useMatchApiData() {
     return callFootballApi<ApiFixtureStatistic[]>('fixture-statistics', { fixture: fixtureId });
   };
 
-  const searchFixtures = async (from: string, to: string) => {
-    return callFootballApi<ApiFixture[]>('search-fixtures', { from, to });
+  const searchFixtures = async (from: string, to: string, season?: string) => {
+    const params: Record<string, string> = { from, to };
+    if (season) params.season = season;
+    return callFootballApi<ApiFixture[]>('search-fixtures', params);
   };
 
   const convertEventsToMatchDetails = (events: ApiFixtureEvent[], statistics: ApiFixtureStatistic[]) => {
@@ -242,57 +244,101 @@ export function useMatchApiData() {
     }
   };
 
+  // Team name aliases for better matching
+  const TEAM_ALIASES: Record<string, string[]> = {
+    'real madrid': ['real madrid cf', 'real madrid c.f.'],
+    'alavés': ['deportivo alavés', 'alaves', 'deportivo alaves'],
+    'atlético madrid': ['atletico madrid', 'atlético de madrid'],
+    'barcelona': ['fc barcelona', 'barça'],
+    'celta': ['rc celta', 'celta vigo', 'celta de vigo'],
+    'villarreal': ['villarreal cf'],
+    'valencia': ['valencia cf'],
+    'sevilla': ['sevilla fc'],
+    'betis': ['real betis'],
+    'athletic': ['athletic club', 'athletic bilbao'],
+    'real sociedad': ['real sociedad de futbol'],
+    'getafe': ['getafe cf'],
+    'osasuna': ['ca osasuna'],
+    'mallorca': ['rcd mallorca'],
+    'rayo': ['rayo vallecano'],
+    'las palmas': ['ud las palmas'],
+    'girona': ['girona fc'],
+    'salzburg': ['red bull salzburg', 'rb salzburg', 'fc salzburg'],
+    'atalanta': ['atalanta bc'],
+    'brest': ['stade brestois'],
+    'lille': ['losc lille', 'losc'],
+  };
+
+  const normalizeTeamName = (name: string) => {
+    return name.toLowerCase()
+      .replace(/\s*(cf|fc|cd|ud|sd|rcd|rc)\s*/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  const teamsMatchLocal = (dbName: string, apiName: string): boolean => {
+    const dbNorm = normalizeTeamName(dbName);
+    const apiNorm = normalizeTeamName(apiName);
+    
+    if (dbNorm.includes(apiNorm) || apiNorm.includes(dbNorm)) return true;
+    
+    for (const [key, aliases] of Object.entries(TEAM_ALIASES)) {
+      const allNames = [key, ...aliases].map(n => normalizeTeamName(n));
+      const dbMatches = allNames.some(n => dbNorm.includes(n) || n.includes(dbNorm));
+      const apiMatches = allNames.some(n => apiNorm.includes(n) || n.includes(apiNorm));
+      if (dbMatches && apiMatches) return true;
+    }
+    
+    return false;
+  };
+
   const findApiFixtureForMatch = async (homeTeam: string, awayTeam: string, matchDate: string) => {
     try {
       const date = new Date(matchDate);
-      // Expand search range to +/- 3 days to account for timezone differences and data inconsistencies
       const fromDate = new Date(date);
-      fromDate.setDate(fromDate.getDate() - 3);
+      fromDate.setDate(fromDate.getDate() - 5);
       const toDate = new Date(date);
-      toDate.setDate(toDate.getDate() + 3);
+      toDate.setDate(toDate.getDate() + 5);
       
       const from = fromDate.toISOString().split('T')[0];
       const to = toDate.toISOString().split('T')[0];
 
       console.log(`Searching fixtures from ${from} to ${to} for ${homeTeam} vs ${awayTeam}`);
       
-      const fixtures = await searchFixtures(from, to);
+      // Multi-season search: try 2025, then 2024, then no season filter
+      let fixtures: ApiFixture[] | null = null;
+      const seasons = ['2025', '2024', undefined]; // undefined = no season filter
+      
+      for (const season of seasons) {
+        console.log(`Trying season: ${season || 'none (date only)'}`);
+        fixtures = await searchFixtures(from, to, season);
+        
+        if (fixtures && fixtures.length > 0) {
+          console.log(`Season ${season || 'none'}: Found ${fixtures.length} fixtures`);
+          break;
+        }
+      }
       
       if (!fixtures || fixtures.length === 0) {
-        console.log('No fixtures found in API for this date range');
+        console.log('No fixtures found in API for this date range in any season');
         return null;
       }
 
-      console.log(`Found ${fixtures.length} fixtures, searching for match...`);
-
-      // Normalize team names for comparison
-      const normalizeTeamName = (name: string) => {
-        return name.toLowerCase()
-          .replace(/cf|fc|cd|ud|sd|rcd|rc|/gi, '')
-          .replace(/\s+/g, ' ')
-          .trim();
-      };
-
-      // Try to find matching fixture by comparing both teams
-      const homeNorm = normalizeTeamName(homeTeam);
-      const awayNorm = normalizeTeamName(awayTeam);
-
+      // Find matching fixture using improved team matching with aliases
       const match = fixtures.find(f => {
-        const apiHomeNorm = normalizeTeamName(f.teams.home.name);
-        const apiAwayNorm = normalizeTeamName(f.teams.away.name);
+        const apiHome = f.teams.home.name;
+        const apiAway = f.teams.away.name;
         
-        // Check if teams match (in either order)
-        const teamsMatch = 
-          (apiHomeNorm.includes(homeNorm) || homeNorm.includes(apiHomeNorm) ||
-           apiHomeNorm.includes('real madrid') && homeNorm.includes('real madrid')) &&
-          (apiAwayNorm.includes(awayNorm) || awayNorm.includes(apiAwayNorm) ||
-           apiAwayNorm.includes('real madrid') && awayNorm.includes('real madrid'));
+        const isRealMadridHome = teamsMatchLocal('Real Madrid', apiHome);
+        const isRealMadridAway = teamsMatchLocal('Real Madrid', apiAway);
         
-        const teamsMatchReverse = 
-          (apiHomeNorm.includes(awayNorm) || awayNorm.includes(apiHomeNorm)) &&
-          (apiAwayNorm.includes(homeNorm) || homeNorm.includes(apiAwayNorm));
+        if (!isRealMadridHome && !isRealMadridAway) return false;
         
-        return teamsMatch || teamsMatchReverse;
+        if (isRealMadridHome) {
+          return teamsMatchLocal(awayTeam, apiAway);
+        } else {
+          return teamsMatchLocal(homeTeam, apiHome);
+        }
       });
 
       if (match) {
