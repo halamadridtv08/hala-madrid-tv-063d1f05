@@ -228,6 +228,14 @@ serve(async (req) => {
     const matchId = url.searchParams.get('matchId');
     const fixtureId = url.searchParams.get('fixtureId');
 
+    const seasonParam = url.searchParams.get('season');
+    const parsedSeason = seasonParam ? Number.parseInt(seasonParam, 10) : NaN;
+    const season = Number.isFinite(parsedSeason) && parsedSeason >= 2000 && parsedSeason <= 2100
+      ? parsedSeason
+      : FOOTBALL_API.CURRENT_SEASON;
+
+    console.log(`sync-match-details: season=${season}`);
+
     if (matchId && fixtureId) {
       // Sync specific match
       console.log(`Syncing match ${matchId} with fixture ${fixtureId}`);
@@ -307,8 +315,8 @@ serve(async (req) => {
     let prefetchedFixtures: any[] = [];
     try {
       const [lastData, nextData] = await Promise.all([
-        fetchFromFootballApi(`/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&last=200`),
-        fetchFromFootballApi(`/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&next=50`),
+        fetchFromFootballApi(`/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&season=${season}&last=200`),
+        fetchFromFootballApi(`/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&season=${season}&next=50`),
       ]);
       const byId = new Map<number, any>();
       for (const f of [...(lastData.response || []), ...(nextData.response || [])]) {
@@ -339,7 +347,7 @@ serve(async (req) => {
         let fixtures: any[] = [];
         try {
           const fixturesData = await fetchFromFootballApi(
-            `/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&from=${from}&to=${to}`
+            `/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&season=${season}&from=${from}&to=${to}`
           );
           fixtures = fixturesData.response || [];
           console.log(`Date-range: API returned ${fixtures.length} fixtures`);
@@ -460,6 +468,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
+        season,
         synced: syncedCount, 
         checked: checkedCount,
         total: dbMatches?.length || 0,
