@@ -8,8 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Match } from "@/types/Match";
 import { MatchForm } from "./MatchForm";
 import { MatchJsonImporter } from "./MatchJsonImporter";
-import { Plus, Edit, Trash2, Calendar } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useMatchApiData } from "@/hooks/useMatchApiData";
 
 interface MatchTableProps {
   matches: Match[];
@@ -20,7 +21,8 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
   const [loading, setLoading] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | undefined>(undefined);
-
+  const [syncingMatchId, setSyncingMatchId] = useState<string | null>(null);
+  const { findApiFixtureForMatch, syncMatchFromApi, syncing } = useMatchApiData();
   // Trier les matchs par date (plus récent en premier)
   const sortedMatches = useMemo(() => {
     return [...matches].sort((a, b) => {
@@ -108,6 +110,54 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
     console.log("Affichage des détails du match:", match);
   };
 
+  const handleSyncMatch = async (match: Match) => {
+    setSyncingMatchId(match.id);
+    try {
+      // First try to find the API fixture ID
+      const fixtureId = await findApiFixtureForMatch(
+        match.home_team,
+        match.away_team,
+        match.match_date
+      );
+
+      if (!fixtureId) {
+        toast.error("Impossible de trouver ce match dans l'API Football");
+        return;
+      }
+
+      const success = await syncMatchFromApi(match.id, fixtureId);
+      if (success) {
+        refreshMatches();
+      }
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast.error("Erreur lors de la synchronisation");
+    } finally {
+      setSyncingMatchId(null);
+    }
+  };
+
+  const handleSyncAllRecent = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        'https://qjnppcfbywfazwolfppo.supabase.co/functions/v1/sync-match-details'
+      );
+      const result = await response.json();
+      
+      if (result.success) {
+        toast.success(`${result.synced} match(s) synchronisé(s) sur ${result.checked} vérifiés`);
+        refreshMatches();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('Sync all error:', error);
+      toast.error("Erreur lors de la synchronisation automatique");
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <>
       <div className="space-y-6">
@@ -115,12 +165,18 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
         
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <CardTitle>Matchs ({matches.length})</CardTitle>
-              <Button onClick={handleAddMatch}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nouveau match
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={handleSyncAllRecent} disabled={loading}>
+                  {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                  Sync API
+                </Button>
+                <Button onClick={handleAddMatch}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouveau match
+                </Button>
+              </div>
             </div>
           </CardHeader>
         <CardContent>
@@ -154,6 +210,22 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 sm:gap-2 justify-end sm:justify-start">
+                  {match.status === 'finished' && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleSyncMatch(match)}
+                      disabled={syncingMatchId === match.id || syncing}
+                      title="Synchroniser depuis l'API"
+                      className="h-8 w-8 sm:h-9 sm:w-9 p-0"
+                    >
+                      {syncingMatchId === match.id ? (
+                        <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      )}
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     size="sm"
