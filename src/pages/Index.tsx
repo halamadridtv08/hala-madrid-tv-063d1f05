@@ -33,8 +33,8 @@ const Index = () => {
         description="Toute l'actualité du Real Madrid en direct : matchs, transferts, joueurs, statistiques. Suivez les Merengues avec HALA MADRID TV."
         url="/"
       />
-      <LiveMatchBar />
       <Navbar />
+      <LiveMatchBar />
       <main>
       {isVisible('hero_section') && <HeroSection />}
       {isVisible('youtube_videos') && <FeaturedYouTubeVideo />}
