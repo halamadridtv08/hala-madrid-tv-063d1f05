@@ -24,9 +24,10 @@ const Auth = () => {
   const [showTwoFactor, setShowTwoFactor] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
   const [isLogin, setIsLogin] = useState(true);
+  const [pageReady, setPageReady] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { imageUrl: heroImageFromDb, isLoading: isLoadingHeroImage } = useAuthHeroImage();
 
   // Vérifier si un mot de passe est compromis via Have I Been Pwned API
@@ -47,7 +48,7 @@ const Auth = () => {
       return text.split('\n').some(line => line.startsWith(suffix));
     } catch (error) {
       console.error('Erreur vérification mot de passe:', error);
-      return false; // En cas d'erreur, on autorise quand même
+      return false;
     }
   };
   
@@ -55,19 +56,25 @@ const Auth = () => {
   const heroImage = heroImageFromDb || authHeroImage;
 
   useEffect(() => {
+    // Wait for auth to finish loading before showing page
+    if (authLoading) return;
+    
     if (user) {
-      navigate("/");
+      navigate("/", { replace: true });
+      return;
     }
 
     const handleHashFragment = async () => {
       const hashFragment = window.location.hash;
       if (hashFragment && hashFragment.includes('access_token')) {
-        navigate("/");
+        navigate("/", { replace: true });
+        return;
       }
     };
 
     handleHashFragment();
-  }, [user, navigate]);
+    setPageReady(true);
+  }, [user, authLoading, navigate]);
 
   const checkAdminRequires2FA = async (userId: string): Promise<boolean> => {
     try {
@@ -241,6 +248,21 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  // Show loading state while checking auth
+  if (authLoading || !pageReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#001F54] via-[#002D72] to-[#001F54]">
+        <div className="animate-pulse">
+          <img 
+            src={logoImage} 
+            alt="Hala Madrid TV" 
+            className="w-20 h-20 mx-auto opacity-80"
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (showTwoFactor) {
     return (
