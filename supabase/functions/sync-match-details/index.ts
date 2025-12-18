@@ -281,12 +281,23 @@ serve(async (req) => {
 
     console.log(`Found ${dbMatches?.length || 0} finished matches in database`);
 
-    // Filter matches that need sync (no goals array in match_details)
-    const matchesToSync = (dbMatches || []).filter((m: any) => 
-      !m.match_details?.goals || m.match_details.goals.length === 0
-    );
+    const now = Date.now();
+    const oneDayMs = 24 * 60 * 60 * 1000;
 
-    console.log(`${matchesToSync.length} matches need synchronization`);
+    // Filter matches that need sync (no goals array in match_details) AND have a past date
+    const matchesToSync = (dbMatches || []).filter((m: any) => {
+      const needsData = !m.match_details?.goals || m.match_details.goals.length === 0;
+      const matchTime = new Date(m.match_date).getTime();
+      const isFuture = matchTime > now + oneDayMs;
+      return needsData && !isFuture;
+    });
+
+    const skippedFuture = (dbMatches || []).filter((m: any) => {
+      const matchTime = new Date(m.match_date).getTime();
+      return matchTime > now + oneDayMs;
+    }).length;
+
+    console.log(`${matchesToSync.length} matches need synchronization (${skippedFuture} skipped: future dates)`);
 
     let syncedCount = 0;
     let checkedCount = 0;
@@ -453,6 +464,7 @@ serve(async (req) => {
         checked: checkedCount,
         total: dbMatches?.length || 0,
         needsSync: matchesToSync.length,
+        skippedFuture,
         errors: errors.length > 0 ? errors : undefined
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
