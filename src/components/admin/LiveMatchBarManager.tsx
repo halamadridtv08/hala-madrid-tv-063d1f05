@@ -164,14 +164,14 @@ export function LiveMatchBarManager() {
               <div className="space-y-2">
                 <Label>Match à afficher</Label>
                 <Select 
-                  value={formData.active_match_id} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, active_match_id: value }))}
+                  value={formData.active_match_id || "__auto__"} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, active_match_id: value === "__auto__" ? "" : value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un match (optionnel)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Auto-détection</SelectItem>
+                    <SelectItem value="__auto__">Auto-détection</SelectItem>
                     {matches?.map(match => (
                       <SelectItem key={match.id} value={match.id}>
                         {match.home_team} vs {match.away_team} - {format(new Date(match.match_date), "dd/MM/yyyy HH:mm", { locale: fr })}
