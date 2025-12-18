@@ -228,14 +228,6 @@ serve(async (req) => {
     const matchId = url.searchParams.get('matchId');
     const fixtureId = url.searchParams.get('fixtureId');
 
-    const seasonParam = url.searchParams.get('season');
-    const parsedSeason = seasonParam ? Number.parseInt(seasonParam, 10) : NaN;
-    const season = Number.isFinite(parsedSeason) && parsedSeason >= 2000 && parsedSeason <= 2100
-      ? parsedSeason
-      : FOOTBALL_API.CURRENT_SEASON;
-
-    console.log(`sync-match-details: season=${season}`);
-
     if (matchId && fixtureId) {
       // Sync specific match
       console.log(`Syncing match ${matchId} with fixture ${fixtureId}`);
@@ -289,23 +281,12 @@ serve(async (req) => {
 
     console.log(`Found ${dbMatches?.length || 0} finished matches in database`);
 
-    const now = Date.now();
-    const oneDayMs = 24 * 60 * 60 * 1000;
+    // Filter matches that need sync (no goals array in match_details)
+    const matchesToSync = (dbMatches || []).filter((m: any) => 
+      !m.match_details?.goals || m.match_details.goals.length === 0
+    );
 
-    // Filter matches that need sync (no goals array in match_details) AND have a past date
-    const matchesToSync = (dbMatches || []).filter((m: any) => {
-      const needsData = !m.match_details?.goals || m.match_details.goals.length === 0;
-      const matchTime = new Date(m.match_date).getTime();
-      const isFuture = matchTime > now + oneDayMs;
-      return needsData && !isFuture;
-    });
-
-    const skippedFuture = (dbMatches || []).filter((m: any) => {
-      const matchTime = new Date(m.match_date).getTime();
-      return matchTime > now + oneDayMs;
-    }).length;
-
-    console.log(`${matchesToSync.length} matches need synchronization (${skippedFuture} skipped: future dates)`);
+    console.log(`${matchesToSync.length} matches need synchronization`);
 
     let syncedCount = 0;
     let checkedCount = 0;
@@ -315,8 +296,8 @@ serve(async (req) => {
     let prefetchedFixtures: any[] = [];
     try {
       const [lastData, nextData] = await Promise.all([
-        fetchFromFootballApi(`/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&season=${season}&last=200`),
-        fetchFromFootballApi(`/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&season=${season}&next=50`),
+        fetchFromFootballApi(`/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&last=200`),
+        fetchFromFootballApi(`/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&next=50`),
       ]);
       const byId = new Map<number, any>();
       for (const f of [...(lastData.response || []), ...(nextData.response || [])]) {
@@ -347,7 +328,7 @@ serve(async (req) => {
         let fixtures: any[] = [];
         try {
           const fixturesData = await fetchFromFootballApi(
-            `/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&season=${season}&from=${from}&to=${to}`
+            `/fixtures?team=${FOOTBALL_API.REAL_MADRID_ID}&from=${from}&to=${to}`
           );
           fixtures = fixturesData.response || [];
           console.log(`Date-range: API returned ${fixtures.length} fixtures`);
@@ -468,12 +449,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        season,
         synced: syncedCount, 
         checked: checkedCount,
         total: dbMatches?.length || 0,
         needsSync: matchesToSync.length,
-        skippedFuture,
         errors: errors.length > 0 ? errors : undefined
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
