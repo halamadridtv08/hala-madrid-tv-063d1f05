@@ -10,7 +10,7 @@ const FOOTBALL_API = {
   BASE_URL: 'https://v3.football.api-sports.io',
   REAL_MADRID_ID: 541,
   LA_LIGA_ID: 140,
-  CURRENT_SEASON: 2025
+  CURRENT_SEASON: 2024
 };
 
 // Simple in-memory cache
