@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { Match } from "@/types/Match";
 import { MatchForm } from "./MatchForm";
@@ -22,6 +29,13 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMatch, setEditingMatch] = useState<Match | undefined>(undefined);
   const [syncingMatchId, setSyncingMatchId] = useState<string | null>(null);
+  const [syncSeason, setSyncSeason] = useState<string>(() => {
+    try {
+      return localStorage.getItem("admin.syncSeason") ?? "2024";
+    } catch {
+      return "2024";
+    }
+  });
   const { findApiFixtureForMatch, syncMatchFromApi, syncing } = useMatchApiData();
   // Trier les matchs par date (plus récent en premier)
   const sortedMatches = useMemo(() => {
@@ -31,6 +45,15 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
       return dateB - dateA;
     });
   }, [matches]);
+
+  const handleSyncSeasonChange = (value: string) => {
+    setSyncSeason(value);
+    try {
+      localStorage.setItem("admin.syncSeason", value);
+    } catch {
+      // ignore
+    }
+  };
 
   const refreshMatches = async () => {
     try {
@@ -141,21 +164,24 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
     setLoading(true);
     try {
       const response = await fetch(
-        'https://qjnppcfbywfazwolfppo.supabase.co/functions/v1/sync-match-details'
+        `https://qjnppcfbywfazwolfppo.supabase.co/functions/v1/sync-match-details?season=${encodeURIComponent(syncSeason)}`
       );
       const result = await response.json();
       
       if (result.success) {
+        const seasonLabel = result.season ? `${result.season}/${String(result.season + 1).slice(-2)}` : undefined;
+        const seasonText = seasonLabel ? ` (saison ${seasonLabel})` : "";
+
         if (result.synced > 0) {
-          toast.success(`${result.synced} match(s) synchronisé(s) sur ${result.checked} vérifiés`);
+          toast.success(`${result.synced} match(s) synchronisé(s) sur ${result.checked} vérifiés${seasonText}`);
         } else if (result.needsSync === 0) {
           const msg = result.skippedFuture > 0
-            ? `Tous les matchs passés sont synchronisés ! (${result.skippedFuture} matchs futurs ignorés)`
-            : "Tous les matchs sont déjà synchronisés !";
+            ? `Tous les matchs passés sont synchronisés ! (${result.skippedFuture} matchs futurs ignorés)${seasonText}`
+            : `Tous les matchs sont déjà synchronisés !${seasonText}`;
           toast.info(msg);
         } else {
           toast.warning(
-            `Aucune correspondance API trouvée pour les ${result.needsSync} matchs à synchroniser.`
+            `Aucune correspondance API trouvée pour les ${result.needsSync} matchs à synchroniser${seasonText}.`
           );
         }
         if (result.errors && result.errors.length > 0) {
@@ -181,7 +207,20 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
           <CardHeader>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <CardTitle>Matchs ({matches.length})</CardTitle>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Saison</span>
+                  <Select value={syncSeason} onValueChange={handleSyncSeasonChange}>
+                    <SelectTrigger className="w-[132px]">
+                      <SelectValue placeholder="Saison" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2024">2024/25</SelectItem>
+                      <SelectItem value="2025">2025/26</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <Button variant="outline" onClick={handleSyncAllRecent} disabled={loading}>
                   {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
                   Sync API
