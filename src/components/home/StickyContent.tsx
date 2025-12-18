@@ -34,11 +34,12 @@ export const StickyContent = () => {
   useEffect(() => {
     const fetchTrending = async () => {
       try {
-        // Fetch recent featured articles as "trending"
+        // Fetch most viewed/clicked articles as "trending"
         const { data, error } = await supabase
           .from('articles')
-          .select('id, title, category, published_at, image_url')
+          .select('id, title, category, published_at, image_url, view_count')
           .eq('is_published', true)
+          .order('view_count', { ascending: false })
           .order('published_at', { ascending: false })
           .limit(5);
 

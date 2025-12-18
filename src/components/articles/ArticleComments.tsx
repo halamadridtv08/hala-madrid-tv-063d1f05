@@ -25,17 +25,19 @@ export const ArticleComments = ({ articleId }: ArticleCommentsProps) => {
   }, [articleId]);
 
   const fetchComments = async () => {
-    // Use the secure public view that excludes email addresses
+    // Fetch approved comments from the table with RLS
     const { data, error } = await supabase
-      .from("article_comments_public")
-      .select("*")
+      .from("article_comments")
+      .select("id, article_id, user_name, content, created_at, updated_at, is_approved, is_published")
       .eq("article_id", articleId)
+      .eq("is_approved", true)
+      .eq("is_published", true)
       .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching comments:", error);
     } else {
-      setComments(data || []);
+      setComments((data || []) as ArticleComment[]);
     }
   };
 

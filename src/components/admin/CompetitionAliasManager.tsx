@@ -94,6 +94,8 @@ export const CompetitionAliasManager = () => {
     setEditingId(alias.id);
     setNewCanonicalName(alias.canonical_name);
     setNewAliases(alias.aliases.join(', '));
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id: string) => {
