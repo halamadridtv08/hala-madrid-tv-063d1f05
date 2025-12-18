@@ -53,10 +53,15 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
     timerSettings, 
     currentMinute, 
     getNumericMinute,
+    getPeriodLabel,
     startFirstHalf, 
     endFirstHalf, 
     startSecondHalf, 
-    endMatch, 
+    endMatch,
+    startExtraTime1,
+    endExtraTime1,
+    startExtraTime2,
+    endExtraTime2,
     setExtraTime,
     loading: timerLoading 
   } = useMatchTimer(selectedMatchId);
@@ -295,13 +300,73 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
       match_id: selectedMatchId,
       minute: 90,
       entry_type: 'fulltime',
-      title: '⏹️ Fin du match!',
-      content: `Le match est terminé!${extraTime > 0 ? ` (+ ${extraTime} min)` : ''}`,
+      title: '⏹️ Fin du temps réglementaire!',
+      content: `90 minutes terminées!${extraTime > 0 ? ` (+ ${extraTime} min)` : ''}`,
+      is_important: true,
+      author_id: user?.id || null,
+    });
+    setExtraTimeInput('');
+    toast({ title: 'Temps réglementaire terminé!' });
+  };
+
+  // Prolongations handlers
+  const handleStartExtraTime1 = async () => {
+    await startExtraTime1();
+    await addEntry({
+      match_id: selectedMatchId,
+      minute: 90,
+      entry_type: 'kickoff',
+      title: '▶️ Début des prolongations!',
+      content: 'La première période de prolongation commence (15 min)',
+      is_important: true,
+      author_id: user?.id || null,
+    });
+    toast({ title: 'Prolongation 1 démarrée!' });
+  };
+
+  const handleEndExtraTime1 = async () => {
+    const extraTime = parseInt(extraTimeInput) || 0;
+    await endExtraTime1(extraTime);
+    await addEntry({
+      match_id: selectedMatchId,
+      minute: 105,
+      entry_type: 'halftime',
+      title: '⏸️ Mi-temps des prolongations',
+      content: `Fin de la 1ère période de prolongation${extraTime > 0 ? ` (+ ${extraTime} min)` : ''}`,
+      is_important: true,
+      author_id: user?.id || null,
+    });
+    setExtraTimeInput('');
+    toast({ title: 'Mi-temps prolongations!' });
+  };
+
+  const handleStartExtraTime2 = async () => {
+    await startExtraTime2();
+    await addEntry({
+      match_id: selectedMatchId,
+      minute: 105,
+      entry_type: 'kickoff',
+      title: '▶️ Reprise prolongations!',
+      content: 'La 2ème période de prolongation commence (15 min)',
+      is_important: true,
+      author_id: user?.id || null,
+    });
+    toast({ title: 'Prolongation 2 démarrée!' });
+  };
+
+  const handleEndExtraTime2 = async () => {
+    const extraTime = parseInt(extraTimeInput) || 0;
+    await endExtraTime2(extraTime);
+    await addEntry({
+      match_id: selectedMatchId,
+      minute: 120,
+      entry_type: 'fulltime',
+      title: '⏹️ Fin des prolongations!',
+      content: `Les prolongations sont terminées!${extraTime > 0 ? ` (+ ${extraTime} min)` : ''}`,
       is_important: true,
       author_id: user?.id || null,
     });
     
-    // Update match status to finished
     await supabase.from('matches').update({ status: 'finished' }).eq('id', selectedMatchId);
     setExtraTimeInput('');
     toast({ title: 'Match terminé!' });
@@ -311,9 +376,11 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
     const minutes = parseInt(extraTimeInput);
     if (isNaN(minutes) || minutes < 0) return;
     await setExtraTime(minutes);
+    const period = timerSettings?.current_half || 1;
+    const baseMinute = period === 1 ? 45 : period === 2 ? 90 : period === 3 ? 105 : 120;
     await addEntry({
       match_id: selectedMatchId,
-      minute: timerSettings?.current_half === 1 ? 45 : 90,
+      minute: baseMinute,
       entry_type: 'extra_time',
       title: `⏰ Temps additionnel: ${minutes} minutes`,
       content: `${minutes} minutes de temps additionnel annoncées`,
@@ -321,6 +388,20 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
       author_id: user?.id || null,
     });
     toast({ title: `Temps additionnel: ${minutes} min` });
+  };
+
+  // Delete entry handler with feedback
+  const handleDeleteEntry = async (entryId: string) => {
+    try {
+      await deleteEntry(entryId);
+      toast({ title: 'Entrée supprimée' });
+    } catch (error: any) {
+      toast({ 
+        title: 'Erreur', 
+        description: error.message || 'Impossible de supprimer', 
+        variant: 'destructive' 
+      });
+    }
   };
 
   const selectedMatch = matches.find(m => m.id === selectedMatchId);
@@ -383,49 +464,103 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
                     <Badge variant="outline">ARRÊTÉ</Badge>
                   )}
                   {timerSettings && (
-                    <span className="ml-2">
-                      {timerSettings.current_half === 1 ? '1ère MT' : '2ème MT'}
-                    </span>
+                    <span className="ml-2">{getPeriodLabel()}</span>
                   )}
                 </div>
               </div>
 
-              {/* Timer buttons */}
-              <div className="grid grid-cols-2 gap-2">
-                <Button 
-                  onClick={handleStartFirstHalf}
-                  disabled={timerSettings?.is_timer_running}
-                  className="w-full"
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  Coup d'envoi
-                </Button>
-                <Button 
-                  onClick={handleEndFirstHalf}
-                  disabled={!timerSettings?.is_timer_running || timerSettings?.current_half !== 1}
-                  variant="secondary"
-                  className="w-full"
-                >
-                  <Pause className="w-4 h-4 mr-2" />
-                  Mi-temps
-                </Button>
-                <Button 
-                  onClick={handleStartSecondHalf}
-                  disabled={timerSettings?.is_timer_running || timerSettings?.current_half !== 1}
-                  className="w-full"
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  Reprise
-                </Button>
-                <Button 
-                  onClick={handleEndMatch}
-                  disabled={!timerSettings?.is_timer_running && timerSettings?.current_half !== 2}
-                  variant="destructive"
-                  className="w-full"
-                >
-                  <Square className="w-4 h-4 mr-2" />
-                  Fin match
-                </Button>
+              {/* Timer buttons - Match régulier */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Match régulier</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    onClick={handleStartFirstHalf}
+                    disabled={timerSettings?.is_timer_running || (timerSettings?.current_half || 0) >= 1}
+                    className="w-full"
+                    size="sm"
+                  >
+                    <Play className="w-4 h-4 mr-1" />
+                    Coup d'envoi
+                  </Button>
+                  <Button 
+                    onClick={handleEndFirstHalf}
+                    disabled={!timerSettings?.is_timer_running || timerSettings?.current_half !== 1}
+                    variant="secondary"
+                    className="w-full"
+                    size="sm"
+                  >
+                    <Pause className="w-4 h-4 mr-1" />
+                    Mi-temps
+                  </Button>
+                  <Button 
+                    onClick={handleStartSecondHalf}
+                    disabled={timerSettings?.is_timer_running || timerSettings?.current_half !== 1 || !timerSettings?.is_paused}
+                    className="w-full"
+                    size="sm"
+                  >
+                    <Play className="w-4 h-4 mr-1" />
+                    Reprise
+                  </Button>
+                  <Button 
+                    onClick={handleEndMatch}
+                    disabled={!timerSettings?.is_timer_running || timerSettings?.current_half !== 2}
+                    variant="destructive"
+                    className="w-full"
+                    size="sm"
+                  >
+                    <Square className="w-4 h-4 mr-1" />
+                    Fin 90'
+                  </Button>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Prolongations */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Prolongations (2x15min)</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    onClick={handleStartExtraTime1}
+                    disabled={timerSettings?.is_timer_running || timerSettings?.current_half !== 2 || !timerSettings?.is_paused}
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
+                  >
+                    <Play className="w-4 h-4 mr-1" />
+                    Prol. 1
+                  </Button>
+                  <Button 
+                    onClick={handleEndExtraTime1}
+                    disabled={!timerSettings?.is_timer_running || timerSettings?.current_half !== 3}
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
+                  >
+                    <Pause className="w-4 h-4 mr-1" />
+                    Mi-prol.
+                  </Button>
+                  <Button 
+                    onClick={handleStartExtraTime2}
+                    disabled={timerSettings?.is_timer_running || timerSettings?.current_half !== 3 || !timerSettings?.is_paused}
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
+                  >
+                    <Play className="w-4 h-4 mr-1" />
+                    Prol. 2
+                  </Button>
+                  <Button 
+                    onClick={handleEndExtraTime2}
+                    disabled={!timerSettings?.is_timer_running || timerSettings?.current_half !== 4}
+                    variant="destructive"
+                    className="w-full"
+                    size="sm"
+                  >
+                    <Square className="w-4 h-4 mr-1" />
+                    Fin 120'
+                  </Button>
+                </div>
               </div>
 
               <Separator />
@@ -673,7 +808,8 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => deleteEntry(entry.id)}
+                      onClick={() => handleDeleteEntry(entry.id)}
+                      className="hover:bg-destructive/10"
                     >
                       <Trash2 className="w-4 h-4 text-destructive" />
                     </Button>
