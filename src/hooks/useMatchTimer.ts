@@ -101,7 +101,8 @@ export function useMatchTimer(matchId: string) {
     return upsertTimerSettings({
       is_timer_running: false,
       second_half_extra_time: secondHalfExtraTime,
-      is_paused: true
+      is_paused: true,
+      paused_at_minute: 90 + secondHalfExtraTime
     });
   };
 
