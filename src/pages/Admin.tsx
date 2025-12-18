@@ -68,6 +68,7 @@ import { MatchControlCenter } from "@/components/admin/MatchControlCenter";
 import { NewsletterManager } from "@/components/admin/NewsletterManager";
 import { DreamTeamManager } from "@/components/admin/DreamTeamManager";
 import { LiveMatchBarManager } from "@/components/admin/LiveMatchBarManager";
+import { AdminNotifications } from "@/components/admin/AdminNotifications";
 import { useNavigate } from "react-router-dom";
 interface StatsData {
   totalPlayers: number;
@@ -517,6 +518,13 @@ const Admin = () => {
       <DreamTeamManager />
     </div>
   );
+
+  const renderNotifications = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Notifications</h2>
+      <AdminNotifications />
+    </div>
+  );
   return <div className="min-h-screen bg-background flex">
       {/* Sidebar desktop */}
       <AdminSidebar 
@@ -575,6 +583,7 @@ const Admin = () => {
           <TabsContent value="match-control">{renderMatchControl()}</TabsContent>
           <TabsContent value="newsletter">{renderNewsletter()}</TabsContent>
           <TabsContent value="dream-teams">{renderDreamTeams()}</TabsContent>
+          <TabsContent value="notifications">{renderNotifications()}</TabsContent>
           <TabsContent value="integrations">
             <IntegrationsManager />
           </TabsContent>

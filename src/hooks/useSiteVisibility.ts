@@ -64,6 +64,8 @@ export function useSiteVisibility() {
   }, []);
 
   const isVisible = (sectionKey: string): boolean => {
+    // Return false during loading to prevent flash
+    if (loading) return false;
     return visibility[sectionKey] !== false;
   };
 

@@ -47,6 +47,42 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_notifications: {
+        Row: {
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          read_at: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          read_at?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       admins: {
         Row: {
           created_at: string | null
@@ -332,6 +368,7 @@ export type Database = {
           title: string
           updated_at: string | null
           video_url: string | null
+          view_count: number | null
         }
         Insert: {
           author_id: string
@@ -349,6 +386,7 @@ export type Database = {
           title: string
           updated_at?: string | null
           video_url?: string | null
+          view_count?: number | null
         }
         Update: {
           author_id?: string
@@ -366,6 +404,7 @@ export type Database = {
           title?: string
           updated_at?: string | null
           video_url?: string | null
+          view_count?: number | null
         }
         Relationships: []
       }

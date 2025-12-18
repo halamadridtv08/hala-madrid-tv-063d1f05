@@ -63,6 +63,13 @@ const ArticleDetail = () => {
         } = await supabase.from('articles').select('*').eq('id', id).single();
         if (error) throw error;
         setArticle(data);
+        
+        // Increment view count (fire and forget)
+        supabase
+          .from('articles')
+          .update({ view_count: (data.view_count || 0) + 1 })
+          .eq('id', id)
+          .then(() => {});
       } catch (error: any) {
         console.error('Error fetching article:', error);
         toast({

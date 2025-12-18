@@ -21,7 +21,8 @@ import {
   Radio,
   Mail,
   Star,
-  Tv
+  Tv,
+  Bell
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -57,6 +58,7 @@ const navigationItems = [
   { value: "flash-news", label: "Infos Flash", icon: Twitter },
   { value: "newsletter", label: "Newsletter", icon: Mail },
   { value: "dream-teams", label: "Dream Teams", icon: Star },
+  { value: "notifications", label: "Notifications", icon: Bell },
   { value: "integrations", label: "Intégrations", icon: Puzzle },
   { value: "settings", label: "Paramètres", icon: Settings },
 ];
