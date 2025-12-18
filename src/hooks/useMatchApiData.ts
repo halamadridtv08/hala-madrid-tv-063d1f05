@@ -314,53 +314,74 @@ export function useMatchApiData() {
       fromDate.setDate(fromDate.getDate() - 5);
       const toDate = new Date(date);
       toDate.setDate(toDate.getDate() + 5);
-      
+
       const from = fromDate.toISOString().split('T')[0];
       const to = toDate.toISOString().split('T')[0];
 
       console.log(`Searching fixtures from ${from} to ${to} for ${homeTeam} vs ${awayTeam}`);
-      
-      // Multi-season search: try 2025, then 2024, then no season filter
-      let fixtures: ApiFixture[] | null = null;
-      const seasons = ['2025', '2024', undefined]; // undefined = no season filter
-      
-      for (const season of seasons) {
-        console.log(`Trying season: ${season || 'none (date only)'}`);
-        fixtures = await searchFixtures(from, to, season);
-        
-        if (fixtures && fixtures.length > 0) {
-          console.log(`Season ${season || 'none'}: Found ${fixtures.length} fixtures`);
-          break;
-        }
-      }
-      
+
+      // 1) Try date-range search first
+      let fixtures = await searchFixtures(from, to, '2025');
       if (!fixtures || fixtures.length === 0) {
-        console.log('No fixtures found in API for this date range in any season');
+        fixtures = await searchFixtures(from, to, '2024');
+      }
+      if (!fixtures || fixtures.length === 0) {
+        fixtures = await searchFixtures(from, to);
+      }
+
+      // 2) Fallback: if no results, use last/next fixtures (covers wrong DB dates)
+      if (!fixtures || fixtures.length === 0) {
+        const [lastFixtures, nextFixtures] = await Promise.all([
+          callFootballApi<ApiFixture[]>('last-matches', { team: '541', last: '200' }),
+          callFootballApi<ApiFixture[]>('fixtures', { team: '541', next: '50' }),
+        ]);
+
+        const byId = new Map<number, ApiFixture>();
+        for (const f of [...(lastFixtures || []), ...(nextFixtures || [])]) {
+          if (f?.fixture?.id) byId.set(f.fixture.id, f);
+        }
+        fixtures = Array.from(byId.values());
+        console.log(`Fallback fixtures list: ${fixtures.length}`);
+      }
+
+      if (!fixtures || fixtures.length === 0) {
+        console.log('No fixtures available from API');
         return null;
       }
 
-      // Find matching fixture using improved team matching with aliases
-      const match = fixtures.find(f => {
-        const apiHome = f.teams.home.name;
-        const apiAway = f.teams.away.name;
-        
-        const isRealMadridHome = teamsMatchLocal('Real Madrid', apiHome);
-        const isRealMadridAway = teamsMatchLocal('Real Madrid', apiAway);
-        
-        if (!isRealMadridHome && !isRealMadridAway) return false;
-        
-        if (isRealMadridHome) {
-          return teamsMatchLocal(awayTeam, apiAway);
-        } else {
-          return teamsMatchLocal(homeTeam, apiHome);
-        }
-      });
+      const isDbRealMadridHome = teamsMatchLocal('Real Madrid', homeTeam);
+      const isDbRealMadridAway = teamsMatchLocal('Real Madrid', awayTeam);
+      if (!isDbRealMadridHome && !isDbRealMadridAway) {
+        console.log(`Not a Real Madrid match: ${homeTeam} vs ${awayTeam}`);
+        return null;
+      }
+      const opponentName = isDbRealMadridHome ? awayTeam : homeTeam;
+
+      const candidates = fixtures
+        .filter((f) => {
+          const apiHome = f.teams.home.name;
+          const apiAway = f.teams.away.name;
+
+          const isApiRealMadridHome = teamsMatchLocal('Real Madrid', apiHome);
+          const isApiRealMadridAway = teamsMatchLocal('Real Madrid', apiAway);
+          if (!isApiRealMadridHome && !isApiRealMadridAway) return false;
+
+          const apiOpponent = isApiRealMadridHome ? apiAway : apiHome;
+          return teamsMatchLocal(opponentName, apiOpponent);
+        })
+        .map((f) => {
+          const fixtureDate = new Date(f.fixture.date).getTime();
+          const diff = Math.abs(fixtureDate - date.getTime());
+          return { f, diff };
+        })
+        .sort((a, b) => a.diff - b.diff);
+
+      const match = candidates[0]?.f;
 
       if (match) {
         console.log(`Found matching fixture: ${match.teams.home.name} vs ${match.teams.away.name} (ID: ${match.fixture.id})`);
       } else {
-        console.log('No matching fixture found. Available fixtures:', 
-          fixtures.map(f => `${f.teams.home.name} vs ${f.teams.away.name}`));
+        console.log('No matching fixture found. Available fixtures:', fixtures.map((f) => `${f.teams.home.name} vs ${f.teams.away.name}`));
       }
 
       return match ? String(match.fixture.id) : null;
