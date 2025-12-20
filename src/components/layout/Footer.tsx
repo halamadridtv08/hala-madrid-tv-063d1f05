@@ -99,7 +99,7 @@ export function Footer() {
 
   return (
     <>
-      <footer className="bg-madrid-blue text-white mt-12 relative overflow-hidden">
+      <footer className={`text-white mt-12 relative overflow-hidden ${isSplineVisible && splineUrl ? 'bg-transparent' : 'bg-madrid-blue'}`}>
         {/* Spline 3D Animation Overlay */}
         {isSplineVisible && splineUrl && (
           <FooterSplineAnimation url={splineUrl} />

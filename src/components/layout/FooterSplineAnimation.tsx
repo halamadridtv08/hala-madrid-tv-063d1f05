@@ -13,7 +13,7 @@ export function FooterSplineAnimation({ url }: FooterSplineAnimationProps) {
   if (!url) return null;
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden opacity-60">
+    <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-transparent">
           <Loader2 className="h-8 w-8 animate-spin text-white/30" />
