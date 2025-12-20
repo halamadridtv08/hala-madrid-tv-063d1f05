@@ -1,55 +1,52 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Radio, Trash2, Send, Calendar } from 'lucide-react';
-import { useLiveBlog } from '@/hooks/useLiveBlog';
+import { Radio, Calendar } from 'lucide-react';
+import { useLiveBlog, NewLiveBlogEntry } from '@/hooks/useLiveBlog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { Match } from '@/types/Match';
+
+import { QuickActionBar } from './liveblog/QuickActionBar';
+import { GoalEntryModal } from './liveblog/GoalEntryModal';
+import { CardEntryModal } from './liveblog/CardEntryModal';
+import { SubstitutionModal } from './liveblog/SubstitutionModal';
+import { GroupedEntriesView } from './liveblog/GroupedEntriesView';
 
 interface LiveBlogManagerProps {
   matchId?: string;
 }
 
-const ENTRY_TYPES = [
-  { value: 'update', label: 'Mise à jour' },
-  { value: 'goal', label: 'But ⚽' },
-  { value: 'card', label: 'Carton 🟨🟥' },
-  { value: 'substitution', label: 'Remplacement 🔄' },
-  { value: 'important', label: 'Important ❗' },
-  { value: 'halftime', label: 'Mi-temps ⏸️' },
-  { value: 'kickoff', label: 'Coup d\'envoi ▶️' },
-  { value: 'fulltime', label: 'Fin du match ⏹️' },
-  { value: 'corner', label: 'Corner 🚩' },
-  { value: 'foul', label: 'Faute ⚠️' },
-  { value: 'chance', label: 'Occasion 🎯' },
-];
+interface Player {
+  id: string;
+  name: string;
+  jersey_number?: number | null;
+  image_url?: string | null;
+  position?: string;
+}
 
 export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) => {
   const [selectedMatchId, setSelectedMatchId] = useState<string>(propMatchId || '');
   const [matches, setMatches] = useState<Match[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [loadingMatches, setLoadingMatches] = useState(true);
   
-  const { entries, addEntry, deleteEntry, loading } = useLiveBlog(selectedMatchId || '');
+  const { entries, addEntry, deleteEntry, loading } = useLiveBlog(selectedMatchId || undefined);
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const [minute, setMinute] = useState<string>('');
-  const [entryType, setEntryType] = useState('update');
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [isImportant, setIsImportant] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  
+  // Modal states
+  const [goalModalOpen, setGoalModalOpen] = useState(false);
+  const [cardModalOpen, setCardModalOpen] = useState(false);
+  const [substitutionModalOpen, setSubstitutionModalOpen] = useState(false);
+  const [defaultCardType, setDefaultCardType] = useState<'yellow' | 'red'>('yellow');
 
+  // Fetch matches
   useEffect(() => {
     const fetchMatches = async () => {
       const { data, error } = await supabase
@@ -60,7 +57,6 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
       
       if (!error && data) {
         setMatches(data as Match[]);
-        // Auto-select the first live match or most recent
         if (!propMatchId) {
           const liveMatch = data.find(m => m.status === 'live');
           if (liveMatch) setSelectedMatchId(liveMatch.id);
@@ -76,39 +72,182 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
     }
   }, [propMatchId]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!content.trim() || !selectedMatchId) return;
+  // Fetch players
+  useEffect(() => {
+    const fetchPlayers = async () => {
+      const { data, error } = await supabase
+        .from('players')
+        .select('id, name, jersey_number, image_url, position')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (!error && data) {
+        setPlayers(data);
+      }
+    };
+    fetchPlayers();
+  }, []);
 
+  const handleQuickAction = (type: string) => {
+    switch (type) {
+      case 'goal':
+        setGoalModalOpen(true);
+        break;
+      case 'yellow_card':
+        setDefaultCardType('yellow');
+        setCardModalOpen(true);
+        break;
+      case 'red_card':
+        setDefaultCardType('red');
+        setCardModalOpen(true);
+        break;
+      case 'substitution':
+        setSubstitutionModalOpen(true);
+        break;
+      case 'halftime':
+        addQuickEntry('halftime', '⏸️ MI-TEMPS', 'La première période est terminée.', 45);
+        break;
+      case 'kickoff':
+        addQuickEntry('kickoff', '▶️ COUP D\'ENVOI', 'Le match commence !', 0);
+        break;
+      case 'fulltime':
+        addQuickEntry('fulltime', '⏹️ FIN DU MATCH', 'C\'est terminé !', 90);
+        break;
+      case 'var':
+        addQuickEntry('var', '📺 VAR', 'L\'arbitre consulte la VAR...', null, true);
+        break;
+      case 'injury':
+        addQuickEntry('injury', '🏥 Blessure', 'Un joueur est au sol...', null);
+        break;
+      case 'comment':
+        // Open a simple comment modal or use existing form
+        break;
+    }
+  };
+
+  const addQuickEntry = async (
+    entryType: string, 
+    title: string, 
+    content: string, 
+    minute: number | null,
+    isImportant: boolean = false
+  ) => {
+    if (!selectedMatchId) return;
+    
     setSubmitting(true);
     try {
       await addEntry({
         match_id: selectedMatchId,
-        minute: minute ? parseInt(minute) : null,
+        minute,
         entry_type: entryType,
-        title: title || null,
+        title,
         content,
         is_important: isImportant,
         author_id: user?.id || null,
       });
-
-      toast({
-        title: 'Entrée ajoutée',
-        description: 'La mise à jour a été publiée en direct.',
-      });
-
-      // Reset form
-      setMinute('');
-      setTitle('');
-      setContent('');
-      setIsImportant(false);
-      setEntryType('update');
+      toast({ title: 'Entrée ajoutée' });
     } catch (error) {
-      toast({
-        title: 'Erreur',
-        description: 'Impossible d\'ajouter l\'entrée.',
-        variant: 'destructive',
+      toast({ title: 'Erreur', variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleGoalSubmit = async (data: {
+    minute: number;
+    player_id: string;
+    assist_player_id?: string;
+    content: string;
+    is_important: boolean;
+    team_side: 'home' | 'away';
+  }) => {
+    if (!selectedMatchId) return;
+    
+    setSubmitting(true);
+    try {
+      await addEntry({
+        match_id: selectedMatchId,
+        minute: data.minute,
+        entry_type: 'goal',
+        title: 'BUT !',
+        content: data.content,
+        is_important: data.is_important,
+        author_id: user?.id || null,
+        player_id: data.player_id,
+        assist_player_id: data.assist_player_id || null,
+        team_side: data.team_side,
       });
+      toast({ title: 'But ajouté' });
+      setGoalModalOpen(false);
+    } catch (error) {
+      toast({ title: 'Erreur', variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCardSubmit = async (data: {
+    minute: number;
+    player_id: string;
+    card_type: 'yellow' | 'red' | 'second_yellow';
+    card_reason: string;
+    content: string;
+    is_important: boolean;
+    team_side: 'home' | 'away';
+  }) => {
+    if (!selectedMatchId) return;
+    
+    setSubmitting(true);
+    try {
+      await addEntry({
+        match_id: selectedMatchId,
+        minute: data.minute,
+        entry_type: data.card_type === 'yellow' ? 'yellow_card' : 'red_card',
+        title: data.card_type === 'yellow' ? 'CARTON JAUNE' : 'CARTON ROUGE',
+        content: data.content,
+        is_important: data.is_important,
+        author_id: user?.id || null,
+        player_id: data.player_id,
+        card_type: data.card_type,
+        card_reason: data.card_reason,
+        team_side: data.team_side,
+      });
+      toast({ title: 'Carton ajouté' });
+      setCardModalOpen(false);
+    } catch (error) {
+      toast({ title: 'Erreur', variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubstitutionSubmit = async (data: {
+    minute: number;
+    player_id: string;
+    substituted_player_id: string;
+    content: string;
+    team_side: 'home' | 'away';
+  }) => {
+    if (!selectedMatchId) return;
+    
+    setSubmitting(true);
+    try {
+      await addEntry({
+        match_id: selectedMatchId,
+        minute: data.minute,
+        entry_type: 'substitution',
+        title: 'REMPLACEMENT',
+        content: data.content,
+        is_important: false,
+        author_id: user?.id || null,
+        player_id: data.player_id,
+        substituted_player_id: data.substituted_player_id,
+        team_side: data.team_side,
+      });
+      toast({ title: 'Remplacement ajouté' });
+      setSubstitutionModalOpen(false);
+    } catch (error) {
+      toast({ title: 'Erreur', variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
@@ -121,30 +260,26 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
       await deleteEntry(id);
       toast({ title: 'Entrée supprimée' });
     } catch (error) {
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de supprimer l\'entrée.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erreur', variant: 'destructive' });
     }
   };
 
   const selectedMatch = matches.find(m => m.id === selectedMatchId);
 
   return (
-    <div className="space-y-6">
-      {/* Match Selector (only if no matchId provided) */}
+    <div className="space-y-4">
+      {/* Match Selector */}
       {!propMatchId && (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Sélectionner un match
+          <CardHeader className="py-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Calendar className="w-4 h-4" />
+              Match
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             {loadingMatches ? (
-              <p className="text-muted-foreground">Chargement des matchs...</p>
+              <p className="text-muted-foreground text-sm">Chargement...</p>
             ) : (
               <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
                 <SelectTrigger>
@@ -157,7 +292,7 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
                         {match.status === 'live' && (
                           <Badge variant="destructive" className="text-xs">LIVE</Badge>
                         )}
-                        {match.home_team} vs {match.away_team} - {format(new Date(match.match_date), 'dd/MM/yyyy HH:mm')}
+                        {match.home_team} vs {match.away_team} - {format(new Date(match.match_date), 'dd/MM HH:mm')}
                       </span>
                     </SelectItem>
                   ))}
@@ -165,14 +300,14 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
               </Select>
             )}
             {selectedMatch && (
-              <div className="mt-4 p-4 bg-muted rounded-lg">
+              <div className="mt-3 p-3 bg-muted rounded-lg">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold">{selectedMatch.home_team} vs {selectedMatch.away_team}</p>
-                    <p className="text-sm text-muted-foreground">{selectedMatch.competition}</p>
+                    <p className="font-semibold text-sm">{selectedMatch.home_team} vs {selectedMatch.away_team}</p>
+                    <p className="text-xs text-muted-foreground">{selectedMatch.competition}</p>
                   </div>
                   <Badge variant={selectedMatch.status === 'live' ? 'destructive' : 'outline'}>
-                    {selectedMatch.status === 'live' ? '🔴 EN DIRECT' : selectedMatch.status}
+                    {selectedMatch.status === 'live' ? '🔴 LIVE' : selectedMatch.status}
                   </Badge>
                 </div>
               </div>
@@ -181,142 +316,23 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
         </Card>
       )}
 
-      {/* New Entry Form */}
+      {/* Quick Action Bar */}
       {selectedMatchId && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Radio className="w-5 h-5 text-red-500" />
-              Nouvelle entrée Live Blog
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="minute">Minute</Label>
-                  <Input
-                    id="minute"
-                    type="number"
-                    min="0"
-                    max="120"
-                    placeholder="45"
-                    value={minute}
-                    onChange={(e) => setMinute(e.target.value)}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Type</Label>
-                  <Select value={entryType} onValueChange={setEntryType}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ENTRY_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="title">Titre (optionnel)</Label>
-                  <Input
-                    id="title"
-                    placeholder="Titre de l'entrée"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="content">Contenu *</Label>
-                <Textarea
-                  id="content"
-                  placeholder="Décrivez l'événement..."
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={3}
-                  required
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="important"
-                    checked={isImportant}
-                    onCheckedChange={setIsImportant}
-                  />
-                  <Label htmlFor="important">Marquer comme important</Label>
-                </div>
-                
-                <Button type="submit" disabled={submitting || !content.trim()}>
-                  <Send className="w-4 h-4 mr-2" />
-                  {submitting ? 'Publication...' : 'Publier'}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <QuickActionBar onAction={handleQuickAction} isLive={selectedMatch?.status === 'live'} />
       )}
 
-      {/* Existing Entries */}
+      {/* Entries List */}
       {selectedMatchId && (
         <Card>
-          <CardHeader>
-            <CardTitle>Entrées publiées ({entries.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             {loading ? (
-              <p className="text-muted-foreground">Chargement...</p>
-            ) : entries.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                Aucune entrée pour le moment. Commencez à publier !
-              </p>
+              <p className="text-muted-foreground text-center py-8">Chargement...</p>
             ) : (
-              <div className="space-y-3">
-                {entries.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className={`flex items-start gap-4 p-4 rounded-lg border ${
-                      entry.is_important ? 'bg-primary/5 border-primary/30' : ''
-                    }`}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        {entry.minute !== null && (
-                          <Badge variant="outline" className="font-mono">
-                            {entry.minute}'
-                          </Badge>
-                        )}
-                        <Badge>{entry.entry_type}</Badge>
-                        {entry.is_important && (
-                          <Badge variant="destructive">Important</Badge>
-                        )}
-                        <span className="text-xs text-muted-foreground ml-auto">
-                          {format(new Date(entry.created_at), 'HH:mm:ss', { locale: fr })}
-                        </span>
-                      </div>
-                      {entry.title && (
-                        <h4 className="font-semibold">{entry.title}</h4>
-                      )}
-                      <p className="text-sm text-muted-foreground">{entry.content}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(entry.id)}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+              <GroupedEntriesView
+                entries={entries}
+                players={players}
+                onDelete={handleDelete}
+              />
             )}
           </CardContent>
         </Card>
@@ -327,11 +343,37 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
           <CardContent className="py-12 text-center">
             <Radio className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
             <p className="text-muted-foreground">
-              Sélectionnez un match ci-dessus pour gérer son Live Blog
+              Sélectionnez un match pour gérer son Live Blog
             </p>
           </CardContent>
         </Card>
       )}
+
+      {/* Modals */}
+      <GoalEntryModal
+        open={goalModalOpen}
+        onClose={() => setGoalModalOpen(false)}
+        onSubmit={handleGoalSubmit}
+        players={players}
+        isSubmitting={submitting}
+      />
+
+      <CardEntryModal
+        open={cardModalOpen}
+        onClose={() => setCardModalOpen(false)}
+        onSubmit={handleCardSubmit}
+        players={players}
+        isSubmitting={submitting}
+        defaultCardType={defaultCardType}
+      />
+
+      <SubstitutionModal
+        open={substitutionModalOpen}
+        onClose={() => setSubstitutionModalOpen(false)}
+        onSubmit={handleSubstitutionSubmit}
+        players={players}
+        isSubmitting={submitting}
+      />
     </div>
   );
 };

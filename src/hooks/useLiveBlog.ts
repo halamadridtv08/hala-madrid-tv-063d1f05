@@ -14,6 +14,28 @@ export interface LiveBlogEntry {
   author_id: string | null;
   image_url: string | null;
   player_id: string | null;
+  assist_player_id: string | null;
+  card_type: 'yellow' | 'red' | 'second_yellow' | null;
+  card_reason: string | null;
+  team_side: 'home' | 'away' | null;
+  substituted_player_id: string | null;
+}
+
+export interface NewLiveBlogEntry {
+  match_id: string;
+  minute?: number | null;
+  entry_type: string;
+  title?: string | null;
+  content: string;
+  is_important?: boolean;
+  author_id?: string | null;
+  image_url?: string | null;
+  player_id?: string | null;
+  assist_player_id?: string | null;
+  card_type?: 'yellow' | 'red' | 'second_yellow' | null;
+  card_reason?: string | null;
+  team_side?: 'home' | 'away' | null;
+  substituted_player_id?: string | null;
 }
 
 export const useLiveBlog = (matchId: string | undefined) => {
@@ -35,7 +57,7 @@ export const useLiveBlog = (matchId: string | undefined) => {
       if (error) {
         console.error('Error fetching live blog entries:', error);
       } else {
-        setEntries(data || []);
+        setEntries((data || []) as LiveBlogEntry[]);
       }
       setLoading(false);
     };
@@ -86,7 +108,7 @@ export const useLiveBlog = (matchId: string | undefined) => {
     };
   }, [matchId, toast]);
 
-  const addEntry = async (entry: Omit<LiveBlogEntry, 'id' | 'created_at' | 'image_url' | 'player_id'> & { image_url?: string | null; player_id?: string | null }) => {
+  const addEntry = async (entry: NewLiveBlogEntry) => {
     const { data, error } = await supabase
       .from('live_blog_entries')
       .insert(entry)
@@ -97,7 +119,7 @@ export const useLiveBlog = (matchId: string | undefined) => {
       console.error('Error adding live blog entry:', error);
       throw error;
     }
-    return data;
+    return data as LiveBlogEntry;
   };
 
   const updateEntry = async (id: string, updates: Partial<LiveBlogEntry>) => {
