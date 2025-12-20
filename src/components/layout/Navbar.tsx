@@ -53,9 +53,7 @@ export function Navbar() {
   return <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 shadow-sm">
       <div className="madrid-container py-2 md:py-4 flex justify-between items-center">
         <Link to="/" className="flex items-center gap-2 md:gap-3" onClick={closeMenu}>
-          <div className="relative w-14 h-14 md:w-16 md:h-16 rounded-full backdrop-blur-lg border border-madrid-gold/20 bg-gradient-to-tr from-black/60 to-black/40 shadow-lg flex items-center justify-center hover:shadow-xl hover:shadow-madrid-gold/20 hover:scale-105 transition-all duration-300">
-            <img alt="Hala Madrid Logo" className="h-10 w-10 md:h-12 md:w-12 object-contain" width="48" height="48" src="/lovable-uploads/68f70788-6521-4d69-a55f-56bf305adf1d.png" />
-          </div>
+          <img alt="Hala Madrid Logo" className="h-12 w-12 md:h-14 md:w-14 object-contain hover:scale-105 transition-transform duration-300" width="56" height="56" src="/lovable-uploads/68f70788-6521-4d69-a55f-56bf305adf1d.png" />
           <span className="font-montserrat font-bold text-sm sm:text-lg md:text-xl lg:text-2xl tracking-tight">
             <span className="text-madrid-blue">HALA</span>
             <span className="text-black dark:text-white">MADRID</span>
