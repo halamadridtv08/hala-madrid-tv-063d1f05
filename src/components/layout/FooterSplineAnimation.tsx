@@ -1,5 +1,7 @@
-import { Suspense, lazy, useState, useEffect, useRef } from "react";
+import { Suspense, lazy, useState } from "react";
 import { Loader2 } from "lucide-react";
+
+const Spline = lazy(() => import("@splinetool/react-spline"));
 
 interface FooterSplineAnimationProps {
   url: string;
@@ -7,56 +9,8 @@ interface FooterSplineAnimationProps {
 
 export function FooterSplineAnimation({ url }: FooterSplineAnimationProps) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!url || !containerRef.current) return;
-
-    // Reset states when URL changes
-    setIsLoaded(false);
-    setHasError(false);
-
-    // Use the native spline-viewer web component for better compatibility
-    const script = document.createElement('script');
-    script.type = 'module';
-    script.src = 'https://unpkg.com/@splinetool/viewer@1.12.27/build/spline-viewer.js';
-    
-    script.onload = () => {
-      if (containerRef.current) {
-        // Create the spline-viewer element
-        const viewer = document.createElement('spline-viewer');
-        viewer.setAttribute('url', url);
-        viewer.style.width = '100%';
-        viewer.style.height = '100%';
-        viewer.style.position = 'absolute';
-        viewer.style.top = '0';
-        viewer.style.left = '0';
-        
-        // Clear previous content and add new viewer
-        containerRef.current.innerHTML = '';
-        containerRef.current.appendChild(viewer);
-        
-        setIsLoaded(true);
-      }
-    };
-
-    script.onerror = () => {
-      setHasError(true);
-      setIsLoaded(true);
-    };
-
-    document.head.appendChild(script);
-
-    return () => {
-      // Cleanup
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '';
-      }
-    };
-  }, [url]);
-
-  if (!url || hasError) return null;
+  if (!url) return null;
 
   return (
     <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
@@ -65,11 +19,19 @@ export function FooterSplineAnimation({ url }: FooterSplineAnimationProps) {
           <Loader2 className="h-8 w-8 animate-spin text-white/30" />
         </div>
       )}
-      <div 
-        ref={containerRef} 
-        className="w-full h-full"
-        style={{ minHeight: '100%' }}
-      />
+      <Suspense fallback={null}>
+        <Spline
+          scene={url}
+          onLoad={() => setIsLoaded(true)}
+          style={{
+            width: "100%",
+            height: "100%",
+            position: "absolute",
+            top: 0,
+            left: 0,
+          }}
+        />
+      </Suspense>
     </div>
   );
 }
