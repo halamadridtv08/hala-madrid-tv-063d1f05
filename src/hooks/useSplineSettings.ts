@@ -15,6 +15,24 @@ export function useSplineSettings() {
   const [loading, setLoading] = useState(true);
   const { isVisible } = useSiteVisibility();
 
+  // Extract Spline URL from HTML content or direct URL
+  const extractSplineUrl = (value: string): string => {
+    if (!value) return "";
+    
+    // If it's already a direct URL, return it
+    if (value.startsWith("https://prod.spline.design/")) {
+      return value;
+    }
+    
+    // Extract URL from spline-viewer tag
+    const match = value.match(/url="([^"]+)"/);
+    if (match && match[1]) {
+      return match[1];
+    }
+    
+    return value;
+  };
+
   const fetchSplineUrl = async () => {
     try {
       const { data, error } = await supabase
@@ -25,8 +43,10 @@ export function useSplineSettings() {
 
       if (error && error.code !== "PGRST116") throw error;
 
+      const extractedUrl = extractSplineUrl(data?.setting_value || "");
+      
       setSettings({
-        url: data?.setting_value || "",
+        url: extractedUrl,
         isVisible: isVisible("footer_spline"),
       });
     } catch (error) {
