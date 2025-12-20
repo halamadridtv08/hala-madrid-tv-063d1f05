@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 const Spline = lazy(() => import("@splinetool/react-spline"));
@@ -9,8 +9,23 @@ interface FooterSplineAnimationProps {
 
 export function FooterSplineAnimation({ url }: FooterSplineAnimationProps) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [webGLSupported, setWebGLSupported] = useState(true);
 
-  if (!url) return null;
+  // Check WebGL support on mount
+  useEffect(() => {
+    try {
+      const canvas = document.createElement("canvas");
+      const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+      if (!gl) {
+        setWebGLSupported(false);
+      }
+    } catch {
+      setWebGLSupported(false);
+    }
+  }, []);
+
+  if (!url || !webGLSupported || hasError) return null;
 
   return (
     <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
@@ -23,6 +38,7 @@ export function FooterSplineAnimation({ url }: FooterSplineAnimationProps) {
         <Spline
           scene={url}
           onLoad={() => setIsLoaded(true)}
+          onError={() => setHasError(true)}
           style={{
             width: "100%",
             height: "100%",
