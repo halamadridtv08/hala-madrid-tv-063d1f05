@@ -910,7 +910,10 @@ export type Database = {
       }
       live_blog_entries: {
         Row: {
+          assist_player_id: string | null
           author_id: string | null
+          card_reason: string | null
+          card_type: string | null
           content: string
           created_at: string
           entry_type: string
@@ -920,11 +923,16 @@ export type Database = {
           match_id: string
           minute: number | null
           player_id: string | null
+          substituted_player_id: string | null
+          team_side: string | null
           title: string | null
           updated_at: string
         }
         Insert: {
+          assist_player_id?: string | null
           author_id?: string | null
+          card_reason?: string | null
+          card_type?: string | null
           content: string
           created_at?: string
           entry_type?: string
@@ -934,11 +942,16 @@ export type Database = {
           match_id: string
           minute?: number | null
           player_id?: string | null
+          substituted_player_id?: string | null
+          team_side?: string | null
           title?: string | null
           updated_at?: string
         }
         Update: {
+          assist_player_id?: string | null
           author_id?: string | null
+          card_reason?: string | null
+          card_type?: string | null
           content?: string
           created_at?: string
           entry_type?: string
@@ -948,10 +961,19 @@ export type Database = {
           match_id?: string
           minute?: number | null
           player_id?: string | null
+          substituted_player_id?: string | null
+          team_side?: string | null
           title?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "live_blog_entries_assist_player_id_fkey"
+            columns: ["assist_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "live_blog_entries_match_id_fkey"
             columns: ["match_id"]
@@ -962,6 +984,13 @@ export type Database = {
           {
             foreignKeyName: "live_blog_entries_player_id_fkey"
             columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_blog_entries_substituted_player_id_fkey"
+            columns: ["substituted_player_id"]
             isOneToOne: false
             referencedRelation: "players"
             referencedColumns: ["id"]
