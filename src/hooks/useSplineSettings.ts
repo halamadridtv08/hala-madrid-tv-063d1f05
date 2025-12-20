@@ -60,13 +60,16 @@ export function useSplineSettings() {
     fetchSplineUrl();
   }, []);
 
+  // Compute visibility separately to avoid infinite loops
+  const footerSplineVisible = isVisible("footer_spline");
+  
   // Update visibility when it changes
   useEffect(() => {
     setSettings((prev) => ({
       ...prev,
-      isVisible: isVisible("footer_spline"),
+      isVisible: footerSplineVisible,
     }));
-  }, [isVisible]);
+  }, [footerSplineVisible]);
 
   const updateSplineUrl = async (newUrl: string) => {
     try {
