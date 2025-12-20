@@ -3,13 +3,14 @@ import { useState } from "react";
 import DOMPurify from "dompurify";
 import SocialMediaCard from "./SocialMediaCard";
 import FancySocialLinks from "./FancySocialLinks";
+import { FooterSplineAnimation } from "./FooterSplineAnimation";
 import { useFooterLinks, FooterLink } from "@/hooks/useFooterLinks";
 import { useSiteVisibility } from "@/hooks/useSiteVisibility";
+import { useSplineSettings } from "@/hooks/useSplineSettings";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Cookie, FileText, Mail, Shield, HelpCircle } from "lucide-react";
 import { FooterNewsletterForm } from "@/components/newsletter/FooterNewsletterForm";
-
 const iconMap: Record<string, React.ReactNode> = {
   cookie: <Cookie className="h-4 w-4" />,
   file: <FileText className="h-4 w-4" />,
@@ -21,9 +22,9 @@ const iconMap: Record<string, React.ReactNode> = {
 export function Footer() {
   const { links, loading } = useFooterLinks();
   const { isVisible } = useSiteVisibility();
+  const { splineUrl, isSplineVisible } = useSplineSettings();
   const { t } = useLanguage();
   const [modalContent, setModalContent] = useState<FooterLink | null>(null);
-
   // Group links by section
   const groupedLinks = links.reduce((acc, link) => {
     if (!acc[link.section]) {
@@ -98,8 +99,13 @@ export function Footer() {
 
   return (
     <>
-      <footer className="bg-madrid-blue text-white mt-12">
-        <div className="madrid-container py-8 md:py-12">
+      <footer className="bg-madrid-blue text-white mt-12 relative overflow-hidden">
+        {/* Spline 3D Animation Overlay */}
+        {isSplineVisible && splineUrl && (
+          <FooterSplineAnimation url={splineUrl} />
+        )}
+        
+        <div className="madrid-container py-8 md:py-12 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* About Section */}
             <div>

@@ -69,6 +69,7 @@ import { NewsletterManager } from "@/components/admin/NewsletterManager";
 import { DreamTeamManager } from "@/components/admin/DreamTeamManager";
 import { LiveMatchBarManager } from "@/components/admin/LiveMatchBarManager";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
+import { SplineManager } from "@/components/admin/SplineManager";
 import { useNavigate } from "react-router-dom";
 interface StatsData {
   totalPlayers: number;
@@ -443,6 +444,7 @@ const Admin = () => {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Visibilité & Affichage</h3>
         <SiteVisibilityManager />
+        <SplineManager />
         <AuthImageManager />
       </div>
 
