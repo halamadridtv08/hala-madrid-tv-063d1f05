@@ -11,10 +11,10 @@ export const emailSchema = z
     "L'email contient des caractères non autorisés"
   );
 
-// Password validation with security requirements
+// Password validation with security requirements (12+ chars, special character)
 export const passwordSchema = z
   .string()
-  .min(8, "Le mot de passe doit contenir au moins 8 caractères")
+  .min(12, "Le mot de passe doit contenir au moins 12 caractères")
   .max(128, "Le mot de passe ne peut pas dépasser 128 caractères")
   .refine(
     (password) => /[A-Z]/.test(password),
@@ -27,6 +27,10 @@ export const passwordSchema = z
   .refine(
     (password) => /[0-9]/.test(password),
     "Le mot de passe doit contenir au moins un chiffre"
+  )
+  .refine(
+    (password) => /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    "Le mot de passe doit contenir au moins un caractère spécial (!@#$%^&*(),.?\":{}|<>)"
   );
 
 // Login form schema (less strict password for existing users)

@@ -27,6 +27,9 @@ const Auth = () => {
   const [pendingEmail, setPendingEmail] = useState("");
   const [isLogin, setIsLogin] = useState(true);
   const [pageReady, setPageReady] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
+  const [failedAttempts, setFailedAttempts] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
@@ -137,10 +140,52 @@ const Auth = () => {
     }
   };
 
+  const checkIfBlocked = async (): Promise<boolean> => {
+    try {
+      const ip = await getClientIP();
+      const { data, error } = await supabase.rpc('check_login_blocked', {
+        p_email: email,
+        p_ip_address: ip
+      });
+
+      if (error) {
+        console.error('Error checking block status:', error);
+        return false;
+      }
+
+      if (data && data.length > 0) {
+        const blockInfo = data[0];
+        setFailedAttempts(blockInfo.failed_attempts || 0);
+        
+        if (blockInfo.is_blocked) {
+          setIsBlocked(true);
+          setBlockedUntil(new Date(blockInfo.blocked_until));
+          const remainingMinutes = Math.ceil((new Date(blockInfo.blocked_until).getTime() - Date.now()) / 60000);
+          setError(`🔒 Compte temporairement bloqué. Trop de tentatives échouées (${blockInfo.failed_attempts}/5). Réessayez dans ${remainingMinutes} minutes.`);
+          return true;
+        }
+      }
+      
+      setIsBlocked(false);
+      setBlockedUntil(null);
+      return false;
+    } catch (error) {
+      console.error('Error in block check:', error);
+      return false;
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // Check if user is blocked before attempting login
+    const blocked = await checkIfBlocked();
+    if (blocked) {
+      setLoading(false);
+      return;
+    }
 
     // Validate with Zod
     const validation = loginSchema.safeParse({ email, password });
@@ -158,6 +203,8 @@ const Auth = () => {
 
       if (error) {
         await logLoginAttempt(email, false);
+        // Check again if this attempt caused a block
+        await checkIfBlocked();
         throw error;
       }
 
@@ -173,6 +220,11 @@ const Auth = () => {
         }
 
         await logLoginAttempt(email, true);
+        // Reset block state on successful login
+        setIsBlocked(false);
+        setBlockedUntil(null);
+        setFailedAttempts(0);
+        
         toast({
           title: "Connexion réussie",
           description: "Bienvenue sur Hala Madrid TV",
@@ -180,7 +232,12 @@ const Auth = () => {
         navigate("/");
       }
     } catch (error: any) {
-      setError(error.message || "Erreur lors de la connexion");
+      const attemptsRemaining = 5 - failedAttempts - 1;
+      if (attemptsRemaining > 0 && attemptsRemaining <= 3) {
+        setError(`${error.message || "Erreur lors de la connexion"} (${attemptsRemaining} tentative${attemptsRemaining > 1 ? 's' : ''} restante${attemptsRemaining > 1 ? 's' : ''})`);
+      } else {
+        setError(error.message || "Erreur lors de la connexion");
+      }
     } finally {
       setLoading(false);
     }

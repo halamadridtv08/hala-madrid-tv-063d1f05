@@ -2842,6 +2842,14 @@ export type Database = {
       }
     }
     Functions: {
+      check_login_blocked: {
+        Args: { p_email: string; p_ip_address?: string }
+        Returns: {
+          blocked_until: string
+          failed_attempts: number
+          is_blocked: boolean
+        }[]
+      }
       check_player_stats_alerts: { Args: never; Returns: undefined }
       check_rate_limit: {
         Args: {
