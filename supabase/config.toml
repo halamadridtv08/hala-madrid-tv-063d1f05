@@ -1,28 +1,33 @@
 project_id = "qjnppcfbywfazwolfppo"
 
+# Public endpoints - no JWT required
 [functions.sitemap]
 verify_jwt = false
 
+[functions.rss-feed]
+verify_jwt = false
+
+# CRON job endpoints - no JWT but validate CRON_SECRET internally
 [functions.publish-scheduled-articles]
 verify_jwt = false
 
 [functions.publish-scheduled-flash-news]
 verify_jwt = false
 
-[functions.sync-matches]
-verify_jwt = false
-
-[functions.send-push-notification]
-verify_jwt = false
-
-[functions.rss-feed]
-verify_jwt = false
-
+# Translation endpoint - public for multi-language support
 [functions.translate]
 verify_jwt = false
 
+# Football API - public for match data
 [functions.football-api]
 verify_jwt = false
 
+# SECURED endpoints - require valid JWT token
+[functions.sync-matches]
+verify_jwt = true
+
 [functions.sync-match-details]
-verify_jwt = false
+verify_jwt = true
+
+[functions.send-push-notification]
+verify_jwt = true

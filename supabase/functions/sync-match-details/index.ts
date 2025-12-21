@@ -2,9 +2,26 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// Secure CORS - only allow requests from authorized domains
+const getAllowedOrigins = () => {
+  const origins = [
+    'https://halamadridtv.com',
+    'https://www.halamadridtv.com',
+  ];
+  const projectRef = Deno.env.get('SUPABASE_URL')?.match(/https:\/\/([^.]+)\./)?.[1];
+  if (projectRef) {
+    origins.push(`https://${projectRef}.lovableproject.com`);
+    origins.push(`https://${projectRef}.supabase.co`);
+  }
+  return origins;
+};
+
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': getAllowedOrigins()[0],
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
 };
 
 const FOOTBALL_API = {

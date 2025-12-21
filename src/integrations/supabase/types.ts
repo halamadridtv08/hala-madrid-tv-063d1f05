@@ -1062,7 +1062,10 @@ export type Database = {
       login_attempts: {
         Row: {
           attempted_at: string
+          country: string | null
+          device_fingerprint: string | null
           email: string
+          failed_reason: string | null
           id: string
           ip_address: string | null
           success: boolean | null
@@ -1070,7 +1073,10 @@ export type Database = {
         }
         Insert: {
           attempted_at?: string
+          country?: string | null
+          device_fingerprint?: string | null
           email: string
+          failed_reason?: string | null
           id?: string
           ip_address?: string | null
           success?: boolean | null
@@ -1078,7 +1084,10 @@ export type Database = {
         }
         Update: {
           attempted_at?: string
+          country?: string | null
+          device_fingerprint?: string | null
           email?: string
+          failed_reason?: string | null
           id?: string
           ip_address?: string | null
           success?: boolean | null
@@ -2284,6 +2293,36 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          action: string
+          attempts: number | null
+          blocked_until: string | null
+          first_attempt_at: string | null
+          id: string
+          identifier: string
+          last_attempt_at: string | null
+        }
+        Insert: {
+          action: string
+          attempts?: number | null
+          blocked_until?: string | null
+          first_attempt_at?: string | null
+          id?: string
+          identifier: string
+          last_attempt_at?: string | null
+        }
+        Update: {
+          action?: string
+          attempts?: number | null
+          blocked_until?: string | null
+          first_attempt_at?: string | null
+          id?: string
+          identifier?: string
+          last_attempt_at?: string | null
+        }
+        Relationships: []
+      }
       season_statistics: {
         Row: {
           clean_sheets: number | null
@@ -2795,6 +2834,17 @@ export type Database = {
     }
     Functions: {
       check_player_stats_alerts: { Args: never; Returns: undefined }
+      check_rate_limit: {
+        Args: {
+          p_action: string
+          p_block_seconds?: number
+          p_identifier: string
+          p_max_attempts?: number
+          p_window_seconds?: number
+        }
+        Returns: Json
+      }
+      cleanup_rate_limits: { Args: never; Returns: number }
       confirm_newsletter_subscription: {
         Args: { p_confirmation_token: string; p_email: string }
         Returns: boolean
