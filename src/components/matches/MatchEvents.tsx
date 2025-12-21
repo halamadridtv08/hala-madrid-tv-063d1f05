@@ -189,21 +189,67 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
   const cards = matchDetails.cards || { yellow: {}, red: {} };
   const fouls = Array.isArray(matchDetails.fouls) ? matchDetails.fouls : [];
 
-  // Créer les événements de cartons à partir des fautes (cartons jaunes)
-  const yellowCardEvents = fouls.map((foul: any) => ({
-    ...foul,
-    type: 'yellow'
-  }));
+  // Fonction pour parser les cartons depuis le format "player (minute')"
+  const parseCardString = (cardStr: string, team: string): { player: string; minute: number; team: string } | null => {
+    const match = cardStr.match(/^(.+?)\s*\((\d+)'?\)$/);
+    if (match) {
+      return {
+        player: match[1].trim(),
+        minute: parseInt(match[2], 10),
+        team: team
+      };
+    }
+    return null;
+  };
 
-  // Créer les événements de cartons rouges (si disponibles dans les données)
+  // Parser les cartons jaunes depuis le nouveau format
+  const yellowCardEvents: any[] = [];
+  if (cards.yellow) {
+    Object.entries(cards.yellow).forEach(([team, cardsList]) => {
+      if (Array.isArray(cardsList)) {
+        cardsList.forEach((cardStr: string) => {
+          const parsed = parseCardString(cardStr, team);
+          if (parsed) {
+            yellowCardEvents.push({ ...parsed, type: 'yellow' });
+          }
+        });
+      }
+    });
+  }
+
+  // Parser les cartons rouges depuis le nouveau format
   const redCardEvents: any[] = [];
-  
-  // Vérifier si on a des données de cartons rouges dans les événements
-  if (matchDetails.cards && matchDetails.cards.red_card_events) {
-    redCardEvents.push(...matchDetails.cards.red_card_events.map((card: any) => ({
-      ...card,
-      type: 'red'
-    })));
+  if (cards.red) {
+    Object.entries(cards.red).forEach(([team, cardsList]) => {
+      if (Array.isArray(cardsList)) {
+        cardsList.forEach((cardStr: string) => {
+          const parsed = parseCardString(cardStr, team);
+          if (parsed) {
+            redCardEvents.push({ ...parsed, type: 'red' });
+          }
+        });
+      }
+    });
+  }
+
+  // Fallback: créer les événements de cartons jaunes à partir des fautes (ancien format)
+  if (yellowCardEvents.length === 0 && fouls.length > 0) {
+    fouls.forEach((foul: any) => {
+      yellowCardEvents.push({
+        ...foul,
+        type: 'yellow'
+      });
+    });
+  }
+
+  // Vérifier si on a des données de cartons rouges dans les événements (ancien format)
+  if (redCardEvents.length === 0 && matchDetails.cards?.red_card_events) {
+    matchDetails.cards.red_card_events.forEach((card: any) => {
+      redCardEvents.push({
+        ...card,
+        type: 'red'
+      });
+    });
   }
 
   // Combiner tous les événements de cartons
