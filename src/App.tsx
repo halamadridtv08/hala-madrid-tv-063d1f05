@@ -12,6 +12,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
 import { IntegrationScripts } from "./components/IntegrationScripts";
 import { MediaProtectionProvider } from "./components/common/MediaProtectionProvider";
+import { SessionTimeoutProvider } from "./components/auth/SessionTimeoutProvider";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -64,6 +65,7 @@ const App = () => (
               <InstallPrompt />
               <IntegrationScripts />
               <MediaProtectionProvider />
+              <SessionTimeoutProvider />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -88,7 +90,7 @@ const App = () => (
                   <Route 
                     path="/admin" 
                     element={
-                      <ProtectedRoute>
+                      <ProtectedRoute requireAdmin={true}>
                         <Admin />
                       </ProtectedRoute>
                     } 
