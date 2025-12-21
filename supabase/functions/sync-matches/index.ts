@@ -185,10 +185,11 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Match sync error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
       JSON.stringify({
         error: 'Erreur lors de la synchronisation',
-        details: error.message
+        details: errorMessage
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
