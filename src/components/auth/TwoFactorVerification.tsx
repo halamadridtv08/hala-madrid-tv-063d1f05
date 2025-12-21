@@ -27,18 +27,15 @@ export function TwoFactorVerification({ email, onVerificationSuccess, onCancel }
 
     setLoading(true);
     try {
-      // Récupérer le secret TOTP de l'utilisateur
+      // Récupérer le secret TOTP déchiffré via la fonction SQL
       const { data: userSession } = await supabase.auth.getSession();
       if (!userSession.session?.user) throw new Error("Utilisateur non authentifié");
 
-      const { data: totpData, error: totpError } = await supabase
-        .from('user_totp_secrets')
-        .select('secret')
-        .eq('user_id', userSession.session.user.id)
-        .eq('is_verified', true)
-        .single();
+      const { data: decryptedSecret, error: totpError } = await supabase.rpc('get_totp_secret', {
+        p_user_id: userSession.session.user.id
+      });
 
-      if (totpError || !totpData) {
+      if (totpError || !decryptedSecret) {
         throw new Error("Configuration 2FA non trouvée");
       }
 
@@ -49,7 +46,7 @@ export function TwoFactorVerification({ email, onVerificationSuccess, onCancel }
         algorithm: "SHA1",
         digits: 6,
         period: 30,
-        secret: totpData.secret,
+        secret: decryptedSecret,
       });
 
       const isValid = totp.validate({ token: totpCode, window: 1 }) !== null;
@@ -90,28 +87,28 @@ export function TwoFactorVerification({ email, onVerificationSuccess, onCancel }
       const { data: userSession } = await supabase.auth.getSession();
       if (!userSession.session?.user) throw new Error("Utilisateur non authentifié");
 
+      // Récupérer les codes de backup depuis la table sécurisée
       const { data: totpData, error: totpError } = await supabase
-        .from('user_totp_secrets')
+        .from('secure_totp_secrets')
         .select('backup_codes')
         .eq('user_id', userSession.session.user.id)
-        .eq('is_verified', true)
         .single();
 
       if (totpError || !totpData) {
         throw new Error("Configuration 2FA non trouvée");
       }
 
-      const backupCodes = totpData.backup_codes || [];
-      const codeIndex = backupCodes.findIndex(code => code.toUpperCase() === backupCode.toUpperCase());
+      const backupCodes: string[] = totpData.backup_codes || [];
+      const codeIndex = backupCodes.findIndex((code: string) => code.toUpperCase() === backupCode.toUpperCase());
 
       if (codeIndex !== -1) {
         // Supprimer le code utilisé
-        const updatedCodes = backupCodes.filter((_, index) => index !== codeIndex);
+        const updatedCodes = backupCodes.filter((_: string, index: number) => index !== codeIndex);
         
-        await supabase
-          .from('user_totp_secrets')
-          .update({ backup_codes: updatedCodes })
-          .eq('user_id', userSession.session.user.id);
+        await supabase.rpc('save_backup_codes', {
+          p_user_id: userSession.session.user.id,
+          p_codes: updatedCodes
+        });
 
         await logLoginAttempt(email, true);
         onVerificationSuccess();
