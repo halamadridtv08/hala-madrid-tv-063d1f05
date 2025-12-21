@@ -27,6 +27,7 @@ interface OpposingPlayer {
   name: string;
   position: string;
   jersey_number?: number;
+  photo_url?: string;
   is_starter: boolean;
   created_at: string;
   updated_at: string;
@@ -56,6 +57,7 @@ export const OpposingTeamManager = () => {
     name: "",
     position: "",
     jersey_number: "",
+    photo_url: "",
     is_starter: true
   });
 
@@ -168,7 +170,8 @@ export const OpposingTeamManager = () => {
     const playerData = {
       ...playerForm,
       team_id: selectedTeam,
-      jersey_number: playerForm.jersey_number ? parseInt(playerForm.jersey_number) : null
+      jersey_number: playerForm.jersey_number ? parseInt(playerForm.jersey_number) : null,
+      photo_url: playerForm.photo_url || null
     };
 
     try {
@@ -191,7 +194,7 @@ export const OpposingTeamManager = () => {
 
       setIsPlayerDialogOpen(false);
       setEditingPlayer(null);
-      setPlayerForm({ name: "", position: "", jersey_number: "", is_starter: true });
+      setPlayerForm({ name: "", position: "", jersey_number: "", photo_url: "", is_starter: true });
       fetchPlayers(selectedTeam);
     } catch (error) {
       toast.error("Erreur lors de la sauvegarde");
@@ -388,11 +391,12 @@ export const OpposingTeamManager = () => {
         name: player.name,
         position: player.position,
         jersey_number: player.jersey_number?.toString() || "",
+        photo_url: player.photo_url || "",
         is_starter: player.is_starter
       });
     } else {
       setEditingPlayer(null);
-      setPlayerForm({ name: "", position: "", jersey_number: "", is_starter: true });
+      setPlayerForm({ name: "", position: "", jersey_number: "", photo_url: "", is_starter: true });
     }
     setIsPlayerDialogOpen(true);
   };
@@ -791,6 +795,26 @@ export const OpposingTeamManager = () => {
                       />
                     </div>
                     <div>
+                      <label className="text-sm font-medium">Photo du joueur (URL)</label>
+                      <Input
+                        value={playerForm.photo_url}
+                        onChange={(e) => setPlayerForm({ ...playerForm, photo_url: e.target.value })}
+                        placeholder="https://example.com/photo.jpg"
+                      />
+                      {playerForm.photo_url && (
+                        <div className="mt-2">
+                          <img 
+                            src={playerForm.photo_url} 
+                            alt="Preview" 
+                            className="w-16 h-16 object-cover rounded-full border"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div>
                       <label className="text-sm font-medium">Type</label>
                       <Select
                         value={playerForm.is_starter ? "starter" : "substitute"}
@@ -828,6 +852,7 @@ export const OpposingTeamManager = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Photo</TableHead>
                       <TableHead>N°</TableHead>
                       <TableHead>Nom</TableHead>
                       <TableHead>Position</TableHead>
@@ -837,6 +862,19 @@ export const OpposingTeamManager = () => {
                   <TableBody>
                     {players.filter(p => p.is_starter).map((player) => (
                       <TableRow key={player.id}>
+                        <TableCell>
+                          {player.photo_url ? (
+                            <img 
+                              src={player.photo_url} 
+                              alt={player.name} 
+                              className="w-10 h-10 object-cover rounded-full border"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                              <span className="text-xs text-gray-500">{player.name.charAt(0)}</span>
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell>{player.jersey_number}</TableCell>
                         <TableCell className="font-medium">{player.name}</TableCell>
                         <TableCell>
@@ -872,6 +910,7 @@ export const OpposingTeamManager = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Photo</TableHead>
                       <TableHead>N°</TableHead>
                       <TableHead>Nom</TableHead>
                       <TableHead>Position</TableHead>
@@ -881,6 +920,19 @@ export const OpposingTeamManager = () => {
                   <TableBody>
                     {players.filter(p => !p.is_starter).map((player) => (
                       <TableRow key={player.id}>
+                        <TableCell>
+                          {player.photo_url ? (
+                            <img 
+                              src={player.photo_url} 
+                              alt={player.name} 
+                              className="w-10 h-10 object-cover rounded-full border"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                              <span className="text-xs text-gray-500">{player.name.charAt(0)}</span>
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell>{player.jersey_number}</TableCell>
                         <TableCell className="font-medium">{player.name}</TableCell>
                         <TableCell>
