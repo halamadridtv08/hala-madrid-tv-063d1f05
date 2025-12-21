@@ -70,17 +70,25 @@ export function TwoFactorSetup({ onSetupComplete }: TwoFactorSetupProps) {
 
   const generateRandomSecret = (): string => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
     let result = '';
     for (let i = 0; i < 32; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
+      result += chars.charAt(array[i] % chars.length);
     }
     return result;
   };
 
   const generateBackupCodes = (): string[] => {
-    const codes = [];
+    const codes: string[] = [];
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     for (let i = 0; i < 8; i++) {
-      const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+      const array = new Uint8Array(8);
+      crypto.getRandomValues(array);
+      let code = '';
+      for (let j = 0; j < 8; j++) {
+        code += chars.charAt(array[j] % chars.length);
+      }
       codes.push(code);
     }
     return codes;

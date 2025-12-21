@@ -66,9 +66,20 @@ export function RichTextEditor({
   const insertUnorderedList = () => execCommand('insertUnorderedList');
   const insertOrderedList = () => execCommand('insertOrderedList');
 
+  const escapeHtml = (text: string): string => {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  };
+
   const validateUrl = (url: string): boolean => {
     try {
-      const parsed = new URL(url.trim());
+      const trimmed = url.trim();
+      // Block common XSS vectors
+      if (/^(javascript|data|vbscript|file):/i.test(trimmed)) {
+        return false;
+      }
+      const parsed = new URL(trimmed);
       return ['http:', 'https:'].includes(parsed.protocol);
     } catch {
       return false;
@@ -83,17 +94,23 @@ export function RichTextEditor({
         alert("URL invalide. Veuillez utiliser une URL commençant par http:// ou https://");
         return;
       }
-      execCommand('createLink', trimmedUrl);
+      const escapedUrl = escapeHtml(trimmedUrl);
+      execCommand('createLink', escapedUrl);
     }
   };
 
   const handleMediaUploadSuccess = (url: string, type: string) => {
     if (editorRef.current) {
+      if (!validateUrl(url)) {
+        alert("URL de média invalide");
+        return;
+      }
+      const escapedUrl = escapeHtml(url);
       let html = '';
       if (type === 'image') {
-        html = `<img src="${url}" alt="Image" style="max-width: 100%; height: auto;" />`;
+        html = `<img src="${escapedUrl}" alt="Image" style="max-width: 100%; height: auto;" />`;
       } else if (type === 'video') {
-        html = `<video controls src="${url}" style="max-width: 100%;"></video>`;
+        html = `<video controls src="${escapedUrl}" style="max-width: 100%;"></video>`;
       }
       
       document.execCommand('insertHTML', false, html);
