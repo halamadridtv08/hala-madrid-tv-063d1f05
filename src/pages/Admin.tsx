@@ -37,6 +37,7 @@ import YouTubeVideoTable from "@/components/admin/YouTubeVideoTable";
 import SettingsDashboard from "@/components/admin/SettingsDashboard";
 import { DataSynchronizer } from "@/components/admin/DataSynchronizer";
 import { OpposingTeamManager } from "@/components/admin/OpposingTeamManager";
+import { OpposingPlayerPhotosManager } from "@/components/admin/OpposingPlayerPhotosManager";
 import { MatchFormationManager } from "@/components/admin/MatchFormationManager";
 import { FormationManager } from "@/components/admin/formation/FormationManager";
 import { FormationManagerV2 } from "@/components/admin/formation/FormationManagerV2";
@@ -460,9 +461,14 @@ const Admin = () => {
         </div>
       </div>
     </div>;
-  const renderOpponents = () => <div>
-      <h2 className="text-2xl font-bold mb-4">Gestion des Équipes Adverses</h2>
-      <OpposingTeamManager />
+  const renderOpponents = () => <div className="space-y-8">
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Gestion des Équipes Adverses</h2>
+        <OpposingTeamManager />
+      </div>
+      <div>
+        <OpposingPlayerPhotosManager />
+      </div>
     </div>;
   const renderSettings = () => <div className="space-y-8">
       <h2 className="text-2xl font-bold mb-6">Paramètres</h2>

@@ -1,5 +1,23 @@
 import { z } from "zod";
 
+// Liste des domaines d'emails temporaires (synchronisée avec Supabase)
+const TEMP_EMAIL_DOMAINS = [
+  '10minutemail.com', 'guerrillamail.com', 'guerrillamail.net', 'guerrillamail.org',
+  'tempmail.com', 'temp-mail.org', 'temp-mail.io', 'mailinator.com', 'throwaway.email',
+  'fakeinbox.com', 'trashmail.com', 'trashmail.net', 'mailnesia.com', 'mohmal.com',
+  'getnada.com', 'nada.email', 'dispostable.com', 'tempinbox.com', 'sharklasers.com',
+  'spam4.me', 'yopmail.com', 'yopmail.fr', 'maildrop.cc', 'mintemail.com', 'dropmail.me',
+  'harakirimail.com', 'mytemp.email', 'inboxkitten.com', 'emailondeck.com', '33mail.com',
+  'emailfake.com', 'crazymailing.com', 'tempr.email', 'throwawaymail.com', 'spamgourmet.com',
+  'mailcatch.com', 'bugmenot.com', 'discard.email', 'spambox.us', 'safetymail.info'
+];
+
+// Fonction pour vérifier si un email utilise un domaine temporaire
+export const isTemporaryEmail = (email: string): boolean => {
+  const domain = email.split('@')[1]?.toLowerCase();
+  return TEMP_EMAIL_DOMAINS.includes(domain);
+};
+
 // Email validation with strict rules
 export const emailSchema = z
   .string()
@@ -9,6 +27,10 @@ export const emailSchema = z
   .refine(
     (email) => !email.includes("<") && !email.includes(">") && !email.includes("'") && !email.includes('"'),
     "L'email contient des caractères non autorisés"
+  )
+  .refine(
+    (email) => !isTemporaryEmail(email),
+    "Les adresses email temporaires ne sont pas autorisées. Veuillez utiliser une adresse email permanente."
   );
 
 // Password validation with security requirements (12+ chars, special character)
