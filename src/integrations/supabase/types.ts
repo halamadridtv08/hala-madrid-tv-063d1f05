@@ -2391,6 +2391,7 @@ export type Database = {
       }
       secure_totp_secrets: {
         Row: {
+          backup_codes: string[] | null
           backup_codes_encrypted: string[] | null
           created_at: string | null
           encrypted_secret: string
@@ -2399,6 +2400,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          backup_codes?: string[] | null
           backup_codes_encrypted?: string[] | null
           created_at?: string | null
           encrypted_secret: string
@@ -2407,6 +2409,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          backup_codes?: string[] | null
           backup_codes_encrypted?: string[] | null
           created_at?: string | null
           encrypted_secret?: string
@@ -2849,7 +2852,8 @@ export type Database = {
         Args: { p_confirmation_token: string; p_email: string }
         Returns: boolean
       }
-      delete_totp_secret: { Args: { p_user_id: string }; Returns: boolean }
+      delete_totp_secret: { Args: { p_user_id: string }; Returns: undefined }
+      get_encryption_key: { Args: never; Returns: string }
       get_role_history: {
         Args: { p_user_id?: string }
         Returns: {
@@ -2864,10 +2868,7 @@ export type Database = {
           user_id: string
         }[]
       }
-      get_totp_secret: {
-        Args: { p_encryption_key: string; p_user_id: string }
-        Returns: string
-      }
+      get_totp_secret: { Args: { p_user_id: string }; Returns: string }
       get_user_email_by_id: { Args: { p_user_id: string }; Returns: string }
       get_users_with_roles: {
         Args: never
@@ -2901,12 +2902,12 @@ export type Database = {
       publish_scheduled_articles: { Args: never; Returns: undefined }
       publish_scheduled_flash_news: { Args: never; Returns: undefined }
       save_backup_codes: {
-        Args: { p_codes: string[]; p_encryption_key: string; p_user_id: string }
-        Returns: boolean
+        Args: { p_codes: string[]; p_user_id: string }
+        Returns: undefined
       }
       save_totp_secret: {
-        Args: { p_encryption_key: string; p_secret: string; p_user_id: string }
-        Returns: string
+        Args: { p_secret: string; p_user_id: string }
+        Returns: undefined
       }
       unsubscribe_newsletter: {
         Args: { p_confirmation_token: string; p_email: string }

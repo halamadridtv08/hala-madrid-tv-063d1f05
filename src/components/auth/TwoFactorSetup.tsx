@@ -127,16 +127,21 @@ export function TwoFactorSetup({ onSetupComplete }: TwoFactorSetupProps) {
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('user_totp_secrets')
-        .upsert({
-          user_id: user.id,
-          secret: secret,
-          backup_codes: backupCodes,
-          is_verified: true
-        });
+      // Sauvegarder le secret TOTP chiffré via la fonction SQL
+      const { error: secretError } = await supabase.rpc('save_totp_secret', {
+        p_user_id: user.id,
+        p_secret: secret
+      });
 
-      if (error) throw error;
+      if (secretError) throw secretError;
+
+      // Sauvegarder les codes de récupération
+      const { error: backupError } = await supabase.rpc('save_backup_codes', {
+        p_user_id: user.id,
+        p_codes: backupCodes
+      });
+
+      if (backupError) throw backupError;
 
       toast({
         title: "2FA activé",
