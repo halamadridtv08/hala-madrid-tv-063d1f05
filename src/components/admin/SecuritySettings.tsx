@@ -41,16 +41,16 @@ export function SecuritySettings() {
 
     try {
       const { data, error } = await supabase
-        .from('user_totp_secrets')
-        .select('is_verified')
+        .from('secure_totp_secrets')
+        .select('user_id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         throw error;
       }
 
-      setHas2FA(data?.is_verified || false);
+      setHas2FA(!!data);
     } catch (error: any) {
       console.error('Error checking 2FA status:', error);
     } finally {
@@ -83,10 +83,7 @@ export function SecuritySettings() {
     if (!window.confirm("Êtes-vous sûr de vouloir désactiver l'authentification à double facteur ?")) return;
 
     try {
-      const { error } = await supabase
-        .from('user_totp_secrets')
-        .delete()
-        .eq('user_id', user.id);
+      const { error } = await supabase.rpc('delete_totp_secret');
 
       if (error) throw error;
 

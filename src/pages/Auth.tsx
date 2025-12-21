@@ -93,10 +93,9 @@ const Auth = () => {
       if (!roleData) return false;
 
       const { data: totpData, error: totpError } = await supabase
-        .from('user_totp_secrets')
-        .select('is_verified')
+        .from('secure_totp_secrets')
+        .select('user_id')
         .eq('user_id', userId)
-        .eq('is_verified', true)
         .maybeSingle();
 
       if (totpError) {

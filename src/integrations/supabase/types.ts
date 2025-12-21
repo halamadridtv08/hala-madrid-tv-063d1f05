@@ -2599,36 +2599,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_totp_secrets: {
-        Row: {
-          backup_codes: string[] | null
-          created_at: string
-          id: string
-          is_verified: boolean | null
-          secret: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          backup_codes?: string[] | null
-          created_at?: string
-          id?: string
-          is_verified?: boolean | null
-          secret: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          backup_codes?: string[] | null
-          created_at?: string
-          id?: string
-          is_verified?: boolean | null
-          secret?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       videos: {
         Row: {
           category: string | null
