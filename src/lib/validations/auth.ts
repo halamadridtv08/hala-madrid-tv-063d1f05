@@ -1,90 +1,4 @@
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
-
-// Liste statique de domaines d'emails temporaires courants (fallback)
-const COMMON_DISPOSABLE_DOMAINS = [
-  '10minutemail.com', '10minutemail.net', '10minutemail.org',
-  'guerrillamail.com', 'guerrillamail.net', 'guerrillamail.org', 'guerrillamail.biz',
-  'tempmail.com', 'temp-mail.org', 'temp-mail.io', 'temp-mail.net',
-  'mailinator.com', 'mailinator.net', 'mailinator.org',
-  'throwaway.email', 'throwawaymail.com',
-  'fakeinbox.com', 'fakemailgenerator.com',
-  'yopmail.com', 'yopmail.fr', 'yopmail.net',
-  'discard.email', 'discardmail.com',
-  'trashmail.com', 'trashmail.net', 'trashmail.org',
-  'getnada.com', 'nada.email',
-  'maildrop.cc', 'mailnesia.com',
-  'mohmal.com', 'tempail.com',
-  'sharklasers.com', 'spam4.me',
-  'grr.la', 'guerrillamailblock.com',
-  'emailondeck.com', 'tempr.email',
-  'tmpmail.org', 'tmpmail.net',
-  'burnermail.io', 'minutemail.com',
-  'emailfake.com', 'fakemail.net',
-  'mailcatch.com', 'mailsac.com',
-  'mytemp.email', 'tempinbox.com',
-  'disposablemail.com', 'throwmail.com'
-];
-
-// Cache pour les domaines bloqués depuis Supabase
-let cachedBlockedDomains: string[] | null = null;
-let cacheExpiry: number = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-// Fonction pour récupérer les domaines bloqués depuis Supabase
-export const fetchBlockedDomains = async (): Promise<string[]> => {
-  const now = Date.now();
-  
-  // Retourner le cache s'il est encore valide
-  if (cachedBlockedDomains && now < cacheExpiry) {
-    return cachedBlockedDomains;
-  }
-  
-  try {
-    const { data, error } = await supabase
-      .from('blocked_email_domains')
-      .select('domain')
-      .eq('is_active', true);
-    
-    if (error) {
-      console.error('Error fetching blocked domains:', error);
-      return COMMON_DISPOSABLE_DOMAINS;
-    }
-    
-    const domains = data?.map(d => d.domain.toLowerCase()) || [];
-    
-    // Combiner avec la liste statique
-    const allDomains = [...new Set([...domains, ...COMMON_DISPOSABLE_DOMAINS])];
-    
-    // Mettre en cache
-    cachedBlockedDomains = allDomains;
-    cacheExpiry = now + CACHE_DURATION;
-    
-    return allDomains;
-  } catch (error) {
-    console.error('Error fetching blocked domains:', error);
-    return COMMON_DISPOSABLE_DOMAINS;
-  }
-};
-
-// Vérification synchrone (utilise la liste statique comme fallback)
-export const isDisposableEmailSync = (email: string): boolean => {
-  const domain = email.split('@')[1]?.toLowerCase();
-  if (!domain) return false;
-  
-  // Vérifier d'abord le cache, sinon la liste statique
-  const domainsToCheck = cachedBlockedDomains || COMMON_DISPOSABLE_DOMAINS;
-  return domainsToCheck.includes(domain);
-};
-
-// Vérification asynchrone complète (avec données Supabase)
-export const isDisposableEmail = async (email: string): Promise<boolean> => {
-  const domain = email.split('@')[1]?.toLowerCase();
-  if (!domain) return false;
-  
-  const blockedDomains = await fetchBlockedDomains();
-  return blockedDomains.includes(domain);
-};
 
 // Email validation with strict rules
 export const emailSchema = z
@@ -95,10 +9,6 @@ export const emailSchema = z
   .refine(
     (email) => !email.includes("<") && !email.includes(">") && !email.includes("'") && !email.includes('"'),
     "L'email contient des caractères non autorisés"
-  )
-  .refine(
-    (email) => !isDisposableEmailSync(email),
-    "Les adresses email temporaires ne sont pas autorisées. Veuillez utiliser une adresse email permanente."
   );
 
 // Password validation with security requirements (12+ chars, special character)

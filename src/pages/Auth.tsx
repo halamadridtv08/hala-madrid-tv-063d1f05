@@ -11,7 +11,7 @@ import { Mail, Eye, EyeOff, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { TwoFactorVerification } from "@/components/auth/TwoFactorVerification";
 import { useAuthHeroImage } from "@/hooks/useAuthHeroImage";
-import { loginSchema, signUpSchema, isDisposableEmail } from "@/lib/validations/auth";
+import { loginSchema, signUpSchema } from "@/lib/validations/auth";
 import { generateDeviceFingerprint } from "@/lib/auditLog";
 import authHeroImage from "@/assets/auth-hero.jpg";
 import logoImage from "/lovable-uploads/b475ad56-9770-4b40-a504-a1e193850dc8.png";
@@ -254,18 +254,6 @@ const Auth = () => {
       setError(validation.error.errors[0].message);
       setLoading(false);
       return;
-    }
-
-    // Vérifier si l'email est un domaine temporaire (async check contre Supabase)
-    try {
-      const isDisposable = await isDisposableEmail(email);
-      if (isDisposable) {
-        setError("⛔ Les adresses email temporaires ne sont pas autorisées. Veuillez utiliser une adresse email permanente.");
-        setLoading(false);
-        return;
-      }
-    } catch (err) {
-      console.error('Error checking disposable email:', err);
     }
 
     try {
