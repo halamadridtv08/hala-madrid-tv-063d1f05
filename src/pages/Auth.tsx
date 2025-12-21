@@ -243,35 +243,12 @@ const Auth = () => {
     }
   };
 
-  // Vérifier côté backend si le domaine email est bloqué
-  const checkEmailDomainBlocked = async (emailToCheck: string): Promise<{ blocked: boolean; reason?: string }> => {
-    try {
-      const { data, error } = await supabase.rpc('is_email_domain_blocked', {
-        p_email: emailToCheck
-      });
-      
-      if (error) {
-        console.error('Error checking email domain:', error);
-        return { blocked: false };
-      }
-      
-      if (data && data.length > 0 && data[0].is_blocked) {
-        return { blocked: true, reason: data[0].reason };
-      }
-      
-      return { blocked: false };
-    } catch (err) {
-      console.error('Error in domain check:', err);
-      return { blocked: false };
-    }
-  };
-
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    // Validate with Zod (strict password requirements + temp email check)
+    // Validate with Zod (strict password requirements)
     const validation = signUpSchema.safeParse({ email, password });
     if (!validation.success) {
       setError(validation.error.errors[0].message);
@@ -280,14 +257,6 @@ const Auth = () => {
     }
 
     try {
-      // Double vérification côté backend pour les emails temporaires
-      const domainCheck = await checkEmailDomainBlocked(email);
-      if (domainCheck.blocked) {
-        setError("🚫 Les adresses email temporaires ne sont pas autorisées. Veuillez utiliser une adresse email permanente.");
-        setLoading(false);
-        return;
-      }
-
       // Vérifier si le mot de passe est compromis
       setCheckingPassword(true);
       const isPwned = await isPasswordPwned(password);

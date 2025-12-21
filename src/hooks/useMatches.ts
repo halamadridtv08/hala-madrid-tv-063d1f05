@@ -74,23 +74,20 @@ export function useMatches() {
 
   const getUpcomingMatches = () => {
     const now = new Date();
-    return matches.filter(match => {
-      const matchDate = new Date(match.match_date);
-      // Inclure tous les matchs futurs OU avec status upcoming/live
-      // Ne pas filtrer par status si le match est dans le futur
-      return matchDate >= now || match.status === 'upcoming' || match.status === 'live';
-    });
+    return matches.filter(match => 
+      new Date(match.match_date) >= now && 
+      (match.status === 'upcoming' || match.status === 'live')
+    );
   };
 
   const getPastMatches = () => {
     const now = new Date();
     return matches
-      .filter(match => {
-        const matchDate = new Date(match.match_date);
-        // Inclure tous les matchs passés (par date) OU avec status finished
-        return matchDate < now || match.status === 'finished';
-      })
-      .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime());
+      .filter(match => 
+        new Date(match.match_date) < now || 
+        match.status === 'finished'
+      )
+      .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime()); // Plus récent en premier
   };
 
   return {

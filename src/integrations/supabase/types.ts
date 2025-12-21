@@ -444,33 +444,6 @@ export type Database = {
         }
         Relationships: []
       }
-      blocked_email_domains: {
-        Row: {
-          created_at: string
-          domain: string
-          id: string
-          is_active: boolean | null
-          reason: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          domain: string
-          id?: string
-          is_active?: boolean | null
-          reason?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          domain?: string
-          id?: string
-          is_active?: boolean | null
-          reason?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       coaches: {
         Row: {
           age: number | null
@@ -1714,7 +1687,6 @@ export type Database = {
           is_starter: boolean | null
           jersey_number: number | null
           name: string
-          photo_url: string | null
           position: string
           team_id: string
           updated_at: string
@@ -1725,7 +1697,6 @@ export type Database = {
           is_starter?: boolean | null
           jersey_number?: number | null
           name: string
-          photo_url?: string | null
           position: string
           team_id: string
           updated_at?: string
@@ -1736,7 +1707,6 @@ export type Database = {
           is_starter?: boolean | null
           jersey_number?: number | null
           name?: string
-          photo_url?: string | null
           position?: string
           team_id?: string
           updated_at?: string
@@ -2929,14 +2899,6 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
-      }
-      is_email_domain_blocked: {
-        Args: { p_email: string }
-        Returns: {
-          domain: string
-          is_blocked: boolean
-          reason: string
-        }[]
       }
       log_admin_action: {
         Args: {
