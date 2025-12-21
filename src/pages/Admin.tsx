@@ -7,7 +7,7 @@ import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { AdminStatsOverview } from "@/components/admin/AdminStatsOverview";
 import { AdminStatsManager } from "@/components/admin/AdminStatsManager";
-import { FileText, Video, Users, Calendar, Settings, LayoutDashboard, User, Camera, BarChart3, ArrowLeft, Mic, PlayCircle, Shirt, Target, Trophy, Twitter } from "lucide-react";
+import { FileText, Video, Users, Calendar, Settings, LayoutDashboard, User, Camera, BarChart3, ArrowLeft, Mic, PlayCircle, Shirt, Target, Trophy, Twitter, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -71,6 +71,8 @@ import { LiveMatchBarManager } from "@/components/admin/LiveMatchBarManager";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
 import { SplineManager } from "@/components/admin/SplineManager";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+
 interface StatsData {
   totalPlayers: number;
   activePlayers: number;
@@ -81,8 +83,39 @@ interface StatsData {
   totalPressConferences: number;
   totalTrainingSessions: number;
 }
+
 const Admin = () => {
   const navigate = useNavigate();
+  const { isAdmin, isLoading: authLoading } = useAuth();
+  
+  // Double-check admin status - defense in depth
+  useEffect(() => {
+    if (!authLoading && !isAdmin) {
+      console.warn("Security: Non-admin user attempted to access admin panel");
+      navigate("/", { replace: true });
+    }
+  }, [isAdmin, authLoading, navigate]);
+
+  // Show nothing while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Block non-admins
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
+        <ShieldAlert className="h-16 w-16 text-destructive" />
+        <h1 className="text-2xl font-bold">Accès refusé</h1>
+        <p className="text-muted-foreground">Vous n'avez pas les permissions nécessaires.</p>
+        <Button onClick={() => navigate("/")}>Retour à l'accueil</Button>
+      </div>
+    );
+  }
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [articles, setArticles] = useState<Article[]>([]);

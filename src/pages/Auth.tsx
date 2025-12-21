@@ -11,6 +11,8 @@ import { Mail, Eye, EyeOff, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { TwoFactorVerification } from "@/components/auth/TwoFactorVerification";
 import { useAuthHeroImage } from "@/hooks/useAuthHeroImage";
+import { loginSchema, signUpSchema } from "@/lib/validations/auth";
+import { generateDeviceFingerprint } from "@/lib/auditLog";
 import authHeroImage from "@/assets/auth-hero.jpg";
 import logoImage from "/lovable-uploads/b475ad56-9770-4b40-a504-a1e193850dc8.png";
 
@@ -113,6 +115,7 @@ const Auth = () => {
   const logLoginAttempt = async (email: string, success: boolean) => {
     try {
       const ip = await getClientIP();
+      const fingerprint = generateDeviceFingerprint();
       await supabase.rpc('log_login_attempt', {
         p_email: email,
         p_success: success,
@@ -139,10 +142,18 @@ const Auth = () => {
     setLoading(true);
     setError(null);
 
+    // Validate with Zod
+    const validation = loginSchema.safeParse({ email, password });
+    if (!validation.success) {
+      setError(validation.error.errors[0].message);
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
+        email: validation.data.email,
+        password: validation.data.password
       });
 
       if (error) {
@@ -180,6 +191,14 @@ const Auth = () => {
     setLoading(true);
     setError(null);
 
+    // Validate with Zod (strict password requirements)
+    const validation = signUpSchema.safeParse({ email, password });
+    if (!validation.success) {
+      setError(validation.error.errors[0].message);
+      setLoading(false);
+      return;
+    }
+
     try {
       // Vérifier si le mot de passe est compromis
       setCheckingPassword(true);
@@ -195,8 +214,8 @@ const Auth = () => {
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: validation.data.email,
+        password: validation.data.password,
         options: {
           emailRedirectTo: redirectUrl
         }
