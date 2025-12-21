@@ -2873,11 +2873,11 @@ export type Database = {
       publish_scheduled_flash_news: { Args: never; Returns: undefined }
       save_backup_codes: {
         Args: { p_codes: string[]; p_user_id: string }
-        Returns: undefined
+        Returns: boolean
       }
       save_totp_secret: {
         Args: { p_secret: string; p_user_id: string }
-        Returns: undefined
+        Returns: string
       }
       unsubscribe_newsletter: {
         Args: { p_confirmation_token: string; p_email: string }
