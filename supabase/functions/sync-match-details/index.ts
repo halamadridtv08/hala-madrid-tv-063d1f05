@@ -423,7 +423,8 @@ serve(async (req) => {
 
       } catch (err) {
         console.error(`Error syncing match ${match.id}:`, err);
-        errors.push(`${match.home_team} vs ${match.away_team}: ${err.message}`);
+        const errMessage = err instanceof Error ? err.message : 'Unknown error';
+        errors.push(`${match.home_team} vs ${match.away_team}: ${errMessage}`);
       }
     }
 
@@ -441,8 +442,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in sync-match-details:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
