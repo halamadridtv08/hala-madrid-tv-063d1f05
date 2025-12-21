@@ -1,12 +1,32 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+// Allowed origins for CORS
+const getAllowedOrigins = () => {
+  return [
+    'https://qjnppcfbywfazwolfppo.lovableproject.com',
+    'https://realmadridfr.lovable.app'
+  ];
+};
+
+const getCorsHeaders = (origin: string | null) => {
+  const allowedOrigins = getAllowedOrigins();
+  const isAllowed = origin && (
+    allowedOrigins.includes(origin) || 
+    /https:\/\/.*\.lovableproject\.com/.test(origin)
+  );
+  
+  return {
+    'Access-Control-Allow-Origin': isAllowed ? origin : allowedOrigins[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
 };
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -142,6 +162,8 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error("Translation error:", error);
+    const origin = req.headers.get('origin');
+    const corsHeaders = getCorsHeaders(origin);
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

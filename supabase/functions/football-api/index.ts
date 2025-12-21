@@ -1,9 +1,26 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// Allowed origins for CORS
+const getAllowedOrigins = () => {
+  return [
+    'https://qjnppcfbywfazwolfppo.lovableproject.com',
+    'https://realmadridfr.lovable.app'
+  ];
+};
+
+const getCorsHeaders = (origin: string | null) => {
+  const allowedOrigins = getAllowedOrigins();
+  const isAllowed = origin && (
+    allowedOrigins.includes(origin) || 
+    /https:\/\/.*\.lovableproject\.com/.test(origin)
+  );
+  
+  return {
+    'Access-Control-Allow-Origin': isAllowed ? origin : allowedOrigins[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  };
 };
 
 const FOOTBALL_API = {
@@ -56,6 +73,9 @@ async function fetchFromApi(endpoint: string) {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
