@@ -22,9 +22,9 @@ verify_jwt = false
 [functions.football-api]
 verify_jwt = false
 
-# SECURED endpoints - require valid JWT token
+# CRON job endpoint - validates CRON_SECRET or admin JWT internally
 [functions.sync-matches]
-verify_jwt = true
+verify_jwt = false
 
 [functions.sync-match-details]
 verify_jwt = true
