@@ -1,10 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// More restrictive CORS - only allow requests from the app's domain
-// In production, replace with your actual domain
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://qjnppcfbywfazwolfppo.supabase.co',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -109,13 +107,43 @@ async function syncMatches(supabaseClient: any) {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Verify authentication
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Check for CRON_SECRET first (for scheduled jobs)
+    const cronSecret = Deno.env.get('CRON_SECRET');
     const authHeader = req.headers.get('Authorization');
+    
+    // Extract token from Authorization header
+    const token = authHeader?.replace('Bearer ', '');
+    
+    // If CRON_SECRET is set and matches the token, allow the request (CRON job)
+    if (cronSecret && token === cronSecret) {
+      console.log('Match sync initiated by CRON job');
+      const result = await syncMatches(supabaseClient);
+      console.log(`CRON sync completed: ${result.processed} matches processed`);
+      
+      return new Response(
+        JSON.stringify({
+          message: 'Synchronisation CRON réussie',
+          data: result
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
+    // Otherwise, verify JWT authentication for admin users
     if (!authHeader) {
       console.error('Match sync attempted without authorization header');
       return new Response(
@@ -127,13 +155,7 @@ serve(async (req) => {
       );
     }
 
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
     // Get user from token
-    const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
 
     if (authError || !user) {
