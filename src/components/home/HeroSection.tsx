@@ -37,21 +37,21 @@ export function HeroSection() {
           {/* Overlay sombre pour lisibilité */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30 z-10" />
 
-          {/* Contenu */}
-          <div className="relative z-20 madrid-container py-16 sm:py-24 lg:py-32 flex items-center min-h-[70vh] sm:min-h-[80vh] lg:min-h-[90vh]">
+          {/* Contenu - positionné en bas */}
+          <div className="relative z-20 madrid-container pb-12 sm:pb-16 lg:pb-20 pt-32 flex items-end min-h-[70vh] sm:min-h-[80vh] lg:min-h-[90vh]">
             <motion.div
               className="max-w-2xl"
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white mb-4 sm:mb-6 md:mb-8 leading-tight">
+              <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white mb-4 sm:mb-6 leading-tight">
                 <span className="text-madrid-gold">Bienvenue sur </span>
                 <br />
                 HALA<span className="text-white">MADRID</span>
                 <span className="text-madrid-gold">TV</span>
               </h1>
-              <p className="text-base xs:text-lg sm:text-xl md:text-2xl text-gray-100 mb-6 sm:mb-8 md:mb-10 leading-relaxed">
+              <p className="text-base xs:text-lg sm:text-xl md:text-2xl text-gray-100 mb-4 sm:mb-6 leading-relaxed">
                 Votre chaîne officielle d'actualités, de vidéos et d'informations sur le Real Madrid
               </p>
               <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 items-start xs:items-center">
