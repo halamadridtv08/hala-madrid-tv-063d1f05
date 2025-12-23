@@ -38,6 +38,7 @@ interface TransferFormData {
   is_published: boolean;
   description: string;
   transfer_date: string;
+  return_date: string;
   display_order: number;
 }
 
@@ -54,6 +55,7 @@ const defaultFormData: TransferFormData = {
   is_published: false,
   description: "",
   transfer_date: "",
+  return_date: "",
   display_order: 0
 };
 
@@ -144,6 +146,7 @@ export const TransfersManager = () => {
         is_published: transfer.is_published,
         description: transfer.description || "",
         transfer_date: transfer.transfer_date || "",
+        return_date: transfer.return_date || "",
         display_order: transfer.display_order
       });
     } else {
@@ -172,6 +175,7 @@ export const TransfersManager = () => {
       is_published: formData.is_published,
       description: formData.description || null,
       transfer_date: formData.transfer_date || null,
+      return_date: formData.return_date || null,
       display_order: formData.display_order
     };
 
@@ -427,6 +431,19 @@ export const TransfersManager = () => {
                   />
                 </div>
               </div>
+
+              {/* Return date - only show for loan transfers */}
+              {formData.transfer_type === 'loan' && (
+                <div className="space-y-2">
+                  <Label htmlFor="return_date">Date de retour (fin de prêt)</Label>
+                  <Input
+                    id="return_date"
+                    type="date"
+                    value={formData.return_date}
+                    onChange={(e) => setFormData({ ...formData, return_date: e.target.value })}
+                  />
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
