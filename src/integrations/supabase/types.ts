@@ -2597,6 +2597,7 @@ export type Database = {
           id: string
           is_official: boolean | null
           is_published: boolean | null
+          player_id: string | null
           player_image: string | null
           player_name: string
           return_date: string | null
@@ -2616,6 +2617,7 @@ export type Database = {
           id?: string
           is_official?: boolean | null
           is_published?: boolean | null
+          player_id?: string | null
           player_image?: string | null
           player_name: string
           return_date?: string | null
@@ -2635,6 +2637,7 @@ export type Database = {
           id?: string
           is_official?: boolean | null
           is_published?: boolean | null
+          player_id?: string | null
           player_image?: string | null
           player_name?: string
           return_date?: string | null
@@ -2645,7 +2648,15 @@ export type Database = {
           transfer_type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transfers_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_favorites: {
         Row: {

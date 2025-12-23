@@ -26,6 +26,7 @@ interface Player {
 }
 
 interface TransferFormData {
+  player_id: string;
   player_name: string;
   player_image: string;
   from_team: string;
@@ -43,6 +44,7 @@ interface TransferFormData {
 }
 
 const defaultFormData: TransferFormData = {
+  player_id: "",
   player_name: "",
   player_image: "",
   from_team: "Real Madrid",
@@ -106,6 +108,7 @@ export const TransfersManager = () => {
   const selectPlayer = (player: Player) => {
     setFormData({
       ...formData,
+      player_id: player.id,
       player_name: player.name,
       player_image: player.image_url || ""
     });
@@ -134,6 +137,7 @@ export const TransfersManager = () => {
     if (transfer) {
       setEditingTransfer(transfer);
       setFormData({
+        player_id: (transfer as any).player_id || "",
         player_name: transfer.player_name,
         player_image: transfer.player_image || "",
         from_team: transfer.from_team,
@@ -163,6 +167,7 @@ export const TransfersManager = () => {
     }
 
     const payload = {
+      player_id: formData.player_id || null,
       player_name: formData.player_name,
       player_image: formData.player_image || null,
       from_team: formData.from_team,

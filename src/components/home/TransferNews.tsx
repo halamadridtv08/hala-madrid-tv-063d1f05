@@ -15,6 +15,16 @@ const getTransferTypeLabel = (type: string) => {
   }
 };
 
+const getTransferTypeBadgeColor = (type: string) => {
+  switch (type) {
+    case 'loan': return 'bg-blue-600 hover:bg-blue-700';
+    case 'permanent': return 'bg-purple-600 hover:bg-purple-700';
+    case 'free': return 'bg-gray-600 hover:bg-gray-700';
+    case 'return': return 'bg-green-600 hover:bg-green-700';
+    default: return 'bg-muted';
+  }
+};
+
 export const TransferNews = () => {
   const { transfers, loading } = useTransfers(true);
 
@@ -48,7 +58,7 @@ export const TransferNews = () => {
               Actualités Transferts
             </CardTitle>
             <Link 
-              to="/news?category=transfer" 
+              to="/transfers" 
               className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
               Plus
@@ -57,15 +67,22 @@ export const TransferNews = () => {
           <CardContent className="p-4 space-y-6">
             {transfers.slice(0, 3).map((transfer) => (
               <div key={transfer.id} className="space-y-3">
-                {/* Official Badge */}
-                {transfer.is_official && (
+                {/* Badges row */}
+                <div className="flex flex-wrap gap-2">
+                  {transfer.is_official && (
+                    <Badge 
+                      variant="default" 
+                      className="bg-green-600 hover:bg-green-700 text-white font-bold uppercase text-xs px-3 py-1"
+                    >
+                      Officiel
+                    </Badge>
+                  )}
                   <Badge 
-                    variant="default" 
-                    className="bg-green-600 hover:bg-green-700 text-white font-bold uppercase text-xs px-3 py-1"
+                    className={`${getTransferTypeBadgeColor(transfer.transfer_type)} text-white font-medium text-xs px-2 py-1`}
                   >
-                    Officiel
+                    {getTransferTypeLabel(transfer.transfer_type)}
                   </Badge>
-                )}
+                </div>
                 
                 {/* Transfer Visual */}
                 <div className="flex items-center justify-center gap-2 sm:gap-4 py-4">

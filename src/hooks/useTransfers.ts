@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface Transfer {
   id: string;
+  player_id: string | null;
   player_name: string;
   player_image: string | null;
   from_team: string;
