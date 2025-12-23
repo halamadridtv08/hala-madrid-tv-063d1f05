@@ -15,6 +15,7 @@ export interface Transfer {
   is_published: boolean;
   description: string | null;
   transfer_date: string | null;
+  return_date: string | null;
   display_order: number;
   created_at: string;
   updated_at: string;

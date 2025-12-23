@@ -2599,6 +2599,7 @@ export type Database = {
           is_published: boolean | null
           player_image: string | null
           player_name: string
+          return_date: string | null
           to_team: string
           to_team_logo: string | null
           transfer_date: string | null
@@ -2617,6 +2618,7 @@ export type Database = {
           is_published?: boolean | null
           player_image?: string | null
           player_name: string
+          return_date?: string | null
           to_team: string
           to_team_logo?: string | null
           transfer_date?: string | null
@@ -2635,6 +2637,7 @@ export type Database = {
           is_published?: boolean | null
           player_image?: string | null
           player_name?: string
+          return_date?: string | null
           to_team?: string
           to_team_logo?: string | null
           transfer_date?: string | null
