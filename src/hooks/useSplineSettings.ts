@@ -20,14 +20,20 @@ export function useSplineSettings() {
     if (!value) return "";
     
     // If it's already a direct URL, return it
-    if (value.startsWith("https://prod.spline.design/")) {
+    if (value.startsWith("https://prod.spline.design/") || value.startsWith("https://my.spline.design/")) {
       return value;
     }
     
-    // Extract URL from spline-viewer tag
-    const match = value.match(/url="([^"]+)"/);
-    if (match && match[1]) {
-      return match[1];
+    // Extract URL from spline-viewer tag (matches url="..." pattern)
+    const splineViewerMatch = value.match(/url="([^"]+)"/);
+    if (splineViewerMatch && splineViewerMatch[1]) {
+      return splineViewerMatch[1];
+    }
+    
+    // Try to extract any Spline URL from the content
+    const urlMatch = value.match(/(https:\/\/(?:prod|my)\.spline\.design\/[^\s"<>]+)/);
+    if (urlMatch && urlMatch[1]) {
+      return urlMatch[1];
     }
     
     return value;
