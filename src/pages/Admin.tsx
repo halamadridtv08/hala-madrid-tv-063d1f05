@@ -71,6 +71,7 @@ import { LiveMatchBarManager } from "@/components/admin/LiveMatchBarManager";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
 import { SplineManager } from "@/components/admin/SplineManager";
 import { HeroBackgroundManager } from "@/components/admin/HeroBackgroundManager";
+import { TransfersManager } from "@/components/admin/TransfersManager";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -592,6 +593,8 @@ const Admin = () => {
       <AdminNotifications />
     </div>
   );
+
+  const renderTransfers = () => <TransfersManager />;
   return <div className="min-h-screen bg-background flex">
       {/* Sidebar desktop */}
       <AdminSidebar 
@@ -647,6 +650,7 @@ const Admin = () => {
           <TabsContent value="kits">{renderKits()}</TabsContent>
           <TabsContent value="youtube">{renderYouTubeVideos()}</TabsContent>
           <TabsContent value="flash-news">{renderFlashNews()}</TabsContent>
+          <TabsContent value="transfers">{renderTransfers()}</TabsContent>
           <TabsContent value="match-control">{renderMatchControl()}</TabsContent>
           <TabsContent value="newsletter">{renderNewsletter()}</TabsContent>
           <TabsContent value="dream-teams">{renderDreamTeams()}</TabsContent>

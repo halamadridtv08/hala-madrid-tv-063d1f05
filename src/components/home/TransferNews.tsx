@@ -2,37 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTransfers } from "@/hooks/useTransfers";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface Transfer {
-  id: string;
-  playerName: string;
-  playerImage: string;
-  fromTeam: string;
-  fromTeamLogo: string;
-  toTeam: string;
-  toTeamLogo: string;
-  transferType: 'loan' | 'permanent' | 'free' | 'return';
-  isOfficial: boolean;
-  description: string;
-}
-
-// Données temporaires - à remplacer par des données de la base
-const mockTransfers: Transfer[] = [
-  {
-    id: "1",
-    playerName: "Endrick",
-    playerImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Endrick_2024.jpg/220px-Endrick_2024.jpg",
-    fromTeam: "Real Madrid",
-    fromTeamLogo: "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg",
-    toTeam: "Olympique Lyonnais",
-    toTeamLogo: "https://upload.wikimedia.org/wikipedia/en/thumb/a/a0/Olympique_Lyonnais_logo.svg/1200px-Olympique_Lyonnais_logo.svg.png",
-    transferType: 'loan',
-    isOfficial: true,
-    description: "Real Madrid have loaned Endrick to Olympique Lyonnais"
-  }
-];
-
-const getTransferTypeLabel = (type: Transfer['transferType']) => {
+const getTransferTypeLabel = (type: string) => {
   switch (type) {
     case 'loan': return 'Prêt';
     case 'permanent': return 'Transfert';
@@ -43,85 +16,124 @@ const getTransferTypeLabel = (type: Transfer['transferType']) => {
 };
 
 export const TransferNews = () => {
-  const transfers = mockTransfers;
+  const { transfers, loading } = useTransfers(true);
+
+  if (loading) {
+    return (
+      <section className="py-6 bg-muted/30">
+        <div className="madrid-container">
+          <Card className="overflow-hidden border-0 shadow-lg">
+            <CardHeader className="pb-2">
+              <Skeleton className="h-6 w-48" />
+            </CardHeader>
+            <CardContent className="p-4">
+              <Skeleton className="h-24 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    );
+  }
+
+  if (transfers.length === 0) {
+    return null;
+  }
 
   return (
-    <Card className="overflow-hidden border-0 shadow-lg">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 bg-gradient-to-r from-muted/50 to-transparent">
-        <CardTitle className="text-lg font-bold uppercase tracking-wide text-foreground">
-          Actualités Transferts
-        </CardTitle>
-        <Link 
-          to="/news?category=transfer" 
-          className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-        >
-          Plus
-        </Link>
-      </CardHeader>
-      <CardContent className="p-4 space-y-4">
-        {transfers.map((transfer) => (
-          <div key={transfer.id} className="space-y-3">
-            {/* Official Badge */}
-            {transfer.isOfficial && (
-              <Badge 
-                variant="default" 
-                className="bg-green-600 hover:bg-green-700 text-white font-bold uppercase text-xs px-3 py-1"
-              >
-                Officiel
-              </Badge>
-            )}
-            
-            {/* Transfer Visual */}
-            <div className="flex items-center justify-center gap-2 py-4">
-              {/* From Team Logo */}
-              <div className="flex-shrink-0">
-                <img 
-                  src={transfer.fromTeamLogo} 
-                  alt={transfer.fromTeam}
-                  className="w-12 h-12 object-contain"
-                />
-              </div>
-              
-              {/* Arrow */}
-              <ArrowRight className="w-5 h-5 text-amber-500 flex-shrink-0" />
-              
-              {/* Player Photo */}
-              <div className="flex-shrink-0">
-                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-muted bg-muted">
-                  <img 
-                    src={transfer.playerImage} 
-                    alt={transfer.playerName}
-                    className="w-full h-full object-cover"
-                  />
+    <section className="py-6 bg-muted/30">
+      <div className="madrid-container">
+        <Card className="overflow-hidden border-0 shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 bg-gradient-to-r from-muted/50 to-transparent">
+            <CardTitle className="text-lg font-bold uppercase tracking-wide text-foreground">
+              Actualités Transferts
+            </CardTitle>
+            <Link 
+              to="/news?category=transfer" 
+              className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              Plus
+            </Link>
+          </CardHeader>
+          <CardContent className="p-4 space-y-6">
+            {transfers.slice(0, 3).map((transfer) => (
+              <div key={transfer.id} className="space-y-3">
+                {/* Official Badge */}
+                {transfer.is_official && (
+                  <Badge 
+                    variant="default" 
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold uppercase text-xs px-3 py-1"
+                  >
+                    Officiel
+                  </Badge>
+                )}
+                
+                {/* Transfer Visual */}
+                <div className="flex items-center justify-center gap-2 sm:gap-4 py-4">
+                  {/* From Team Logo */}
+                  <div className="flex-shrink-0">
+                    {transfer.from_team_logo ? (
+                      <img 
+                        src={transfer.from_team_logo} 
+                        alt={transfer.from_team}
+                        className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-full flex items-center justify-center text-xs font-bold">
+                        {transfer.from_team.substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Arrow */}
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 flex-shrink-0" />
+                  
+                  {/* Player Photo */}
+                  <div className="flex-shrink-0">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-muted bg-muted">
+                      {transfer.player_image ? (
+                        <img 
+                          src={transfer.player_image} 
+                          alt={transfer.player_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-lg font-bold text-muted-foreground">
+                          {transfer.player_name.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Arrow */}
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 flex-shrink-0" />
+                  
+                  {/* To Team Logo */}
+                  <div className="flex-shrink-0">
+                    {transfer.to_team_logo ? (
+                      <img 
+                        src={transfer.to_team_logo} 
+                        alt={transfer.to_team}
+                        className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-full flex items-center justify-center text-xs font-bold">
+                        {transfer.to_team.substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
                 </div>
+                
+                {/* Description */}
+                {transfer.description && (
+                  <p className="text-center text-sm text-muted-foreground italic">
+                    {transfer.description}
+                  </p>
+                )}
               </div>
-              
-              {/* Arrow */}
-              <ArrowRight className="w-5 h-5 text-amber-500 flex-shrink-0" />
-              
-              {/* To Team Logo */}
-              <div className="flex-shrink-0">
-                <img 
-                  src={transfer.toTeamLogo} 
-                  alt={transfer.toTeam}
-                  className="w-12 h-12 object-contain"
-                />
-              </div>
-            </div>
-            
-            {/* Description */}
-            <p className="text-center text-sm text-muted-foreground italic">
-              {transfer.description}
-            </p>
-          </div>
-        ))}
-        
-        {transfers.length === 0 && (
-          <p className="text-center text-muted-foreground py-4">
-            Aucun transfert récent
-          </p>
-        )}
-      </CardContent>
-    </Card>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    </section>
   );
 };

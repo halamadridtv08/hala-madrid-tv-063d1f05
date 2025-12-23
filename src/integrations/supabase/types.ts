@@ -2587,6 +2587,63 @@ export type Database = {
         }
         Relationships: []
       }
+      transfers: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number | null
+          from_team: string
+          from_team_logo: string | null
+          id: string
+          is_official: boolean | null
+          is_published: boolean | null
+          player_image: string | null
+          player_name: string
+          to_team: string
+          to_team_logo: string | null
+          transfer_date: string | null
+          transfer_fee: string | null
+          transfer_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          from_team: string
+          from_team_logo?: string | null
+          id?: string
+          is_official?: boolean | null
+          is_published?: boolean | null
+          player_image?: string | null
+          player_name: string
+          to_team: string
+          to_team_logo?: string | null
+          transfer_date?: string | null
+          transfer_fee?: string | null
+          transfer_type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          from_team?: string
+          from_team_logo?: string | null
+          id?: string
+          is_official?: boolean | null
+          is_published?: boolean | null
+          player_image?: string | null
+          player_name?: string
+          to_team?: string
+          to_team_logo?: string | null
+          transfer_date?: string | null
+          transfer_fee?: string | null
+          transfer_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_favorites: {
         Row: {
           created_at: string | null
