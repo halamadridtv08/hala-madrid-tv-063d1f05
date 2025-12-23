@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 
 interface FooterSplineAnimationProps {
@@ -8,41 +8,108 @@ interface FooterSplineAnimationProps {
 export function FooterSplineAnimation({ url }: FooterSplineAnimationProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [shouldRender, setShouldRender] = useState(false);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Delay rendering to avoid blocking initial page load
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShouldRender(true);
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Validate and transform URL to embed format
-  const getEmbedUrl = (inputUrl: string): string | null => {
-    if (!inputUrl) return null;
+  // Extract URL from HTML snippet or use direct URL
+  const extractSplineUrl = (input: string): string | null => {
+    if (!input) return null;
     
-    // If it's a scene.splinecode URL, convert to embed format
-    if (inputUrl.includes("prod.spline.design") && inputUrl.includes("scene.splinecode")) {
-      // Extract the scene ID and create embed URL
-      const match = inputUrl.match(/prod\.spline\.design\/([^/]+)\/scene\.splinecode/);
-      if (match && match[1]) {
-        return `https://my.spline.design/${match[1]}/`;
-      }
+    const trimmed = input.trim();
+    
+    // If it's already a direct URL
+    if (trimmed.startsWith("https://prod.spline.design/") || trimmed.startsWith("https://my.spline.design/")) {
+      return trimmed;
     }
     
-    // If it's already an embed URL
-    if (inputUrl.includes("my.spline.design")) {
-      return inputUrl;
+    // Extract from <spline-viewer url="...">
+    const match = trimmed.match(/url="([^"]+)"/);
+    if (match?.[1]) {
+      return match[1];
+    }
+    
+    // Try to find any Spline URL
+    const urlMatch = trimmed.match(/(https:\/\/(?:prod|my)\.spline\.design\/[^\s"<>]+)/);
+    if (urlMatch?.[1]) {
+      return urlMatch[1];
     }
     
     return null;
   };
 
-  const embedUrl = getEmbedUrl(url);
+  const splineUrl = extractSplineUrl(url);
 
-  if (!embedUrl || hasError || !shouldRender) return null;
+  // Load the Spline viewer script dynamically
+  useEffect(() => {
+    if (!splineUrl) return;
+
+    const existingScript = document.querySelector('script[src*="splinetool/viewer"]');
+    
+    if (existingScript) {
+      setScriptLoaded(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.type = "module";
+    script.src = "https://unpkg.com/@splinetool/viewer@1.12.28/build/spline-viewer.js";
+    script.async = true;
+    
+    script.onload = () => {
+      setScriptLoaded(true);
+    };
+    
+    script.onerror = () => {
+      console.warn("Failed to load Spline viewer script");
+      setHasError(true);
+    };
+
+    document.head.appendChild(script);
+
+    return () => {
+      // Don't remove script on cleanup as it might be used elsewhere
+    };
+  }, [splineUrl]);
+
+  // Create the spline-viewer element when script is loaded
+  useEffect(() => {
+    if (!scriptLoaded || !splineUrl || !containerRef.current) return;
+
+    // Clear previous content
+    containerRef.current.innerHTML = "";
+
+    // Create the spline-viewer custom element
+    const viewer = document.createElement("spline-viewer");
+    viewer.setAttribute("url", splineUrl);
+    viewer.style.width = "100%";
+    viewer.style.height = "100%";
+    viewer.style.position = "absolute";
+    viewer.style.top = "0";
+    viewer.style.left = "0";
+    viewer.style.pointerEvents = "none";
+
+    // Listen for load event
+    viewer.addEventListener("load", () => {
+      setIsLoaded(true);
+    });
+
+    viewer.addEventListener("error", () => {
+      setHasError(true);
+    });
+
+    containerRef.current.appendChild(viewer);
+
+    // Fallback: mark as loaded after a timeout if no event fires
+    const timeout = setTimeout(() => {
+      setIsLoaded(true);
+    }, 5000);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [scriptLoaded, splineUrl]);
+
+  if (!splineUrl || hasError) return null;
 
   return (
     <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
@@ -51,24 +118,10 @@ export function FooterSplineAnimation({ url }: FooterSplineAnimationProps) {
           <Loader2 className="h-8 w-8 animate-spin text-white/30" />
         </div>
       )}
-      <iframe
-        src={embedUrl}
-        frameBorder="0"
-        width="100%"
-        height="100%"
-        title="Spline 3D Animation"
-        onLoad={() => setIsLoaded(true)}
-        onError={() => setHasError(true)}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          border: "none",
-          pointerEvents: "none",
-        }}
-        allow="autoplay"
+      <div 
+        ref={containerRef} 
+        className="absolute inset-0"
+        style={{ opacity: isLoaded ? 1 : 0, transition: "opacity 0.3s ease" }}
       />
     </div>
   );
