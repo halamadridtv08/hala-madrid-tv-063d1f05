@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,27 +12,58 @@ import { Loader2, Save, ExternalLink, Box } from "lucide-react";
 export function SplineManager() {
   const { splineUrl, loading, updateSplineUrl } = useSplineSettings();
   const { isVisible, toggleVisibility } = useSiteVisibility();
+
   const [url, setUrl] = useState(splineUrl);
   const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState(false);
 
   // Sync URL state when splineUrl changes
-  useState(() => {
-    if (splineUrl) {
-      setUrl(splineUrl);
+  useEffect(() => {
+    if (splineUrl) setUrl(splineUrl);
+  }, [splineUrl]);
+
+  // Accept either a raw URL or the full <script>+<spline-viewer> snippet,
+  // but always store ONLY the URL in the database.
+  const normalizeSplineInput = (input: string): { url: string; wasExtracted: boolean } => {
+    const value = (input || "").trim();
+    if (!value) return { url: "", wasExtracted: false };
+
+    // Direct URL
+    if (value.startsWith("https://prod.spline.design/") || value.startsWith("https://my.spline.design/")) {
+      return { url: value, wasExtracted: false };
     }
-  });
+
+    // Extract from <spline-viewer url="...">
+    const viewerMatch = value.match(/url="([^"]+)"/);
+    if (viewerMatch?.[1]) {
+      return { url: viewerMatch[1], wasExtracted: true };
+    }
+
+    // Fallback: find any Spline URL inside the pasted text
+    const anyUrlMatch = value.match(/(https:\/\/(?:prod|my)\.spline\.design\/[^\s"<>]+)/);
+    if (anyUrlMatch?.[1]) {
+      return { url: anyUrlMatch[1], wasExtracted: true };
+    }
+
+    return { url: value, wasExtracted: false };
+  };
 
   const handleSaveUrl = async () => {
-    if (!url.trim()) {
-      toast.error("Veuillez entrer une URL valide");
+    const normalized = normalizeSplineInput(url);
+
+    if (!normalized.url) {
+      toast.error("Veuillez entrer une URL Spline valide");
       return;
     }
 
     setSaving(true);
     try {
-      await updateSplineUrl(url.trim());
-      toast.success("URL Spline mise à jour");
+      await updateSplineUrl(normalized.url);
+      setUrl(normalized.url);
+
+      toast.success(
+        normalized.wasExtracted ? "Code détecté : URL extraite et enregistrée" : "URL Spline mise à jour"
+      );
     } catch (error) {
       toast.error("Erreur lors de la mise à jour");
     } finally {
@@ -44,11 +75,7 @@ export function SplineManager() {
     setToggling(true);
     try {
       await toggleVisibility("footer_spline");
-      toast.success(
-        isVisible("footer_spline")
-          ? "Animation Spline désactivée"
-          : "Animation Spline activée"
-      );
+      toast.success(isVisible("footer_spline") ? "Animation Spline désactivée" : "Animation Spline activée");
     } catch (error) {
       toast.error("Erreur lors du changement de visibilité");
     } finally {
@@ -82,9 +109,7 @@ export function SplineManager() {
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <Label htmlFor="spline-toggle">Activer l'animation</Label>
-            <p className="text-sm text-muted-foreground">
-              Afficher l'animation Spline dans le footer
-            </p>
+            <p className="text-sm text-muted-foreground">Afficher l'animation Spline dans le footer</p>
           </div>
           <Switch
             id="spline-toggle"
@@ -100,21 +125,18 @@ export function SplineManager() {
           <div className="flex gap-2">
             <Input
               id="spline-url"
-              placeholder="https://prod.spline.design/..."
+              placeholder="https://prod.spline.design/.../scene.splinecode"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               className="flex-1"
             />
             <Button onClick={handleSaveUrl} disabled={saving}>
-              {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Collez l'URL de votre scène Spline (format: prod.spline.design/...)
+            Vous pouvez coller soit l'URL (prod.spline.design / my.spline.design), soit le code
+            &lt;spline-viewer&gt; : on n'enregistre que l'URL.
           </p>
         </div>
 
