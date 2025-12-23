@@ -15,7 +15,6 @@ import { MediaProtectionProvider } from "./components/common/MediaProtectionProv
 import { SessionTimeoutProvider } from "./components/auth/SessionTimeoutProvider";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Auth from "./pages/Auth";
 
 // Lazy load non-critical pages for better Core Web Vitals
 const News = lazy(() => import("./pages/News"));
@@ -88,7 +87,6 @@ const App = () => (
                   <Route path="/dream-team" element={<DreamTeam />} />
                   <Route path="/transfers" element={<Transfers />} />
                   <Route path="/live-blog/:matchId" element={<LiveBlog />} />
-                  <Route path="/auth" element={<Auth />} />
                   <Route 
                     path="/admin" 
                     element={
