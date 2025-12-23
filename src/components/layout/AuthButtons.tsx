@@ -1,25 +1,12 @@
-
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Mail, Twitter } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 export function AuthButtons() {
   const { user, isAdmin, signOut } = useAuth();
-
-  const signInWithSocial = async (provider: 'google' | 'twitter') => {
-    try {
-      await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth`,
-        },
-      });
-    } catch (error) {
-      console.error(`Error signing in with ${provider}:`, error);
-    }
-  };
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   if (user) {
     return (
@@ -44,10 +31,17 @@ export function AuthButtons() {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <Button asChild variant="outline" size="sm">
-        <Link to="/auth">Connexion</Link>
-      </Button>
-    </div>
+    <>
+      <div className="flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => setShowAuthModal(true)}
+        >
+          Connexion
+        </Button>
+      </div>
+      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />
+    </>
   );
 }
