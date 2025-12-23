@@ -26,14 +26,13 @@ const Auth = () => {
   const [showTwoFactor, setShowTwoFactor] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
   const [isLogin, setIsLogin] = useState(true);
-  const [pageReady, setPageReady] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
-  const { imageUrl: heroImageFromDb, isLoading: isLoadingHeroImage } = useAuthHeroImage();
+  const { imageUrl: heroImageFromDb } = useAuthHeroImage();
 
   // Vérifier si un mot de passe est compromis via Have I Been Pwned API
   const isPasswordPwned = async (pwd: string): Promise<boolean> => {
@@ -61,24 +60,18 @@ const Auth = () => {
   const heroImage = heroImageFromDb || authHeroImage;
 
   useEffect(() => {
-    // Wait for auth to finish loading before showing page
+    // Wait for auth to finish loading before redirecting
     if (authLoading) return;
-    
+
     if (user) {
       navigate("/", { replace: true });
       return;
     }
 
-    const handleHashFragment = async () => {
-      const hashFragment = window.location.hash;
-      if (hashFragment && hashFragment.includes('access_token')) {
-        navigate("/", { replace: true });
-        return;
-      }
-    };
-
-    handleHashFragment();
-    setPageReady(true);
+    const hashFragment = window.location.hash;
+    if (hashFragment && hashFragment.includes("access_token")) {
+      navigate("/", { replace: true });
+    }
   }, [user, authLoading, navigate]);
 
   const checkAdminRequires2FA = async (userId: string): Promise<boolean> => {
@@ -337,7 +330,7 @@ const Auth = () => {
   };
 
   // Don't render anything while redirecting authenticated users
-  if (authLoading || user) {
+  if (user) {
     return null;
   }
 

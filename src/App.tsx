@@ -15,6 +15,7 @@ import { MediaProtectionProvider } from "./components/common/MediaProtectionProv
 import { SessionTimeoutProvider } from "./components/auth/SessionTimeoutProvider";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Auth from "./pages/Auth";
 
 // Lazy load non-critical pages for better Core Web Vitals
 const News = lazy(() => import("./pages/News"));
@@ -26,7 +27,6 @@ const Kits = lazy(() => import("./pages/Kits"));
 const Calendar = lazy(() => import("./pages/Calendar"));
 const Stats = lazy(() => import("./pages/Stats"));
 const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
-const Auth = lazy(() => import("./pages/Auth"));
 const Admin = lazy(() => import("./pages/Admin"));
 const ArticleDetail = lazy(() => import("./pages/ArticleDetail"));
 const Videos = lazy(() => import("./pages/Videos"));

@@ -29,34 +29,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Auth state changed:", event, session?.user?.id);
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
+    // Set up auth state listener first (keep callback synchronous)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session?.user?.id);
+      setSession(session ?? null);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        // Defer Supabase calls to avoid auth deadlocks
+        setTimeout(() => {
           checkAdminStatus(session.user.id);
-          
-          if (event === 'SIGNED_IN') {
-            toast.success("Connexion réussie - Bienvenue sur Hala Madrid TV!");
-          }
-        } else {
-          setIsAdmin(false);
+        }, 0);
+
+        if (event === "SIGNED_IN") {
+          toast.success("Connexion réussie - Bienvenue sur Hala Madrid TV!");
         }
+      } else {
+        setIsAdmin(false);
       }
-    );
+    });
 
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+      setSession(session ?? null);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         checkAdminStatus(session.user.id);
       }
-      
+
       setIsLoading(false);
     });
 
