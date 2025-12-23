@@ -336,19 +336,9 @@ const Auth = () => {
     }
   };
 
-  // Show loading state while checking auth
-  if (authLoading || !pageReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#001F54] via-[#002D72] to-[#001F54]">
-        <div className="animate-pulse">
-          <img 
-            src={logoImage} 
-            alt="Hala Madrid TV" 
-            className="w-20 h-20 mx-auto opacity-80"
-          />
-        </div>
-      </div>
-    );
+  // Don't render anything while redirecting authenticated users
+  if (authLoading || user) {
+    return null;
   }
 
   if (showTwoFactor) {
