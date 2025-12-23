@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, ArrowRight, Eye, EyeOff, Check } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowRight, Eye, EyeOff, Check, Search, User } from "lucide-react";
 import { toast } from "sonner";
 import { Transfer } from "@/hooks/useTransfers";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+interface Player {
+  id: string;
+  name: string;
+  jersey_number: number | null;
+  image_url: string | null;
+  position: string;
+}
 
 interface TransferFormData {
   player_name: string;
@@ -56,14 +66,50 @@ const transferTypeLabels = {
 
 export const TransfersManager = () => {
   const [transfers, setTransfers] = useState<Transfer[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTransfer, setEditingTransfer] = useState<Transfer | null>(null);
   const [formData, setFormData] = useState<TransferFormData>(defaultFormData);
+  const [playerSearch, setPlayerSearch] = useState("");
+  const [showPlayerDropdown, setShowPlayerDropdown] = useState(false);
 
   useEffect(() => {
     fetchTransfers();
+    fetchPlayers();
   }, []);
+
+  const fetchPlayers = async () => {
+    const { data, error } = await supabase
+      .from("players")
+      .select("id, name, jersey_number, image_url, position")
+      .eq("is_active", true)
+      .order("name");
+
+    if (!error && data) {
+      setPlayers(data);
+    }
+  };
+
+  const filteredPlayers = useMemo(() => {
+    if (!playerSearch) return players;
+    const search = playerSearch.toLowerCase();
+    return players.filter(
+      (p) =>
+        p.name.toLowerCase().includes(search) ||
+        (p.jersey_number && p.jersey_number.toString().includes(search))
+    );
+  }, [players, playerSearch]);
+
+  const selectPlayer = (player: Player) => {
+    setFormData({
+      ...formData,
+      player_name: player.name,
+      player_image: player.image_url || ""
+    });
+    setPlayerSearch("");
+    setShowPlayerDropdown(false);
+  };
 
   const fetchTransfers = async () => {
     setLoading(true);
@@ -220,25 +266,84 @@ export const TransfersManager = () => {
               </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="player_name">Nom du joueur *</Label>
-                  <Input
-                    id="player_name"
-                    value={formData.player_name}
-                    onChange={(e) => setFormData({ ...formData, player_name: e.target.value })}
-                    placeholder="Ex: Endrick"
-                  />
+              {/* Player Selector */}
+              <div className="space-y-2">
+                <Label>Joueur *</Label>
+                <div className="relative">
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        value={playerSearch}
+                        onChange={(e) => {
+                          setPlayerSearch(e.target.value);
+                          setShowPlayerDropdown(true);
+                        }}
+                        onFocus={() => setShowPlayerDropdown(true)}
+                        placeholder="Rechercher un joueur..."
+                        className="pl-9"
+                      />
+                    </div>
+                  </div>
+                  
+                  {showPlayerDropdown && (
+                    <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg">
+                      <ScrollArea className="h-[200px]">
+                        {filteredPlayers.length === 0 ? (
+                          <p className="p-3 text-sm text-muted-foreground text-center">
+                            Aucun joueur trouvé
+                          </p>
+                        ) : (
+                          filteredPlayers.map((player) => (
+                            <button
+                              key={player.id}
+                              type="button"
+                              onClick={() => selectPlayer(player)}
+                              className="w-full flex items-center gap-3 p-2 hover:bg-accent text-left transition-colors"
+                            >
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={player.image_url || undefined} alt={player.name} />
+                                <AvatarFallback>
+                                  <User className="h-4 w-4" />
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{player.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  #{player.jersey_number} · {player.position}
+                                </p>
+                              </div>
+                            </button>
+                          ))
+                        )}
+                      </ScrollArea>
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="player_image">Photo du joueur (URL)</Label>
-                  <Input
-                    id="player_image"
-                    value={formData.player_image}
-                    onChange={(e) => setFormData({ ...formData, player_image: e.target.value })}
-                    placeholder="https://..."
-                  />
-                </div>
+
+                {/* Selected player display */}
+                {formData.player_name && (
+                  <div className="flex items-center gap-3 p-3 bg-accent/50 rounded-lg">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={formData.player_image || undefined} alt={formData.player_name} />
+                      <AvatarFallback>
+                        <User className="h-5 w-5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-medium">{formData.player_name}</p>
+                      <p className="text-xs text-muted-foreground">Sélectionné</p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, player_name: "", player_image: "" })}
+                    >
+                      Changer
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
