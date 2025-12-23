@@ -1,34 +1,5 @@
-import { Suspense, lazy, useState, useEffect, Component, ReactNode } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-
-const Spline = lazy(() => import("@splinetool/react-spline"));
-
-// Error Boundary to catch Spline loading errors
-class SplineErrorBoundary extends Component<
-  { children: ReactNode; onError: () => void },
-  { hasError: boolean }
-> {
-  constructor(props: { children: ReactNode; onError: () => void }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error) {
-    console.warn("Spline animation failed to load:", error.message);
-    this.props.onError();
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return null;
-    }
-    return this.props.children;
-  }
-}
 
 interface FooterSplineAnimationProps {
   url: string;
@@ -37,36 +8,41 @@ interface FooterSplineAnimationProps {
 export function FooterSplineAnimation({ url }: FooterSplineAnimationProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [webGLSupported, setWebGLSupported] = useState(true);
   const [shouldRender, setShouldRender] = useState(false);
 
-  // Check WebGL support on mount with a small delay to prevent hydration issues
+  // Delay rendering to avoid blocking initial page load
   useEffect(() => {
-    // Delay rendering to avoid blocking initial page load
     const timer = setTimeout(() => {
-      try {
-        const canvas = document.createElement("canvas");
-        const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-        if (!gl) {
-          setWebGLSupported(false);
-        } else {
-          setShouldRender(true);
-        }
-      } catch {
-        setWebGLSupported(false);
-      }
-    }, 1000); // 1 second delay to let critical content load first
+      setShouldRender(true);
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, []);
 
-  // Validate URL format
-  const isValidUrl = url && (
-    url.startsWith("https://prod.spline.design/") || 
-    url.startsWith("https://my.spline.design/")
-  );
+  // Validate and transform URL to embed format
+  const getEmbedUrl = (inputUrl: string): string | null => {
+    if (!inputUrl) return null;
+    
+    // If it's a scene.splinecode URL, convert to embed format
+    if (inputUrl.includes("prod.spline.design") && inputUrl.includes("scene.splinecode")) {
+      // Extract the scene ID and create embed URL
+      const match = inputUrl.match(/prod\.spline\.design\/([^/]+)\/scene\.splinecode/);
+      if (match && match[1]) {
+        return `https://my.spline.design/${match[1]}/`;
+      }
+    }
+    
+    // If it's already an embed URL
+    if (inputUrl.includes("my.spline.design")) {
+      return inputUrl;
+    }
+    
+    return null;
+  };
 
-  if (!isValidUrl || !webGLSupported || hasError || !shouldRender) return null;
+  const embedUrl = getEmbedUrl(url);
+
+  if (!embedUrl || hasError || !shouldRender) return null;
 
   return (
     <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
@@ -75,22 +51,25 @@ export function FooterSplineAnimation({ url }: FooterSplineAnimationProps) {
           <Loader2 className="h-8 w-8 animate-spin text-white/30" />
         </div>
       )}
-      <SplineErrorBoundary onError={() => setHasError(true)}>
-        <Suspense fallback={null}>
-          <Spline
-            scene={url}
-            onLoad={() => setIsLoaded(true)}
-            onError={() => setHasError(true)}
-            style={{
-              width: "100%",
-              height: "100%",
-              position: "absolute",
-              top: 0,
-              left: 0,
-            }}
-          />
-        </Suspense>
-      </SplineErrorBoundary>
+      <iframe
+        src={embedUrl}
+        frameBorder="0"
+        width="100%"
+        height="100%"
+        title="Spline 3D Animation"
+        onLoad={() => setIsLoaded(true)}
+        onError={() => setHasError(true)}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          border: "none",
+          pointerEvents: "none",
+        }}
+        allow="autoplay"
+      />
     </div>
   );
 }
