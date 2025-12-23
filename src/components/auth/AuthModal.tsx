@@ -395,7 +395,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               <img
                 src={logoImage}
                 alt="Hala Madrid TV"
-                className="w-16 h-16 mx-auto mb-3"
+                className="w-24 h-24 mx-auto mb-3"
               />
               <h1 className="text-2xl font-bold text-foreground mb-1">
                 {isLogin ? "Bienvenue" : "Rejoignez-nous"}
