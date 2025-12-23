@@ -25,9 +25,9 @@ export const ArticleComments = ({ articleId }: ArticleCommentsProps) => {
   }, [articleId]);
 
   const fetchComments = async () => {
-    // Fetch approved comments from the table with RLS
+    // Use the public view that excludes user_email for security
     const { data, error } = await supabase
-      .from("article_comments")
+      .from("article_comments_public")
       .select("id, article_id, user_name, content, created_at, updated_at, is_approved, is_published")
       .eq("article_id", articleId)
       .eq("is_approved", true)
