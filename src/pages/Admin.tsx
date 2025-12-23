@@ -70,6 +70,7 @@ import { DreamTeamManager } from "@/components/admin/DreamTeamManager";
 import { LiveMatchBarManager } from "@/components/admin/LiveMatchBarManager";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
 import { SplineManager } from "@/components/admin/SplineManager";
+import { HeroBackgroundManager } from "@/components/admin/HeroBackgroundManager";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -477,6 +478,7 @@ const Admin = () => {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Visibilité & Affichage</h3>
         <SiteVisibilityManager />
+        <HeroBackgroundManager />
         <SplineManager />
         <AuthImageManager />
       </div>
