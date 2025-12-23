@@ -37,10 +37,10 @@ export function HeroSection() {
           {/* Overlay sombre pour lisibilité */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30 z-10" />
 
-          {/* Contenu - positionné en bas */}
-          <div className="relative z-20 madrid-container pb-12 sm:pb-16 lg:pb-20 pt-32 flex items-end min-h-[70vh] sm:min-h-[80vh] lg:min-h-[90vh]">
+          {/* Contenu - centré en bas */}
+          <div className="relative z-20 madrid-container pb-12 sm:pb-16 lg:pb-20 pt-32 flex items-end justify-center min-h-[70vh] sm:min-h-[80vh] lg:min-h-[90vh]">
             <motion.div
-              className="max-w-2xl"
+              className="text-center max-w-3xl"
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
@@ -54,7 +54,7 @@ export function HeroSection() {
               <p className="text-base xs:text-lg sm:text-xl md:text-2xl text-gray-100 mb-4 sm:mb-6 leading-relaxed">
                 Votre chaîne officielle d'actualités, de vidéos et d'informations sur le Real Madrid
               </p>
-              <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 items-start xs:items-center">
+              <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 items-center justify-center">
                 <ShinyButton onClick={() => navigate('/news')}>
                   Dernières Actualités
                 </ShinyButton>
