@@ -7,6 +7,7 @@ import YouTubeVideos from "@/components/home/YouTubeVideos";
 import FeaturedYouTubeVideo from "@/components/home/FeaturedYouTubeVideo";
 import { TrophiesShowcase } from "@/components/home/TrophiesShowcase";
 import { TwitterFlashCarousel } from "@/components/home/TwitterFlashCarousel";
+import { TransferNews } from "@/components/home/TransferNews";
 import { MatchPredictionsWidget } from "@/components/home/MatchPredictionsWidget";
 import { StickyContent } from "@/components/home/StickyContent";
 import { LiveMatchBar } from "@/components/home/LiveMatchBar";
@@ -40,6 +41,7 @@ const Index = () => {
       {isVisible('youtube_videos') && <FeaturedYouTubeVideo />}
       {isVisible('latest_news') && <LatestNews />}
       {isVisible('flash_news') && <TwitterFlashCarousel />}
+      {isVisible('transfer_news') && <TransferNews />}
       
       {isVisible('youtube_videos') && <YouTubeVideos />}
       {isVisible('trophies') && <TrophiesShowcase />}
