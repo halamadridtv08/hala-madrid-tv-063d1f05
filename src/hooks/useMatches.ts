@@ -74,20 +74,26 @@ export function useMatches() {
 
   const getUpcomingMatches = () => {
     const now = new Date();
-    return matches.filter(match => 
-      new Date(match.match_date) >= now && 
-      (match.status === 'upcoming' || match.status === 'live')
-    );
+    return matches
+      .filter(match => {
+        const matchDate = new Date(match.match_date);
+        // Un match est à venir s'il est dans le futur OU s'il a le status upcoming/live
+        return matchDate >= now || match.status === 'upcoming' || match.status === 'live';
+      })
+      .filter(match => match.status !== 'finished')
+      .sort((a, b) => new Date(a.match_date).getTime() - new Date(b.match_date).getTime());
   };
 
   const getPastMatches = () => {
     const now = new Date();
     return matches
-      .filter(match => 
-        new Date(match.match_date) < now || 
-        match.status === 'finished'
-      )
-      .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime()); // Plus récent en premier
+      .filter(match => {
+        const matchDate = new Date(match.match_date);
+        // Un match est passé s'il est terminé OU si sa date est passée
+        return match.status === 'finished' || matchDate < now;
+      })
+      .filter(match => match.status === 'finished') // Ne garder que les matchs terminés
+      .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime());
   };
 
   return {

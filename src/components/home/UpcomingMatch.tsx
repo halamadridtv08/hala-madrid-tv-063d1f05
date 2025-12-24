@@ -30,7 +30,9 @@ export function UpcomingMatch() {
     if (!upcomingMatch) return;
 
     const calculateTimeLeft = () => {
-      const difference = +new Date(upcomingMatch.match_date) - +new Date();
+      const matchDate = new Date(upcomingMatch.match_date);
+      const now = new Date();
+      const difference = matchDate.getTime() - now.getTime();
       
       if (difference > 0) {
         setTimeLeft({
@@ -39,6 +41,9 @@ export function UpcomingMatch() {
           minutes: Math.floor((difference / 1000 / 60) % 60),
           seconds: Math.floor((difference / 1000) % 60),
         });
+      } else {
+        // Le match a commencé ou est passé
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
     };
 
@@ -50,17 +55,37 @@ export function UpcomingMatch() {
 
   const fetchUpcomingMatch = async () => {
     try {
-      // Récupérer le prochain match à venir (status upcoming ou live)
-      const { data, error } = await supabase
+      const now = new Date().toISOString();
+      
+      // D'abord chercher un match avec status 'upcoming' ou 'live' dans le futur
+      let { data, error } = await supabase
         .from('matches')
         .select('*')
         .in('status', ['upcoming', 'live'])
+        .gte('match_date', now)
         .order('match_date', { ascending: true })
         .limit(1)
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         throw error;
+      }
+
+      // Si aucun match trouvé, chercher le prochain match peu importe le status
+      if (!data) {
+        const { data: nextMatch, error: nextError } = await supabase
+          .from('matches')
+          .select('*')
+          .gte('match_date', now)
+          .order('match_date', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (nextError && nextError.code !== 'PGRST116') {
+          throw nextError;
+        }
+        
+        data = nextMatch;
       }
 
       setUpcomingMatch(data || null);
