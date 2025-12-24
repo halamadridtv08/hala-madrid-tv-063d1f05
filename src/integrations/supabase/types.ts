@@ -137,6 +137,45 @@ export type Database = {
         }
         Relationships: []
       }
+      announcement_bar: {
+        Row: {
+          background_color: string | null
+          created_at: string
+          cta_link: string | null
+          cta_text: string | null
+          emoji: string | null
+          id: string
+          is_active: boolean | null
+          message: string
+          text_color: string | null
+          updated_at: string
+        }
+        Insert: {
+          background_color?: string | null
+          created_at?: string
+          cta_link?: string | null
+          cta_text?: string | null
+          emoji?: string | null
+          id?: string
+          is_active?: boolean | null
+          message?: string
+          text_color?: string | null
+          updated_at?: string
+        }
+        Update: {
+          background_color?: string | null
+          created_at?: string
+          cta_link?: string | null
+          cta_text?: string | null
+          emoji?: string | null
+          id?: string
+          is_active?: boolean | null
+          message?: string
+          text_color?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       article_ads: {
         Row: {
           aspect_ratio: string | null
