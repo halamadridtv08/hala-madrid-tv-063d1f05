@@ -73,6 +73,18 @@
   * {
     @apply border-border;
   }
+  
+  /* Text selection styles for better contrast */
+  ::selection {
+    background-color: hsl(210 79% 46% / 0.3);
+    color: hsl(var(--foreground));
+  }
+  
+  .dark ::selection {
+    background-color: hsl(210 79% 60% / 0.4);
+    color: hsl(0 0% 100%);
+  }
+  
   html {
     @apply overflow-x-hidden;
   }
