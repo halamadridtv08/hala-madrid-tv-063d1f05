@@ -103,39 +103,16 @@ export const LazyImage = memo(({
     setIsLoaded(true); // Cacher le spinner même en cas d'erreur
   }, []);
 
-  // Générer URL optimisée Supabase
-  const getOptimizedSrc = (originalSrc: string, targetWidth?: number): string => {
+  // Générer URL optimisée Supabase (désactivé car peut casser les URLs)
+  const getOptimizedSrc = (originalSrc: string): string => {
     if (!originalSrc) return originalSrc;
     
-    if (originalSrc.includes('supabase.co/storage/v1/object/public/')) {
-      const baseUrl = originalSrc.replace('/object/public/', '/render/image/public/');
-      const params = new URLSearchParams();
-      
-      const w = targetWidth || width || 800;
-      params.set('width', Math.min(w, 1920).toString());
-      params.set('quality', '75');
-      params.set('format', 'webp');
-      
-      return `${baseUrl}?${params.toString()}`;
-    }
-    
+    // Pour l'instant, retourner l'URL originale pour éviter les erreurs
+    // L'optimisation Supabase nécessite une configuration spécifique
     return originalSrc;
   };
 
-  // Générer srcSet pour images responsives
-  const generateSrcSet = (): string | undefined => {
-    if (!src || !src.includes('supabase.co/storage/v1/object/public/')) {
-      return undefined;
-    }
-
-    const widths = [320, 640, 960, 1280, 1920];
-    return widths
-      .map(w => `${getOptimizedSrc(src, w)} ${w}w`)
-      .join(', ');
-  };
-
   const optimizedSrc = getOptimizedSrc(src);
-  const srcSet = generateSrcSet();
 
   return (
     <div 
@@ -156,10 +133,10 @@ export const LazyImage = memo(({
         </div>
       )}
       
-      {/* Image d'erreur */}
+      {/* Image d'erreur avec meilleur contraste */}
       {hasError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted">
-          <span className="text-muted-foreground text-sm">Image non disponible</span>
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/80 dark:bg-muted/60">
+          <span className="text-muted-foreground dark:text-muted-foreground/80 text-sm px-2 text-center">Image non disponible</span>
         </div>
       )}
       
@@ -167,14 +144,12 @@ export const LazyImage = memo(({
       {isInView && !hasError && (
         <img
           src={optimizedSrc}
-          srcSet={srcSet}
           sizes={sizes || '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw'}
           alt={alt}
           width={width}
           height={height}
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"
-          fetchPriority={priority ? 'high' : 'auto'}
           onLoad={handleLoad}
           onError={handleError}
           className={cn(
