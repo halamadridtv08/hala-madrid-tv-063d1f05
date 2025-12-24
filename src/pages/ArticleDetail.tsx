@@ -5,14 +5,10 @@ import { Footer } from "@/components/layout/Footer";
 import { SEOHead } from "@/components/SEOHead";
 import { LatestNewsWidget } from "@/components/home/LatestNewsWidget";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { User, Calendar, Image, Video, Play } from "lucide-react";
+import { User, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { PhotoType } from "@/types/Photo";
-import { VideoType } from "@/types/Video";
 import { ArticleVideoPlayer } from "@/components/articles/ArticleVideoPlayer";
 import { ArticleImageGallery } from "@/components/articles/ArticleImageGallery";
 import { ArticleComments } from "@/components/articles/ArticleComments";
@@ -21,6 +17,9 @@ import { ArticleQuiz } from "@/components/articles/ArticleQuiz";
 import { ArticleTweets } from "@/components/articles/ArticleTweets";
 import { RelatedArticles } from "@/components/articles/RelatedArticles";
 import { ArticleAds } from "@/components/articles/ArticleAds";
+import { ArticleReactions } from "@/components/articles/ArticleReactions";
+import { DynamicBreadcrumb } from "@/components/common/DynamicBreadcrumb";
+import { ShareModal } from "@/components/common/ShareModal";
 import DOMPurify from "dompurify";
 import { stripHtml } from "@/utils/stripHtml";
 
@@ -201,13 +200,26 @@ const ArticleDetail = () => {
       <Navbar />
       <main>
         <div className="madrid-container py-8">
+          {/* Breadcrumb */}
+          <DynamicBreadcrumb 
+            customTitle={article.title} 
+            className="mb-6"
+          />
+          
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Contenu de l'article */}
             <div className="lg:col-span-2">
               <div className="mb-8">
-                <Badge className={`${getCategoryColor(article.category)} mb-4`}>
-                  {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
-                </Badge>
+                <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+                  <Badge className={`${getCategoryColor(article.category)}`}>
+                    {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
+                  </Badge>
+                  <ShareModal 
+                    title={article.title}
+                    description={stripHtml(article.description).slice(0, 160)}
+                    url={typeof window !== "undefined" ? window.location.href : undefined}
+                  />
+                </div>
                 <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
                 <div 
                   className="text-xl text-muted-foreground mb-4 prose dark:prose-invert max-w-none" 
@@ -244,6 +256,9 @@ const ArticleDetail = () => {
 
               {/* Inline Ads - Dans l'article */}
               <ArticleAds position="inline" />
+
+              {/* Article Reactions */}
+              <ArticleReactions articleId={id!} className="border-t border-b border-border my-8" />
 
               {article.video_url && (
                 <ArticleVideoPlayer videoUrl={article.video_url} />
