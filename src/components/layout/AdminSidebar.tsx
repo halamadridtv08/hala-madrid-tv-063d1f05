@@ -23,7 +23,8 @@ import {
   Star,
   Tv,
   Bell,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Megaphone
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -47,6 +48,7 @@ const navigationItems = [
   { value: "coaches", label: "Entraîneurs", icon: Users },
   { value: "matches", label: "Matchs", icon: Calendar },
   { value: "live-bar", label: "Barre Live", icon: Tv },
+  { value: "announcement-bar", label: "Barre Annonce", icon: Megaphone },
   { value: "match-control", label: "Centre Match", icon: Radio },
   { value: "opponents", label: "Équipes Adverses", icon: Target },
   { value: "formations", label: "Formations", icon: Target },

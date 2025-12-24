@@ -72,6 +72,7 @@ import { AdminNotifications } from "@/components/admin/AdminNotifications";
 import { SplineManager } from "@/components/admin/SplineManager";
 import { HeroBackgroundManager } from "@/components/admin/HeroBackgroundManager";
 import { TransfersManager } from "@/components/admin/TransfersManager";
+import { AnnouncementBarManager } from "@/components/admin/AnnouncementBarManager";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -572,6 +573,8 @@ const Admin = () => {
   );
 
   const renderLiveBar = () => <LiveMatchBarManager />;
+  
+  const renderAnnouncementBar = () => <AnnouncementBarManager />;
 
   const renderNewsletter = () => (
     <div className="space-y-6">
@@ -641,6 +644,7 @@ const Admin = () => {
           <TabsContent value="coaches">{renderCoaches()}</TabsContent>
           <TabsContent value="matches">{renderMatches()}</TabsContent>
           <TabsContent value="live-bar">{renderLiveBar()}</TabsContent>
+          <TabsContent value="announcement-bar">{renderAnnouncementBar()}</TabsContent>
           <TabsContent value="opponents">{renderOpponents()}</TabsContent>
           <TabsContent value="formations">{renderFormations()}</TabsContent>
           <TabsContent value="lineups">{renderLineups()}</TabsContent>
