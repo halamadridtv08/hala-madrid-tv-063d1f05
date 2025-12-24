@@ -50,14 +50,14 @@ export function UpcomingMatch() {
 
   const fetchUpcomingMatch = async () => {
     try {
+      // Récupérer le prochain match à venir (status upcoming ou live)
       const { data, error } = await supabase
         .from('matches')
         .select('*')
-        .eq('status', 'upcoming')
-        .gte('match_date', new Date().toISOString())
+        .in('status', ['upcoming', 'live'])
         .order('match_date', { ascending: true })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         throw error;

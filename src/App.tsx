@@ -13,6 +13,7 @@ import { InstallPrompt } from "./components/pwa/InstallPrompt";
 import { IntegrationScripts } from "./components/IntegrationScripts";
 import { MediaProtectionProvider } from "./components/common/MediaProtectionProvider";
 import { SessionTimeoutProvider } from "./components/auth/SessionTimeoutProvider";
+import { ScrollToTopButton } from "./components/common/ScrollToTopButton";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -35,6 +36,7 @@ const Predictions = lazy(() => import("./pages/Predictions"));
 const DreamTeam = lazy(() => import("./pages/DreamTeam"));
 const LiveBlog = lazy(() => import("./pages/LiveBlog"));
 const Transfers = lazy(() => import("./pages/Transfers"));
+const PlayerComparator = lazy(() => import("./pages/PlayerComparator"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -66,6 +68,7 @@ const App = () => (
               <IntegrationScripts />
               <MediaProtectionProvider />
               <SessionTimeoutProvider />
+              <ScrollToTopButton />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -86,6 +89,7 @@ const App = () => (
                   <Route path="/predictions" element={<Predictions />} />
                   <Route path="/dream-team" element={<DreamTeam />} />
                   <Route path="/transfers" element={<Transfers />} />
+                  <Route path="/comparator" element={<PlayerComparator />} />
                   <Route path="/live-blog/:matchId" element={<LiveBlog />} />
                   <Route 
                     path="/admin" 
