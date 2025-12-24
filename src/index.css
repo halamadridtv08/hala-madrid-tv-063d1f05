@@ -144,68 +144,152 @@
     @apply transition-transform duration-200 hover:scale-105;
   }
   
-  /* Article content styles */
+  /* Article content styles - Force text colors for dark mode */
   .prose {
-    @apply text-foreground;
+    color: hsl(var(--foreground));
+  }
+  
+  .prose * {
+    color: inherit;
   }
   
   .prose p {
-    @apply mb-4 leading-relaxed text-foreground;
+    margin-bottom: 1rem;
+    line-height: 1.75;
+    color: hsl(var(--foreground));
   }
   
   .prose a {
-    @apply text-primary hover:underline;
+    color: hsl(var(--primary));
+    text-decoration: none;
   }
   
-  .prose strong {
-    @apply font-bold text-foreground;
+  .prose a:hover {
+    text-decoration: underline;
   }
   
-  .prose em {
-    @apply italic;
+  .prose strong, .prose b {
+    font-weight: 700;
+    color: hsl(var(--foreground));
+  }
+  
+  .prose em, .prose i {
+    font-style: italic;
+    color: hsl(var(--foreground));
   }
   
   .prose ul, .prose ol {
-    @apply my-4 pl-6;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+    color: hsl(var(--foreground));
   }
   
   .prose li {
-    @apply mb-2 text-foreground;
+    margin-bottom: 0.5rem;
+    color: hsl(var(--foreground));
   }
   
-  .prose table {
-    @apply w-full border-collapse my-4;
-  }
-  .prose table th {
-    @apply border border-border bg-muted px-3 py-2 text-left font-semibold text-foreground;
-  }
-  .prose table td {
-    @apply border border-border px-3 py-2 text-foreground;
-  }
-  .prose table tr:hover {
-    @apply bg-muted/50;
-  }
-  
-  .prose blockquote {
-    @apply border-l-4 border-primary pl-4 py-2 my-4 italic bg-muted/30 rounded-r-md;
-  }
-  .prose blockquote p {
-    @apply text-muted-foreground;
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    color: hsl(var(--foreground));
+    font-weight: 700;
   }
   
   .prose h2 {
-    @apply text-2xl font-bold mt-8 mb-4 text-foreground;
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
   }
+  
   .prose h3 {
-    @apply text-xl font-semibold mt-6 mb-3 text-foreground;
+    font-size: 1.25rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .prose table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .prose table th {
+    border: 1px solid hsl(var(--border));
+    background-color: hsl(var(--muted));
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+  }
+  
+  .prose table td {
+    border: 1px solid hsl(var(--border));
+    padding: 0.5rem 0.75rem;
+    color: hsl(var(--foreground));
+  }
+  
+  .prose table tr:hover {
+    background-color: hsl(var(--muted) / 0.5);
+  }
+  
+  .prose blockquote {
+    border-left: 4px solid hsl(var(--primary));
+    padding-left: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    font-style: italic;
+    background-color: hsl(var(--muted) / 0.3);
+    border-radius: 0 0.375rem 0.375rem 0;
+  }
+  
+  .prose blockquote p {
+    color: hsl(var(--muted-foreground));
+  }
+  
+  /* Force span and div text colors in prose */
+  .prose span, .prose div {
+    color: hsl(var(--foreground));
   }
   
   /* Social media embeds */
   .prose .twitter-tweet,
   .prose .tiktok-embed {
-    @apply mx-auto my-6;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
   }
+  
   .prose iframe[src*="instagram.com"] {
-    @apply mx-auto my-6 rounded-lg;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0.5rem;
+  }
+  
+  /* Dark mode prose invert fallback */
+  .dark .prose,
+  .dark .prose p,
+  .dark .prose li,
+  .dark .prose span,
+  .dark .prose div,
+  .dark .prose strong,
+  .dark .prose em,
+  .dark .prose h1,
+  .dark .prose h2,
+  .dark .prose h3,
+  .dark .prose h4,
+  .dark .prose h5,
+  .dark .prose h6 {
+    color: hsl(210 40% 98%);
+  }
+  
+  .dark .prose table th,
+  .dark .prose table td {
+    color: hsl(210 40% 98%);
   }
 }
