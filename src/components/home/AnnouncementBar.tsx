@@ -22,7 +22,7 @@ export function AnnouncementBar() {
       )}
       <span className="font-medium">{announcement.message}</span>
       
-      {announcement.cta_text && announcement.cta_link && (
+      {announcement.cta_text?.trim() && announcement.cta_link?.trim() && (
         isExternal ? (
           <a
             href={announcement.cta_link}
