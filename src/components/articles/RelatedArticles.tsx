@@ -40,7 +40,7 @@ export const RelatedArticles = ({ currentArticleId, category }: RelatedArticlesP
       .neq("id", currentArticleId)
       .gte("published_at", twentyFourHoursAgo.toISOString())
       .order("view_count", { ascending: false, nullsFirst: false })
-      .limit(6);
+      .limit(3);
 
     if (!error && data && data.length > 0) {
       setArticles(data);
@@ -52,7 +52,7 @@ export const RelatedArticles = ({ currentArticleId, category }: RelatedArticlesP
         .eq("is_published", true)
         .neq("id", currentArticleId)
         .order("view_count", { ascending: false, nullsFirst: false })
-        .limit(6);
+        .limit(3);
 
       if (!fallbackError && fallbackData) {
         setArticles(fallbackData);
