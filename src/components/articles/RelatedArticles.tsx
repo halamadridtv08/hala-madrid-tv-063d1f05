@@ -25,21 +25,38 @@ export const RelatedArticles = ({ currentArticleId, category }: RelatedArticlesP
   const [articles, setArticles] = useState<Article[]>([]);
 
   useEffect(() => {
-    fetchRelatedArticles();
-  }, [currentArticleId, category]);
+    fetchMostReadArticles();
+  }, [currentArticleId]);
 
-  const fetchRelatedArticles = async () => {
+  const fetchMostReadArticles = async () => {
+    // Calculate 24 hours ago
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
     const { data, error } = await supabase
       .from("articles")
-      .select("id, title, description, image_url, category, published_at, read_time")
+      .select("id, title, description, image_url, category, published_at, read_time, view_count")
       .eq("is_published", true)
-      .eq("category", category)
       .neq("id", currentArticleId)
-      .order("published_at", { ascending: false })
+      .gte("published_at", twentyFourHoursAgo.toISOString())
+      .order("view_count", { ascending: false, nullsFirst: false })
       .limit(6);
 
-    if (!error && data) {
+    if (!error && data && data.length > 0) {
       setArticles(data);
+    } else {
+      // Fallback: if no articles in last 24h, get most read overall
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("articles")
+        .select("id, title, description, image_url, category, published_at, read_time, view_count")
+        .eq("is_published", true)
+        .neq("id", currentArticleId)
+        .order("view_count", { ascending: false, nullsFirst: false })
+        .limit(6);
+
+      if (!fallbackError && fallbackData) {
+        setArticles(fallbackData);
+      }
     }
   };
 
