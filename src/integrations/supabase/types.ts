@@ -426,6 +426,38 @@ export type Database = {
           },
         ]
       }
+      article_view_history: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          user_id: string | null
+          visitor_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          user_id?: string | null
+          visitor_id: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string | null
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_view_history_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       articles: {
         Row: {
           author_id: string
@@ -1811,6 +1843,51 @@ export type Database = {
           logo_url?: string | null
           name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      page_views: {
+        Row: {
+          browser: string | null
+          country: string | null
+          created_at: string
+          device_type: string | null
+          id: string
+          page_path: string
+          page_title: string | null
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+          visitor_id: string
+        }
+        Insert: {
+          browser?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          page_path: string
+          page_title?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          visitor_id: string
+        }
+        Update: {
+          browser?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          page_path?: string
+          page_title?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          visitor_id?: string
         }
         Relationships: []
       }

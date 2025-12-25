@@ -15,6 +15,7 @@ import { MediaProtectionProvider } from "./components/common/MediaProtectionProv
 import { SessionTimeoutProvider } from "./components/auth/SessionTimeoutProvider";
 import { ScrollToTopButton } from "./components/common/ScrollToTopButton";
 import { BadgeUnlockToast } from "./components/badges/BadgesDisplay";
+import { PageTracker } from "./components/common/PageTracker";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -72,6 +73,7 @@ const App = () => (
               <SessionTimeoutProvider />
               <ScrollToTopButton />
               <BadgeUnlockToast />
+              <PageTracker />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />

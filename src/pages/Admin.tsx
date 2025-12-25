@@ -73,6 +73,7 @@ import { SplineManager } from "@/components/admin/SplineManager";
 import { HeroBackgroundManager } from "@/components/admin/HeroBackgroundManager";
 import { TransfersManager } from "@/components/admin/TransfersManager";
 import { AnnouncementBarManager } from "@/components/admin/AnnouncementBarManager";
+import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -598,6 +599,9 @@ const Admin = () => {
   );
 
   const renderTransfers = () => <TransfersManager />;
+  
+  const renderAnalytics = () => <AnalyticsDashboard />;
+  
   return <div className="min-h-screen bg-background flex">
       {/* Sidebar desktop */}
       <AdminSidebar 
@@ -636,6 +640,7 @@ const Admin = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
 
           <TabsContent value="dashboard">{renderDashboard()}</TabsContent>
+          <TabsContent value="analytics">{renderAnalytics()}</TabsContent>
           <TabsContent value="articles">{renderArticles()}</TabsContent>
           <TabsContent value="special-articles">{renderSpecialArticles()}</TabsContent>
           <TabsContent value="videos">{renderVideos()}</TabsContent>
