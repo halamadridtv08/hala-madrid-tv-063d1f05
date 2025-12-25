@@ -24,7 +24,8 @@ import {
   Tv,
   Bell,
   ArrowRightLeft,
-  Megaphone
+  Megaphone,
+  TrendingUp
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ interface AdminSidebarProps {
 
 const navigationItems = [
   { value: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { value: "analytics", label: "Analytics", icon: TrendingUp },
   { value: "articles", label: "Articles", icon: FileText },
   { value: "special-articles", label: "Articles Spéciaux", icon: Trophy },
   { value: "videos", label: "Vidéos", icon: Video },
