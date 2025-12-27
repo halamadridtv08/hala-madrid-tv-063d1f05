@@ -5,8 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { YouTubeVideo } from "@/types/YouTubeVideo";
+import { YouTubeVideo, YOUTUBE_VIDEO_CATEGORIES } from "@/types/YouTubeVideo";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface YouTubeVideoFormProps {
   video?: YouTubeVideo;
@@ -22,6 +23,7 @@ const YouTubeVideoForm = ({ video, onSuccess, onCancel }: YouTubeVideoFormProps)
     youtube_url: video?.youtube_url || "",
     is_published: video?.is_published ?? true,
     is_featured: video?.is_featured ?? false,
+    category: video?.category || "YouTube",
   });
 
   useEffect(() => {
@@ -32,6 +34,7 @@ const YouTubeVideoForm = ({ video, onSuccess, onCancel }: YouTubeVideoFormProps)
         youtube_url: video.youtube_url,
         is_published: video.is_published,
         is_featured: video.is_featured ?? false,
+        category: video.category || "YouTube",
       });
     }
   }, [video]);
@@ -113,6 +116,25 @@ const YouTubeVideoForm = ({ video, onSuccess, onCancel }: YouTubeVideoFormProps)
                 className="mt-2 rounded-lg max-h-32 object-cover"
               />
             )}
+          </div>
+
+          <div>
+            <Label htmlFor="category">Catégorie</Label>
+            <Select
+              value={formData.category}
+              onValueChange={(value) => setFormData({ ...formData, category: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner une catégorie" />
+              </SelectTrigger>
+              <SelectContent>
+                {YOUTUBE_VIDEO_CATEGORIES.map((cat) => (
+                  <SelectItem key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center space-x-2">
