@@ -183,11 +183,13 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
     return player?.profile_image_url || player?.image_url || null;
   };
 
-  // Extraire les événements
-  const goals = matchDetails.goals || [];
-  const substitutions = matchDetails.substitutions || [];
-  const cards = matchDetails.cards || { yellow: {}, red: {} };
-  const fouls = Array.isArray(matchDetails.fouls) ? matchDetails.fouls : [];
+  // Extraire les événements - supporter plusieurs structures de données
+  const goals = matchDetails.goals || matchDetails.events?.goals || matchDetails.raw?.events?.goals || [];
+  const substitutions = matchDetails.substitutions || matchDetails.events?.substitutions || matchDetails.raw?.events?.substitutions || [];
+  const cards = matchDetails.cards || matchDetails.events?.cards || matchDetails.raw?.events?.cards || { yellow: {}, red: {} };
+  const fouls = Array.isArray(matchDetails.fouls) 
+    ? matchDetails.fouls 
+    : (Array.isArray(matchDetails.events?.fouls) ? matchDetails.events.fouls : []);
 
   // Fonction pour parser les cartons depuis le format "player (minute')"
   const parseCardString = (cardStr: string, team: string): { player: string; minute: number; team: string } | null => {
