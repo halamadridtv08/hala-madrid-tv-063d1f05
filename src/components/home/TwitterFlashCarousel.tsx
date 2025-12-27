@@ -177,7 +177,7 @@ export const TwitterFlashCarousel = () => {
                           {getCategoryIcon(news.category)}
                         </div>
                       </div>
-                      <p className="text-sm text-foreground leading-relaxed mb-3">
+                      <p className="text-sm text-foreground leading-relaxed mb-3 whitespace-pre-line">
                         <TranslatedText text={news.content} as="span" />
                       </p>
                       <div className="text-xs text-muted-foreground">
@@ -230,7 +230,7 @@ export const TwitterFlashCarousel = () => {
                           {getCategoryIcon(news.category)}
                         </div>
                       </div>
-                      <p className="text-sm text-foreground leading-relaxed mb-3">
+                      <p className="text-sm text-foreground leading-relaxed mb-3 whitespace-pre-line">
                         <TranslatedText text={news.content} as="span" />
                       </p>
                       <div className="text-xs text-muted-foreground">
