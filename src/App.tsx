@@ -40,6 +40,8 @@ const LiveBlog = lazy(() => import("./pages/LiveBlog"));
 const Transfers = lazy(() => import("./pages/Transfers"));
 const PlayerComparator = lazy(() => import("./pages/PlayerComparator"));
 const Profile = lazy(() => import("./pages/Profile"));
+const AdminSecurity = lazy(() => import("./pages/AdminSecurity"));
+const AdminSEO = lazy(() => import("./pages/AdminSEO"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -102,6 +104,22 @@ const App = () => (
                     element={
                       <ProtectedRoute requireAdmin={true}>
                         <Admin />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/admin/security" 
+                    element={
+                      <ProtectedRoute requireAdmin={true}>
+                        <AdminSecurity />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/admin/seo" 
+                    element={
+                      <ProtectedRoute requireAdmin={true}>
+                        <AdminSEO />
                       </ProtectedRoute>
                     } 
                   />

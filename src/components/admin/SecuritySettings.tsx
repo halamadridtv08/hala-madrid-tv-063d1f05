@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,12 +23,16 @@ interface LoginAttempt {
 }
 
 export function SecuritySettings() {
+  const [searchParams] = useSearchParams();
   const [has2FA, setHas2FA] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loginAttempts, setLoginAttempts] = useState<LoginAttempt[]>([]);
   const [showSetup, setShowSetup] = useState(false);
   const { toast } = useToast();
   const { user, isAdmin } = useAuth();
+  
+  // Check if we should open logs tab by default
+  const defaultTab = searchParams.get('tab') === 'logs' ? 'logs' : '2fa';
 
   useEffect(() => {
     if (user && isAdmin) {
@@ -155,7 +160,7 @@ export function SecuritySettings() {
         </Badge>
       </div>
 
-      <Tabs defaultValue="2fa" className="space-y-4">
+      <Tabs defaultValue={defaultTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="2fa">Authentification 2FA</TabsTrigger>
           <TabsTrigger value="logs">Historique des connexions</TabsTrigger>

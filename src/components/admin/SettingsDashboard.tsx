@@ -72,10 +72,7 @@ const SettingsDashboard = () => {
   };
 
   const handleConfigureSEO = () => {
-    toast({
-      title: "Configuration SEO",
-      description: "Cette fonctionnalité sera bientôt disponible",
-    });
+    navigate('/admin/seo');
   };
 
   return (
@@ -146,7 +143,7 @@ const SettingsDashboard = () => {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => navigate('/admin/security')}
+              onClick={() => navigate('/admin/security?tab=logs')}
             >
               Voir les logs
             </Button>
