@@ -11,11 +11,32 @@ import xLogo from "@/assets/x-logo.jpg";
 import { useFlashNewsWithSources } from "@/hooks/useFlashNewsWithSources";
 import { FlashNewsCategory } from "@/types/FlashNews";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+// Convertit le HTML en texte simple avec retours à la ligne
+const stripHtmlToText = (html: string): string => {
+  if (!html) return "";
+  // Remplacer les divs, br et p par des retours à la ligne
+  let text = html
+    .replace(/<div>/gi, '\n')
+    .replace(/<\/div>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<p>/gi, '\n')
+    .replace(/<\/p>/gi, '')
+    .replace(/&nbsp;/gi, ' ');
+  // Supprimer toutes les autres balises HTML
+  text = text.replace(/<[^>]*>/g, '');
+  // Décoder les entités HTML restantes
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text;
+  text = textarea.value;
+  // Nettoyer les retours à la ligne multiples et les espaces
+  return text.trim().replace(/\n{3,}/g, '\n\n');
+};
 
 const categoryLabels: Record<FlashNewsCategory, string> = {
   transfer: "Transferts",
@@ -178,7 +199,7 @@ export const TwitterFlashCarousel = () => {
                         </div>
                       </div>
                       <p className="text-sm text-foreground leading-relaxed mb-3 whitespace-pre-line">
-                        <TranslatedText text={news.content} as="span" />
+                        <TranslatedText text={stripHtmlToText(news.content)} as="span" />
                       </p>
                       <div className="text-xs text-muted-foreground">
                         {getTimestamp(news.created_at)}
@@ -231,7 +252,7 @@ export const TwitterFlashCarousel = () => {
                         </div>
                       </div>
                       <p className="text-sm text-foreground leading-relaxed mb-3 whitespace-pre-line">
-                        <TranslatedText text={news.content} as="span" />
+                        <TranslatedText text={stripHtmlToText(news.content)} as="span" />
                       </p>
                       <div className="text-xs text-muted-foreground">
                         {getTimestamp(news.created_at)}
