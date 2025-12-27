@@ -223,16 +223,6 @@ const Players = () => {
                       <h3 className="font-bold text-gray-900 dark:text-white">{coach.name}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-300">{coach.role}</p>
                     </div>)}
-                  {displayedStaffMembers.length < 4 && !showAllStaff && <>
-                      <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
-                        <h3 className="font-bold text-gray-900 dark:text-white">Francesco Mauri</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Préparateur Physique</p>
-                      </div>
-                      <div className="p-4 bg-white dark:bg-gray-700 rounded-lg shadow">
-                        <h3 className="font-bold text-gray-900 dark:text-white">Luis Llopis</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Entraîneur des Gardiens</p>
-                      </div>
-                    </>}
                 </div>
 
                 {hasMoreStaff && <div className="mt-4 text-center">
