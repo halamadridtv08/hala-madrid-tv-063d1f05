@@ -149,41 +149,9 @@ export function Navbar() {
               </NavigationMenuItem>
               
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-sm lg:text-base px-2 py-1">Média</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[320px] gap-3 p-4 md:w-[400px] md:grid-cols-2 lg:w-[500px]">
-                    <li>
-                      <NavigationMenuLink asChild>
-                        <Link to="/training" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                          <div className="text-xs lg:text-sm font-medium leading-none">Entraînements</div>
-                          <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
-                            Vidéos des séances d'entraînement
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                    </li>
-                    <li>
-                      <NavigationMenuLink asChild>
-                        <Link to="/press" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                          <div className="text-xs lg:text-sm font-medium leading-none">Conférences</div>
-                          <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
-                            Conférences de presse du staff et des joueurs
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                    </li>
-                    <li>
-                      <NavigationMenuLink asChild>
-                        <Link to="/kits" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                          <div className="text-xs lg:text-sm font-medium leading-none">Maillots</div>
-                          <p className="line-clamp-2 text-xs leading-snug text-muted-foreground">
-                            Découvrez les maillots du Real Madrid
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                    </li>
-                  </ul>
-                </NavigationMenuContent>
+                <Link to="/kits" className="text-foreground hover:text-madrid-blue font-medium transition-colors text-sm lg:text-base px-2 py-1">
+                  Maillots
+                </Link>
               </NavigationMenuItem>
               
               <NavigationMenuItem>
