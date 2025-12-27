@@ -60,6 +60,18 @@ export const FlashNewsForm = ({
     }
   };
 
+  // Format scheduled_at for datetime-local input (YYYY-MM-DDTHH:mm)
+  const formatScheduledAt = (dateString: string | null | undefined): string => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "";
+      return date.toISOString().slice(0, 16);
+    } catch {
+      return "";
+    }
+  };
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -70,7 +82,7 @@ export const FlashNewsForm = ({
       verified: flashNews?.verified ?? true,
       is_published: flashNews?.is_published ?? false,
       status: flashNews?.status || "draft",
-      scheduled_at: flashNews?.scheduled_at || ""
+      scheduled_at: formatScheduledAt(flashNews?.scheduled_at)
     }
   });
 
@@ -85,7 +97,7 @@ export const FlashNewsForm = ({
         verified: flashNews.verified ?? true,
         is_published: flashNews.is_published ?? false,
         status: flashNews.status || "draft",
-        scheduled_at: flashNews.scheduled_at || ""
+        scheduled_at: formatScheduledAt(flashNews.scheduled_at)
       });
       
       // Find and set the selected source
@@ -146,10 +158,19 @@ export const FlashNewsForm = ({
   const onSubmit = async (values: FormValues) => {
     try {
       setLoading(true);
+      
+      // Convert empty scheduled_at to null for database
+      const scheduledAtValue = values.scheduled_at && values.scheduled_at.trim() !== "" 
+        ? new Date(values.scheduled_at).toISOString() 
+        : null;
+      
       if (flashNews) {
         const { error } = await supabase
           .from('flash_news')
-          .update(values)
+          .update({
+            ...values,
+            scheduled_at: scheduledAtValue
+          })
           .eq('id', flashNews.id);
         if (error) throw error;
         toast({
@@ -167,7 +188,7 @@ export const FlashNewsForm = ({
             verified: values.verified,
             is_published: values.is_published,
             status: values.status,
-            scheduled_at: values.scheduled_at || null
+            scheduled_at: scheduledAtValue
           }]);
         if (error) throw error;
         toast({
