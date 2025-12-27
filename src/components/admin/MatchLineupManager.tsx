@@ -72,7 +72,7 @@ export function MatchLineupManager() {
     const { data, error } = await supabase
       .from("matches")
       .select("id, home_team, away_team, match_date")
-      .order("match_date", { ascending: true });
+      .order("match_date", { ascending: false });
 
     if (error) {
       toast.error("Erreur lors du chargement des matchs");
