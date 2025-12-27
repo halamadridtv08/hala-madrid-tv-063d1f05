@@ -25,20 +25,20 @@ export function RichTextEditor({
   const editorRef = useRef<HTMLDivElement>(null);
   const isUpdatingRef = useRef(false);
 
-  // Initialize editor content on mount
+  // Sync editor content with value prop
   useEffect(() => {
-    if (editorRef.current && !isUpdatingRef.current && value) {
+    if (editorRef.current && !isUpdatingRef.current) {
       const sanitized = DOMPurify.sanitize(value, {
         ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'iframe', 'blockquote', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'section'],
         ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'width', 'height', 'controls', 'class', 'target', 'rel', 'style', 'frameborder', 'allow', 'allowfullscreen', 'scrolling', 'allowtransparency', 'data-theme', 'cite', 'data-video-id']
       });
       
-      // Only update if empty (initial load)
-      if (editorRef.current.innerHTML === '' || editorRef.current.innerHTML === '<br>') {
+      // Update if the editor content differs from the value
+      if (editorRef.current.innerHTML !== sanitized) {
         editorRef.current.innerHTML = sanitized;
       }
     }
-  }, []);
+  }, [value]);
 
   const handleInput = () => {
     if (editorRef.current && !isUpdatingRef.current) {
