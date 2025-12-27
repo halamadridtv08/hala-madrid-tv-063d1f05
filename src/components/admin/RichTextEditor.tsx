@@ -86,6 +86,22 @@ export function RichTextEditor({
     }
   };
 
+  // Validate URLs for specific social media platforms with strict domain checking
+  const validateSocialUrl = (url: string, allowedDomains: string[]): boolean => {
+    if (!validateUrl(url)) return false;
+    
+    try {
+      const parsed = new URL(url.trim());
+      const hostname = parsed.hostname.toLowerCase();
+      // Check if hostname matches or is a subdomain of allowed domains
+      return allowedDomains.some(domain => 
+        hostname === domain || hostname.endsWith('.' + domain)
+      );
+    } catch {
+      return false;
+    }
+  };
+
   const insertLink = () => {
     const url = prompt("Entrez l'URL du lien:", "https://");
     if (url) {
@@ -156,37 +172,53 @@ export function RichTextEditor({
 
   const insertTwitterEmbed = () => {
     const url = prompt("Entrez l'URL du tweet:", "https://twitter.com/");
-    if (!url || (!url.includes('twitter.com') && !url.includes('x.com'))) {
-      if (url) alert("URL Twitter/X invalide");
+    if (!url) return;
+    
+    // Validate URL with strict domain checking
+    if (!validateSocialUrl(url, ['twitter.com', 'x.com'])) {
+      alert("URL Twitter/X invalide. Veuillez utiliser une URL valide de twitter.com ou x.com");
       return;
     }
     
-    const embedHTML = `<blockquote class="twitter-tweet" data-theme="dark"><a href="${url}"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>`;
+    // Escape the URL for safe HTML insertion
+    const escapedUrl = escapeHtml(url.trim());
+    const embedHTML = `<blockquote class="twitter-tweet" data-theme="dark"><a href="${escapedUrl}"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>`;
     document.execCommand('insertHTML', false, embedHTML);
     handleInput();
   };
 
   const insertInstagramEmbed = () => {
     const url = prompt("Entrez l'URL du post Instagram:", "https://www.instagram.com/p/");
-    if (!url || !url.includes('instagram.com')) {
-      if (url) alert("URL Instagram invalide");
+    if (!url) return;
+    
+    // Validate URL with strict domain checking
+    if (!validateSocialUrl(url, ['instagram.com'])) {
+      alert("URL Instagram invalide. Veuillez utiliser une URL valide de instagram.com");
       return;
     }
     
-    const embedUrl = url.endsWith('/') ? url + 'embed' : url + '/embed';
-    const embedHTML = `<iframe src="${embedUrl}" width="100%" height="600" frameborder="0" scrolling="no" allowtransparency="true" style="max-width: 540px; margin: 1rem auto; display: block;"></iframe>`;
+    // Escape the URL for safe HTML insertion
+    const trimmedUrl = url.trim();
+    const embedUrl = trimmedUrl.endsWith('/') ? trimmedUrl + 'embed' : trimmedUrl + '/embed';
+    const escapedEmbedUrl = escapeHtml(embedUrl);
+    const embedHTML = `<iframe src="${escapedEmbedUrl}" width="100%" height="600" frameborder="0" scrolling="no" allowtransparency="true" style="max-width: 540px; margin: 1rem auto; display: block;"></iframe>`;
     document.execCommand('insertHTML', false, embedHTML);
     handleInput();
   };
 
   const insertTikTokEmbed = () => {
     const url = prompt("Entrez l'URL de la vidéo TikTok:", "https://www.tiktok.com/@");
-    if (!url || !url.includes('tiktok.com')) {
-      if (url) alert("URL TikTok invalide");
+    if (!url) return;
+    
+    // Validate URL with strict domain checking
+    if (!validateSocialUrl(url, ['tiktok.com'])) {
+      alert("URL TikTok invalide. Veuillez utiliser une URL valide de tiktok.com");
       return;
     }
     
-    const embedHTML = `<blockquote class="tiktok-embed" cite="${url}" data-video-id="" style="max-width: 605px; min-width: 325px; margin: 1rem auto;"><section><a href="${url}">Voir sur TikTok</a></section></blockquote><script async src="https://www.tiktok.com/embed.js"></script>`;
+    // Escape the URL for safe HTML insertion
+    const escapedUrl = escapeHtml(url.trim());
+    const embedHTML = `<blockquote class="tiktok-embed" cite="${escapedUrl}" data-video-id="" style="max-width: 605px; min-width: 325px; margin: 1rem auto;"><section><a href="${escapedUrl}">Voir sur TikTok</a></section></blockquote><script async src="https://www.tiktok.com/embed.js"></script>`;
     document.execCommand('insertHTML', false, embedHTML);
     handleInput();
   };
