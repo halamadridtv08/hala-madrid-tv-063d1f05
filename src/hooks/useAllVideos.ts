@@ -118,7 +118,7 @@ export function useAllVideos() {
               description: undefined,
               video_url: videoUrl,
               thumbnail_url: y.thumbnail_url || (youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : undefined),
-              category: 'YouTube',
+              category: (y as any).category || 'YouTube',
               source: 'youtube',
               created_at: y.created_at,
               is_short: videoUrl.includes('/shorts/') || false

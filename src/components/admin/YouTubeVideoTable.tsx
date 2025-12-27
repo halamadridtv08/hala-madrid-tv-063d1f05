@@ -139,6 +139,7 @@ const YouTubeVideoTable = ({ videos, setVideos }: YouTubeVideoTableProps) => {
               <TableRow>
                 <TableHead>Miniature</TableHead>
                 <TableHead>Titre</TableHead>
+                <TableHead>Catégorie</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead>Featured</TableHead>
                 <TableHead>Date</TableHead>
@@ -157,6 +158,11 @@ const YouTubeVideoTable = ({ videos, setVideos }: YouTubeVideoTableProps) => {
                   </TableCell>
                   <TableCell className="font-medium max-w-xs truncate">
                     {video.title}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">
+                      {video.category || "YouTube"}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant={video.is_published ? "default" : "secondary"}>

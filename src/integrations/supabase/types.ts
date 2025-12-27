@@ -2896,6 +2896,7 @@ export type Database = {
       }
       youtube_videos: {
         Row: {
+          category: string | null
           created_at: string
           id: string
           is_featured: boolean | null
@@ -2906,6 +2907,7 @@ export type Database = {
           youtube_url: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           id?: string
           is_featured?: boolean | null
@@ -2916,6 +2918,7 @@ export type Database = {
           youtube_url: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           id?: string
           is_featured?: boolean | null
