@@ -6,7 +6,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Twitter, TrendingUp, Newspaper } from "lucide-react";
+import { TrendingUp, Newspaper } from "lucide-react";
+import xLogo from "@/assets/x-logo.jpg";
 import { useFlashNewsWithSources } from "@/hooks/useFlashNewsWithSources";
 import { FlashNewsCategory } from "@/types/FlashNews";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -94,8 +95,8 @@ export const TwitterFlashCarousel = () => {
     <section className="py-12 sm:py-16 bg-gradient-to-b from-background to-muted/30">
       <div className="container mx-auto px-4">
         <div className="flex items-center gap-3 mb-6 sm:mb-8">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#1DA1F2]/10">
-            <Twitter className="w-6 h-6 text-[#1DA1F2]" />
+          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-foreground/10 overflow-hidden">
+            <img src={xLogo} alt="X" className="w-8 h-8 object-contain" />
           </div>
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
