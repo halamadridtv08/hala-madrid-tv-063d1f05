@@ -18,10 +18,10 @@ export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStati
   const homeKey = normalizeTeamName(homeTeam);
   const awayKey = normalizeTeamName(awayTeam);
 
-  // Support both formats: old (statistics.*) and new (direct)
-  const statistics = matchDetails.statistics || matchDetails;
-  const possession = matchDetails.possession || {};
-  const cards = matchDetails.cards || {};
+  // Support multiple data formats: statistics nested, direct, or in raw
+  const statistics = matchDetails.statistics || matchDetails.raw?.statistics || matchDetails;
+  const possession = matchDetails.possession || matchDetails.match?.possession || matchDetails.raw?.match?.possession || {};
+  const cards = matchDetails.cards || matchDetails.events?.cards || matchDetails.raw?.events?.cards || {};
 
   // Parse possession percentages
   const parsePossession = (possessionStr: string) => {

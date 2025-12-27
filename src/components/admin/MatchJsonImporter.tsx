@@ -103,6 +103,38 @@ export const MatchJsonImporter = () => {
     }
   };
 
+  // Fonction pour formater les cartons dans le format attendu par MatchEvents
+  const formatCardsForDisplay = (events: ImportedMatchJson['events']): { yellow: Record<string, string[]>; red: Record<string, string[]> } => {
+    const cards = { yellow: {} as Record<string, string[]>, red: {} as Record<string, string[]> };
+    
+    // Traiter les cartons depuis les fautes si disponibles
+    if (events?.fouls) {
+      for (const foul of events.fouls) {
+        if (!cards.yellow[foul.team]) {
+          cards.yellow[foul.team] = [];
+        }
+        cards.yellow[foul.team].push(`${foul.player} (${foul.minute}')`);
+      }
+    }
+    
+    // Si les cartons sont déjà définis, les formater correctement
+    if (events?.cards) {
+      if (events.cards.yellow) {
+        for (const [team, count] of Object.entries(events.cards.yellow)) {
+          // Si c'est un nombre, on ne peut pas créer les entrées sans noms de joueurs
+          // Les données seront récupérées depuis fouls
+        }
+      }
+      if (events.cards.red) {
+        for (const [team, count] of Object.entries(events.cards.red)) {
+          // Idem
+        }
+      }
+    }
+    
+    return cards;
+  };
+
   const transformImportedJson = async (imported: ImportedMatchJson): Promise<MatchJsonData> => {
     const homeTeam = imported.match.teams.home;
     const awayTeam = imported.match.teams.away;
@@ -110,6 +142,9 @@ export const MatchJsonImporter = () => {
     // Normalize competition name
     const competitionRaw = imported.match.competition.replace(/_/g, ' ').toUpperCase();
     const normalizedCompetition = await normalizeCompetitionName(competitionRaw);
+    
+    // Formater les cartons pour l'affichage
+    const formattedCards = formatCardsForDisplay(imported.events);
     
     return {
       home_team: homeTeam === "real_madrid" ? "Real Madrid" : homeTeam.charAt(0).toUpperCase() + homeTeam.slice(1),
@@ -121,16 +156,30 @@ export const MatchJsonImporter = () => {
       competition: normalizedCompetition,
       status: imported.match.status === "termine" ? "finished" : imported.match.status,
       match_details: {
-        // Sauvegarder TOUTES les données brutes du JSON
-        match: imported.match,
-        events: imported.events,
-        statistics: imported.statistics,
-        // Données normalisées pour l'usage dans l'app
-        possession: imported.match.possession,
-        goals: imported.events?.goals,
-        cards: imported.events?.cards,
-        substitutions: imported.events?.substitutions,
-        fouls: imported.events?.fouls
+        // Événements à la racine pour MatchEvents
+        goals: imported.events?.goals || [],
+        substitutions: imported.events?.substitutions || [],
+        cards: formattedCards,
+        fouls: imported.events?.fouls || [],
+        possession: imported.match.possession || {},
+        
+        // Statistiques sous statistics pour MatchStatistics
+        statistics: {
+          shots: imported.statistics?.shots,
+          passes: imported.statistics?.passes,
+          fouls: imported.statistics?.fouls,
+          corners: imported.statistics?.corners,
+          tackles: imported.statistics?.tackles,
+          offsides: imported.statistics?.offsides,
+          goalkeeper_saves: imported.statistics?.goalkeeper_saves
+        },
+        
+        // Conserver les données brutes pour référence
+        raw: {
+          match: imported.match,
+          events: imported.events,
+          statistics: imported.statistics
+        }
       }
     };
   };
@@ -157,6 +206,20 @@ export const MatchJsonImporter = () => {
     
     const isHome = realMadridKey === teams[0];
     
+    // Formater les cartons si disponibles
+    let formattedCards = data.cards || { yellow: {}, red: {} };
+    
+    // Si les cartons viennent des fautes, les formater
+    if (!data.cards && data.fouls && Array.isArray(data.fouls)) {
+      formattedCards = { yellow: {} as Record<string, string[]>, red: {} };
+      for (const foul of data.fouls) {
+        if (!formattedCards.yellow[foul.team]) {
+          formattedCards.yellow[foul.team] = [];
+        }
+        formattedCards.yellow[foul.team].push(`${foul.player} (${foul.minute}')`);
+      }
+    }
+    
     return {
       home_team: isHome ? "Real Madrid" : opponentKey?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Équipe adverse",
       away_team: isHome ? opponentKey?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Équipe adverse" : "Real Madrid",
@@ -167,22 +230,26 @@ export const MatchJsonImporter = () => {
       competition: data.competition ? await normalizeCompetitionName(data.competition) : "La Liga",
       status: data.status || "finished",
       match_details: {
-        // Sauvegarder toutes les données brutes
-        raw: data,
-        // Données structurées
-        possession: data.possession,
-        goals: data.goals,
-        cards: data.cards,
-        substitutions: data.substitutions,
-        fouls: data.fouls,
-        penalties_committed: data.penalties_committed,
-        injuries: data.injuries,
-        shots: data.shots,
-        offsides: data.offsides,
-        corners: data.corners,
-        goalkeeper_saves: data.goalkeeper_saves,
-        tackles: data.tackles,
-        passes: data.passes
+        // Événements à la racine pour MatchEvents
+        goals: data.goals || [],
+        substitutions: data.substitutions || [],
+        cards: formattedCards,
+        fouls: data.fouls || [],
+        possession: data.possession || {},
+        
+        // Statistiques sous statistics pour MatchStatistics
+        statistics: {
+          shots: data.shots,
+          passes: data.passes,
+          fouls: data.fouls_count || data.fouls,
+          corners: data.corners,
+          tackles: data.tackles,
+          offsides: data.offsides,
+          goalkeeper_saves: data.goalkeeper_saves
+        },
+        
+        // Données brutes pour référence
+        raw: data
       }
     };
   };
