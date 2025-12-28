@@ -21,21 +21,51 @@ interface PlayerData {
   id: string;
   name: string;
   jersey_number: number | null;
+  position: string;
 }
+
+interface PlayerStats {
+  goals: number;
+  assists: number;
+  yellow_cards: number;
+  red_cards: number;
+  minutes_played: number;
+  clean_sheets: number;
+  goals_conceded: number;
+  saves: number;
+  isGoalkeeper: boolean;
+  wasStarter: boolean;
+  subMinuteIn: number | null;
+  subMinuteOut: number | null;
+}
+
+const isGoalkeeperPosition = (position: string): boolean => {
+  const lowerPos = position.toLowerCase();
+  return lowerPos.includes('gardien') || 
+         lowerPos.includes('goal') || 
+         lowerPos.includes('gk') || 
+         lowerPos === 'portero' ||
+         lowerPos.includes('keeper');
+};
 
 export const SyncPlayerStatsFromMatches = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<SyncResult[]>([]);
 
-  const extractPlayerStats = (matchDetails: any, players: PlayerData[], matchId: string) => {
-    const statsMap: Map<string, {
-      goals: number;
-      assists: number;
-      yellow_cards: number;
-      red_cards: number;
-      minutes_played: number;
-    }> = new Map();
+  const extractPlayerStats = (
+    matchDetails: any, 
+    players: PlayerData[], 
+    homeScore: number | null,
+    awayScore: number | null,
+    homeTeam: string,
+    awayTeam: string
+  ) => {
+    const statsMap: Map<string, PlayerStats> = new Map();
+    const starterIds = new Set<string>();
+    const substitutedOutIds = new Set<string>();
+    const substitutedInIds = new Map<string, number>(); // playerId -> minute in
+    const substitutedOutMinutes = new Map<string, number>(); // playerId -> minute out
 
     // Initialize stats for all players
     players.forEach(player => {
@@ -44,8 +74,75 @@ export const SyncPlayerStatsFromMatches = () => {
         assists: 0,
         yellow_cards: 0,
         red_cards: 0,
-        minutes_played: 0
+        minutes_played: 0,
+        clean_sheets: 0,
+        goals_conceded: 0,
+        saves: 0,
+        isGoalkeeper: isGoalkeeperPosition(player.position),
+        wasStarter: false,
+        subMinuteIn: null,
+        subMinuteOut: null
       });
+    });
+
+    // Determine if Real Madrid is home or away
+    const isRealMadridHome = homeTeam.toLowerCase().includes('real madrid');
+    const realMadridGoalsConceded = isRealMadridHome ? (awayScore || 0) : (homeScore || 0);
+
+    // Process lineup to identify starters
+    const lineup = matchDetails?.lineup?.real_madrid || matchDetails?.real_madrid_lineup || [];
+    lineup.forEach((playerEntry: any) => {
+      const playerName = typeof playerEntry === 'string' ? playerEntry : playerEntry.name || playerEntry.player;
+      if (playerName) {
+        const player = findBestPlayerMatchSync(playerName, players);
+        if (player) {
+          starterIds.add(player.id);
+          const stats = statsMap.get(player.id)!;
+          stats.wasStarter = true;
+          stats.minutes_played = 90; // Default, will be adjusted for substitutions
+        }
+      }
+    });
+
+    // Process substitutions
+    const substitutions = matchDetails?.substitutions || [];
+    substitutions.forEach((sub: any) => {
+      if (sub.team === 'real_madrid' || sub.team === 'Real Madrid') {
+        const minute = sub.minute || 45;
+
+        // Player coming in (substitute)
+        const playerInName = sub.in || sub.player_in;
+        if (playerInName) {
+          const playerIn = findBestPlayerMatchSync(playerInName, players);
+          if (playerIn) {
+            substitutedInIds.set(playerIn.id, minute);
+            const stats = statsMap.get(playerIn.id)!;
+            stats.subMinuteIn = minute;
+            stats.minutes_played = 90 - minute; // Minutes from sub to end
+          }
+        }
+
+        // Player going out (substituted)
+        const playerOutName = sub.out || sub.player_out;
+        if (playerOutName) {
+          const playerOut = findBestPlayerMatchSync(playerOutName, players);
+          if (playerOut) {
+            substitutedOutIds.add(playerOut.id);
+            substitutedOutMinutes.set(playerOut.id, minute);
+            const stats = statsMap.get(playerOut.id)!;
+            stats.subMinuteOut = minute;
+            stats.minutes_played = minute; // Played until minute of substitution
+          }
+        }
+      }
+    });
+
+    // Adjust minutes for starters who weren't substituted
+    starterIds.forEach(playerId => {
+      if (!substitutedOutIds.has(playerId)) {
+        const stats = statsMap.get(playerId)!;
+        stats.minutes_played = 90;
+      }
     });
 
     // Process goals
@@ -59,7 +156,10 @@ export const SyncPlayerStatsFromMatches = () => {
           if (scorer) {
             const stats = statsMap.get(scorer.id)!;
             stats.goals += 1;
-            stats.minutes_played = 90;
+            // Ensure they have minutes if they scored
+            if (stats.minutes_played === 0) {
+              stats.minutes_played = 90;
+            }
           }
         }
 
@@ -70,76 +170,106 @@ export const SyncPlayerStatsFromMatches = () => {
           if (assister) {
             const stats = statsMap.get(assister.id)!;
             stats.assists += 1;
-            stats.minutes_played = 90;
+            if (stats.minutes_played === 0) {
+              stats.minutes_played = 90;
+            }
           }
         }
       }
     });
 
     // Process yellow cards from events
-    const yellowCards = matchDetails?.events?.yellow_cards || matchDetails?.yellow_cards || [];
-    yellowCards.forEach((card: any) => {
-      if (card.team === 'real_madrid' || card.team === 'Real Madrid') {
-        const playerName = card.player;
-        if (playerName) {
-          const player = findBestPlayerMatchSync(playerName, players);
-          if (player) {
-            const stats = statsMap.get(player.id)!;
-            stats.yellow_cards += 1;
-            stats.minutes_played = 90;
+    const yellowCards = matchDetails?.events?.yellow_cards || matchDetails?.yellow_cards || matchDetails?.cards?.yellow?.real_madrid || [];
+    const processYellowCards = (cardList: any) => {
+      if (Array.isArray(cardList)) {
+        cardList.forEach((card: any) => {
+          let playerName: string | null = null;
+          if (typeof card === 'string') {
+            // Parse "player_name (minute')" format
+            const match = card.match(/^([^(]+)/);
+            if (match) playerName = match[1].trim().replace(/_/g, ' ');
+          } else if (card.player) {
+            playerName = card.player;
           }
-        }
+          
+          if (playerName) {
+            const player = findBestPlayerMatchSync(playerName, players);
+            if (player) {
+              const stats = statsMap.get(player.id)!;
+              stats.yellow_cards += 1;
+              if (stats.minutes_played === 0) {
+                stats.minutes_played = 90;
+              }
+            }
+          }
+        });
       }
-    });
+    };
+    processYellowCards(yellowCards);
 
     // Process red cards from events
-    const redCards = matchDetails?.events?.red_cards || matchDetails?.red_cards || [];
-    redCards.forEach((card: any) => {
-      if (card.team === 'real_madrid' || card.team === 'Real Madrid') {
-        const playerName = card.player;
-        if (playerName) {
-          const player = findBestPlayerMatchSync(playerName, players);
-          if (player) {
-            const stats = statsMap.get(player.id)!;
-            stats.red_cards += 1;
-            stats.minutes_played = 90;
+    const redCards = matchDetails?.events?.red_cards || matchDetails?.red_cards || matchDetails?.cards?.red?.real_madrid || [];
+    const processRedCards = (cardList: any) => {
+      if (Array.isArray(cardList)) {
+        cardList.forEach((card: any) => {
+          let playerName: string | null = null;
+          if (typeof card === 'string') {
+            const match = card.match(/^([^(]+)/);
+            if (match) playerName = match[1].trim().replace(/_/g, ' ');
+          } else if (card.player) {
+            playerName = card.player;
+          }
+          
+          if (playerName) {
+            const player = findBestPlayerMatchSync(playerName, players);
+            if (player) {
+              const stats = statsMap.get(player.id)!;
+              stats.red_cards += 1;
+              if (stats.minutes_played === 0) {
+                stats.minutes_played = 90;
+              }
+            }
+          }
+        });
+      }
+    };
+    processRedCards(redCards);
+
+    // Process goalkeeper saves
+    const goalkeeperSaves = matchDetails?.goalkeeper_saves?.real_madrid || 
+                           matchDetails?.statistics?.goalkeeper_saves?.real_madrid || 0;
+
+    // Calculate goalkeeper stats (clean sheets, goals conceded, saves)
+    for (const [playerId, stats] of statsMap.entries()) {
+      if (stats.isGoalkeeper && stats.minutes_played > 0) {
+        // Check if goalkeeper kept a clean sheet (no goals conceded while playing)
+        if (realMadridGoalsConceded === 0) {
+          stats.clean_sheets = 1;
+          stats.goals_conceded = 0;
+        } else {
+          stats.clean_sheets = 0;
+          // Attribute goals to goalkeeper based on when they were on field
+          // For simplicity, if they played full match, they get all goals conceded
+          // If substituted, we'd need goal timing data (not always available)
+          if (stats.wasStarter && !substitutedOutIds.has(playerId)) {
+            stats.goals_conceded = realMadridGoalsConceded;
+          } else if (stats.wasStarter && substitutedOutIds.has(playerId)) {
+            // Was substituted - could have conceded some goals
+            stats.goals_conceded = Math.min(realMadridGoalsConceded, 
+              Math.ceil(realMadridGoalsConceded * (stats.minutes_played / 90)));
+          } else if (substitutedInIds.has(playerId)) {
+            // Came on as sub
+            stats.goals_conceded = Math.min(realMadridGoalsConceded,
+              Math.ceil(realMadridGoalsConceded * (stats.minutes_played / 90)));
           }
         }
-      }
-    });
-
-    // Process lineup to set minutes played
-    const lineup = matchDetails?.lineup?.real_madrid || matchDetails?.real_madrid_lineup || [];
-    lineup.forEach((playerEntry: any) => {
-      const playerName = typeof playerEntry === 'string' ? playerEntry : playerEntry.name || playerEntry.player;
-      if (playerName) {
-        const player = findBestPlayerMatchSync(playerName, players);
-        if (player) {
-          const stats = statsMap.get(player.id)!;
-          stats.minutes_played = 90;
+        
+        // Distribute saves to playing goalkeeper(s)
+        if (typeof goalkeeperSaves === 'number' && goalkeeperSaves > 0) {
+          stats.saves = goalkeeperSaves;
         }
       }
-    });
-
-    // Process substitutions
-    const substitutions = matchDetails?.substitutions || [];
-    substitutions.forEach((sub: any) => {
-      if (sub.team === 'real_madrid' || sub.team === 'Real Madrid') {
-        // Player coming in
-        const playerIn = findBestPlayerMatchSync(sub.in, players);
-        if (playerIn) {
-          const stats = statsMap.get(playerIn.id)!;
-          stats.minutes_played = Math.max(stats.minutes_played, 90 - (sub.minute || 0));
-        }
-
-        // Player going out
-        const playerOut = findBestPlayerMatchSync(sub.out, players);
-        if (playerOut) {
-          const stats = statsMap.get(playerOut.id)!;
-          stats.minutes_played = sub.minute || 45;
-        }
-      }
-    });
+    }
 
     return statsMap;
   };
@@ -159,10 +289,10 @@ export const SyncPlayerStatsFromMatches = () => {
 
       if (matchesError) throw matchesError;
 
-      // Fetch all active players
+      // Fetch all active players with position
       const { data: players, error: playersError } = await supabase
         .from('players')
-        .select('id, name, jersey_number')
+        .select('id, name, jersey_number, position')
         .eq('is_active', true);
 
       if (playersError) throw playersError;
@@ -190,43 +320,51 @@ export const SyncPlayerStatsFromMatches = () => {
             continue;
           }
 
-          const statsMap = extractPlayerStats(matchDetails, players || [], match.id);
+          const statsMap = extractPlayerStats(
+            matchDetails, 
+            players || [], 
+            match.home_score,
+            match.away_score,
+            match.home_team,
+            match.away_team
+          );
           let statsUpdated = 0;
 
           // Update or insert stats for each player who participated
           for (const [playerId, stats] of statsMap.entries()) {
             // Only update if player has some activity
             if (stats.goals > 0 || stats.assists > 0 || stats.yellow_cards > 0 || 
-                stats.red_cards > 0 || stats.minutes_played > 0) {
+                stats.red_cards > 0 || stats.minutes_played > 0 || 
+                stats.clean_sheets > 0 || stats.saves > 0) {
               
               // Check if stats already exist for this player and match
               const { data: existingStats } = await supabase
                 .from('player_stats')
-                .select('id, goals, assists, yellow_cards, red_cards, minutes_played')
+                .select('id, goals, assists, yellow_cards, red_cards, minutes_played, clean_sheets, goals_conceded, saves')
                 .eq('player_id', playerId)
                 .eq('match_id', match.id)
                 .maybeSingle();
 
               if (existingStats) {
-                // Update only if new data has more info
-                const shouldUpdate = 
-                  stats.goals > (existingStats.goals || 0) ||
-                  stats.assists > (existingStats.assists || 0) ||
-                  stats.yellow_cards > (existingStats.yellow_cards || 0) ||
-                  stats.red_cards > (existingStats.red_cards || 0) ||
-                  stats.minutes_played > (existingStats.minutes_played || 0);
+                // Update with new/better data
+                const updateData: Record<string, any> = {
+                  updated_at: new Date().toISOString()
+                };
+                
+                // Always update these if we have better values
+                if (stats.goals > (existingStats.goals || 0)) updateData.goals = stats.goals;
+                if (stats.assists > (existingStats.assists || 0)) updateData.assists = stats.assists;
+                if (stats.yellow_cards > (existingStats.yellow_cards || 0)) updateData.yellow_cards = stats.yellow_cards;
+                if (stats.red_cards > (existingStats.red_cards || 0)) updateData.red_cards = stats.red_cards;
+                if (stats.minutes_played > (existingStats.minutes_played || 0)) updateData.minutes_played = stats.minutes_played;
+                if (stats.clean_sheets > (existingStats.clean_sheets || 0)) updateData.clean_sheets = stats.clean_sheets;
+                if (stats.goals_conceded !== undefined) updateData.goals_conceded = stats.goals_conceded;
+                if (stats.saves > (existingStats.saves || 0)) updateData.saves = stats.saves;
 
-                if (shouldUpdate) {
+                if (Object.keys(updateData).length > 1) { // More than just updated_at
                   await supabase
                     .from('player_stats')
-                    .update({
-                      goals: Math.max(stats.goals, existingStats.goals || 0),
-                      assists: Math.max(stats.assists, existingStats.assists || 0),
-                      yellow_cards: Math.max(stats.yellow_cards, existingStats.yellow_cards || 0),
-                      red_cards: Math.max(stats.red_cards, existingStats.red_cards || 0),
-                      minutes_played: Math.max(stats.minutes_played, existingStats.minutes_played || 0),
-                      updated_at: new Date().toISOString()
-                    })
+                    .update(updateData)
                     .eq('id', existingStats.id);
                   statsUpdated++;
                 }
@@ -241,7 +379,10 @@ export const SyncPlayerStatsFromMatches = () => {
                     assists: stats.assists,
                     yellow_cards: stats.yellow_cards,
                     red_cards: stats.red_cards,
-                    minutes_played: stats.minutes_played
+                    minutes_played: stats.minutes_played,
+                    clean_sheets: stats.clean_sheets,
+                    goals_conceded: stats.goals_conceded,
+                    saves: stats.saves
                   });
                 statsUpdated++;
               }
@@ -252,7 +393,7 @@ export const SyncPlayerStatsFromMatches = () => {
             matchId: match.id,
             matchInfo,
             status: 'success',
-            message: `${statsUpdated} stats de joueurs mises à jour`,
+            message: `${statsUpdated} stats mises à jour`,
             statsUpdated
           });
 
@@ -274,7 +415,7 @@ export const SyncPlayerStatsFromMatches = () => {
       const successCount = allResults.filter(r => r.status === 'success').length;
       const totalStats = allResults.reduce((sum, r) => sum + r.statsUpdated, 0);
       
-      toast.success(`Synchronisation terminée: ${successCount}/${totalMatches} matchs traités, ${totalStats} stats mises à jour`);
+      toast.success(`Synchronisation terminée: ${successCount}/${totalMatches} matchs, ${totalStats} stats mises à jour`);
 
     } catch (error) {
       console.error('Sync error:', error);
@@ -294,8 +435,9 @@ export const SyncPlayerStatsFromMatches = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Cette fonction analyse tous les matchs avec des données JSON et met à jour automatiquement 
-          les statistiques des joueurs (buts, passes décisives, cartons, minutes jouées).
+          Analyse tous les matchs avec des données JSON et met à jour les statistiques des joueurs:
+          buts, passes, cartons, <strong>minutes jouées</strong> (avec remplacements), 
+          <strong>clean sheets</strong>, <strong>buts encaissés</strong> et <strong>arrêts</strong> pour les gardiens.
         </p>
 
         <Button 
