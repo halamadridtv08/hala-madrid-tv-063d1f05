@@ -337,50 +337,55 @@ export const MatchJsonImporter = () => {
     const parsedResult = await validateJson(jsonInput);
     
     if (parsedResult) {
-      // Extraire tous les noms de joueurs du JSON
+      // Extraire les noms de joueurs du Real Madrid uniquement
       const jsonData = JSON.parse(jsonInput);
       const playerNames = new Set<string>();
       
-      // Collecter les noms depuis les buts (racine ou events.goals)
+      // Déterminer la clé Real Madrid
+      const teams = Object.keys(jsonData.score || jsonData.possession || {});
+      const realMadridKey = teams.find(t => t.includes('real_madrid') || t.includes('realmadrid')) || 'real_madrid';
+      
+      // Collecter les noms depuis les buts - SEULEMENT Real Madrid
       const goals = jsonData.goals || jsonData.events?.goals || [];
       goals.forEach((goal: any) => {
-        if (goal.scorer) playerNames.add(goal.scorer);
-        if (goal.assist) playerNames.add(goal.assist);
+        if (goal.team === realMadridKey) {
+          if (goal.scorer) playerNames.add(goal.scorer);
+          if (goal.assist) playerNames.add(goal.assist);
+        }
       });
       
-      // Collecter depuis les cartons - format events.yellow_cards
+      // Collecter depuis les cartons - format events.yellow_cards - SEULEMENT Real Madrid
       if (jsonData.events?.yellow_cards && Array.isArray(jsonData.events.yellow_cards)) {
         jsonData.events.yellow_cards.forEach((card: any) => {
-          if (card.player) playerNames.add(card.player);
+          if (card.team === realMadridKey && card.player) playerNames.add(card.player);
         });
       }
       if (jsonData.events?.red_cards && Array.isArray(jsonData.events.red_cards)) {
         jsonData.events.red_cards.forEach((card: any) => {
-          if (card.player) playerNames.add(card.player);
+          if (card.team === realMadridKey && card.player) playerNames.add(card.player);
         });
       }
       
-      // Collecter depuis les cartons - ancien format events.cards
+      // Collecter depuis les cartons - ancien format events.cards - SEULEMENT Real Madrid
       if (jsonData.events?.cards) {
         ['yellow', 'red'].forEach(cardType => {
-          if (jsonData.events.cards[cardType]) {
-            Object.values(jsonData.events.cards[cardType]).forEach((cards: any) => {
-              if (Array.isArray(cards)) {
-                cards.forEach(card => {
-                  const playerName = typeof card === 'string' ? card : card.player;
-                  if (playerName) playerNames.add(playerName);
-                });
-              }
+          const teamCards = jsonData.events.cards[cardType]?.[realMadridKey];
+          if (Array.isArray(teamCards)) {
+            teamCards.forEach((card: any) => {
+              const playerName = typeof card === 'string' ? card : card.player;
+              if (playerName) playerNames.add(playerName);
             });
           }
         });
       }
       
-      // Collecter depuis les substitutions (racine ou events.substitutions)
+      // Collecter depuis les substitutions - SEULEMENT Real Madrid
       const substitutions = jsonData.substitutions || jsonData.events?.substitutions || [];
       substitutions.forEach((sub: any) => {
-        if (sub.in) playerNames.add(sub.in);
-        if (sub.out) playerNames.add(sub.out);
+        if (sub.team === realMadridKey) {
+          if (sub.in) playerNames.add(sub.in);
+          if (sub.out) playerNames.add(sub.out);
+        }
       });
       
       const uniqueNames = Array.from(playerNames);
@@ -389,7 +394,7 @@ export const MatchJsonImporter = () => {
         setPlayerNamesToValidate(uniqueNames);
         setShowPlayerValidation(true);
       } else {
-        // Pas de joueurs à valider, passer directement à la prévisualisation
+        // Pas de joueurs Real Madrid à valider, passer directement à la prévisualisation
         generatePreview(jsonData, parsedResult);
       }
     }
