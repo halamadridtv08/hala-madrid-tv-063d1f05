@@ -94,14 +94,100 @@ export function PlayerStatsManager({ playerId, playerName }: PlayerStatsManagerP
     try {
       const { data, error } = await supabase
         .from('matches')
-        .select('id, home_team, away_team, match_date')
+        .select('id, home_team, away_team, match_date, match_details')
         .order('match_date', { ascending: false })
-        .limit(20);
+        .limit(30);
 
       if (error) throw error;
       setMatches(data || []);
     } catch (error) {
       console.error('Error fetching matches:', error);
+    }
+  };
+
+  // Auto-remplir les stats depuis les données du match sélectionné
+  const handleMatchSelect = async (matchId: string) => {
+    setFormData(prev => ({ ...prev, match_id: matchId }));
+    
+    if (!matchId) return;
+    
+    const selectedMatch = matches.find(m => m.id === matchId) as any;
+    if (!selectedMatch?.match_details) return;
+    
+    const details = selectedMatch.match_details;
+    let goals = 0;
+    let assists = 0;
+    let yellowCards = 0;
+    let redCards = 0;
+    let minutesPlayed = 90;
+    
+    // Chercher dans les buts
+    const matchGoals = details.goals || details.raw?.events?.goals || [];
+    for (const goal of matchGoals) {
+      const scorerName = (goal.scorer || goal.player || '').toLowerCase();
+      if (playerName.toLowerCase().includes(scorerName) || scorerName.includes(playerName.toLowerCase().split(' ')[0])) {
+        goals++;
+      }
+      const assistName = (goal.assist || '').toLowerCase();
+      if (playerName.toLowerCase().includes(assistName) || assistName.includes(playerName.toLowerCase().split(' ')[0])) {
+        assists++;
+      }
+    }
+    
+    // Chercher dans les cartons
+    const cards = details.cards || {};
+    const checkCards = (cardList: any, type: 'yellow' | 'red') => {
+      if (!cardList) return 0;
+      let count = 0;
+      for (const [team, teamCards] of Object.entries(cardList)) {
+        if (Array.isArray(teamCards)) {
+          for (const card of teamCards) {
+            const cardPlayerName = typeof card === 'string' ? card : (card as any).player || '';
+            const cleanName = String(cardPlayerName).replace(/\s*\([^)]*\)/g, '').toLowerCase();
+            if (playerName.toLowerCase().includes(cleanName) || cleanName.includes(playerName.toLowerCase().split(' ')[0])) {
+              count++;
+            }
+          }
+        }
+      }
+      return count;
+    };
+    
+    yellowCards = checkCards(cards.yellow, 'yellow');
+    redCards = checkCards(cards.red, 'red');
+    
+    // Chercher dans les substitutions
+    const subs = details.substitutions || details.raw?.events?.substitutions || [];
+    for (const sub of subs) {
+      const outName = (sub.out || sub.player_out || '').toLowerCase();
+      const inName = (sub.in || sub.player_in || '').toLowerCase();
+      const pName = playerName.toLowerCase();
+      const firstName = pName.split(' ')[0];
+      
+      if (pName.includes(outName) || outName.includes(firstName)) {
+        minutesPlayed = sub.minute || 90;
+      }
+      if (pName.includes(inName) || inName.includes(firstName)) {
+        minutesPlayed = 90 - (sub.minute || 0);
+      }
+    }
+    
+    // Mettre à jour le formulaire avec les données trouvées
+    setFormData(prev => ({
+      ...prev,
+      match_id: matchId,
+      goals,
+      assists,
+      yellow_cards: yellowCards,
+      red_cards: redCards,
+      minutes_played: minutesPlayed
+    }));
+    
+    if (goals > 0 || assists > 0 || yellowCards > 0) {
+      toast({
+        title: "Données pré-remplies",
+        description: `${goals} but(s), ${assists} passe(s) décisive(s) trouvés pour ${playerName}`
+      });
     }
   };
 
@@ -190,7 +276,7 @@ export function PlayerStatsManager({ playerId, playerName }: PlayerStatsManagerP
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="match">Match (optionnel)</Label>
-                <Select value={formData.match_id} onValueChange={(value) => setFormData(prev => ({ ...prev, match_id: value }))}>
+                <Select value={formData.match_id} onValueChange={handleMatchSelect}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un match" />
                   </SelectTrigger>
