@@ -52,6 +52,7 @@ import { SiteVisibilityManager } from "@/components/admin/SiteVisibilityManager"
 import { FlashNewsCategoryManager } from "@/components/admin/FlashNewsCategoryManager";
 import { FlashNewsSourceManager } from "@/components/admin/FlashNewsSourceManager";
 import { BatchMatchImporter } from "@/components/admin/BatchMatchImporter";
+import { SyncPlayerStatsFromMatches } from "@/components/admin/SyncPlayerStatsFromMatches";
 import { StatsEvolutionChart } from "@/components/admin/StatsEvolutionChart";
 import { StatsExporter } from "@/components/admin/StatsExporter";
 import { PlayerStatsAlerts } from "@/components/admin/PlayerStatsAlerts";
@@ -439,6 +440,11 @@ const Admin = () => {
       {window.location.hash === '#stats-manager' ? <AdminStatsManager /> : <AdminStatsOverview />}
       
       <div className="mt-8 space-y-8">
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Synchronisation automatique</h3>
+          <SyncPlayerStatsFromMatches />
+        </div>
+        
         <div>
           <h3 className="text-xl font-semibold mb-4">Évolution et Export des Statistiques</h3>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
