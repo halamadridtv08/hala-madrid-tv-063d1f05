@@ -412,6 +412,13 @@ export const MatchJsonImporter = () => {
   };
 
   const generatePreview = (jsonData: any, matchData: MatchJsonData) => {
+    // Récupérer la date du match sélectionné depuis la base de données
+    const selectedMatch = matches.find(m => m.id === selectedMatchId);
+    if (selectedMatch) {
+      matchData.match_date = selectedMatch.match_date;
+      matchData.competition = selectedMatch.competition || matchData.competition;
+    }
+    
     // Générer l'aperçu des stats
     const playerStatsMap = new Map<string, any>();
 
