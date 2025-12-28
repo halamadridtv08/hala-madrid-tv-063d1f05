@@ -184,12 +184,16 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
   };
 
   // Extraire les événements - supporter plusieurs structures de données
-  const goals = matchDetails.goals || matchDetails.events?.goals || matchDetails.raw?.events?.goals || [];
-  const substitutions = matchDetails.substitutions || matchDetails.events?.substitutions || matchDetails.raw?.events?.substitutions || [];
+  const goals = matchDetails.goals || matchDetails.events?.goals || matchDetails.raw?.goals || matchDetails.raw?.events?.goals || [];
+  const substitutions = matchDetails.substitutions || matchDetails.events?.substitutions || matchDetails.raw?.substitutions || matchDetails.raw?.events?.substitutions || [];
   const cards = matchDetails.cards || matchDetails.events?.cards || matchDetails.raw?.events?.cards || { yellow: {}, red: {} };
   const fouls = Array.isArray(matchDetails.fouls) 
     ? matchDetails.fouls 
     : (Array.isArray(matchDetails.events?.fouls) ? matchDetails.events.fouls : []);
+
+  // Supporter le format events.yellow_cards (array d'objets)
+  const rawYellowCards = matchDetails.raw?.events?.yellow_cards || matchDetails.events?.yellow_cards || [];
+  const rawRedCards = matchDetails.raw?.events?.red_cards || matchDetails.events?.red_cards || [];
 
   // Fonction pour parser les cartons depuis le format "player (minute')"
   const parseCardString = (cardStr: string, team: string): { player: string; minute: number; team: string } | null => {
@@ -204,9 +208,22 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
     return null;
   };
 
-  // Parser les cartons jaunes depuis le nouveau format
+  // Parser les cartons jaunes depuis le format cards.yellow
   const yellowCardEvents: any[] = [];
-  if (cards.yellow) {
+  
+  // Format 1: events.yellow_cards (array d'objets avec player, minute, team)
+  if (Array.isArray(rawYellowCards) && rawYellowCards.length > 0) {
+    rawYellowCards.forEach((card: any) => {
+      yellowCardEvents.push({
+        player: card.player,
+        minute: card.minute,
+        team: card.team,
+        type: 'yellow'
+      });
+    });
+  }
+  // Format 2: cards.yellow avec tableau de strings "player (minute')"
+  else if (cards.yellow) {
     Object.entries(cards.yellow).forEach(([team, cardsList]) => {
       if (Array.isArray(cardsList)) {
         cardsList.forEach((cardStr: string) => {
@@ -219,9 +236,22 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
     });
   }
 
-  // Parser les cartons rouges depuis le nouveau format
+  // Parser les cartons rouges
   const redCardEvents: any[] = [];
-  if (cards.red) {
+  
+  // Format 1: events.red_cards (array d'objets)
+  if (Array.isArray(rawRedCards) && rawRedCards.length > 0) {
+    rawRedCards.forEach((card: any) => {
+      redCardEvents.push({
+        player: card.player,
+        minute: card.minute,
+        team: card.team,
+        type: 'red'
+      });
+    });
+  }
+  // Format 2: cards.red avec tableau de strings
+  else if (cards.red) {
     Object.entries(cards.red).forEach(([team, cardsList]) => {
       if (Array.isArray(cardsList)) {
         cardsList.forEach((cardStr: string) => {
