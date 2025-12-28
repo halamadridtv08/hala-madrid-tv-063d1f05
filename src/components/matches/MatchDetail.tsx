@@ -289,19 +289,31 @@ export const MatchDetail = ({
         </div>
 
         <Tabs defaultValue="tactical" className="mt-6">
-          <TabsList className={`grid w-full ${isVisible('live_blog_match') ? 'grid-cols-6' : 'grid-cols-5'}`}>
-            <TabsTrigger value="tactical">Compositions</TabsTrigger>
-            {isVisible('live_blog_match') && (
-              <TabsTrigger value="live-blog" className="flex items-center gap-1">
-                {match.status === 'live' && <Radio className="h-3 w-3 text-red-500 animate-pulse" />}
-                Live Blog
+          <div className="overflow-x-auto -mx-2 px-2 pb-2 scrollbar-hide">
+            <TabsList className="inline-flex w-auto min-w-full sm:w-full sm:grid sm:grid-cols-5 lg:grid-cols-6 gap-1">
+              <TabsTrigger value="tactical" className="text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3">
+                Compositions
               </TabsTrigger>
-            )}
-            <TabsTrigger value="events">Événements</TabsTrigger>
-            <TabsTrigger value="stats">Stats</TabsTrigger>
-            <TabsTrigger value="lineups">Probables</TabsTrigger>
-            <TabsTrigger value="absents">Absents</TabsTrigger>
-          </TabsList>
+              {isVisible('live_blog_match') && (
+                <TabsTrigger value="live-blog" className="flex items-center gap-1 text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3">
+                  {match.status === 'live' && <Radio className="h-3 w-3 text-red-500 animate-pulse" />}
+                  Live Blog
+                </TabsTrigger>
+              )}
+              <TabsTrigger value="events" className="text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3">
+                Événements
+              </TabsTrigger>
+              <TabsTrigger value="stats" className="text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3">
+                Stats
+              </TabsTrigger>
+              <TabsTrigger value="lineups" className="text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3">
+                Probables
+              </TabsTrigger>
+              <TabsTrigger value="absents" className="text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3">
+                Absents
+              </TabsTrigger>
+            </TabsList>
+          </div>
           
           <TabsContent value="tactical">
             <TacticalFormation matchId={match.id} matchData={match} />
