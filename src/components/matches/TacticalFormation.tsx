@@ -452,7 +452,7 @@ export const TacticalFormation = ({
             <Trophy className="h-5 w-5" />
             Compositions officielles
           </CardTitle>
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             {realMadridFormation && (
               <Badge variant="outline" className="bg-blue-600/10 border-blue-600">
                 Real Madrid: {realMadridFormation.formation}
@@ -466,10 +466,7 @@ export const TacticalFormation = ({
           </div>
         </CardHeader>
         <CardContent>
-          <div
-            className="relative w-full bg-gradient-to-b from-green-600 via-green-500 to-green-600 rounded-lg overflow-hidden shadow-lg"
-            style={{ aspectRatio: "2/3", minHeight: "700px" }}
-          >
+          <div className="relative w-full bg-gradient-to-b from-green-600 via-green-500 to-green-600 rounded-lg overflow-hidden shadow-lg aspect-[2/3] min-h-[520px] sm:min-h-[700px]">
             {/* Texture du terrain */}
             <div
               className="absolute inset-0 opacity-10"
