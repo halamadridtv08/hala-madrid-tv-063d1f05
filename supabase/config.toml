@@ -31,3 +31,13 @@ verify_jwt = true
 
 [functions.send-push-notification]
 verify_jwt = true
+
+# New CRON job endpoints - validate CRON_SECRET internally
+[functions.match-notifications]
+verify_jwt = false
+
+[functions.sync-laliga-standings]
+verify_jwt = false
+
+[functions.archive-old-articles]
+verify_jwt = false
