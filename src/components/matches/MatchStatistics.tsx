@@ -18,10 +18,29 @@ export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStati
   const homeKey = normalizeTeamName(homeTeam);
   const awayKey = normalizeTeamName(awayTeam);
 
-  // Support multiple data formats: statistics nested, direct, or in raw
-  const statistics = matchDetails.statistics || matchDetails.raw?.statistics || matchDetails;
-  const possession = matchDetails.possession || matchDetails.match?.possession || matchDetails.raw?.match?.possession || {};
-  const cards = matchDetails.cards || matchDetails.events?.cards || matchDetails.raw?.events?.cards || {};
+  // Support multiple data formats: statistics nested, direct, raw.statistics, or raw direct
+  const statistics = matchDetails.statistics 
+    || matchDetails.raw?.statistics 
+    || matchDetails.raw 
+    || matchDetails;
+    
+  const possession = matchDetails.possession 
+    || matchDetails.statistics?.possession
+    || matchDetails.raw?.possession 
+    || matchDetails.match?.possession 
+    || matchDetails.raw?.match?.possession 
+    || {};
+    
+  // Support cards from multiple locations
+  const cards = matchDetails.cards 
+    || matchDetails.events?.cards 
+    || matchDetails.raw?.cards
+    || matchDetails.raw?.events?.cards 
+    || {};
+    
+  // Support events.yellow_cards format (array)
+  const rawYellowCards = matchDetails.raw?.events?.yellow_cards || matchDetails.events?.yellow_cards || [];
+  const rawRedCards = matchDetails.raw?.events?.red_cards || matchDetails.events?.red_cards || [];
 
   // Parse possession percentages
   const parsePossession = (possessionStr: string) => {
@@ -32,12 +51,21 @@ export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStati
   const homePossession = parsePossession(possession[homeKey] || '0%');
   const awayPossession = parsePossession(possession[awayKey] || '0%');
 
-  // Helper to count cards from array format
-  const countCards = (cardsData: any, team: string) => {
+  // Helper to count cards - support both array of objects and array of strings
+  const countCards = (cardsData: any, rawCardsArray: any[], team: string) => {
+    // Format 1: events.yellow_cards (array d'objets avec player, minute, team)
+    if (Array.isArray(rawCardsArray) && rawCardsArray.length > 0) {
+      return rawCardsArray.filter((c: any) => c.team === team).length;
+    }
+    // Format 2: cards.yellow/red as object with team keys
     if (Array.isArray(cardsData?.[team])) {
       return cardsData[team].length;
     }
-    return cardsData?.[team] || 0;
+    // Format 3: cards.yellow/red as object with team counts
+    if (typeof cardsData?.[team] === 'number') {
+      return cardsData[team];
+    }
+    return 0;
   };
 
   // Get statistics data - support both nested and direct format
@@ -86,12 +114,12 @@ export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStati
         away: statistics.fouls?.[awayKey] || 0 
       },
       yellowCards: { 
-        home: countCards(cards.yellow, homeKey),
-        away: countCards(cards.yellow, awayKey)
+        home: countCards(cards.yellow, rawYellowCards, homeKey),
+        away: countCards(cards.yellow, rawYellowCards, awayKey)
       },
       redCards: { 
-        home: countCards(cards.red, homeKey),
-        away: countCards(cards.red, awayKey)
+        home: countCards(cards.red, rawRedCards, homeKey),
+        away: countCards(cards.red, rawRedCards, awayKey)
       }
     }
   };

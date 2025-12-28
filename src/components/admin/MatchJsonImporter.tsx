@@ -206,19 +206,34 @@ export const MatchJsonImporter = () => {
     
     const isHome = realMadridKey === teams[0];
     
-    // Formater les cartons si disponibles
-    let formattedCards = data.cards || { yellow: {}, red: {} };
+    // Formater les cartons - supporter plusieurs formats
+    const formattedCards: { yellow: Record<string, string[]>; red: Record<string, string[]> } = { 
+      yellow: {}, 
+      red: {} 
+    };
     
-    // Si les cartons viennent des fautes, les formater
-    if (!data.cards && data.fouls && Array.isArray(data.fouls)) {
-      formattedCards = { yellow: {} as Record<string, string[]>, red: {} };
-      for (const foul of data.fouls) {
-        if (!formattedCards.yellow[foul.team]) {
-          formattedCards.yellow[foul.team] = [];
+    // Format 1: events.yellow_cards / events.red_cards (array d'objets)
+    if (data.events?.yellow_cards && Array.isArray(data.events.yellow_cards)) {
+      for (const card of data.events.yellow_cards) {
+        const team = card.team;
+        if (!formattedCards.yellow[team]) {
+          formattedCards.yellow[team] = [];
         }
-        formattedCards.yellow[foul.team].push(`${foul.player} (${foul.minute}')`);
+        formattedCards.yellow[team].push(`${card.player} (${card.minute}')`);
       }
     }
+    if (data.events?.red_cards && Array.isArray(data.events.red_cards)) {
+      for (const card of data.events.red_cards) {
+        const team = card.team;
+        if (!formattedCards.red[team]) {
+          formattedCards.red[team] = [];
+        }
+        formattedCards.red[team].push(`${card.player} (${card.minute}')`);
+      }
+    }
+    
+    // Format 2: cards.yellow / cards.red avec nombres (compter seulement)
+    // On garde les données existantes des events si disponibles
     
     return {
       home_team: isHome ? "Real Madrid" : opponentKey?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Équipe adverse",
@@ -234,18 +249,17 @@ export const MatchJsonImporter = () => {
         goals: data.goals || [],
         substitutions: data.substitutions || [],
         cards: formattedCards,
-        fouls: data.fouls || [],
         possession: data.possession || {},
         
         // Statistiques sous statistics pour MatchStatistics
-        statistics: {
+        statistics: data.statistics || {
           shots: data.shots,
           passes: data.passes,
-          fouls: data.fouls_count || data.fouls,
-          corners: data.corners,
-          tackles: data.tackles,
-          offsides: data.offsides,
-          goalkeeper_saves: data.goalkeeper_saves
+          fouls: data.statistics?.fouls,
+          corners: data.statistics?.corners,
+          tackles: data.statistics?.tackles,
+          offsides: data.statistics?.offsides,
+          goalkeeper_saves: data.statistics?.goalkeeper_saves
         },
         
         // Données brutes pour référence
@@ -327,15 +341,26 @@ export const MatchJsonImporter = () => {
       const jsonData = JSON.parse(jsonInput);
       const playerNames = new Set<string>();
       
-      // Collecter les noms depuis les buts
-      if (jsonData.events?.goals) {
-        jsonData.events.goals.forEach((goal: any) => {
-          if (goal.scorer) playerNames.add(goal.scorer);
-          if (goal.assist) playerNames.add(goal.assist);
+      // Collecter les noms depuis les buts (racine ou events.goals)
+      const goals = jsonData.goals || jsonData.events?.goals || [];
+      goals.forEach((goal: any) => {
+        if (goal.scorer) playerNames.add(goal.scorer);
+        if (goal.assist) playerNames.add(goal.assist);
+      });
+      
+      // Collecter depuis les cartons - format events.yellow_cards
+      if (jsonData.events?.yellow_cards && Array.isArray(jsonData.events.yellow_cards)) {
+        jsonData.events.yellow_cards.forEach((card: any) => {
+          if (card.player) playerNames.add(card.player);
+        });
+      }
+      if (jsonData.events?.red_cards && Array.isArray(jsonData.events.red_cards)) {
+        jsonData.events.red_cards.forEach((card: any) => {
+          if (card.player) playerNames.add(card.player);
         });
       }
       
-      // Collecter depuis les cartons
+      // Collecter depuis les cartons - ancien format events.cards
       if (jsonData.events?.cards) {
         ['yellow', 'red'].forEach(cardType => {
           if (jsonData.events.cards[cardType]) {
@@ -351,13 +376,12 @@ export const MatchJsonImporter = () => {
         });
       }
       
-      // Collecter depuis les substitutions
-      if (jsonData.events?.substitutions) {
-        jsonData.events.substitutions.forEach((sub: any) => {
-          if (sub.in) playerNames.add(sub.in);
-          if (sub.out) playerNames.add(sub.out);
-        });
-      }
+      // Collecter depuis les substitutions (racine ou events.substitutions)
+      const substitutions = jsonData.substitutions || jsonData.events?.substitutions || [];
+      substitutions.forEach((sub: any) => {
+        if (sub.in) playerNames.add(sub.in);
+        if (sub.out) playerNames.add(sub.out);
+      });
       
       const uniqueNames = Array.from(playerNames);
       
@@ -384,32 +408,56 @@ export const MatchJsonImporter = () => {
 
   const generatePreview = (jsonData: any, matchData: MatchJsonData) => {
     // Générer l'aperçu des stats
-    const playerStatsPreview: any[] = [];
     const playerStatsMap = new Map<string, any>();
 
-    // 1. Buts et passes
-    if (jsonData.events?.goals) {
-      for (const goal of jsonData.events.goals) {
-        const scorerName = goal.scorer || goal.player;
-        if (scorerName) {
-          const key = scorerName;
-          if (!playerStatsMap.has(key)) {
-            playerStatsMap.set(key, { playerName: scorerName.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
-          }
-          playerStatsMap.get(key).goals++;
+    // 1. Buts et passes (supporter goals à la racine ou dans events)
+    const goals = jsonData.goals || jsonData.events?.goals || [];
+    for (const goal of goals) {
+      const scorerName = goal.scorer || goal.player;
+      if (scorerName) {
+        const key = scorerName;
+        if (!playerStatsMap.has(key)) {
+          playerStatsMap.set(key, { playerName: scorerName.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
+        }
+        playerStatsMap.get(key).goals++;
 
-          if (goal.assist) {
-            const assistKey = goal.assist;
-            if (!playerStatsMap.has(assistKey)) {
-              playerStatsMap.set(assistKey, { playerName: goal.assist.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
-            }
-            playerStatsMap.get(assistKey).assists++;
+        if (goal.assist) {
+          const assistKey = goal.assist;
+          if (!playerStatsMap.has(assistKey)) {
+            playerStatsMap.set(assistKey, { playerName: goal.assist.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
           }
+          playerStatsMap.get(assistKey).assists++;
         }
       }
     }
 
-    // 2. Cartons
+    // 2. Cartons - format events.yellow_cards (array d'objets)
+    if (jsonData.events?.yellow_cards && Array.isArray(jsonData.events.yellow_cards)) {
+      for (const card of jsonData.events.yellow_cards) {
+        const playerName = card.player;
+        if (playerName) {
+          const key = playerName;
+          if (!playerStatsMap.has(key)) {
+            playerStatsMap.set(key, { playerName: playerName.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
+          }
+          playerStatsMap.get(key).yellowCards = (playerStatsMap.get(key).yellowCards || 0) + 1;
+        }
+      }
+    }
+    if (jsonData.events?.red_cards && Array.isArray(jsonData.events.red_cards)) {
+      for (const card of jsonData.events.red_cards) {
+        const playerName = card.player;
+        if (playerName) {
+          const key = playerName;
+          if (!playerStatsMap.has(key)) {
+            playerStatsMap.set(key, { playerName: playerName.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
+          }
+          playerStatsMap.get(key).redCards = (playerStatsMap.get(key).redCards || 0) + 1;
+        }
+      }
+    }
+
+    // 2b. Cartons - ancien format events.cards
     if (jsonData.events?.cards) {
       if (jsonData.events.cards.yellow) {
         for (const [team, cards] of Object.entries(jsonData.events.cards.yellow)) {
@@ -446,23 +494,22 @@ export const MatchJsonImporter = () => {
       }
     }
 
-    // 3. Substitutions (minutes jouées)
-    if (jsonData.events?.substitutions) {
-      for (const sub of jsonData.events.substitutions) {
-        if (sub.out) {
-          const key = sub.out;
-          if (!playerStatsMap.has(key)) {
-            playerStatsMap.set(key, { playerName: sub.out.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
-          }
-          playerStatsMap.get(key).minutesPlayed = sub.minute || 90;
+    // 3. Substitutions (supporter à la racine ou dans events)
+    const substitutions = jsonData.substitutions || jsonData.events?.substitutions || [];
+    for (const sub of substitutions) {
+      if (sub.out) {
+        const key = sub.out;
+        if (!playerStatsMap.has(key)) {
+          playerStatsMap.set(key, { playerName: sub.out.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
         }
-        if (sub.in) {
-          const key = sub.in;
-          if (!playerStatsMap.has(key)) {
-            playerStatsMap.set(key, { playerName: sub.in.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
-          }
-          playerStatsMap.get(key).minutesPlayed = 90 - (sub.minute || 0);
+        playerStatsMap.get(key).minutesPlayed = sub.minute || 90;
+      }
+      if (sub.in) {
+        const key = sub.in;
+        if (!playerStatsMap.has(key)) {
+          playerStatsMap.set(key, { playerName: sub.in.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
         }
+        playerStatsMap.get(key).minutesPlayed = 90 - (sub.minute || 0);
       }
     }
 
