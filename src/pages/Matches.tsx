@@ -437,7 +437,7 @@ const Matches = () => {
 
       {/* Team Formations Dialog */}
       <Dialog open={showFormations} onOpenChange={setShowFormations}>
-        <DialogContent className="w-[calc(100vw-1rem)] max-w-none sm:max-w-6xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Compositions d'équipe</DialogTitle>
           </DialogHeader>
