@@ -7,7 +7,7 @@ interface PlayerMatch {
 }
 
 // Normalise un nom pour la comparaison
-const normalizePlayerName = (name: string): string => {
+export const normalizePlayerName = (name: string): string => {
   return name
     .toLowerCase()
     .replace(/_/g, ' ')
@@ -23,8 +23,8 @@ const normalizePlayerName = (name: string): string => {
     .trim();
 };
 
-// Calcule un score de similarité entre deux chaînes
-const calculateSimilarity = (str1: string, str2: string): number => {
+// Calcule un score de similarité entre deux chaînes (exporté)
+export const calculateSimilarity = (str1: string, str2: string): number => {
   const s1 = normalizePlayerName(str1);
   const s2 = normalizePlayerName(str2);
   
@@ -51,6 +51,31 @@ const calculateSimilarity = (str1: string, str2: string): number => {
   const maxParts = Math.max(parts1.length, parts2.length);
   return matchingParts / maxParts * 0.8;
 };
+
+// Version synchrone pour trouver le meilleur joueur correspondant à un nom (avec cache de joueurs)
+export const findBestPlayerMatchSync = (
+  searchName: string,
+  players: { id: string; name: string; jersey_number?: number | null }[]
+): PlayerMatch | null => {
+  if (!searchName || !players.length) return null;
+  
+  let bestMatch: PlayerMatch | null = null;
+  
+  for (const player of players) {
+    const similarity = calculateSimilarity(searchName, player.name);
+    
+    if (similarity > 0.5 && (!bestMatch || similarity > bestMatch.confidence)) {
+      bestMatch = {
+        id: player.id,
+        name: player.name,
+        confidence: similarity
+      };
+    }
+  }
+  
+  return bestMatch;
+};
+
 
 // Trouve le meilleur joueur correspondant à un nom
 export const findBestPlayerMatch = async (
