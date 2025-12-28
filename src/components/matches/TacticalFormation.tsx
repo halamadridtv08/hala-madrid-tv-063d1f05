@@ -105,62 +105,113 @@ export const TacticalFormation = ({
   }
   const realMadridFormation = formations.real_madrid;
   const opposingFormation = formations.opposing;
+  const getOpposingTeamName = () => {
+    if (matchData?.homeTeam?.name === 'Real Madrid') {
+      return matchData?.awayTeam?.name || 'Équipe adverse';
+    }
+    return matchData?.homeTeam?.name || 'Équipe adverse';
+  };
+
   return <div className="space-y-6">
-      {/* Vue tactique principale */}
+      {/* Vue tactique principale - Les deux équipes sur le même terrain */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Trophy className="h-5 w-5" />
             Compositions officielles
           </CardTitle>
-          <div className="flex items-center gap-4">
-            {realMadridFormation && <Badge variant="outline">
+          <div className="flex items-center justify-between gap-4">
+            {realMadridFormation && <Badge variant="outline" className="bg-blue-600/10 border-blue-600">
                 Real Madrid: {realMadridFormation.formation}
               </Badge>}
-            {opposingFormation && <Badge variant="outline">
-                {matchData?.homeTeam?.name === 'Real Madrid' ? matchData?.awayTeam?.name : matchData?.homeTeam?.name}: {opposingFormation.formation}
+            {opposingFormation && <Badge variant="outline" className="bg-red-600/10 border-red-600">
+                {getOpposingTeamName()}: {opposingFormation.formation}
               </Badge>}
           </div>
         </CardHeader>
         <CardContent>
-          <div className="relative w-full bg-gradient-to-b from-green-500 to-green-600 rounded-lg overflow-hidden shadow-lg" style={{
-          aspectRatio: "3/4",
-          minHeight: "500px"
+          <div className="relative w-full bg-gradient-to-b from-green-600 via-green-500 to-green-600 rounded-lg overflow-hidden shadow-lg" style={{
+          aspectRatio: "2/3",
+          minHeight: "700px"
         }}>
+            {/* Texture du terrain */}
+            <div className="absolute inset-0 opacity-10" style={{
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 40px)'
+            }}></div>
+
             {/* Lignes du terrain de football */}
             <div className="absolute inset-0">
+              {/* Bordure du terrain */}
+              <div className="absolute inset-2 border-2 border-white opacity-80 rounded"></div>
+              
               {/* Ligne médiane */}
               <div className="absolute w-full h-0.5 bg-white top-1/2 transform -translate-y-0.5 opacity-80"></div>
-              <div className="absolute w-0.5 h-full bg-white left-1/2 transform -translate-x-0.5 opacity-80"></div>
               
               {/* Cercle central */}
-              <div className="absolute w-20 h-20 border-2 border-white rounded-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-80"></div>
+              <div className="absolute w-24 h-24 border-2 border-white rounded-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-80"></div>
               <div className="absolute w-2 h-2 bg-white rounded-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
               
-              {/* Surfaces de réparation supérieures */}
-              <div className="absolute w-1/3 h-16 border-2 border-white top-0 left-1/2 transform -translate-x-1/2 opacity-80"></div>
-              <div className="absolute w-1/5 h-8 border-2 border-white top-0 left-1/2 transform -translate-x-1/2 opacity-80"></div>
+              {/* Surfaces de réparation supérieures (équipe adverse) */}
+              <div className="absolute w-2/5 h-[12%] border-2 border-white border-t-0 top-2 left-1/2 transform -translate-x-1/2 opacity-80"></div>
+              <div className="absolute w-1/5 h-[6%] border-2 border-white border-t-0 top-2 left-1/2 transform -translate-x-1/2 opacity-80"></div>
               
-              {/* Surfaces de réparation inférieures */}
-              <div className="absolute w-1/3 h-16 border-2 border-white bottom-0 left-1/2 transform -translate-x-1/2 opacity-80"></div>
-              <div className="absolute w-1/5 h-8 border-2 border-white bottom-0 left-1/2 transform -translate-x-1/2 opacity-80"></div>
+              {/* Surfaces de réparation inférieures (Real Madrid) */}
+              <div className="absolute w-2/5 h-[12%] border-2 border-white border-b-0 bottom-2 left-1/2 transform -translate-x-1/2 opacity-80"></div>
+              <div className="absolute w-1/5 h-[6%] border-2 border-white border-b-0 bottom-2 left-1/2 transform -translate-x-1/2 opacity-80"></div>
               
               {/* Points de penalty */}
-              <div className="absolute w-2 h-2 bg-white rounded-full top-12 left-1/2 transform -translate-x-1/2"></div>
-              <div className="absolute w-2 h-2 bg-white rounded-full bottom-12 left-1/2 transform -translate-x-1/2"></div>
+              <div className="absolute w-2 h-2 bg-white rounded-full top-[15%] left-1/2 transform -translate-x-1/2"></div>
+              <div className="absolute w-2 h-2 bg-white rounded-full bottom-[15%] left-1/2 transform -translate-x-1/2"></div>
               
               {/* Arcs de cercle des surfaces */}
-              <div className="absolute w-12 h-6 border-2 border-white border-b-0 top-16 left-1/2 transform -translate-x-1/2 rounded-t-full opacity-80"></div>
-              <div className="absolute w-12 h-6 border-2 border-white border-t-0 bottom-16 left-1/2 transform -translate-x-1/2 rounded-b-full opacity-80"></div>
+              <div className="absolute w-16 h-8 border-2 border-white border-t-0 top-[12%] left-1/2 transform -translate-x-1/2 rounded-b-full opacity-80"></div>
+              <div className="absolute w-16 h-8 border-2 border-white border-b-0 bottom-[12%] left-1/2 transform -translate-x-1/2 rounded-t-full opacity-80"></div>
             </div>
 
-            {/* Joueurs Real Madrid */}
-            {realMadridFormation?.players.filter(player => player.is_starter).map(player => <div key={player.id} className="absolute transform -translate-x-1/2 -translate-y-1/2 group" style={{
-            left: `${player.position_x}%`,
-            top: `${player.position_y}%`
-          }}>
+            {/* Équipe adverse (moitié supérieure - positions inversées) */}
+            {opposingFormation?.players.filter(player => player.is_starter).map(player => {
+              // Inverser les positions pour l'équipe adverse (miroir vertical)
+              const invertedY = 50 - (player.position_y - 50); // Miroir par rapport au centre
+              const adjustedY = invertedY * 0.5; // Comprimer sur la moitié supérieure (0-50%)
+              
+              return <div key={`opposing-${player.id}`} className="absolute transform -translate-x-1/2 -translate-y-1/2 group z-10" style={{
+                left: `${player.position_x}%`,
+                top: `${adjustedY}%`
+              }}>
                 <div className="relative">
-                  {player.player_image_url ? <img src={player.player_image_url} alt={player.player_name} className="w-12 h-12 rounded-full border-2 border-white shadow-lg object-cover" /> : <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg flex items-center justify-center">
+                  {player.player_image_url ? <img src={player.player_image_url} alt={player.player_name} className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-red-400 shadow-lg object-cover" /> : <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-red-400 bg-gradient-to-br from-red-600 to-red-700 shadow-lg flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">{player.jersey_number}</span>
+                    </div>}
+                  
+                  {/* Numéro du maillot */}
+                  <div className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md text-[10px]">
+                    {player.jersey_number}
+                  </div>
+                  
+                  {/* Note du joueur */}
+                  <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md text-[10px]">
+                    {player.player_rating?.toFixed(1) || '0.0'}
+                  </div>
+                  
+                  {/* Nom du joueur (visible au hover) */}
+                  <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                    {player.player_name}
+                  </div>
+                </div>
+              </div>;
+            })}
+
+            {/* Real Madrid (moitié inférieure) */}
+            {realMadridFormation?.players.filter(player => player.is_starter).map(player => {
+              // Ajuster pour la moitié inférieure (50-100%)
+              const adjustedY = 50 + (player.position_y * 0.5);
+              
+              return <div key={`rm-${player.id}`} className="absolute transform -translate-x-1/2 -translate-y-1/2 group z-10" style={{
+                left: `${player.position_x}%`,
+                top: `${adjustedY}%`
+              }}>
+                <div className="relative">
+                  {player.player_image_url ? <img src={player.player_image_url} alt={player.player_name} className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-white shadow-lg object-cover" /> : <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-white bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg flex items-center justify-center">
                       <span className="text-white text-xs font-bold">{player.jersey_number}</span>
                     </div>}
                   
@@ -171,20 +222,16 @@ export const TacticalFormation = ({
                   
                   {/* Note du joueur */}
                   <div className="absolute -bottom-1 -right-1 bg-yellow-400 text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md text-[10px]">
-                    {player.player_rating.toFixed(1)}
+                    {player.player_rating?.toFixed(1) || '0.0'}
                   </div>
                   
-                  {/* Nom du joueur */}
-                  <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Nom du joueur (visible au hover) */}
+                  <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
                     {player.player_name}
                   </div>
-                  
-                  {/* Position */}
-                  <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                    {player.player_position}
-                  </div>
                 </div>
-              </div>)}
+              </div>;
+            })}
           </div>
         </CardContent>
       </Card>
