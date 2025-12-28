@@ -248,7 +248,7 @@ export const MatchDetail = ({
   };
   
   return <Dialog open={isOpen} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-none sm:max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="text-xl">
             <div className="flex items-center gap-2">
@@ -259,13 +259,13 @@ export const MatchDetail = ({
             </div>
           </DialogTitle>
           <DialogDescription>
-            <div className="flex items-center justify-center mt-2 space-x-2">
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
               <Calendar className="h-5 w-5 text-gray-500" />
               <span>{formatMatchDate(match.date)}</span>
-              <Clock className="h-5 w-5 text-gray-500 ml-4" />
+              <Clock className="h-5 w-5 text-gray-500" />
               <span>{formatMatchTime(match.date)}</span>
             </div>
-            <div className="flex items-center justify-center mt-2 space-x-2">
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
               <MapPin className="h-5 w-5 text-gray-500" />
               <span className="text-gray-600 dark:text-gray-300">{match.venue}</span>
             </div>
@@ -289,18 +289,18 @@ export const MatchDetail = ({
         </div>
 
         <Tabs defaultValue="tactical" className="mt-6">
-          <TabsList className={`grid w-full ${isVisible('live_blog_match') ? 'grid-cols-6' : 'grid-cols-5'}`}>
-            <TabsTrigger value="tactical">Compositions</TabsTrigger>
+          <TabsList className="sticky top-0 z-20 w-full justify-start overflow-x-auto flex gap-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <TabsTrigger value="tactical" className="shrink-0 text-xs sm:text-sm">Compositions</TabsTrigger>
             {isVisible('live_blog_match') && (
-              <TabsTrigger value="live-blog" className="flex items-center gap-1">
+              <TabsTrigger value="live-blog" className="shrink-0 flex items-center gap-1 text-xs sm:text-sm">
                 {match.status === 'live' && <Radio className="h-3 w-3 text-red-500 animate-pulse" />}
                 Live Blog
               </TabsTrigger>
             )}
-            <TabsTrigger value="events">Événements</TabsTrigger>
-            <TabsTrigger value="stats">Stats</TabsTrigger>
-            <TabsTrigger value="lineups">Probables</TabsTrigger>
-            <TabsTrigger value="absents">Absents</TabsTrigger>
+            <TabsTrigger value="events" className="shrink-0 text-xs sm:text-sm">Événements</TabsTrigger>
+            <TabsTrigger value="stats" className="shrink-0 text-xs sm:text-sm">Stats</TabsTrigger>
+            <TabsTrigger value="lineups" className="shrink-0 text-xs sm:text-sm">Probables</TabsTrigger>
+            <TabsTrigger value="absents" className="shrink-0 text-xs sm:text-sm">Absents</TabsTrigger>
           </TabsList>
           
           <TabsContent value="tactical">
