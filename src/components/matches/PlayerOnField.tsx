@@ -45,8 +45,11 @@ export const PlayerOnField: React.FC<PlayerOnFieldProps> = ({ player, style }) =
           </div>
         </div>
 
-        {/* Nom du joueur */}
-        <div className="bg-black/80 px-1.5 md:px-2 py-0.5 rounded text-center">
+        {/* Numéro + Nom du joueur */}
+        <div className="bg-black/80 px-1.5 md:px-2 py-0.5 rounded flex items-center gap-1">
+          <span className="text-[10px] md:text-xs font-bold text-amber-400">
+            {player.jersey_number}
+          </span>
           <p className="text-[10px] md:text-xs font-semibold text-white whitespace-nowrap">
             {player.player_name.split(' ').pop()}
           </p>
