@@ -3,10 +3,11 @@ import { Footer } from "@/components/layout/Footer";
 import { SEOHead } from "@/components/SEOHead";
 import { BadgesDisplay } from "@/components/badges/BadgesDisplay";
 import { DynamicBreadcrumb } from "@/components/common/DynamicBreadcrumb";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useBadges } from "@/hooks/useBadges";
 import { useAuth } from "@/contexts/AuthContext";
 import { User, Trophy, Target, Calendar } from "lucide-react";
+import { ChangePasswordForm } from "@/components/profile/ChangePasswordForm";
 
 const Profile = () => {
   const { user } = useAuth();
@@ -87,6 +88,13 @@ const Profile = () => {
               </Card>
             ))}
           </div>
+
+          {/* Change Password Section */}
+          {user && (
+            <div className="mb-8">
+              <ChangePasswordForm />
+            </div>
+          )}
 
           {/* Badges Section */}
           <BadgesDisplay />
