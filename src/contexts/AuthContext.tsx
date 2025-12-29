@@ -2,7 +2,7 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { showLoginSuccessToast, showLogoutSuccessToast } from '@/lib/authToasts';
 
 type AuthContextType = {
   session: Session | null;
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }, 0);
 
         if (event === "SIGNED_IN") {
-          toast.success("Connexion réussie - Bienvenue sur Hala Madrid TV!");
+          showLoginSuccessToast(session?.user?.email ?? undefined);
         }
       } else {
         setIsAdmin(false);
@@ -93,10 +93,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-      toast.success("Déconnexion réussie");
+      showLogoutSuccessToast();
     } catch (error) {
       console.error('Error signing out:', error);
-      toast.error("Erreur de déconnexion");
     }
   };
 

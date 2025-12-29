@@ -23,6 +23,7 @@ import { Link } from "react-router-dom";
 import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 import { useLiveMatchNotifications } from "@/hooks/useMatchNotifications";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { WelcomePopup } from "@/components/welcome/WelcomePopup";
 
 const Index = () => {
   const { isVisible } = useSiteVisibility();
@@ -35,6 +36,7 @@ const Index = () => {
         description="Toute l'actualité du Real Madrid en direct : matchs, transferts, joueurs, statistiques. Suivez les Merengues avec HALA MADRID TV."
         url="/"
       />
+      <WelcomePopup />
       <AnnouncementBar />
       <Navbar />
       <LiveMatchBar />
