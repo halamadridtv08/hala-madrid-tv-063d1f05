@@ -16,15 +16,20 @@ export const FooterNewsletterForm = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.from('newsletter_subscribers').insert({
-        email: email.trim(),
-        subscription_type: 'weekly',
-        confirmation_token: crypto.randomUUID(),
+      // Use secure server-side function with validation
+      const { error } = await supabase.rpc('subscribe_to_newsletter', {
+        p_email: email.trim(),
+        p_subscription_type: 'weekly'
       });
 
       if (error) {
-        if (error.code === '23505') {
+        // Handle specific error messages from the function
+        if (error.message?.includes('ALREADY_SUBSCRIBED')) {
           toast.info('Vous êtes déjà inscrit à notre newsletter !');
+        } else if (error.message?.includes('Format d\'email invalide')) {
+          toast.error('Format d\'email invalide');
+        } else if (error.message?.includes('domaine d\'email n\'est pas autorisé')) {
+          toast.error('Ce type d\'email n\'est pas accepté');
         } else {
           throw error;
         }

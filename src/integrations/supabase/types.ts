@@ -3160,6 +3160,10 @@ export type Database = {
         Args: { p_secret: string; p_user_id: string }
         Returns: string
       }
+      subscribe_to_newsletter: {
+        Args: { p_email: string; p_subscription_type?: string }
+        Returns: string
+      }
       unsubscribe_newsletter: {
         Args: { p_confirmation_token: string; p_email: string }
         Returns: boolean
