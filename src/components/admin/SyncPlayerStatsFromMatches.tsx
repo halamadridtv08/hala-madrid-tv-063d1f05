@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { RefreshCw, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { RefreshCw, CheckCircle, XCircle, AlertCircle, PlayCircle } from 'lucide-react';
 import { findBestPlayerMatchSync } from '@/utils/playerNameMatcher';
 
 interface SyncResult {
@@ -48,10 +49,49 @@ const isGoalkeeperPosition = (position: string): boolean => {
          lowerPos.includes('keeper');
 };
 
+interface MatchOption {
+  id: string;
+  label: string;
+  home_team: string;
+  away_team: string;
+  match_date: string;
+  home_score: number | null;
+  away_score: number | null;
+  match_details: any;
+}
+
 export const SyncPlayerStatsFromMatches = () => {
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isSyncingSingle, setIsSyncingSingle] = useState(false);
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<SyncResult[]>([]);
+  const [availableMatches, setAvailableMatches] = useState<MatchOption[]>([]);
+  const [selectedMatchId, setSelectedMatchId] = useState<string>('');
+
+  // Fetch matches with JSON data on mount
+  useEffect(() => {
+    const fetchMatches = async () => {
+      const { data } = await supabase
+        .from('matches')
+        .select('id, home_team, away_team, match_date, home_score, away_score, match_details')
+        .not('match_details', 'is', null)
+        .order('match_date', { ascending: false });
+
+      if (data) {
+        setAvailableMatches(data.map(m => ({
+          id: m.id,
+          label: `${m.home_team} vs ${m.away_team} (${new Date(m.match_date).toLocaleDateString('fr-FR')})`,
+          home_team: m.home_team,
+          away_team: m.away_team,
+          match_date: m.match_date,
+          home_score: m.home_score,
+          away_score: m.away_score,
+          match_details: m.match_details
+        })));
+      }
+    };
+    fetchMatches();
+  }, []);
 
   // Fetch starters from match_formation_players table
   const getStartersFromFormation = async (matchId: string): Promise<Map<string, { isStarter: boolean; position: string }>> => {
@@ -461,6 +501,131 @@ export const SyncPlayerStatsFromMatches = () => {
     }
   };
 
+  // Sync a single match
+  const handleSyncSingleMatch = async () => {
+    if (!selectedMatchId) {
+      toast.error('Veuillez sélectionner un match');
+      return;
+    }
+
+    setIsSyncingSingle(true);
+    setResults([]);
+
+    try {
+      const match = availableMatches.find(m => m.id === selectedMatchId);
+      if (!match) {
+        toast.error('Match non trouvé');
+        return;
+      }
+
+      // Fetch all active players
+      const { data: players, error: playersError } = await supabase
+        .from('players')
+        .select('id, name, jersey_number, position')
+        .eq('is_active', true);
+
+      if (playersError) throw playersError;
+
+      const matchInfo = match.label;
+      const matchDetails = typeof match.match_details === 'string' 
+        ? JSON.parse(match.match_details) 
+        : match.match_details;
+
+      if (!matchDetails || Object.keys(matchDetails).length === 0) {
+        setResults([{
+          matchId: match.id,
+          matchInfo,
+          status: 'skipped',
+          message: 'Pas de détails dans le JSON',
+          statsUpdated: 0
+        }]);
+        toast.warning('Ce match n\'a pas de détails JSON');
+        return;
+      }
+
+      const statsMap = await extractPlayerStats(
+        matchDetails, 
+        players || [], 
+        match.home_score,
+        match.away_score,
+        match.home_team,
+        match.away_team,
+        match.id
+      );
+      let statsUpdated = 0;
+
+      // Update or insert stats for each player who participated
+      for (const [playerId, stats] of statsMap.entries()) {
+        if (stats.goals > 0 || stats.assists > 0 || stats.yellow_cards > 0 || 
+            stats.red_cards > 0 || stats.minutes_played > 0 || 
+            stats.clean_sheets > 0 || stats.saves > 0) {
+          
+          const { data: existingStats } = await supabase
+            .from('player_stats')
+            .select('id, goals, assists, yellow_cards, red_cards, minutes_played, clean_sheets, goals_conceded, saves')
+            .eq('player_id', playerId)
+            .eq('match_id', match.id)
+            .maybeSingle();
+
+          if (existingStats) {
+            const updateData: Record<string, any> = {
+              updated_at: new Date().toISOString()
+            };
+            
+            if (stats.goals > (existingStats.goals || 0)) updateData.goals = stats.goals;
+            if (stats.assists > (existingStats.assists || 0)) updateData.assists = stats.assists;
+            if (stats.yellow_cards > (existingStats.yellow_cards || 0)) updateData.yellow_cards = stats.yellow_cards;
+            if (stats.red_cards > (existingStats.red_cards || 0)) updateData.red_cards = stats.red_cards;
+            if (stats.minutes_played > (existingStats.minutes_played || 0)) updateData.minutes_played = stats.minutes_played;
+            if (stats.clean_sheets > (existingStats.clean_sheets || 0)) updateData.clean_sheets = stats.clean_sheets;
+            if (stats.goals_conceded !== undefined) updateData.goals_conceded = stats.goals_conceded;
+            if (stats.saves > (existingStats.saves || 0)) updateData.saves = stats.saves;
+
+            if (Object.keys(updateData).length > 1) {
+              await supabase
+                .from('player_stats')
+                .update(updateData)
+                .eq('id', existingStats.id);
+              statsUpdated++;
+            }
+          } else {
+            await supabase
+              .from('player_stats')
+              .insert({
+                player_id: playerId,
+                match_id: match.id,
+                goals: stats.goals,
+                assists: stats.assists,
+                yellow_cards: stats.yellow_cards,
+                red_cards: stats.red_cards,
+                minutes_played: stats.minutes_played,
+                clean_sheets: stats.clean_sheets,
+                goals_conceded: stats.goals_conceded,
+                saves: stats.saves
+              });
+            statsUpdated++;
+          }
+        }
+      }
+
+      setResults([{
+        matchId: match.id,
+        matchInfo,
+        status: 'success',
+        message: `${statsUpdated} stats mises à jour`,
+        statsUpdated
+      }]);
+      
+      toast.success(`Synchronisation terminée: ${statsUpdated} stats mises à jour`);
+
+    } catch (error) {
+      console.error('Single match sync error:', error);
+      toast.error('Erreur lors de la synchronisation');
+    } finally {
+      setIsSyncingSingle(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -469,30 +634,73 @@ export const SyncPlayerStatsFromMatches = () => {
           Synchroniser les stats depuis les matchs passés
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Analyse tous les matchs avec des données JSON et met à jour les statistiques des joueurs:
-          buts, passes, cartons, <strong>minutes jouées</strong> (avec remplacements), 
-          <strong>clean sheets</strong>, <strong>buts encaissés</strong> et <strong>arrêts</strong> pour les gardiens.
-        </p>
+      <CardContent className="space-y-6">
+        {/* Section: Sync single match */}
+        <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
+          <h4 className="font-medium flex items-center gap-2">
+            <PlayCircle className="h-4 w-4" />
+            Synchroniser un match spécifique
+          </h4>
+          <p className="text-sm text-muted-foreground">
+            Sélectionnez un match pour synchroniser uniquement ses statistiques.
+          </p>
+          <div className="flex gap-2">
+            <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Sélectionner un match..." />
+              </SelectTrigger>
+              <SelectContent>
+                {availableMatches.map((match) => (
+                  <SelectItem key={match.id} value={match.id}>
+                    {match.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button 
+              onClick={handleSyncSingleMatch} 
+              disabled={isSyncingSingle || !selectedMatchId}
+              variant="secondary"
+            >
+              {isSyncingSingle ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <PlayCircle className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
 
-        <Button 
-          onClick={handleSync} 
-          disabled={isSyncing}
-          className="w-full"
-        >
-          {isSyncing ? (
-            <>
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              Synchronisation en cours...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Lancer la synchronisation
-            </>
-          )}
-        </Button>
+        {/* Section: Sync all matches */}
+        <div className="space-y-3">
+          <h4 className="font-medium flex items-center gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Synchroniser tous les matchs
+          </h4>
+          <p className="text-sm text-muted-foreground">
+            Analyse tous les matchs avec des données JSON et met à jour les statistiques des joueurs:
+            buts, passes, cartons, <strong>minutes jouées</strong> (avec remplacements), 
+            <strong>clean sheets</strong>, <strong>buts encaissés</strong> et <strong>arrêts</strong> pour les gardiens.
+          </p>
+
+          <Button 
+            onClick={handleSync} 
+            disabled={isSyncing || isSyncingSingle}
+            className="w-full"
+          >
+            {isSyncing ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Synchronisation en cours...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Lancer la synchronisation complète
+              </>
+            )}
+          </Button>
+        </div>
 
         {isSyncing && (
           <div className="space-y-2">
