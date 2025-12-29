@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Mail, Eye, EyeOff, X } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+
 import { TwoFactorVerification } from "@/components/auth/TwoFactorVerification";
 import { useAuthHeroImage } from "@/hooks/useAuthHeroImage";
 import { loginSchema, signUpSchema, isDisposableEmail } from "@/lib/validations/auth";
@@ -38,17 +38,14 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  
   const { imageUrl: heroImageFromDb } = useAuthHeroImage();
 
   const heroImage = heroImageFromDb || authHeroImage;
 
-  // Close modal when user logs in
-  useEffect(() => {
-    if (user && open) {
-      onOpenChange(false);
-    }
-  }, [user, open, onOpenChange]);
+  // Le modal est fermé explicitement après une connexion réussie (ou après validation 2FA)
+  // pour éviter de le fermer prématurément pendant le flux 2FA.
+
 
   // Reset form when modal opens
   useEffect(() => {
@@ -247,10 +244,12 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
         const requires2FA = await checkAdminRequires2FA(data.user.id);
 
         if (requires2FA) {
-          await supabase.auth.signOut();
-          setPendingEmail(email);
+          // IMPORTANT: ne pas déconnecter ici.
+          // TwoFactorVerification a besoin d'une session active (getSession()) pour vérifier le TOTP.
+          setPendingEmail(validation.data.email);
           setShowTwoFactor(true);
-          await logLoginAttempt(email, true);
+          setPassword("");
+          setLoading(false);
           return;
         }
 
@@ -350,6 +349,8 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
   };
 
   const handleTwoFactorCancel = () => {
+    // Si l'utilisateur annule la 2FA, on termine la session pour éviter un état « connecté mais non vérifié ».
+    void supabase.auth.signOut();
     setShowTwoFactor(false);
     setPendingEmail("");
   };
