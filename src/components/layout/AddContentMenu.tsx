@@ -29,6 +29,10 @@ export function AddContentMenu({ onClose, onTabChange }: AddContentMenuProps) {
 
   const handleNavigate = (tab: string, contentType: string) => {
     console.log(`Switching to tab: ${tab}`);
+    
+    // Navigate to admin page with the correct tab
+    navigate(`/admin?tab=${tab}`);
+    
     if (onTabChange) {
       onTabChange(tab);
     }
