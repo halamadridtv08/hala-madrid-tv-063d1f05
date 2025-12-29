@@ -36,6 +36,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
   const [failedAttempts, setFailedAttempts] = useState(0);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const { imageUrl: heroImageFromDb } = useAuthHeroImage();
@@ -56,8 +57,37 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
       setPassword("");
       setError(null);
       setShowTwoFactor(false);
+      setResetEmailSent(false);
     }
   }, [open]);
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError("Veuillez entrer votre adresse email d'abord");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/`,
+      });
+
+      if (error) throw error;
+
+      setResetEmailSent(true);
+      toast({
+        title: "Email envoyé",
+        description: "Vérifiez votre boîte mail pour réinitialiser votre mot de passe",
+      });
+    } catch (error: any) {
+      setError(error.message || "Erreur lors de l'envoi de l'email");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const isPasswordPwned = async (pwd: string): Promise<boolean> => {
     try {
@@ -439,12 +469,24 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               </div>
 
               <div>
-                <label
-                  htmlFor="modal-password"
-                  className="block text-sm font-medium text-foreground mb-1.5"
-                >
-                  Mot de passe
-                </label>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label
+                    htmlFor="modal-password"
+                    className="block text-sm font-medium text-foreground"
+                  >
+                    Mot de passe
+                  </label>
+                  {isLogin && (
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      className="text-xs text-primary hover:underline"
+                      disabled={loading || resetEmailSent}
+                    >
+                      {resetEmailSent ? "Email envoyé ✓" : "Mot de passe oublié ?"}
+                    </button>
+                  )}
+                </div>
                 <div className="relative">
                   <Input
                     id="modal-password"
