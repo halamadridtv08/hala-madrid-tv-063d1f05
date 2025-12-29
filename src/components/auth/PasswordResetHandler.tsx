@@ -85,7 +85,7 @@ export function PasswordResetHandler() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      const { data, error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
@@ -98,12 +98,23 @@ export function PasswordResetHandler() {
       });
       sonnerToast.success('Mot de passe mis à jour avec succès !');
 
-      // Close modal after a short delay
-      setTimeout(() => {
+      // Close modal after a short delay and ensure user stays logged in
+      setTimeout(async () => {
         setShowResetModal(false);
         setNewPassword('');
         setConfirmPassword('');
         setSuccess(false);
+        
+        // Clean URL hash to avoid re-triggering recovery
+        if (window.location.hash.includes('type=recovery')) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+        
+        // Refresh session to ensure user is properly logged in
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          console.log('User is logged in after password reset:', session.user?.email);
+        }
       }, 2000);
 
     } catch (error: any) {
