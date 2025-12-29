@@ -16,6 +16,7 @@ import { SessionTimeoutProvider } from "./components/auth/SessionTimeoutProvider
 import { ScrollToTopButton } from "./components/common/ScrollToTopButton";
 import { BadgeUnlockToast } from "./components/badges/BadgesDisplay";
 import { PageTracker } from "./components/common/PageTracker";
+import { PasswordResetHandler } from "./components/auth/PasswordResetHandler";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
@@ -76,6 +77,7 @@ const App = () => (
               <ScrollToTopButton />
               <BadgeUnlockToast />
               <PageTracker />
+              <PasswordResetHandler />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
