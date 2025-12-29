@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, MapPin, AlertCircle, Radio } from "lucide-react";
+import { Calendar, Clock, MapPin, AlertCircle, Radio, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TacticalFormation } from "./TacticalFormation";
@@ -13,6 +13,8 @@ import { MatchStatistics } from "./MatchStatistics";
 import { ProbableLineupFormation } from "./ProbableLineupFormation";
 import { LiveBlog } from "./LiveBlog";
 import { useSiteVisibility } from "@/hooks/useSiteVisibility";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileTabSelector } from "./MobileTabSelector";
 interface PlayerType {
   name: string;
   position: string;
@@ -288,96 +290,16 @@ export const MatchDetail = ({
           </div>
         </div>
 
-        <Tabs defaultValue="tactical" className="mt-6">
-          <TabsList className={`flex flex-wrap h-auto gap-1 p-1 w-full ${isVisible('live_blog_match') ? 'sm:grid sm:grid-cols-6' : 'sm:grid sm:grid-cols-5'}`}>
-            <TabsTrigger value="tactical" className="flex-1 min-w-[80px] text-xs sm:text-sm px-2 py-1.5">Compositions</TabsTrigger>
-            {isVisible('live_blog_match') && (
-              <TabsTrigger value="live-blog" className="flex-1 min-w-[70px] text-xs sm:text-sm px-2 py-1.5 flex items-center justify-center gap-1">
-                {match.status === 'live' && <Radio className="h-3 w-3 text-red-500 animate-pulse" />}
-                <span className="hidden xs:inline">Live</span> Blog
-              </TabsTrigger>
-            )}
-            <TabsTrigger value="events" className="flex-1 min-w-[70px] text-xs sm:text-sm px-2 py-1.5">Événements</TabsTrigger>
-            <TabsTrigger value="stats" className="flex-1 min-w-[50px] text-xs sm:text-sm px-2 py-1.5">Stats</TabsTrigger>
-            <TabsTrigger value="lineups" className="flex-1 min-w-[65px] text-xs sm:text-sm px-2 py-1.5">Probables</TabsTrigger>
-            <TabsTrigger value="absents" className="flex-1 min-w-[60px] text-xs sm:text-sm px-2 py-1.5">Absents</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="tactical">
-            <TacticalFormation matchId={match.id} matchData={match} />
-          </TabsContent>
-
-          {isVisible('live_blog_match') && (
-            <TabsContent value="live-blog">
-              <LiveBlog matchId={match.id} />
-            </TabsContent>
-          )}
-
-          <TabsContent value="events">
-            <MatchEvents matchDetails={match.match_details} />
-          </TabsContent>
-
-          <TabsContent value="stats">
-            <MatchStatistics matchDetails={match.match_details} homeTeam={match.homeTeam.name} awayTeam={match.awayTeam.name} />
-          </TabsContent>
-
-          <TabsContent value="lineups">
-            <Card>
-              <CardContent className="pt-6">
-                {loading ? (
-                  <div className="text-center py-8">
-                    Chargement des compositions...
-                  </div>
-                ) : (
-                  <ProbableLineupFormation
-                    realMadridLineup={realMadridLineup}
-                    realMadridSubs={realMadridSubs}
-                    opposingLineup={finalOpposingLineup}
-                    opposingSubs={finalOpposingSubs}
-                    opposingTeamName={match.homeTeam.name === 'Real Madrid' ? match.awayTeam.name : match.homeTeam.name}
-                    homeTeamName={match.homeTeam.name}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="absents">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center mb-4">
-                  <AlertCircle className="h-5 w-5 text-amber-500 mr-2" />
-                  <h3 className="font-bold">Joueurs absents ou incertains</h3>
-                </div>
-                
-                {absentPlayers.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">Aucun joueur absent pour ce match</p>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Joueur</TableHead>
-                        <TableHead>Équipe</TableHead>
-                        <TableHead>Raison</TableHead>
-                        <TableHead>Retour prévu</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {absentPlayers.map(player => (
-                        <TableRow key={player.id}>
-                          <TableCell className="font-medium">{player.player_name}</TableCell>
-                          <TableCell>{player.team_type === 'real_madrid' ? 'Real Madrid' : 'Équipe adverse'}</TableCell>
-                          <TableCell>{player.reason}</TableCell>
-                          <TableCell>{player.return_date ? new Date(player.return_date).toLocaleDateString('fr-FR') : 'Non défini'}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <MobileTabSelector 
+          match={match} 
+          isVisible={isVisible} 
+          loading={loading}
+          realMadridLineup={realMadridLineup}
+          realMadridSubs={realMadridSubs}
+          finalOpposingLineup={finalOpposingLineup}
+          finalOpposingSubs={finalOpposingSubs}
+          absentPlayers={absentPlayers}
+        />
       </DialogContent>
     </Dialog>;
 };
