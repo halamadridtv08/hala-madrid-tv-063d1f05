@@ -248,7 +248,7 @@ export const MatchDetail = ({
   };
   
   return <Dialog open={isOpen} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full p-3 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-xl">
             <div className="flex items-center gap-2">
@@ -272,35 +272,35 @@ export const MatchDetail = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col md:flex-row justify-between items-center space-y-8 md:space-y-0 my-4">
+        <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 my-4">
           <div className="flex flex-col items-center">
-            <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="w-20 h-20 object-contain" />
-            <h3 className="text-xl font-bold mt-2">{match.homeTeam.name}</h3>
+            <img src={match.homeTeam.logo} alt={match.homeTeam.name} className="w-14 h-14 sm:w-20 sm:h-20 object-contain" />
+            <h3 className="text-base sm:text-xl font-bold mt-2 text-center">{match.homeTeam.name}</h3>
           </div>
           
           <div className="text-center">
-            <div className="text-5xl font-bold text-madrid-gold">VS</div>
+            <div className="text-3xl sm:text-5xl font-bold text-madrid-gold">VS</div>
           </div>
           
           <div className="flex flex-col items-center">
-            <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="w-20 h-20 object-contain" />
-            <h3 className="text-xl font-bold mt-2">{match.awayTeam.name}</h3>
+            <img src={match.awayTeam.logo} alt={match.awayTeam.name} className="w-14 h-14 sm:w-20 sm:h-20 object-contain" />
+            <h3 className="text-base sm:text-xl font-bold mt-2 text-center">{match.awayTeam.name}</h3>
           </div>
         </div>
 
         <Tabs defaultValue="tactical" className="mt-6">
-          <TabsList className={`grid w-full ${isVisible('live_blog_match') ? 'grid-cols-6' : 'grid-cols-5'}`}>
-            <TabsTrigger value="tactical">Compositions</TabsTrigger>
+          <TabsList className={`flex flex-wrap h-auto gap-1 p-1 w-full ${isVisible('live_blog_match') ? 'sm:grid sm:grid-cols-6' : 'sm:grid sm:grid-cols-5'}`}>
+            <TabsTrigger value="tactical" className="flex-1 min-w-[80px] text-xs sm:text-sm px-2 py-1.5">Compositions</TabsTrigger>
             {isVisible('live_blog_match') && (
-              <TabsTrigger value="live-blog" className="flex items-center gap-1">
+              <TabsTrigger value="live-blog" className="flex-1 min-w-[70px] text-xs sm:text-sm px-2 py-1.5 flex items-center justify-center gap-1">
                 {match.status === 'live' && <Radio className="h-3 w-3 text-red-500 animate-pulse" />}
-                Live Blog
+                <span className="hidden xs:inline">Live</span> Blog
               </TabsTrigger>
             )}
-            <TabsTrigger value="events">Événements</TabsTrigger>
-            <TabsTrigger value="stats">Stats</TabsTrigger>
-            <TabsTrigger value="lineups">Probables</TabsTrigger>
-            <TabsTrigger value="absents">Absents</TabsTrigger>
+            <TabsTrigger value="events" className="flex-1 min-w-[70px] text-xs sm:text-sm px-2 py-1.5">Événements</TabsTrigger>
+            <TabsTrigger value="stats" className="flex-1 min-w-[50px] text-xs sm:text-sm px-2 py-1.5">Stats</TabsTrigger>
+            <TabsTrigger value="lineups" className="flex-1 min-w-[65px] text-xs sm:text-sm px-2 py-1.5">Probables</TabsTrigger>
+            <TabsTrigger value="absents" className="flex-1 min-w-[60px] text-xs sm:text-sm px-2 py-1.5">Absents</TabsTrigger>
           </TabsList>
           
           <TabsContent value="tactical">
