@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil, Save, X } from "lucide-react";
 
 interface PlayerStat {
   id: string;
@@ -43,8 +44,24 @@ export function PlayerStatsManager({ playerId, playerName }: PlayerStatsManagerP
   const [stats, setStats] = useState<PlayerStat[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingStat, setEditingStat] = useState<PlayerStat | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     match_id: "",
+    goals: 0,
+    assists: 0,
+    minutes_played: 0,
+    yellow_cards: 0,
+    red_cards: 0,
+    saves: 0,
+    clean_sheets: 0,
+    goals_conceded: 0,
+    passes_completed: 0,
+    pass_accuracy: 0,
+    tackles: 0,
+    interceptions: 0
+  });
+  const [editFormData, setEditFormData] = useState({
     goals: 0,
     assists: 0,
     minutes_played: 0,
@@ -227,6 +244,53 @@ export function PlayerStatsManager({ playerId, playerName }: PlayerStatsManagerP
         interceptions: 0
       });
 
+      fetchPlayerStats();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: error.message
+      });
+    }
+  };
+
+  const openEditDialog = (stat: PlayerStat) => {
+    setEditingStat(stat);
+    setEditFormData({
+      goals: stat.goals || 0,
+      assists: stat.assists || 0,
+      minutes_played: stat.minutes_played || 0,
+      yellow_cards: stat.yellow_cards || 0,
+      red_cards: stat.red_cards || 0,
+      saves: stat.saves || 0,
+      clean_sheets: stat.clean_sheets || 0,
+      goals_conceded: stat.goals_conceded || 0,
+      passes_completed: stat.passes_completed || 0,
+      pass_accuracy: stat.pass_accuracy || 0,
+      tackles: stat.tackles || 0,
+      interceptions: stat.interceptions || 0
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateStat = async () => {
+    if (!editingStat) return;
+
+    try {
+      const { error } = await supabase
+        .from('player_stats')
+        .update(editFormData)
+        .eq('id', editingStat.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Statistiques mises à jour",
+        description: "Les modifications ont été enregistrées avec succès"
+      });
+
+      setIsEditDialogOpen(false);
+      setEditingStat(null);
       fetchPlayerStats();
     } catch (error: any) {
       toast({
@@ -429,7 +493,7 @@ export function PlayerStatsManager({ playerId, playerName }: PlayerStatsManagerP
         </CardHeader>
         <CardContent>
           {stats.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">Aucune statistique enregistrée</p>
+            <p className="text-muted-foreground text-center py-4">Aucune statistique enregistrée</p>
           ) : (
             <div className="space-y-4">
               {stats.map((stat) => (
@@ -442,18 +506,28 @@ export function PlayerStatsManager({ playerId, playerName }: PlayerStatsManagerP
                           "Statistiques générales"
                         }
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         {stat.minutes_played} min jouées
                       </p>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => deleteStat(stat.id)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => openEditDialog(stat)}
+                        className="text-blue-500 hover:text-blue-700 hover:bg-blue-500/10"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => deleteStat(stat.id)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-500/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-4 gap-2 text-sm">
@@ -472,6 +546,163 @@ export function PlayerStatsManager({ playerId, playerName }: PlayerStatsManagerP
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog d'édition */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifier les statistiques</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-4">
+            <div>
+              <Label htmlFor="edit_minutes_played">Minutes jouées</Label>
+              <Input
+                id="edit_minutes_played"
+                type="number"
+                min="0"
+                max="120"
+                value={editFormData.minutes_played}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, minutes_played: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit_goals">Buts</Label>
+              <Input
+                id="edit_goals"
+                type="number"
+                min="0"
+                value={editFormData.goals}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, goals: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit_assists">Passes décisives</Label>
+              <Input
+                id="edit_assists"
+                type="number"
+                min="0"
+                value={editFormData.assists}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, assists: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit_yellow_cards">Cartons jaunes</Label>
+              <Input
+                id="edit_yellow_cards"
+                type="number"
+                min="0"
+                value={editFormData.yellow_cards}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, yellow_cards: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit_red_cards">Cartons rouges</Label>
+              <Input
+                id="edit_red_cards"
+                type="number"
+                min="0"
+                value={editFormData.red_cards}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, red_cards: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit_passes_completed">Passes réussies</Label>
+              <Input
+                id="edit_passes_completed"
+                type="number"
+                min="0"
+                value={editFormData.passes_completed}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, passes_completed: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit_pass_accuracy">Précision (%)</Label>
+              <Input
+                id="edit_pass_accuracy"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value={editFormData.pass_accuracy}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, pass_accuracy: parseFloat(e.target.value) || 0 }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit_tackles">Tacles</Label>
+              <Input
+                id="edit_tackles"
+                type="number"
+                min="0"
+                value={editFormData.tackles}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, tackles: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit_interceptions">Interceptions</Label>
+              <Input
+                id="edit_interceptions"
+                type="number"
+                min="0"
+                value={editFormData.interceptions}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, interceptions: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit_saves">Arrêts</Label>
+              <Input
+                id="edit_saves"
+                type="number"
+                min="0"
+                value={editFormData.saves}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, saves: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit_clean_sheets">Clean sheets</Label>
+              <Input
+                id="edit_clean_sheets"
+                type="number"
+                min="0"
+                value={editFormData.clean_sheets}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, clean_sheets: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit_goals_conceded">Buts encaissés</Label>
+              <Input
+                id="edit_goals_conceded"
+                type="number"
+                min="0"
+                value={editFormData.goals_conceded}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, goals_conceded: parseInt(e.target.value) || 0 }))}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <X className="mr-2 h-4 w-4" />
+              Annuler
+            </Button>
+            <Button onClick={handleUpdateStat}>
+              <Save className="mr-2 h-4 w-4" />
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
