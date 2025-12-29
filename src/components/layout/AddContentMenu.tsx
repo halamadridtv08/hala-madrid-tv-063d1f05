@@ -21,10 +21,14 @@ export function AddContentMenu({ onClose, onTabChange }: AddContentMenuProps) {
       }
     };
 
-    // Use 'click' instead of 'mousedown' to allow button onClick to fire first
-    document.addEventListener("click", handleClickOutside);
+    // Add listener with a small delay to prevent immediate close
+    const timeoutId = setTimeout(() => {
+      document.addEventListener("mousedown", handleClickOutside);
+    }, 0);
+    
     return () => {
-      document.removeEventListener("click", handleClickOutside);
+      clearTimeout(timeoutId);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onClose]);
 
