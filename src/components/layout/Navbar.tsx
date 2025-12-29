@@ -68,8 +68,8 @@ export function Navbar() {
           <AnimatedSearchBar value={searchQuery} onChange={setSearchQuery} onSubmit={handleSearchSubmit} />
         </div>
 
-        {/* Mobile Menu Button */}
-        <div className="flex items-center gap-1 md:gap-2 md:hidden">
+        {/* Mobile/Tablet Menu Button */}
+        <div className="flex items-center gap-1 md:gap-2 lg:hidden">
           {isAdmin && <div className="relative">
               <Button variant="ghost" size="sm" onClick={toggleAddMenu} className="relative text-madrid-blue p-1" aria-label="Ajouter du contenu">
                 <Plus className="h-4 w-4" />
@@ -86,7 +86,7 @@ export function Navbar() {
         </div>
 
         {/* Desktop Menu */}
-        <nav className="hidden md:flex items-center gap-3 lg:gap-5">
+        <nav className="hidden lg:flex items-center gap-3 xl:gap-5">
           <NavigationMenu>
             <NavigationMenuList className="gap-1 lg:gap-2">
               <NavigationMenuItem>
@@ -189,8 +189,8 @@ export function Navbar() {
           <AuthButtons />
         </nav>
 
-        {/* Mobile Menu Dropdown */}
-        {isMenuOpen && <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-900 shadow-md md:hidden z-50">
+        {/* Mobile/Tablet Menu Dropdown */}
+        {isMenuOpen && <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-900 shadow-md lg:hidden z-50">
             <div className="p-3">
               <div className="mb-4">
                 <AnimatedSearchBar value={searchQuery} onChange={setSearchQuery} onSubmit={handleSearchSubmit} />
@@ -226,6 +226,11 @@ export function Navbar() {
                 </Link>
                 {isVisible('dream_team_nav') && <Link to="/dream-team" className="text-foreground hover:text-madrid-gold font-medium transition-colors py-2 flex items-center gap-2 text-sm" onClick={closeMenu}>
                     <Star className="h-4 w-4 text-madrid-gold" /> Dream Team
+                  </Link>}
+                
+                {/* Admin link in mobile/tablet menu */}
+                {isAdmin && <Link to="/admin" className="text-madrid-blue hover:text-madrid-blue/80 font-medium transition-colors py-2 text-sm border-t border-gray-200 dark:border-gray-700 mt-2 pt-2" onClick={closeMenu}>
+                    Administration
                   </Link>}
               </div>
               
