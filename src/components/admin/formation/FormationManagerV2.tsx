@@ -879,7 +879,7 @@ export const FormationManagerV2: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Sélectionner un match</Label>
                 <Select value={selectedMatch} onValueChange={setSelectedMatch}>
@@ -934,23 +934,27 @@ export const FormationManagerV2: React.FC = () => {
                     </Button>
                   ) : (
                     <div className="space-y-2">
-                      <div className="flex flex-wrap gap-2">
-                        <Button onClick={applyFormationTemplate} size="sm" variant="outline">
-                          <Layout className="h-4 w-4 mr-2" />
-                          Appliquer template {selectedFormation}
+                      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+                        <Button onClick={applyFormationTemplate} size="sm" variant="outline" className="text-xs sm:text-sm">
+                          <Layout className="h-4 w-4 sm:mr-2 shrink-0" />
+                          <span className="hidden sm:inline">Appliquer template {selectedFormation}</span>
+                          <span className="sm:hidden">Template</span>
                         </Button>
                         <Button 
                           onClick={() => setShowGrid(!showGrid)} 
                           size="sm" 
                           variant={showGrid ? "default" : "outline"}
+                          className="text-xs sm:text-sm"
                         >
-                          <Grid3x3 className="h-4 w-4 mr-2" />
-                          {showGrid ? "Grille active" : "Grille désactivée"}
+                          <Grid3x3 className="h-4 w-4 sm:mr-2 shrink-0" />
+                          <span className="hidden sm:inline">{showGrid ? "Grille active" : "Grille désactivée"}</span>
+                          <span className="sm:hidden">Grille</span>
                         </Button>
                         <Button 
                           onClick={() => setLayoutMode(layoutMode === "horizontal" ? "vertical" : "horizontal")} 
                           size="sm" 
                           variant="outline"
+                          className="hidden sm:flex"
                         >
                           {layoutMode === "horizontal" ? (
                             <>
@@ -969,35 +973,40 @@ export const FormationManagerV2: React.FC = () => {
                           size="sm" 
                           variant="outline"
                           disabled={positionHistory.length === 0}
+                          className="text-xs sm:text-sm"
                         >
-                          <Undo className="h-4 w-4 mr-2" />
-                          Annuler ({positionHistory.length})
+                          <Undo className="h-4 w-4 sm:mr-2 shrink-0" />
+                          <span className="hidden sm:inline">Annuler ({positionHistory.length})</span>
+                          <span className="sm:hidden">({positionHistory.length})</span>
                         </Button>
                         <Button 
                           onClick={syncPlayerImages}
                           size="sm"
                           variant="outline"
                           disabled={!formationId}
+                          className="text-xs sm:text-sm"
                         >
-                          <Users className="h-4 w-4 mr-2" />
-                          Sync Images
+                          <Users className="h-4 w-4 sm:mr-2 shrink-0" />
+                          <span className="hidden sm:inline">Sync Images</span>
+                          <span className="sm:hidden">Sync</span>
                         </Button>
                         <Button 
                           onClick={saveFormation}
                           size="sm"
                           disabled={!formationId}
+                          className="text-xs sm:text-sm"
                         >
-                          <Save className="h-4 w-4 mr-2" />
-                          Sauvegarder
+                          <Save className="h-4 w-4 sm:mr-2 shrink-0" />
+                          <span className="hidden sm:inline">Sauvegarder</span>
                           {lastSaved && (
-                            <span className="ml-2 text-xs opacity-70">
+                            <span className="ml-1 text-xs opacity-70 hidden sm:inline">
                               {lastSaved.toLocaleTimeString()}
                             </span>
                           )}
                         </Button>
-                        <Button onClick={deleteFormation} variant="destructive" size="sm">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Supprimer
+                        <Button onClick={deleteFormation} variant="destructive" size="sm" className="text-xs sm:text-sm">
+                          <Trash2 className="h-4 w-4 sm:mr-2 shrink-0" />
+                          <span className="hidden sm:inline">Supprimer</span>
                         </Button>
                       </div>
                       
@@ -1033,37 +1042,9 @@ export const FormationManagerV2: React.FC = () => {
                   )}
 
                   {formationId && (
-                    <div className="grid grid-cols-4 gap-4">
-                      {/* Liste des joueurs disponibles - Plus compact */}
-                      <Card className="col-span-1">
-                        <CardHeader className="py-3">
-                          <CardTitle className="text-sm">Joueurs disponibles</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-2">
-                          <ScrollArea className="h-[500px]">
-                            <div className="space-y-1">
-                              {availablePlayers
-                                .filter(p => 
-                                  !fieldPlayers.some(fp => fp.player_id === p.id) &&
-                                  !substitutes.some(sp => sp.player_id === p.id)
-                                )
-                                .map((player) => (
-                                  <DraggablePlayer
-                                    key={player.id}
-                                    id={player.id}
-                                    name={player.name}
-                                    position={player.position}
-                                    jerseyNumber={player.jersey_number}
-                                    variant="list"
-                                  />
-                                ))}
-                            </div>
-                          </ScrollArea>
-                        </CardContent>
-                      </Card>
-
-                      {/* Terrain + Remplaçants - Disposition adaptative */}
-                      <div className="col-span-3">
+                    <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4">
+                      {/* Terrain + Remplaçants - En premier sur mobile */}
+                      <div className="lg:col-span-3 order-1 lg:order-2">
                         <div className="flex items-center justify-between mb-1">
                           <Badge variant={fieldPlayers.length === 11 ? "default" : "secondary"} className="text-sm">
                             {fieldPlayers.length}/11 joueurs sur le terrain
@@ -1422,6 +1403,34 @@ export const FormationManagerV2: React.FC = () => {
                           </div>
                         )}
                       </div>
+
+                      {/* Liste des joueurs disponibles - En dessous sur mobile */}
+                      <Card className="lg:col-span-1 order-2 lg:order-1">
+                        <CardHeader className="py-3">
+                          <CardTitle className="text-sm">Joueurs disponibles</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-2">
+                          <ScrollArea className="h-[300px] lg:h-[500px]">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-1">
+                              {availablePlayers
+                                .filter(p => 
+                                  !fieldPlayers.some(fp => fp.player_id === p.id) &&
+                                  !substitutes.some(sp => sp.player_id === p.id)
+                                )
+                                .map((player) => (
+                                  <DraggablePlayer
+                                    key={player.id}
+                                    id={player.id}
+                                    name={player.name}
+                                    position={player.position}
+                                    jerseyNumber={player.jersey_number}
+                                    variant="list"
+                                  />
+                                ))}
+                            </div>
+                          </ScrollArea>
+                        </CardContent>
+                      </Card>
                     </div>
                   )}
                 </TabsContent>
