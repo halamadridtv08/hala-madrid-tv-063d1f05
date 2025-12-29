@@ -75,7 +75,7 @@ import { HeroBackgroundManager } from "@/components/admin/HeroBackgroundManager"
 import { TransfersManager } from "@/components/admin/TransfersManager";
 import { AnnouncementBarManager } from "@/components/admin/AnnouncementBarManager";
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface StatsData {
@@ -89,10 +89,92 @@ interface StatsData {
   totalTrainingSessions: number;
 }
 
+const VALID_ADMIN_TABS = [
+  "dashboard",
+  "analytics",
+  "articles",
+  "special-articles",
+  "videos",
+  "photos",
+  "players",
+  "coaches",
+  "matches",
+  "live-bar",
+  "announcement-bar",
+  "opponents",
+  "formations",
+  "lineups",
+  "press",
+  "training",
+  "stats",
+  "kits",
+  "youtube",
+  "flash-news",
+  "transfers",
+  "match-control",
+  "newsletter",
+  "dream-teams",
+  "notifications",
+  "integrations",
+  "settings",
+] as const;
+
+type AdminTab = (typeof VALID_ADMIN_TABS)[number];
+
+function isValidAdminTab(value: string | null): value is AdminTab {
+  return !!value && (VALID_ADMIN_TABS as readonly string[]).includes(value);
+}
+
 const Admin = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAdmin, isLoading: authLoading } = useAuth();
-  
+
+  const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [videos, setVideos] = useState<VideoType[]>([]);
+  const [photos, setPhotos] = useState<PhotoType[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [pressConferences, setPressConferences] = useState<PressConference[]>([]);
+  const [trainingSessions, setTrainingSessions] = useState<TrainingSession[]>([]);
+  const [kits, setKits] = useState<Kit[]>([]);
+  const [youtubeVideos, setYoutubeVideos] = useState<YouTubeVideo[]>([]);
+
+  const [selectedFlashNews, setSelectedFlashNews] = useState<any>(null);
+  const [refreshFlashNews, setRefreshFlashNews] = useState(false);
+  const flashNewsFormRef = React.useRef<HTMLDivElement>(null);
+
+  const handleEditFlashNews = (flashNews: any) => {
+    setSelectedFlashNews(flashNews);
+    // Scroll to form after a short delay to ensure it's rendered
+    setTimeout(() => {
+      flashNewsFormRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 100);
+  };
+
+  const [stats, setStats] = useState<StatsData>({
+    totalPlayers: 0,
+    activePlayers: 0,
+    totalCoaches: 0,
+    publishedArticles: 0,
+    totalVideos: 0,
+    upcomingMatches: 0,
+    totalPressConferences: 0,
+    totalTrainingSessions: 0,
+  });
+
+  const handleTabChange = (tab: string) => {
+    if (isValidAdminTab(tab)) {
+      setActiveTab(tab);
+    }
+  };
+
   // Double-check admin status - defense in depth
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -100,6 +182,40 @@ const Admin = () => {
       navigate("/", { replace: true });
     }
   }, [isAdmin, authLoading, navigate]);
+
+  // Read tab from URL (?tab=players)
+  useEffect(() => {
+    const tabParam = new URLSearchParams(location.search).get("tab");
+    if (isValidAdminTab(tabParam)) {
+      setActiveTab(tabParam);
+    } else if (tabParam) {
+      setActiveTab("dashboard");
+    }
+  }, [location.search]);
+
+  // Persist tab to URL when user changes tab inside the admin
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (activeTab === "dashboard") {
+      params.delete("tab");
+    } else {
+      params.set("tab", activeTab);
+    }
+
+    const next = params.toString();
+    const nextSearch = next ? `?${next}` : "";
+
+    if (location.search !== nextSearch) {
+      navigate(
+        {
+          pathname: location.pathname,
+          search: nextSearch,
+          hash: location.hash,
+        },
+        { replace: true }
+      );
+    }
+  }, [activeTab, location.hash, location.pathname, location.search, navigate]);
 
   // Show nothing while checking auth
   if (authLoading) {
@@ -121,41 +237,7 @@ const Admin = () => {
       </div>
     );
   }
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [videos, setVideos] = useState<VideoType[]>([]);
-  const [photos, setPhotos] = useState<PhotoType[]>([]);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [coaches, setCoaches] = useState<Coach[]>([]);
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [pressConferences, setPressConferences] = useState<PressConference[]>([]);
-  const [trainingSessions, setTrainingSessions] = useState<TrainingSession[]>([]);
-  const [kits, setKits] = useState<Kit[]>([]);
-  const [youtubeVideos, setYoutubeVideos] = useState<YouTubeVideo[]>([]);
-  const [selectedFlashNews, setSelectedFlashNews] = useState<any>(null);
-  const [refreshFlashNews, setRefreshFlashNews] = useState(false);
-  const flashNewsFormRef = React.useRef<HTMLDivElement>(null);
-  const handleEditFlashNews = (flashNews: any) => {
-    setSelectedFlashNews(flashNews);
-    // Scroll to form after a short delay to ensure it's rendered
-    setTimeout(() => {
-      flashNewsFormRef.current?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }, 100);
-  };
-  const [stats, setStats] = useState<StatsData>({
-    totalPlayers: 0,
-    activePlayers: 0,
-    totalCoaches: 0,
-    publishedArticles: 0,
-    totalVideos: 0,
-    upcomingMatches: 0,
-    totalPressConferences: 0,
-    totalTrainingSessions: 0
-  });
+
   useEffect(() => {
     const fetchArticles = async () => {
       const {
@@ -612,7 +694,7 @@ const Admin = () => {
       {/* Sidebar desktop */}
       <AdminSidebar 
         activeTab={activeTab} 
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         collapsed={sidebarCollapsed}
         onCollapsedChange={setSidebarCollapsed}
       />
@@ -622,7 +704,7 @@ const Admin = () => {
         <div className="madrid-container py-4 md:py-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
             <div className="flex items-center gap-3 md:gap-4">
-              <AdminMobileNav activeTab={activeTab} onTabChange={setActiveTab} />
+              <AdminMobileNav activeTab={activeTab} onTabChange={handleTabChange} />
               <Button onClick={() => navigate('/')} variant="outline" size="sm" className="w-fit">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Retour au site</span>
@@ -643,7 +725,7 @@ const Admin = () => {
 
         
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 md:space-y-6">
 
           <TabsContent value="dashboard">{renderDashboard()}</TabsContent>
           <TabsContent value="analytics">{renderAnalytics()}</TabsContent>
