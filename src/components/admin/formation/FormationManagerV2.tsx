@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Save, Users, Shield, Trash2, Plus, Grid3x3, Layout, Columns2, Rows2, Undo, Lock, Unlock } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   DndContext,
   DragEndEvent,
@@ -110,6 +111,8 @@ export const FormationManagerV2: React.FC = () => {
   const [formationId, setFormationId] = useState<string | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [previousMatches, setPreviousMatches] = useState<Match[]>([]);
+
+  const isMobile = useIsMobile();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -1056,7 +1059,7 @@ export const FormationManagerV2: React.FC = () => {
                           )}
                         </div>
                         
-                        {layoutMode === "horizontal" ? (
+                        {layoutMode === "horizontal" && !isMobile ? (
                           <ResizablePanelGroup direction="horizontal" className="rounded-lg border">
                             {/* Terrain - Redimensionnable */}
                             <ResizablePanel defaultSize={65} minSize={50}>
