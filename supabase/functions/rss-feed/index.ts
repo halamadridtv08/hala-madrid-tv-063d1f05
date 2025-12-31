@@ -31,7 +31,7 @@ serve(async (req) => {
       throw error;
     }
 
-    const siteUrl = "https://halamadrid.tv";
+    const siteUrl = "https://hala-madrid-tv.com";
     const feedTitle = "HALA MADRID TV - Actualités Real Madrid";
     const feedDescription = "Toute l'actualité du Real Madrid CF en français - Articles, analyses, matchs et transferts";
 
