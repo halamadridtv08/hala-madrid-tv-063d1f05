@@ -44,6 +44,13 @@ const Profile = lazy(() => import("./pages/Profile"));
 const AdminSecurity = lazy(() => import("./pages/AdminSecurity"));
 const AdminSEO = lazy(() => import("./pages/AdminSEO"));
 
+// Legal pages
+const MentionsLegales = lazy(() => import("./pages/legal/MentionsLegales"));
+const PolitiqueConfidentialite = lazy(() => import("./pages/legal/PolitiqueConfidentialite"));
+const PreferencesCookies = lazy(() => import("./pages/legal/PreferencesCookies"));
+const Contact = lazy(() => import("./pages/legal/Contact"));
+const CGU = lazy(() => import("./pages/legal/CGU"));
+
 // Loading fallback component
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -125,6 +132,12 @@ const App = () => (
                       </ProtectedRoute>
                     } 
                   />
+                  {/* Legal pages */}
+                  <Route path="/mentions-legales" element={<MentionsLegales />} />
+                  <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
+                  <Route path="/preferences-cookies" element={<PreferencesCookies />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/cgu" element={<CGU />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
