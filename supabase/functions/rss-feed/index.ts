@@ -35,21 +35,28 @@ serve(async (req) => {
     const feedTitle = "HALA MADRID TV - Actualités Real Madrid";
     const feedDescription = "Toute l'actualité du Real Madrid CF en français - Articles, analyses, matchs et transferts";
 
+    // Helper function to escape XML entities properly
+    const escapeXml = (text: string): string => {
+      if (!text) return "";
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;")
+        // Also strip any HTML tags that might be in the content
+        .replace(/<[^>]*>/g, "");
+    };
+
     // Generate RSS XML
     const rssItems = (articles || [])
       .map((article) => {
         const pubDate = new Date(article.published_at).toUTCString();
         const link = `${siteUrl}/news/${article.id}`;
-        const description = article.description
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&apos;");
-        const title = article.title
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
+        const title = escapeXml(article.title);
+        const description = escapeXml(article.description);
+        const category = escapeXml(article.category);
+        const imageUrl = article.image_url ? escapeXml(article.image_url) : null;
 
         return `
     <item>
@@ -57,9 +64,9 @@ serve(async (req) => {
       <link>${link}</link>
       <guid isPermaLink="true">${link}</guid>
       <description>${description}</description>
-      <category>${article.category}</category>
+      <category>${category}</category>
       <pubDate>${pubDate}</pubDate>
-      ${article.image_url ? `<enclosure url="${article.image_url}" type="image/jpeg" />` : ""}
+      ${imageUrl ? `<enclosure url="${imageUrl}" type="image/jpeg" />` : ""}
     </item>`;
       })
       .join("");
