@@ -8,9 +8,11 @@ import { useFooterLinks, FooterLink } from "@/hooks/useFooterLinks";
 import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 import { useSplineSettings } from "@/hooks/useSplineSettings";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSiteContent } from "@/hooks/useSiteContent";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Cookie, FileText, Mail, Shield, HelpCircle } from "lucide-react";
 import { FooterNewsletterForm } from "@/components/newsletter/FooterNewsletterForm";
+
 const iconMap: Record<string, React.ReactNode> = {
   cookie: <Cookie className="h-4 w-4" />,
   file: <FileText className="h-4 w-4" />,
@@ -24,7 +26,14 @@ export function Footer() {
   const { isVisible } = useSiteVisibility();
   const { splineUrl, isSplineVisible } = useSplineSettings();
   const { t } = useLanguage();
+  const { getContent } = useSiteContent();
   const [modalContent, setModalContent] = useState<FooterLink | null>(null);
+  
+  // Get dynamic content from site_content table
+  const siteName = getContent('site_name', 'HALA MADRID TV');
+  const footerAboutText = getContent('footer_about_text', t('footer.aboutText'));
+  const footerCopyright = getContent('footer_copyright', t('footer.rights'));
+  
   // Group links by section
   const groupedLinks = links.reduce((acc, link) => {
     if (!acc[link.section]) {
@@ -109,9 +118,9 @@ export function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* About Section */}
             <div>
-              <h3 className="text-xl font-bold mb-4">HALA MADRID TV</h3>
+              <h3 className="text-xl font-bold mb-4">{siteName}</h3>
               <p className="text-gray-300">
-                {t('footer.aboutText')}
+                {footerAboutText}
               </p>
               <div className="mt-6">
                 {isVisible('fancy_social_links') ? (
@@ -187,7 +196,7 @@ export function Footer() {
           <div className="border-t border-gray-600 mt-8 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-gray-300">
-                © {new Date().getFullYear()} HALA MADRID TV. {t('footer.rights')}.
+                © {new Date().getFullYear()} {siteName}. {footerCopyright}.
               </p>
               
               {/* Social links from database */}
