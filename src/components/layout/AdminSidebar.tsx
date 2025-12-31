@@ -43,6 +43,7 @@ interface AdminSidebarProps {
 const navigationItems = [
   { value: "dashboard", label: "Dashboard", icon: LayoutDashboard, adminOnly: false },
   { value: "analytics", label: "Analytics", icon: TrendingUp, adminOnly: false },
+  { value: "moderator-activity", label: "Activité Modérateurs", icon: Users, adminOnly: true },
   { value: "articles", label: "Articles", icon: FileText, adminOnly: false },
   { value: "special-articles", label: "Articles Spéciaux", icon: Trophy, adminOnly: false },
   { value: "videos", label: "Vidéos", icon: Video, adminOnly: false },

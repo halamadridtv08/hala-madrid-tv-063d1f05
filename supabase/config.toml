@@ -41,3 +41,7 @@ verify_jwt = false
 
 [functions.archive-old-articles]
 verify_jwt = false
+
+# Moderator notification endpoint - requires authentication
+[functions.notify-moderator-action]
+verify_jwt = true

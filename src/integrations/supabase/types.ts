@@ -1739,6 +1739,42 @@ export type Database = {
         }
         Relationships: []
       }
+      moderator_actions: {
+        Row: {
+          action_type: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_title: string | null
+          entity_type: string
+          id: string
+          moderator_id: string
+          notification_sent: boolean | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_title?: string | null
+          entity_type: string
+          id?: string
+          moderator_id: string
+          notification_sent?: boolean | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_title?: string | null
+          entity_type?: string
+          id?: string
+          moderator_id?: string
+          notification_sent?: boolean | null
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           confirmation_token: string | null
@@ -3087,7 +3123,34 @@ export type Database = {
         Returns: boolean
       }
       delete_totp_secret: { Args: { p_user_id: string }; Returns: undefined }
+      get_admin_emails: { Args: never; Returns: string[] }
       get_encryption_key: { Args: never; Returns: string }
+      get_moderator_activity_stats: {
+        Args: { p_days?: number }
+        Returns: {
+          articles_published: number
+          comments_moderated: number
+          flash_news_published: number
+          last_action_at: string
+          moderator_email: string
+          moderator_id: string
+          total_actions: number
+        }[]
+      }
+      get_recent_moderator_actions: {
+        Args: { p_limit?: number; p_moderator_id?: string }
+        Returns: {
+          action_type: string
+          created_at: string
+          details: Json
+          entity_id: string
+          entity_title: string
+          entity_type: string
+          id: string
+          moderator_email: string
+          moderator_id: string
+        }[]
+      }
       get_role_history: {
         Args: { p_user_id?: string }
         Returns: {
@@ -3145,6 +3208,16 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: undefined
+      }
+      log_moderator_action: {
+        Args: {
+          p_action_type: string
+          p_details?: Json
+          p_entity_id?: string
+          p_entity_title?: string
+          p_entity_type: string
+        }
+        Returns: string
       }
       normalize_competition_name: {
         Args: { input_name: string }
