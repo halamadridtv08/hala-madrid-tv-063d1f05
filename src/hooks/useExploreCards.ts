@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, FileText, Video, Image, Users, Target, Trophy, Newspaper, PlayCircle, Settings, HelpCircle, LucideIcon } from "lucide-react";
+import { 
+  Calendar, CalendarDays, FileText, Video, Image, Users, Target, Trophy, 
+  Newspaper, PlayCircle, Settings, HelpCircle, Dumbbell, Mic, Shirt,
+  Home, Star, Heart, Bell, Search, Mail, Phone, MapPin, Clock, 
+  Award, Medal, Gamepad2, Tv, Camera, Film, Music, Book, Bookmark,
+  LucideIcon 
+} from "lucide-react";
 
 export interface ExploreCard {
   id: string;
@@ -14,6 +20,7 @@ export interface ExploreCard {
 
 const ICON_MAP: Record<string, LucideIcon> = {
   Calendar,
+  CalendarDays,
   FileText,
   Video,
   Image,
@@ -24,6 +31,27 @@ const ICON_MAP: Record<string, LucideIcon> = {
   PlayCircle,
   Settings,
   HelpCircle,
+  Dumbbell,
+  Mic,
+  Shirt,
+  Home,
+  Star,
+  Heart,
+  Bell,
+  Search,
+  Mail,
+  Phone,
+  MapPin,
+  Clock,
+  Award,
+  Medal,
+  Gamepad2,
+  Tv,
+  Camera,
+  Film,
+  Music,
+  Book,
+  Bookmark,
 };
 
 export function useExploreCards() {
