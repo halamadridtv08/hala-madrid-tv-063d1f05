@@ -15,11 +15,30 @@ serve(async (req) => {
 
   try {
     // Validate CRON_SECRET for scheduled execution
-    const cronSecret = req.headers.get("x-cron-secret");
-    const expectedSecret = Deno.env.get("CRON_SECRET");
-    
+    const cronSecretRaw = req.headers.get("x-cron-secret") ?? "";
+    const cronSecret = cronSecretRaw.trim();
+    const expectedSecret = (Deno.env.get("CRON_SECRET") ?? "").trim();
+
+    if (!expectedSecret) {
+      console.error("CRON_SECRET not configured in Edge Function secrets");
+      return new Response(JSON.stringify({ error: "CRON_SECRET not configured" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    if (!cronSecret) {
+      console.log("Unauthorized: Missing x-cron-secret header");
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     if (cronSecret !== expectedSecret) {
-      console.log("Unauthorized: Invalid CRON_SECRET");
+      console.log(
+        `Unauthorized: Invalid CRON_SECRET (received_len=${cronSecret.length})`
+      );
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { "Content-Type": "application/json", ...corsHeaders },
