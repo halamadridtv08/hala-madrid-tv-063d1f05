@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Settings, Shield, Database, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +20,7 @@ import {
 const SettingsDashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [autoBackup, setAutoBackup] = useState(true);
@@ -114,42 +116,45 @@ const SettingsDashboard = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Sécurité
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">Authentification à deux facteurs</h4>
-              <p className="text-sm text-muted-foreground">Protection supplémentaire pour les administrateurs</p>
+      {/* Security card - Admin only */}
+      {isAdmin && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Sécurité
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium">Authentification à deux facteurs</h4>
+                <p className="text-sm text-muted-foreground">Protection supplémentaire pour les administrateurs</p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/admin/security')}
+              >
+                Configurer
+              </Button>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/admin/security')}
-            >
-              Configurer
-            </Button>
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">Logs de sécurité</h4>
-              <p className="text-sm text-muted-foreground">Consulter les tentatives de connexion</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium">Logs de sécurité</h4>
+                <p className="text-sm text-muted-foreground">Consulter les tentatives de connexion</p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/admin/security?tab=logs')}
+              >
+                Voir les logs
+              </Button>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/admin/security?tab=logs')}
-            >
-              Voir les logs
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
