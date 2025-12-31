@@ -1,52 +1,27 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Crown, Sparkles, Star, Trophy, Newspaper, Timer, Users } from "lucide-react";
+import { Crown, Sparkles, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useWelcomePopupSettings } from "@/hooks/useWelcomePopupSettings";
-
-// Icon mapping for dynamic icons
-const ICON_MAP: Record<string, string> = {
-  'Trophy': '🏆',
-  'Newspaper': '📰',
-  'Timer': '⚽',
-  'Users': '👥',
-  'Star': '⭐',
-  'Crown': '👑',
-  'Sparkles': '✨',
-};
 
 export const WelcomePopup = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { settings, loading } = useWelcomePopupSettings();
 
   useEffect(() => {
-    if (loading || !settings?.is_enabled) return;
-    
     const hasSeenWelcome = localStorage.getItem("hala-madrid-welcome-seen");
     if (!hasSeenWelcome) {
+      // Small delay for better UX
       const timer = setTimeout(() => {
         setIsOpen(true);
-      }, settings.delay_ms || 1500);
+      }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [loading, settings]);
+  }, []);
 
   const handleClose = () => {
     localStorage.setItem("hala-madrid-welcome-seen", "true");
     setIsOpen(false);
   };
-
-  // Don't render if settings are not loaded or popup is disabled
-  if (loading || !settings?.is_enabled) {
-    return null;
-  }
-
-  const features = settings.features || [
-    { icon: '⚽', label: 'Matchs' },
-    { icon: '📰', label: 'Actualités' },
-    { icon: '🏆', label: 'Trophées' },
-  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -92,13 +67,13 @@ export const WelcomePopup = () => {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
                   className="text-2xl font-bold text-foreground mb-2"
-                  dangerouslySetInnerHTML={{ 
-                    __html: settings.title.replace(
-                      /HALA MADRID TV/g, 
-                      '<span class="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">HALA MADRID TV</span>'
-                    ) 
-                  }}
-                />
+                >
+                  ¡Bienvenido a{" "}
+                  <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                    HALA MADRID TV
+                  </span>
+                  !
+                </motion.h2>
 
                 {/* Subtitle */}
                 <motion.p
@@ -107,7 +82,7 @@ export const WelcomePopup = () => {
                   transition={{ delay: 0.4, duration: 0.5 }}
                   className="text-muted-foreground mb-6"
                 >
-                  {settings.subtitle}
+                  Votre destination ultime pour toute l'actualité du Real Madrid
                 </motion.p>
 
                 {/* Features */}
@@ -117,12 +92,16 @@ export const WelcomePopup = () => {
                   transition={{ delay: 0.5, duration: 0.5 }}
                   className="grid grid-cols-3 gap-2 mb-6"
                 >
-                  {features.slice(0, 3).map((item, index) => (
+                  {[
+                    { icon: "⚽", label: "Matchs" },
+                    { icon: "📰", label: "Actualités" },
+                    { icon: "🏆", label: "Trophées" },
+                  ].map((item, index) => (
                     <div
                       key={index}
                       className="flex flex-col items-center p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                     >
-                      <span className="text-2xl mb-1">{ICON_MAP[item.icon] || item.icon}</span>
+                      <span className="text-2xl mb-1">{item.icon}</span>
                       <span className="text-xs text-muted-foreground">{item.label}</span>
                     </div>
                   ))}
@@ -139,21 +118,19 @@ export const WelcomePopup = () => {
                     className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold py-6 text-lg shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
                   >
                     <Crown className="mr-2 h-5 w-5" />
-                    {settings.button_text}
+                    ¡Hala Madrid!
                   </Button>
                 </motion.div>
 
                 {/* Footer text */}
-                {settings.footer_text && (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.8, duration: 0.5 }}
-                    className="text-xs text-muted-foreground mt-4"
-                  >
-                    {settings.footer_text}
-                  </motion.p>
-                )}
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8, duration: 0.5 }}
+                  className="text-xs text-muted-foreground mt-4"
+                >
+                  Hasta el final, vamos Real 💜
+                </motion.p>
               </div>
             </motion.div>
           )}
