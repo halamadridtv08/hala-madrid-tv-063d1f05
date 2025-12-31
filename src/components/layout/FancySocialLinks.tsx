@@ -126,7 +126,7 @@ const FancySocialLinks: React.FC<FancySocialLinksProps> = ({ className = '' }) =
 
   if (loading) {
     return (
-      <div className={`grid grid-cols-2 gap-6 max-w-[200px] mx-auto ${className}`}>
+      <div className={`grid grid-cols-2 gap-4 ${className}`}>
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="w-[70px] h-[70px] rounded-full bg-muted animate-pulse" />
         ))}
@@ -145,7 +145,7 @@ const FancySocialLinks: React.FC<FancySocialLinksProps> = ({ className = '' }) =
   };
 
   return (
-    <div className={`grid ${getGridCols()} gap-6 max-w-[280px] mx-auto ${className}`}>
+    <div className={`grid ${getGridCols()} gap-4 ${className}`}>
       {links.map((link, index) => {
         const styles = platformStyles[link.platform] || platformStyles.twitter;
         const icon = platformIcons[link.platform];
