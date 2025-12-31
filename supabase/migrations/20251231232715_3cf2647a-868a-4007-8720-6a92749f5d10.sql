@@ -1,1 +1,0 @@
-UPDATE welcome_popup_settings SET is_enabled = false WHERE id = 'e106f035-c668-4f9a-8c21-a4883baba286';
