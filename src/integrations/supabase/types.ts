@@ -542,6 +542,42 @@ export type Database = {
         }
         Relationships: []
       }
+      branding_settings: {
+        Row: {
+          accent_color: string | null
+          created_at: string
+          favicon_url: string | null
+          id: string
+          logo_url: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          site_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string | null
+          created_at?: string
+          favicon_url?: string | null
+          id?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          site_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string | null
+          created_at?: string
+          favicon_url?: string | null
+          id?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          site_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coaches: {
         Row: {
           age: number | null
@@ -656,6 +692,42 @@ export type Database = {
           total_budget_used?: number | null
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      explore_cards: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number | null
+          icon: string
+          id: string
+          is_active: boolean | null
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          icon: string
+          id?: string
+          is_active?: boolean | null
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          icon?: string
+          id?: string
+          is_active?: boolean | null
+          title?: string
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }
@@ -1775,6 +1847,53 @@ export type Database = {
         }
         Relationships: []
       }
+      navigation_links: {
+        Row: {
+          created_at: string
+          display_order: number | null
+          icon: string | null
+          id: string
+          is_visible: boolean | null
+          label: string
+          location: string | null
+          parent_id: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_visible?: boolean | null
+          label: string
+          location?: string | null
+          parent_id?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_visible?: boolean | null
+          label?: string
+          location?: string | null
+          parent_id?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "navigation_links_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "navigation_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_subscribers: {
         Row: {
           confirmation_token: string | null
@@ -2637,6 +2756,42 @@ export type Database = {
         }
         Relationships: []
       }
+      site_content: {
+        Row: {
+          content_key: string
+          content_type: string | null
+          content_value: string
+          created_at: string
+          description: string | null
+          id: string
+          language: string | null
+          section: string
+          updated_at: string
+        }
+        Insert: {
+          content_key: string
+          content_type?: string | null
+          content_value: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          language?: string | null
+          section: string
+          updated_at?: string
+        }
+        Update: {
+          content_key?: string
+          content_type?: string | null
+          content_value?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          language?: string | null
+          section?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           created_at: string
@@ -2694,6 +2849,39 @@ export type Database = {
           section_key?: string
           section_name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      social_links: {
+        Row: {
+          created_at: string
+          display_order: number | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          platform: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          platform: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          platform?: string
+          updated_at?: string
+          url?: string
         }
         Relationships: []
       }
@@ -2927,6 +3115,42 @@ export type Database = {
           title?: string
           updated_at?: string
           video_url?: string
+        }
+        Relationships: []
+      }
+      welcome_popup_settings: {
+        Row: {
+          button_text: string | null
+          created_at: string
+          delay_ms: number | null
+          features: Json | null
+          id: string
+          is_enabled: boolean | null
+          subtitle: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          button_text?: string | null
+          created_at?: string
+          delay_ms?: number | null
+          features?: Json | null
+          id?: string
+          is_enabled?: boolean | null
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          button_text?: string | null
+          created_at?: string
+          delay_ms?: number | null
+          features?: Json | null
+          id?: string
+          is_enabled?: boolean | null
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
