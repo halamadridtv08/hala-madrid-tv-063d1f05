@@ -4,10 +4,14 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { showLoginSuccessToast, showLogoutSuccessToast } from '@/lib/authToasts';
 
+type UserRole = 'admin' | 'moderator' | 'user';
+
 type AuthContextType = {
   session: Session | null;
   user: User | null;
   isAdmin: boolean;
+  isModerator: boolean;
+  userRole: UserRole | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
 };
@@ -16,6 +20,8 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   isAdmin: false,
+  isModerator: false,
+  userRole: null,
   isLoading: true,
   signOut: async () => {},
 });
@@ -26,6 +32,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isModerator, setIsModerator] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -40,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (session?.user) {
         // Defer Supabase calls to avoid auth deadlocks
         setTimeout(() => {
-          checkAdminStatus(session.user.id);
+          checkUserRole(session.user.id);
         }, 0);
 
         if (event === "SIGNED_IN") {
@@ -48,6 +56,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       } else {
         setIsAdmin(false);
+        setIsModerator(false);
+        setUserRole(null);
       }
     });
 
@@ -57,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        checkAdminStatus(session.user.id);
+        checkUserRole(session.user.id);
       }
 
       setIsLoading(false);
@@ -66,27 +76,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkAdminStatus = async (userId: string) => {
+  const checkUserRole = async (userId: string) => {
     try {
-      console.log("Checking admin status for user:", userId);
+      console.log("Checking user role for:", userId);
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId)
-        .eq('role', 'admin')
-        .maybeSingle();
+        .eq('user_id', userId);
       
       if (error) {
-        console.error('Error checking admin status:', error);
+        console.error('Error checking user role:', error);
         setIsAdmin(false);
+        setIsModerator(false);
+        setUserRole('user');
         return;
       }
       
-      console.log("Admin check result:", data);
-      setIsAdmin(!!data);
+      const roles = data?.map(r => r.role) || [];
+      console.log("User roles:", roles);
+      
+      const hasAdmin = roles.includes('admin');
+      const hasModerator = roles.includes('moderator');
+      
+      setIsAdmin(hasAdmin);
+      // Moderator access = admin OR moderator role
+      setIsModerator(hasAdmin || hasModerator);
+      setUserRole(hasAdmin ? 'admin' : hasModerator ? 'moderator' : 'user');
     } catch (error) {
-      console.error('Error checking admin status:', error);
+      console.error('Error checking user role:', error);
       setIsAdmin(false);
+      setIsModerator(false);
+      setUserRole('user');
     }
   };
 
@@ -100,7 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, isAdmin, isLoading, signOut }}>
+    <AuthContext.Provider value={{ session, user, isAdmin, isModerator, userRole, isLoading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

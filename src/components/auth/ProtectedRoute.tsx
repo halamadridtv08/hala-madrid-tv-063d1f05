@@ -6,11 +6,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requireAdmin?: boolean;
+  requireAdmin?: boolean;      // Admin OR Moderator can access
+  requireAdminOnly?: boolean;  // Only Admin can access (security pages)
 }
 
-export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
-  const { user, isAdmin, isLoading } = useAuth();
+export const ProtectedRoute = ({ 
+  children, 
+  requireAdmin = false,
+  requireAdminOnly = false 
+}: ProtectedRouteProps) => {
+  const { user, isAdmin, isModerator, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -25,7 +30,13 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
     return <Navigate to="/auth" replace />;
   }
 
-  if (requireAdmin && !isAdmin) {
+  // For admin-only routes (security), require admin role specifically
+  if (requireAdminOnly && !isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  // For admin routes, allow admin OR moderator
+  if (requireAdmin && !isModerator) {
     return <Navigate to="/" replace />;
   }
 

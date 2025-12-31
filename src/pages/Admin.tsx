@@ -128,7 +128,7 @@ function isValidAdminTab(value: string | null): value is AdminTab {
 const Admin = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAdmin, isLoading: authLoading } = useAuth();
+  const { isAdmin, isModerator, userRole, isLoading: authLoading } = useAuth();
 
   const [activeTab, setActiveTab] = useState<AdminTab>("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -175,13 +175,13 @@ const Admin = () => {
     }
   };
 
-  // Double-check admin status - defense in depth
+  // Double-check moderator/admin status - defense in depth
   useEffect(() => {
-    if (!authLoading && !isAdmin) {
-      console.warn("Security: Non-admin user attempted to access admin panel");
+    if (!authLoading && !isModerator) {
+      console.warn("Security: Non-admin/moderator user attempted to access admin panel");
       navigate("/", { replace: true });
     }
-  }, [isAdmin, authLoading, navigate]);
+  }, [isModerator, authLoading, navigate]);
 
   // Read tab from URL (?tab=players)
   useEffect(() => {
@@ -226,8 +226,8 @@ const Admin = () => {
     );
   }
 
-  // Block non-admins
-  if (!isAdmin) {
+  // Block non-admins and non-moderators
+  if (!isModerator) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <ShieldAlert className="h-16 w-16 text-destructive" />

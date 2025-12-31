@@ -31,6 +31,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -40,36 +41,41 @@ interface AdminSidebarProps {
 }
 
 const navigationItems = [
-  { value: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { value: "analytics", label: "Analytics", icon: TrendingUp },
-  { value: "articles", label: "Articles", icon: FileText },
-  { value: "special-articles", label: "Articles Spéciaux", icon: Trophy },
-  { value: "videos", label: "Vidéos", icon: Video },
-  { value: "photos", label: "Photos", icon: Camera },
-  { value: "players", label: "Joueurs", icon: User },
-  { value: "coaches", label: "Entraîneurs", icon: Users },
-  { value: "matches", label: "Matchs", icon: Calendar },
-  { value: "live-bar", label: "Barre Live", icon: Tv },
-  { value: "announcement-bar", label: "Barre Annonce", icon: Megaphone },
-  { value: "match-control", label: "Centre Match", icon: Radio },
-  { value: "opponents", label: "Équipes Adverses", icon: Target },
-  { value: "formations", label: "Formations", icon: Target },
-  { value: "lineups", label: "Compositions", icon: Users },
-  { value: "press", label: "Conférences", icon: Mic },
-  { value: "training", label: "Entraînements", icon: PlayCircle },
-  { value: "stats", label: "Statistiques", icon: BarChart3 },
-  { value: "kits", label: "Maillots", icon: Shirt },
-  { value: "youtube", label: "YouTube", icon: PlayCircle },
-  { value: "flash-news", label: "Infos Flash", icon: Twitter },
-  { value: "transfers", label: "Transferts", icon: ArrowRightLeft },
-  { value: "newsletter", label: "Newsletter", icon: Mail },
-  { value: "dream-teams", label: "Dream Teams", icon: Star },
-  { value: "notifications", label: "Notifications", icon: Bell },
-  { value: "integrations", label: "Intégrations", icon: Puzzle },
-  { value: "settings", label: "Paramètres", icon: Settings },
+  { value: "dashboard", label: "Dashboard", icon: LayoutDashboard, adminOnly: false },
+  { value: "analytics", label: "Analytics", icon: TrendingUp, adminOnly: false },
+  { value: "articles", label: "Articles", icon: FileText, adminOnly: false },
+  { value: "special-articles", label: "Articles Spéciaux", icon: Trophy, adminOnly: false },
+  { value: "videos", label: "Vidéos", icon: Video, adminOnly: false },
+  { value: "photos", label: "Photos", icon: Camera, adminOnly: false },
+  { value: "players", label: "Joueurs", icon: User, adminOnly: false },
+  { value: "coaches", label: "Entraîneurs", icon: Users, adminOnly: false },
+  { value: "matches", label: "Matchs", icon: Calendar, adminOnly: false },
+  { value: "live-bar", label: "Barre Live", icon: Tv, adminOnly: false },
+  { value: "announcement-bar", label: "Barre Annonce", icon: Megaphone, adminOnly: false },
+  { value: "match-control", label: "Centre Match", icon: Radio, adminOnly: false },
+  { value: "opponents", label: "Équipes Adverses", icon: Target, adminOnly: false },
+  { value: "formations", label: "Formations", icon: Target, adminOnly: false },
+  { value: "lineups", label: "Compositions", icon: Users, adminOnly: false },
+  { value: "press", label: "Conférences", icon: Mic, adminOnly: false },
+  { value: "training", label: "Entraînements", icon: PlayCircle, adminOnly: false },
+  { value: "stats", label: "Statistiques", icon: BarChart3, adminOnly: false },
+  { value: "kits", label: "Maillots", icon: Shirt, adminOnly: false },
+  { value: "youtube", label: "YouTube", icon: PlayCircle, adminOnly: false },
+  { value: "flash-news", label: "Infos Flash", icon: Twitter, adminOnly: false },
+  { value: "transfers", label: "Transferts", icon: ArrowRightLeft, adminOnly: false },
+  { value: "newsletter", label: "Newsletter", icon: Mail, adminOnly: false },
+  { value: "dream-teams", label: "Dream Teams", icon: Star, adminOnly: false },
+  { value: "notifications", label: "Notifications", icon: Bell, adminOnly: false },
+  { value: "integrations", label: "Intégrations", icon: Puzzle, adminOnly: true },
+  { value: "settings", label: "Paramètres", icon: Settings, adminOnly: false },
 ];
 
 export function AdminSidebar({ activeTab, onTabChange, collapsed, onCollapsedChange }: AdminSidebarProps) {
+  const { isAdmin } = useAuth();
+
+  // Filter items based on user role
+  const visibleItems = navigationItems.filter(item => !item.adminOnly || isAdmin);
+
   return (
     <TooltipProvider delayDuration={0}>
       <div className={cn(
@@ -98,7 +104,7 @@ export function AdminSidebar({ activeTab, onTabChange, collapsed, onCollapsedCha
         </div>
         <ScrollArea className="flex-1">
           <div className="p-2 space-y-1">
-            {navigationItems.map((item) => {
+            {visibleItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.value;
               
