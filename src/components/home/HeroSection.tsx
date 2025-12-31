@@ -4,10 +4,19 @@ import { motion } from "framer-motion";
 import { useHeroSettings } from "@/hooks/useHeroSettings";
 import { ShinyButton } from "@/components/ui/shiny-button";
 import { VideoButton } from "@/components/ui/video-button";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 export function HeroSection() {
   const navigate = useNavigate();
   const { backgroundVideoEnabled, backgroundVideoUrl, mockupVideoUrl, isLoading } = useHeroSettings();
+  const { getContent } = useSiteContent();
+  
+  // Get dynamic content from site_content table
+  const heroTitle = getContent('hero_title', 'Bienvenue sur');
+  const heroBrandName = getContent('hero_brand_name', 'HALAMADRIDTV');
+  const heroSubtitle = getContent('hero_subtitle', "Votre chaîne officielle d'actualités, de vidéos et d'informations sur le Real Madrid");
+  const heroCta1 = getContent('hero_cta_primary', 'Dernières Actualités');
+  const heroCta2 = getContent('hero_cta_secondary', 'Voir les Vidéos');
 
   // Mode arrière-plan vidéo plein écran
   if (backgroundVideoEnabled && backgroundVideoUrl) {
@@ -46,20 +55,20 @@ export function HeroSection() {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white mb-4 sm:mb-6 leading-tight">
-                <span className="text-madrid-gold">Bienvenue sur </span>
+                <span className="text-madrid-gold">{heroTitle} </span>
                 <br />
                 HALA<span className="text-white">MADRID</span>
                 <span className="text-madrid-gold">TV</span>
               </h1>
               <p className="text-base xs:text-lg sm:text-xl md:text-2xl text-gray-100 mb-4 sm:mb-6 leading-relaxed">
-                Votre chaîne officielle d'actualités, de vidéos et d'informations sur le Real Madrid
+                {heroSubtitle}
               </p>
               <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 items-center justify-center">
                 <ShinyButton onClick={() => navigate('/news')}>
-                  Dernières Actualités
+                  {heroCta1}
                 </ShinyButton>
                 <VideoButton onClick={() => navigate('/videos')}>
-                  Voir les Vidéos
+                  {heroCta2}
                 </VideoButton>
               </div>
             </motion.div>
@@ -91,20 +100,20 @@ export function HeroSection() {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold text-white mb-3 sm:mb-4 md:mb-6 leading-tight">
-                <span className="text-madrid-gold">Bienvenue sur </span>
+                <span className="text-madrid-gold">{heroTitle} </span>
                 <br />
                 HALA<span className="text-white">MADRID</span>
                 <span className="text-madrid-gold">TV</span>
               </h1>
               <p className="text-sm xs:text-base sm:text-lg md:text-xl lg:text-2xl text-gray-100 mb-4 sm:mb-6 md:mb-8 leading-relaxed">
-                Votre chaîne officielle d'actualités, de vidéos et d'informations sur le Real Madrid
+                {heroSubtitle}
               </p>
               <div className="flex flex-col xs:flex-row gap-2 sm:gap-3 md:gap-4 items-center">
                 <ShinyButton onClick={() => navigate('/news')}>
-                  Dernières Actualités
+                  {heroCta1}
                 </ShinyButton>
                 <VideoButton onClick={() => navigate('/videos')}>
-                  Voir les Vidéos
+                  {heroCta2}
                 </VideoButton>
               </div>
             </motion.div>

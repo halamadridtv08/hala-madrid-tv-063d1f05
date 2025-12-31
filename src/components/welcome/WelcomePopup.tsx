@@ -3,25 +3,33 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Crown, Sparkles, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useWelcomePopupSettings } from "@/hooks/useWelcomePopupSettings";
 
 export const WelcomePopup = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { settings, loading } = useWelcomePopupSettings();
 
   useEffect(() => {
+    if (loading || !settings) return;
+    
+    // Don't show if disabled
+    if (!settings.is_enabled) return;
+    
     const hasSeenWelcome = localStorage.getItem("hala-madrid-welcome-seen");
     if (!hasSeenWelcome) {
-      // Small delay for better UX
       const timer = setTimeout(() => {
         setIsOpen(true);
-      }, 1500);
+      }, settings.display_delay);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [loading, settings]);
 
   const handleClose = () => {
     localStorage.setItem("hala-madrid-welcome-seen", "true");
     setIsOpen(false);
   };
+
+  if (loading || !settings) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -67,13 +75,13 @@ export const WelcomePopup = () => {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
                   className="text-2xl font-bold text-foreground mb-2"
-                >
-                  ¡Bienvenido a{" "}
-                  <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                    HALA MADRID TV
-                  </span>
-                  !
-                </motion.h2>
+                  dangerouslySetInnerHTML={{ 
+                    __html: settings.title.replace(
+                      'HALA MADRID TV', 
+                      '<span class="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">HALA MADRID TV</span>'
+                    ) 
+                  }}
+                />
 
                 {/* Subtitle */}
                 <motion.p
@@ -82,7 +90,7 @@ export const WelcomePopup = () => {
                   transition={{ delay: 0.4, duration: 0.5 }}
                   className="text-muted-foreground mb-6"
                 >
-                  Votre destination ultime pour toute l'actualité du Real Madrid
+                  {settings.subtitle}
                 </motion.p>
 
                 {/* Features */}
@@ -92,11 +100,7 @@ export const WelcomePopup = () => {
                   transition={{ delay: 0.5, duration: 0.5 }}
                   className="grid grid-cols-3 gap-2 mb-6"
                 >
-                  {[
-                    { icon: "⚽", label: "Matchs" },
-                    { icon: "📰", label: "Actualités" },
-                    { icon: "🏆", label: "Trophées" },
-                  ].map((item, index) => (
+                  {settings.features.map((item, index) => (
                     <div
                       key={index}
                       className="flex flex-col items-center p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
@@ -118,7 +122,7 @@ export const WelcomePopup = () => {
                     className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold py-6 text-lg shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
                   >
                     <Crown className="mr-2 h-5 w-5" />
-                    ¡Hala Madrid!
+                    {settings.button_text}
                   </Button>
                 </motion.div>
 
@@ -129,7 +133,7 @@ export const WelcomePopup = () => {
                   transition={{ delay: 0.8, duration: 0.5 }}
                   className="text-xs text-muted-foreground mt-4"
                 >
-                  Hasta el final, vamos Real 💜
+                  {settings.footer_text}
                 </motion.p>
               </div>
             </motion.div>
