@@ -236,17 +236,40 @@ serve(async (req) => {
 
     if (emailError) {
       console.error("Error sending email:", emailError);
-      // Try with fallback sender
+      // Try with fallback sender - Resend test mode only allows sending to own email
+      const fallbackRecipient = "halamadridtv08@gmail.com";
+      console.log(`Trying fallback: sending to ${fallbackRecipient} via onboarding@resend.dev`);
+      
       const { error: fallbackError } = await resend.emails.send({
         from: "HalaMadrid TV <onboarding@resend.dev>",
-        to: adminEmails,
+        to: [fallbackRecipient],
         subject: `📊 Rapport Hebdomadaire - ${stats.totalActions} actions modérateurs`,
         html: htmlContent,
       });
       
       if (fallbackError) {
+        console.error("Fallback email also failed:", fallbackError);
         throw fallbackError;
       }
+      
+      console.log("Weekly report sent successfully via fallback!");
+      return new Response(
+        JSON.stringify({
+          success: true,
+          stats,
+          emailsSent: 1,
+          fallback: true,
+          note: "Email sent to fallback address. Verify halamadrid.tv domain in Resend for full functionality.",
+          period: {
+            start: startDate.toISOString(),
+            end: endDate.toISOString(),
+          },
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
     console.log("Weekly report sent successfully!");
