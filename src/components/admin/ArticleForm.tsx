@@ -14,6 +14,7 @@ import { ArticleTemplates } from "./ArticleTemplates";
 import { ArticleImageCropper } from "./ArticleImageCropper";
 import { Calendar, Clock, Upload, Crop, Image } from "lucide-react";
 import { uploadFile } from "@/utils/fileUpload";
+import { useModeratorActions } from "@/hooks/useModeratorActions";
 
 interface ArticleFormProps {
   article?: Article & { scheduled_at?: string; thumbnail_url?: string };
@@ -24,6 +25,7 @@ interface ArticleFormProps {
 
 export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: ArticleFormProps) => {
   const { user } = useAuth();
+  const { logArticlePublished } = useModeratorActions();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: article?.title || "",
@@ -75,13 +77,27 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
           .eq('id', article.id);
 
         if (error) throw error;
+        
+        // Log if article is being published
+        if (dataToSubmit.is_published && !article.is_published) {
+          await logArticlePublished(article.id, formData.title);
+        }
+        
         toast.success("Article mis à jour avec succès");
       } else {
-        const { error } = await supabase
+        const { data: insertedData, error } = await supabase
           .from('articles')
-          .insert([dataToSubmit]);
+          .insert([dataToSubmit])
+          .select('id')
+          .single();
 
         if (error) throw error;
+        
+        // Log if new article is published directly
+        if (dataToSubmit.is_published && insertedData?.id) {
+          await logArticlePublished(insertedData.id, formData.title);
+        }
+        
         toast.success("Article créé avec succès");
       }
 
