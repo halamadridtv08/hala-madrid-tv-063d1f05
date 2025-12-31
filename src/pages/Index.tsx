@@ -107,7 +107,7 @@ const Index = () => {
                         <h3 className="text-base sm:text-lg md:text-xl font-bold mb-1 sm:mb-2">{card.title}</h3>
                         <p className="text-xs sm:text-sm md:text-base text-gray-500 mb-2 sm:mb-3 md:mb-4 leading-tight">{card.description}</p>
                         <Button asChild variant="outline" size="sm" className="w-full text-xs sm:text-sm">
-                          <Link to={card.url}>{t('common.view')}</Link>
+                          <Link to={card.url}>Voir</Link>
                         </Button>
                       </CardContent>
                     </Card>
