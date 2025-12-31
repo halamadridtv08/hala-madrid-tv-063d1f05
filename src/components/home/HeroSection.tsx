@@ -11,9 +11,7 @@ export function HeroSection() {
   const { backgroundVideoEnabled, backgroundVideoUrl, mockupVideoUrl, isLoading } = useHeroSettings();
   const { getContent } = useSiteContent();
   
-  // Get dynamic content from site_content table
-  const heroTitle = getContent('hero_title', 'Bienvenue sur');
-  const heroBrandName = getContent('hero_brand_name', 'HALAMADRIDTV');
+  // Get dynamic content from site_content table with original defaults
   const heroSubtitle = getContent('hero_subtitle', "Votre chaîne officielle d'actualités, de vidéos et d'informations sur le Real Madrid");
   const heroCta1 = getContent('hero_cta_primary', 'Dernières Actualités');
   const heroCta2 = getContent('hero_cta_secondary', 'Voir les Vidéos');
@@ -55,7 +53,7 @@ export function HeroSection() {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-white mb-4 sm:mb-6 leading-tight">
-                <span className="text-madrid-gold">{heroTitle} </span>
+                <span className="text-madrid-gold">Bienvenue sur </span>
                 <br />
                 HALA<span className="text-white">MADRID</span>
                 <span className="text-madrid-gold">TV</span>
@@ -100,7 +98,7 @@ export function HeroSection() {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold text-white mb-3 sm:mb-4 md:mb-6 leading-tight">
-                <span className="text-madrid-gold">{heroTitle} </span>
+                <span className="text-madrid-gold">Bienvenue sur </span>
                 <br />
                 HALA<span className="text-white">MADRID</span>
                 <span className="text-madrid-gold">TV</span>
