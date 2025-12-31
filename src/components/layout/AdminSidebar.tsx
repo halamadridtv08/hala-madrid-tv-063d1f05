@@ -25,7 +25,13 @@ import {
   Bell,
   ArrowRightLeft,
   Megaphone,
-  TrendingUp
+  TrendingUp,
+  Palette,
+  Type,
+  Link2,
+  Share2,
+  LayoutGrid,
+  Sparkles
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -68,6 +74,12 @@ const navigationItems = [
   { value: "dream-teams", label: "Dream Teams", icon: Star, adminOnly: false },
   { value: "notifications", label: "Notifications", icon: Bell, adminOnly: false },
   { value: "integrations", label: "Intégrations", icon: Puzzle, adminOnly: true },
+  // Apparence section
+  { value: "site-content", label: "Contenu du site", icon: Type, adminOnly: true },
+  { value: "branding", label: "Branding", icon: Palette, adminOnly: true },
+  { value: "welcome-popup", label: "Popup Bienvenue", icon: Sparkles, adminOnly: true },
+  { value: "social-links", label: "Réseaux Sociaux", icon: Share2, adminOnly: true },
+  { value: "explore-cards", label: "Cartes Explorer", icon: LayoutGrid, adminOnly: true },
   { value: "settings", label: "Paramètres", icon: Settings, adminOnly: false },
 ];
 

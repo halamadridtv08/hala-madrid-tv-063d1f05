@@ -76,6 +76,11 @@ import { TransfersManager } from "@/components/admin/TransfersManager";
 import { AnnouncementBarManager } from "@/components/admin/AnnouncementBarManager";
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
 import ModeratorActivityDashboard from "@/components/admin/ModeratorActivityDashboard";
+import { SiteContentManager } from "@/components/admin/SiteContentManager";
+import { BrandingManager } from "@/components/admin/BrandingManager";
+import { WelcomePopupManager } from "@/components/admin/WelcomePopupManager";
+import { SocialLinksManager } from "@/components/admin/SocialLinksManager";
+import { ExploreCardsManager } from "@/components/admin/ExploreCardsManager";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -118,6 +123,11 @@ const VALID_ADMIN_TABS = [
   "dream-teams",
   "notifications",
   "integrations",
+  "site-content",
+  "branding",
+  "welcome-popup",
+  "social-links",
+  "explore-cards",
   "settings",
 ] as const;
 
@@ -759,6 +769,21 @@ const Admin = () => {
           <TabsContent value="notifications">{renderNotifications()}</TabsContent>
           <TabsContent value="integrations">
             <IntegrationsManager />
+          </TabsContent>
+          <TabsContent value="site-content">
+            <SiteContentManager />
+          </TabsContent>
+          <TabsContent value="branding">
+            <BrandingManager />
+          </TabsContent>
+          <TabsContent value="welcome-popup">
+            <WelcomePopupManager />
+          </TabsContent>
+          <TabsContent value="social-links">
+            <SocialLinksManager />
+          </TabsContent>
+          <TabsContent value="explore-cards">
+            <ExploreCardsManager />
           </TabsContent>
           <TabsContent value="settings">{renderSettings()}</TabsContent>
         </Tabs>
