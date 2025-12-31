@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { RichTextEditor } from "./RichTextEditor";
 import { Card } from "@/components/ui/card";
+import { useModeratorActions } from "@/hooks/useModeratorActions";
 
 const formSchema = z.object({
   author: z.string().min(1, "L'auteur est requis"),
@@ -41,6 +42,7 @@ export const FlashNewsForm = ({
   const [selectedSource, setSelectedSource] = useState<FlashNewsSource | null>(null);
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
   const { toast } = useToast();
+  const { logFlashNewsPublished } = useModeratorActions();
 
   useEffect(() => {
     fetchSources();
@@ -173,12 +175,18 @@ export const FlashNewsForm = ({
           })
           .eq('id', flashNews.id);
         if (error) throw error;
+        
+        // Log if flash news is being published
+        if (values.is_published && !flashNews.is_published) {
+          await logFlashNewsPublished(flashNews.id, values.content);
+        }
+        
         toast({
           title: "Info flash mise à jour",
           description: "L'info flash a été mise à jour avec succès."
         });
       } else {
-        const { error } = await supabase
+        const { data: insertedData, error } = await supabase
           .from('flash_news')
           .insert([{
             author: values.author,
@@ -189,8 +197,16 @@ export const FlashNewsForm = ({
             is_published: values.is_published,
             status: values.status,
             scheduled_at: scheduledAtValue
-          }]);
+          }])
+          .select('id')
+          .single();
         if (error) throw error;
+        
+        // Log if new flash news is published directly
+        if (values.is_published && insertedData?.id) {
+          await logFlashNewsPublished(insertedData.id, values.content);
+        }
+        
         toast({
           title: "Info flash créée",
           description: "L'info flash a été créée avec succès."

@@ -45,3 +45,7 @@ verify_jwt = false
 # Moderator notification endpoint - requires authentication
 [functions.notify-moderator-action]
 verify_jwt = true
+
+# Weekly moderator report - CRON job
+[functions.weekly-moderator-report]
+verify_jwt = false
