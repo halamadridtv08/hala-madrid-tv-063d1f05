@@ -35,17 +35,28 @@ serve(async (req) => {
     const feedTitle = "HALA MADRID TV - Actualités Real Madrid";
     const feedDescription = "Toute l'actualité du Real Madrid CF en français - Articles, analyses, matchs et transferts";
 
-    // Helper function to escape XML entities properly
-    const escapeXml = (text: string): string => {
+    // Helper function to strip HTML and escape XML entities properly
+    const cleanForXml = (text: string): string => {
       if (!text) return "";
       return text
+        // First strip all HTML tags
+        .replace(/<[^>]*>/g, "")
+        // Decode common HTML entities
+        .replace(/&nbsp;/g, " ")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#(\d+);/g, (_, num) => String.fromCharCode(num))
+        // Then escape for XML
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&apos;")
-        // Also strip any HTML tags that might be in the content
-        .replace(/<[^>]*>/g, "");
+        // Clean up extra whitespace
+        .replace(/\s+/g, " ")
+        .trim();
     };
 
     // Generate RSS XML
@@ -53,10 +64,10 @@ serve(async (req) => {
       .map((article) => {
         const pubDate = new Date(article.published_at).toUTCString();
         const link = `${siteUrl}/news/${article.id}`;
-        const title = escapeXml(article.title);
-        const description = escapeXml(article.description);
-        const category = escapeXml(article.category);
-        const imageUrl = article.image_url ? escapeXml(article.image_url) : null;
+        const title = cleanForXml(article.title);
+        const description = cleanForXml(article.description);
+        const category = cleanForXml(article.category);
+        const imageUrl = article.image_url ? article.image_url.replace(/&/g, "&amp;") : null;
 
         return `
     <item>
