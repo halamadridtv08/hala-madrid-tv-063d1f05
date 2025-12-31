@@ -64,9 +64,12 @@ export function useSiteVisibility() {
   }, []);
 
   const isVisible = (sectionKey: string): boolean => {
-    // Return false during loading to prevent flash
+    // Return false during loading to prevent flash of content
     if (loading) return false;
-    return visibility[sectionKey] !== false;
+    // Return false if explicitly set to false, otherwise check if the section exists
+    // If section doesn't exist in DB, default to false (hidden)
+    if (!(sectionKey in visibility)) return false;
+    return visibility[sectionKey] === true;
   };
 
   const toggleVisibility = async (sectionKey: string) => {
