@@ -32,6 +32,7 @@ export function Footer() {
   // Get dynamic content from site_content table
   const siteName = getContent('site_name', 'HALA MADRID TV');
   const footerAboutText = getContent('footer_about_text', t('footer.aboutText'));
+  const footerCopyright = getContent('footer_copyright', `© ${new Date().getFullYear()} ${siteName}. ${t('footer.rights')}.`);
   
   // Group links by section
   const groupedLinks = links.reduce((acc, link) => {
@@ -195,7 +196,7 @@ export function Footer() {
           <div className="border-t border-gray-600 mt-8 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-gray-300">
-                © {new Date().getFullYear()} {siteName}. {t('footer.rights')}.
+                {footerCopyright}
               </p>
               
               {/* Social links from database */}
