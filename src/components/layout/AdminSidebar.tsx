@@ -30,7 +30,8 @@ import {
   Type,
   Share2,
   LayoutGrid,
-  Sparkles
+  Sparkles,
+  Link
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -83,6 +84,7 @@ const settingsSubItems = [
   { value: "welcome-popup", label: "Popup Bienvenue", icon: Sparkles, adminOnly: true },
   { value: "social-links", label: "Réseaux Sociaux", icon: Share2, adminOnly: true },
   { value: "explore-cards", label: "Cartes Explorer", icon: LayoutGrid, adminOnly: true },
+  { value: "footer-links", label: "Liens du Footer", icon: Link, adminOnly: true },
   { value: "settings", label: "Configuration", icon: Settings, adminOnly: false },
 ];
 

@@ -128,6 +128,7 @@ const VALID_ADMIN_TABS = [
   "welcome-popup",
   "social-links",
   "explore-cards",
+  "footer-links",
   "settings",
 ] as const;
 
@@ -784,6 +785,9 @@ const Admin = () => {
           </TabsContent>
           <TabsContent value="explore-cards">
             <ExploreCardsManager />
+          </TabsContent>
+          <TabsContent value="footer-links">
+            <FooterLinksManager />
           </TabsContent>
           <TabsContent value="settings">{renderSettings()}</TabsContent>
         </Tabs>
