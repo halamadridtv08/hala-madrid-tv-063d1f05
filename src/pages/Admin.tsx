@@ -75,6 +75,7 @@ import { HeroBackgroundManager } from "@/components/admin/HeroBackgroundManager"
 import { TransfersManager } from "@/components/admin/TransfersManager";
 import { AnnouncementBarManager } from "@/components/admin/AnnouncementBarManager";
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
+import ModeratorActivityDashboard from "@/components/admin/ModeratorActivityDashboard";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -92,6 +93,7 @@ interface StatsData {
 const VALID_ADMIN_TABS = [
   "dashboard",
   "analytics",
+  "moderator-activity",
   "articles",
   "special-articles",
   "videos",
@@ -690,6 +692,8 @@ const Admin = () => {
   
   const renderAnalytics = () => <AnalyticsDashboard />;
   
+  const renderModeratorActivity = () => <ModeratorActivityDashboard />;
+  
   return <div className="min-h-screen bg-background flex">
       {/* Sidebar desktop */}
       <AdminSidebar 
@@ -729,6 +733,7 @@ const Admin = () => {
 
           <TabsContent value="dashboard">{renderDashboard()}</TabsContent>
           <TabsContent value="analytics">{renderAnalytics()}</TabsContent>
+          <TabsContent value="moderator-activity">{isAdmin && renderModeratorActivity()}</TabsContent>
           <TabsContent value="articles">{renderArticles()}</TabsContent>
           <TabsContent value="special-articles">{renderSpecialArticles()}</TabsContent>
           <TabsContent value="videos">{renderVideos()}</TabsContent>
