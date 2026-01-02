@@ -77,7 +77,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (session?.user) {
         currentUserIdRef.current = session.user.id;
+        setIsRoleLoading(true);
         await checkUserRole(session.user.id);
+      } else {
+        setUserRole('user'); // Set default role for non-authenticated users
       }
 
       setIsLoading(false);
