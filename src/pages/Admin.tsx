@@ -192,12 +192,13 @@ const Admin = () => {
   };
 
   // Double-check moderator/admin status - defense in depth
+  // Only redirect after auth AND role are fully loaded (userRole !== null)
   useEffect(() => {
-    if (!authLoading && !isModerator) {
+    if (!authLoading && userRole !== null && !isModerator) {
       console.warn("Security: Non-admin/moderator user attempted to access admin panel");
       navigate("/", { replace: true });
     }
-  }, [isModerator, authLoading, navigate]);
+  }, [isModerator, authLoading, userRole, navigate]);
 
   // Read tab from URL (?tab=players)
   useEffect(() => {
@@ -233,8 +234,8 @@ const Admin = () => {
     }
   }, [activeTab, location.hash, location.pathname, location.search, navigate]);
 
-  // Show nothing while checking auth
-  if (authLoading) {
+  // Show nothing while checking auth OR loading role
+  if (authLoading || userRole === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -242,7 +243,7 @@ const Admin = () => {
     );
   }
 
-  // Block non-admins and non-moderators
+  // Block non-admins and non-moderators (role is now loaded)
   if (!isModerator) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
@@ -605,11 +606,13 @@ const Admin = () => {
         <FooterLinksManager />
       </div>
 
-      {/* Section Utilisateurs & Rôles */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Utilisateurs & Rôles</h3>
-        <UserRolesManager />
-      </div>
+      {/* Section Utilisateurs & Rôles - Admin only */}
+      {isAdmin && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Utilisateurs & Rôles</h3>
+          <UserRolesManager />
+        </div>
+      )}
 
       {/* Section Données & Synchronisation */}
       <div className="space-y-4">

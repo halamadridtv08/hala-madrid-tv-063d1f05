@@ -1,5 +1,5 @@
 
-import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { createContext, useState, useContext, useEffect, useRef, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { showLoginSuccessToast, showLogoutSuccessToast } from '@/lib/authToasts';
@@ -35,6 +35,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isModerator, setIsModerator] = useState(false);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRoleLoading, setIsRoleLoading] = useState(false);
+  
+  // Track current user to avoid race conditions
+  const currentUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Set up auth state listener first (keep callback synchronous)
@@ -46,7 +50,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
 
       if (session?.user) {
+        currentUserIdRef.current = session.user.id;
         // Defer Supabase calls to avoid auth deadlocks
+        setIsRoleLoading(true);
         setTimeout(() => {
           checkUserRole(session.user.id);
         }, 0);
@@ -55,23 +61,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           showLoginSuccessToast(session?.user?.email ?? undefined);
         }
       } else {
+        currentUserIdRef.current = null;
         setIsAdmin(false);
         setIsModerator(false);
         setUserRole(null);
+        setIsRoleLoading(false);
       }
     });
 
     // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const initSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       setSession(session ?? null);
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        checkUserRole(session.user.id);
+        currentUserIdRef.current = session.user.id;
+        await checkUserRole(session.user.id);
       }
 
       setIsLoading(false);
-    });
+    };
+
+    initSession();
 
     return () => subscription.unsubscribe();
   }, []);
@@ -83,6 +95,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .from('user_roles')
         .select('role')
         .eq('user_id', userId);
+      
+      // Abort if user changed during fetch
+      if (currentUserIdRef.current !== userId) {
+        console.log("User changed during role check, aborting");
+        return;
+      }
       
       if (error) {
         console.error('Error checking user role:', error);
@@ -107,6 +125,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAdmin(false);
       setIsModerator(false);
       setUserRole('user');
+    } finally {
+      setIsRoleLoading(false);
     }
   };
 
@@ -119,8 +139,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Combined loading state: wait for both session and role
+  const combinedLoading = isLoading || isRoleLoading;
+
   return (
-    <AuthContext.Provider value={{ session, user, isAdmin, isModerator, userRole, isLoading, signOut }}>
+    <AuthContext.Provider value={{ session, user, isAdmin, isModerator, userRole, isLoading: combinedLoading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
