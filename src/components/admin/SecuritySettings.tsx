@@ -34,6 +34,9 @@ export function SecuritySettings() {
   const { isVisible, toggleVisibility, loading: visibilityLoading } = useSiteVisibility();
   
   const devToolsProtectionEnabled = isVisible('devtools_protection');
+  const rightClickEnabled = isVisible('protection_right_click');
+  const copyEnabled = isVisible('protection_copy');
+  const keyboardEnabled = isVisible('protection_keyboard');
   
   // Check if we should open logs tab by default
   const defaultTab = searchParams.get('tab') === 'logs' ? 'logs' : '2fa';
@@ -274,16 +277,64 @@ export function SecuritySettings() {
                 </AlertDescription>
               </Alert>
 
+              {devToolsProtectionEnabled && (
+                <div className="space-y-4 pt-4 border-t">
+                  <h4 className="font-medium text-sm">Options granulaires</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full ${rightClickEnabled ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+                        <div>
+                          <p className="font-medium text-sm">Blocage clic droit</p>
+                          <p className="text-xs text-muted-foreground">Désactive le menu contextuel et le drag</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={rightClickEnabled}
+                        onCheckedChange={() => toggleVisibility('protection_right_click')}
+                        disabled={visibilityLoading}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full ${copyEnabled ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+                        <div>
+                          <p className="font-medium text-sm">Blocage copie</p>
+                          <p className="text-xs text-muted-foreground">Bloque copier/coller/couper (sauf champs de saisie)</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={copyEnabled}
+                        onCheckedChange={() => toggleVisibility('protection_copy')}
+                        disabled={visibilityLoading}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full ${keyboardEnabled ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+                        <div>
+                          <p className="font-medium text-sm">Blocage raccourcis clavier</p>
+                          <p className="text-xs text-muted-foreground">F12, Ctrl+U, Ctrl+S, Ctrl+Shift+I/J/C</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={keyboardEnabled}
+                        onCheckedChange={() => toggleVisibility('protection_keyboard')}
+                        disabled={visibilityLoading}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2 pt-4">
-                <h4 className="font-medium text-sm">Quand la protection est activée :</h4>
-                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                  <li>Blocage de l'accès aux outils de développement (F12, Ctrl+Shift+I)</li>
-                  <li>Blocage du clic droit sur tout le site</li>
-                  <li>Blocage du copier-coller du contenu</li>
-                  <li>Blocage de Ctrl+U (voir la source)</li>
-                  <li>Affichage d'un écran de blocage si DevTools est détecté</li>
-                  <li>Désactivation de la sélection de texte</li>
-                </ul>
+                <h4 className="font-medium text-sm">Note :</h4>
+                <p className="text-sm text-muted-foreground">
+                  La détection DevTools et l'écran de blocage sont toujours actifs quand la protection principale est activée.
+                </p>
               </div>
             </CardContent>
           </Card>
