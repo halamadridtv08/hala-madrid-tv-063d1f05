@@ -2660,6 +2660,213 @@ export type Database = {
         }
         Relationships: []
       }
+      season_live_blog_archive: {
+        Row: {
+          archived_at: string | null
+          content: string | null
+          entry_type: string | null
+          id: string
+          image_url: string | null
+          is_important: boolean | null
+          match_id: string | null
+          minute: number | null
+          original_id: string | null
+          player_id: string | null
+          season: string
+          team_side: string | null
+          title: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          content?: string | null
+          entry_type?: string | null
+          id?: string
+          image_url?: string | null
+          is_important?: boolean | null
+          match_id?: string | null
+          minute?: number | null
+          original_id?: string | null
+          player_id?: string | null
+          season: string
+          team_side?: string | null
+          title?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          content?: string | null
+          entry_type?: string | null
+          id?: string
+          image_url?: string | null
+          is_important?: boolean | null
+          match_id?: string | null
+          minute?: number | null
+          original_id?: string | null
+          player_id?: string | null
+          season?: string
+          team_side?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      season_matches_archive: {
+        Row: {
+          archived_at: string | null
+          away_score: number | null
+          away_team: string | null
+          away_team_logo: string | null
+          competition: string | null
+          home_score: number | null
+          home_team: string | null
+          home_team_logo: string | null
+          id: string
+          match_date: string | null
+          match_details: Json | null
+          original_id: string | null
+          season: string
+          status: string | null
+          venue: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          away_score?: number | null
+          away_team?: string | null
+          away_team_logo?: string | null
+          competition?: string | null
+          home_score?: number | null
+          home_team?: string | null
+          home_team_logo?: string | null
+          id?: string
+          match_date?: string | null
+          match_details?: Json | null
+          original_id?: string | null
+          season: string
+          status?: string | null
+          venue?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          away_score?: number | null
+          away_team?: string | null
+          away_team_logo?: string | null
+          competition?: string | null
+          home_score?: number | null
+          home_team?: string | null
+          home_team_logo?: string | null
+          id?: string
+          match_date?: string | null
+          match_details?: Json | null
+          original_id?: string | null
+          season?: string
+          status?: string | null
+          venue?: string | null
+        }
+        Relationships: []
+      }
+      season_player_stats_archive: {
+        Row: {
+          archived_at: string | null
+          assists: number | null
+          clean_sheets: number | null
+          goals: number | null
+          goals_conceded: number | null
+          id: string
+          interceptions: number | null
+          match_id: string | null
+          minutes_played: number | null
+          original_id: string | null
+          pass_accuracy: number | null
+          passes_completed: number | null
+          player_id: string | null
+          rating: number | null
+          red_cards: number | null
+          saves: number | null
+          season: string
+          tackles: number | null
+          yellow_cards: number | null
+        }
+        Insert: {
+          archived_at?: string | null
+          assists?: number | null
+          clean_sheets?: number | null
+          goals?: number | null
+          goals_conceded?: number | null
+          id?: string
+          interceptions?: number | null
+          match_id?: string | null
+          minutes_played?: number | null
+          original_id?: string | null
+          pass_accuracy?: number | null
+          passes_completed?: number | null
+          player_id?: string | null
+          rating?: number | null
+          red_cards?: number | null
+          saves?: number | null
+          season: string
+          tackles?: number | null
+          yellow_cards?: number | null
+        }
+        Update: {
+          archived_at?: string | null
+          assists?: number | null
+          clean_sheets?: number | null
+          goals?: number | null
+          goals_conceded?: number | null
+          id?: string
+          interceptions?: number | null
+          match_id?: string | null
+          minutes_played?: number | null
+          original_id?: string | null
+          pass_accuracy?: number | null
+          passes_completed?: number | null
+          player_id?: string | null
+          rating?: number | null
+          red_cards?: number | null
+          saves?: number | null
+          season?: string
+          tackles?: number | null
+          yellow_cards?: number | null
+        }
+        Relationships: []
+      }
+      season_predictions_archive: {
+        Row: {
+          archived_at: string | null
+          best_streak: number | null
+          correct_outcomes: number | null
+          correct_scores: number | null
+          current_streak: number | null
+          id: string
+          season: string
+          total_points: number | null
+          total_predictions: number | null
+          user_id: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          best_streak?: number | null
+          correct_outcomes?: number | null
+          correct_scores?: number | null
+          current_streak?: number | null
+          id?: string
+          season: string
+          total_points?: number | null
+          total_predictions?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          best_streak?: number | null
+          correct_outcomes?: number | null
+          correct_scores?: number | null
+          current_streak?: number | null
+          id?: string
+          season?: string
+          total_points?: number | null
+          total_predictions?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       season_statistics: {
         Row: {
           clean_sheets: number | null
