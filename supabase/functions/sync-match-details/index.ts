@@ -28,8 +28,31 @@ const FOOTBALL_API = {
   BASE_URL: 'https://v3.football.api-sports.io',
   REAL_MADRID_ID: 541,
   LA_LIGA_ID: 140,
-  CURRENT_SEASON: 2025
 };
+
+// Get season year from site_content (e.g., "2025/26" -> 2025)
+async function getCurrentSeasonYear(supabase: any): Promise<number> {
+  try {
+    const { data, error } = await supabase
+      .from('site_content')
+      .select('content_value')
+      .eq('content_key', 'current_season')
+      .single();
+    
+    if (error || !data?.content_value) {
+      console.log('No season found in site_content, using default 2025');
+      return 2025;
+    }
+    
+    // Parse "2025/26" to 2025
+    const seasonYear = parseInt(data.content_value.split('/')[0]);
+    console.log(`Using season year from site_content: ${seasonYear}`);
+    return isNaN(seasonYear) ? 2025 : seasonYear;
+  } catch (err) {
+    console.error('Error fetching season:', err);
+    return 2025;
+  }
+}
 
 async function fetchFromFootballApi(endpoint: string) {
   const apiKey = Deno.env.get('FOOTBALL_API_KEY');
@@ -241,6 +264,9 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Get current season dynamically
+    const CURRENT_SEASON = await getCurrentSeasonYear(supabase);
+
     const url = new URL(req.url);
     const matchId = url.searchParams.get('matchId');
     const fixtureId = url.searchParams.get('fixtureId');
@@ -324,9 +350,9 @@ serve(async (req) => {
 
         console.log(`Searching API fixtures from ${from} to ${to} for: ${match.home_team} vs ${match.away_team}`);
 
-        // Multi-season search: try 2025, then 2024, then no season filter
+        // Multi-season search: try current season, then previous, then no season filter
         let fixtures: any[] = [];
-        const seasons = ['2025', '2024', null]; // null = no season filter
+        const seasons = [String(CURRENT_SEASON), String(CURRENT_SEASON - 1), null]; // null = no season filter
         
         for (const season of seasons) {
           const seasonParam = season ? `&season=${season}` : '';

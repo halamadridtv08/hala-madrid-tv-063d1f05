@@ -4,8 +4,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 export const LaLigaStandings = () => {
+  const { getContent } = useSiteContent();
+  const currentSeason = getContent("current_season", "2025/26");
   const { standings, loading, error, refetch, realMadridId } = useLaLigaStandings();
 
   if (loading) {
@@ -14,7 +17,7 @@ export const LaLigaStandings = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-primary" />
-            Classement La Liga 2025/26
+            Classement La Liga {currentSeason}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -53,7 +56,7 @@ export const LaLigaStandings = () => {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-primary" />
-          Classement La Liga 2025/26
+          Classement La Liga {currentSeason}
         </CardTitle>
         <Button onClick={refetch} variant="ghost" size="sm">
           <RefreshCw className="h-4 w-4" />

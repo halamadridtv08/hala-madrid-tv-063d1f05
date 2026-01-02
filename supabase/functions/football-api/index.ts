@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // Allowed origins for CORS
 const getAllowedOrigins = () => {
@@ -27,7 +28,6 @@ const FOOTBALL_API = {
   BASE_URL: 'https://v3.football.api-sports.io',
   REAL_MADRID_ID: 541,
   LA_LIGA_ID: 140,
-  CURRENT_SEASON: 2025
 };
 
 // Simple in-memory cache
@@ -72,6 +72,40 @@ async function fetchFromApi(endpoint: string) {
   return data;
 }
 
+// Get season year from site_content (e.g., "2025/26" -> 2025)
+async function getCurrentSeasonYear(): Promise<number> {
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.log('Supabase not configured, using default season 2025');
+      return 2025;
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    const { data, error } = await supabase
+      .from('site_content')
+      .select('content_value')
+      .eq('content_key', 'current_season')
+      .single();
+    
+    if (error || !data?.content_value) {
+      console.log('No season found in site_content, using default 2025');
+      return 2025;
+    }
+    
+    // Parse "2025/26" to 2025
+    const seasonYear = parseInt(data.content_value.split('/')[0]);
+    console.log(`Using season year from site_content: ${seasonYear}`);
+    return isNaN(seasonYear) ? 2025 : seasonYear;
+  } catch (err) {
+    console.error('Error fetching season:', err);
+    return 2025;
+  }
+}
+
 serve(async (req) => {
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
@@ -83,17 +117,20 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
+    
+    // Get current season dynamically
+    const CURRENT_SEASON = await getCurrentSeasonYear();
 
     let responseData;
     let cacheKey: string;
 
     switch (action) {
       case 'standings':
-        cacheKey = `standings_${FOOTBALL_API.LA_LIGA_ID}_${FOOTBALL_API.CURRENT_SEASON}`;
+        cacheKey = `standings_${FOOTBALL_API.LA_LIGA_ID}_${CURRENT_SEASON}`;
         responseData = getCached(cacheKey);
         if (!responseData) {
           const data = await fetchFromApi(
-            `/standings?league=${FOOTBALL_API.LA_LIGA_ID}&season=${FOOTBALL_API.CURRENT_SEASON}`
+            `/standings?league=${FOOTBALL_API.LA_LIGA_ID}&season=${CURRENT_SEASON}`
           );
           responseData = data.response?.[0]?.league?.standings?.[0] || [];
           setCache(cacheKey, responseData);
@@ -105,7 +142,7 @@ serve(async (req) => {
         responseData = getCached(cacheKey);
         if (!responseData) {
           const data = await fetchFromApi(
-            `/fixtures?league=${FOOTBALL_API.LA_LIGA_ID}&season=${FOOTBALL_API.CURRENT_SEASON}&live=all`
+            `/fixtures?league=${FOOTBALL_API.LA_LIGA_ID}&season=${CURRENT_SEASON}&live=all`
           );
           responseData = data.response || [];
           setCache(cacheKey, responseData);
@@ -113,11 +150,11 @@ serve(async (req) => {
         break;
 
       case 'team-stats':
-        cacheKey = `team_stats_${FOOTBALL_API.REAL_MADRID_ID}_${FOOTBALL_API.CURRENT_SEASON}`;
+        cacheKey = `team_stats_${FOOTBALL_API.REAL_MADRID_ID}_${CURRENT_SEASON}`;
         responseData = getCached(cacheKey);
         if (!responseData) {
           const data = await fetchFromApi(
-            `/teams/statistics?league=${FOOTBALL_API.LA_LIGA_ID}&season=${FOOTBALL_API.CURRENT_SEASON}&team=${FOOTBALL_API.REAL_MADRID_ID}`
+            `/teams/statistics?league=${FOOTBALL_API.LA_LIGA_ID}&season=${CURRENT_SEASON}&team=${FOOTBALL_API.REAL_MADRID_ID}`
           );
           responseData = data.response || null;
           setCache(cacheKey, responseData);

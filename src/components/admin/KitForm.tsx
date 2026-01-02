@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { MediaUploader } from "./MediaUploader";
 import { KitImageManager } from "./KitImageManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 interface KitFormProps {
   kit?: Kit;
@@ -21,10 +22,13 @@ interface KitFormProps {
 
 export const KitForm = ({ kit, onSuccess, onCancel }: KitFormProps) => {
   const [loading, setLoading] = useState(false);
+  const { getContent } = useSiteContent();
+  const currentSeason = getContent("current_season", "2025/26");
+  
   const [formData, setFormData] = useState({
     title: kit?.title || "",
     type: kit?.type || "domicile" as const,
-    season: kit?.season || "2025/26",
+    season: kit?.season || currentSeason,
     image_url: kit?.image_url || "",
     description: kit?.description || "",
     price: kit?.price || 0,
@@ -32,6 +36,13 @@ export const KitForm = ({ kit, onSuccess, onCancel }: KitFormProps) => {
     is_published: kit?.is_published ?? true,
     display_order: kit?.display_order || 0,
   });
+
+  // Update season when currentSeason loads from DB
+  useEffect(() => {
+    if (!kit?.season && currentSeason) {
+      setFormData(prev => ({ ...prev, season: currentSeason }));
+    }
+  }, [currentSeason, kit?.season]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
