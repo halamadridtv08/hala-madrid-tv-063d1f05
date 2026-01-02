@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
 
 export interface LiveMatchBarSettings {
   id: string;
@@ -19,28 +20,50 @@ export interface LiveMatchBarSettings {
 
 const DEFAULT_SETTINGS_ID = '00000000-0000-0000-0000-000000000001';
 
+const fetchSettings = async (): Promise<LiveMatchBarSettings | null> => {
+  const { data, error } = await supabase
+    .from('live_match_bar_settings')
+    .select('*')
+    .eq('id', DEFAULT_SETTINGS_ID)
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
 export function useLiveMatchBarSettings() {
-  const [settings, setSettings] = useState<LiveMatchBarSettings | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchSettings = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('live_match_bar_settings')
-        .select('*')
-        .eq('id', DEFAULT_SETTINGS_ID)
-        .single();
+  const { data: settings = null, isLoading: loading, error } = useQuery({
+    queryKey: ['live-match-bar-settings'],
+    queryFn: fetchSettings,
+    staleTime: 1000 * 60 * 5, // 5 min cache
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+  });
 
-      if (error) throw error;
-      setSettings(data);
-    } catch (err: any) {
-      console.error('Error fetching live match bar settings:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('live_match_bar_settings_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'live_match_bar_settings',
+          filter: `id=eq.${DEFAULT_SETTINGS_ID}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['live-match-bar-settings'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const updateSettings = async (updates: Partial<LiveMatchBarSettings>) => {
     try {
@@ -55,7 +78,7 @@ export function useLiveMatchBarSettings() {
         .single();
 
       if (error) throw error;
-      setSettings(data);
+      queryClient.invalidateQueries({ queryKey: ['live-match-bar-settings'] });
       return { success: true };
     } catch (err: any) {
       console.error('Error updating live match bar settings:', err);
@@ -63,38 +86,11 @@ export function useLiveMatchBarSettings() {
     }
   };
 
-  useEffect(() => {
-    fetchSettings();
-
-    // Real-time subscription
-    const channel = supabase
-      .channel('live_match_bar_settings_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'live_match_bar_settings',
-          filter: `id=eq.${DEFAULT_SETTINGS_ID}`
-        },
-        (payload) => {
-          if (payload.new) {
-            setSettings(payload.new as LiveMatchBarSettings);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
   return {
     settings,
     loading,
-    error,
+    error: error?.message || null,
     updateSettings,
-    refetch: fetchSettings
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['live-match-bar-settings'] })
   };
 }

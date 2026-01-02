@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 interface SiteVisibility {
   id: string;
@@ -10,39 +11,35 @@ interface SiteVisibility {
   display_order: number;
 }
 
+const fetchVisibility = async (): Promise<SiteVisibility[]> => {
+  const { data, error } = await supabase
+    .from('site_visibility')
+    .select('*')
+    .order('display_order', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+};
+
 export function useSiteVisibility() {
-  const [visibility, setVisibility] = useState<Record<string, boolean>>({});
-  const [sections, setSections] = useState<SiteVisibility[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchVisibility = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('site_visibility')
-        .select('*')
-        .order('display_order', { ascending: true });
+  const { data: sections = [], isLoading: loading } = useQuery({
+    queryKey: ['site-visibility'],
+    queryFn: fetchVisibility,
+    staleTime: 1000 * 60 * 5, // 5 min cache
+    gcTime: 1000 * 60 * 30, // 30 min garbage collection
+    refetchOnWindowFocus: false,
+  });
 
-      if (error) throw error;
+  // Build visibility map from sections
+  const visibility = sections.reduce<Record<string, boolean>>((acc, section) => {
+    acc[section.section_key] = section.is_visible;
+    return acc;
+  }, {});
 
-      if (data) {
-        setSections(data);
-        const visibilityMap: Record<string, boolean> = {};
-        data.forEach(section => {
-          visibilityMap[section.section_key] = section.is_visible;
-        });
-        setVisibility(visibilityMap);
-      }
-    } catch (error) {
-      console.error('Error fetching site visibility:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Subscribe to real-time changes
   useEffect(() => {
-    fetchVisibility();
-
-    // Subscribe to changes
     const channel = supabase
       .channel('site-visibility-changes')
       .on(
@@ -53,7 +50,7 @@ export function useSiteVisibility() {
           table: 'site_visibility'
         },
         () => {
-          fetchVisibility();
+          queryClient.invalidateQueries({ queryKey: ['site-visibility'] });
         }
       )
       .subscribe();
@@ -61,12 +58,13 @@ export function useSiteVisibility() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [queryClient]);
 
   const isVisible = (sectionKey: string): boolean => {
-    // Return false during loading to prevent flash
+    // During loading, return false to prevent flash of content
     if (loading) return false;
-    return visibility[sectionKey] !== false;
+    // Explicitly check for true - if not in map or false, hide
+    return visibility[sectionKey] === true;
   };
 
   const toggleVisibility = async (sectionKey: string) => {
@@ -80,10 +78,7 @@ export function useSiteVisibility() {
 
       if (error) throw error;
 
-      setVisibility(prev => ({
-        ...prev,
-        [sectionKey]: !currentVisibility
-      }));
+      queryClient.invalidateQueries({ queryKey: ['site-visibility'] });
     } catch (error) {
       console.error('Error toggling visibility:', error);
       throw error;
@@ -99,7 +94,7 @@ export function useSiteVisibility() {
 
       if (error) throw error;
       
-      await fetchVisibility();
+      queryClient.invalidateQueries({ queryKey: ['site-visibility'] });
     } catch (error) {
       console.error('Error updating section name:', error);
       throw error;
@@ -113,6 +108,6 @@ export function useSiteVisibility() {
     isVisible, 
     toggleVisibility,
     updateSectionName,
-    refetch: fetchVisibility 
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['site-visibility'] })
   };
 }
