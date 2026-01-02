@@ -5,11 +5,16 @@ export const MediaProtectionProvider = () => {
   const [devToolsDetected, setDevToolsDetected] = useState(false);
   const { isVisible, loading } = useSiteVisibility();
   
-  // Check if protection is enabled in admin settings
+  // Check if main protection is enabled
   const protectionEnabled = isVisible('devtools_protection');
+  
+  // Granular protection options
+  const rightClickEnabled = isVisible('protection_right_click');
+  const copyEnabled = isVisible('protection_copy');
+  const keyboardEnabled = isVisible('protection_keyboard');
 
   useEffect(() => {
-    // Don't run protection if disabled or still loading
+    // Don't run protection if all disabled or still loading
     if (loading || !protectionEnabled) {
       return;
     }
@@ -131,15 +136,23 @@ export const MediaProtectionProvider = () => {
       }
     };
 
-    // Add all event listeners
-    document.addEventListener('contextmenu', handleContextMenu);
-    document.addEventListener('dragstart', handleDragStart);
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('copy', handleCopy);
-    document.addEventListener('paste', handlePaste);
-    document.addEventListener('cut', handleCut);
+    // Add event listeners based on granular settings
+    if (rightClickEnabled) {
+      document.addEventListener('contextmenu', handleContextMenu);
+      document.addEventListener('dragstart', handleDragStart);
+    }
     
-    // Check DevTools periodically
+    if (keyboardEnabled) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    
+    if (copyEnabled) {
+      document.addEventListener('copy', handleCopy);
+      document.addEventListener('paste', handlePaste);
+      document.addEventListener('cut', handleCut);
+    }
+    
+    // Check DevTools periodically (always when main protection is on)
     const devToolsInterval = setInterval(checkDevTools, 500);
     window.addEventListener('resize', checkDevTools);
     checkDevTools(); // Initial check
@@ -190,7 +203,7 @@ export const MediaProtectionProvider = () => {
         existingStyle.remove();
       }
     };
-  }, [loading, protectionEnabled]);
+  }, [loading, protectionEnabled, rightClickEnabled, copyEnabled, keyboardEnabled]);
 
   // Show blocking overlay when DevTools detected and protection is enabled
   if (protectionEnabled && devToolsDetected) {
