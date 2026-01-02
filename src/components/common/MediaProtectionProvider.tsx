@@ -5,17 +5,20 @@ export const MediaProtectionProvider = () => {
   const [devToolsDetected, setDevToolsDetected] = useState(false);
   const { isVisible, loading } = useSiteVisibility();
   
-  // Check if main protection is enabled
-  const protectionEnabled = isVisible('devtools_protection');
+  // Main DevTools overlay protection
+  const devToolsOverlayEnabled = isVisible('devtools_protection');
   
-  // Granular protection options
+  // Granular protection options (work independently)
   const rightClickEnabled = isVisible('protection_right_click');
   const copyEnabled = isVisible('protection_copy');
   const keyboardEnabled = isVisible('protection_keyboard');
+  
+  // Check if any protection is enabled
+  const anyProtectionEnabled = devToolsOverlayEnabled || rightClickEnabled || copyEnabled || keyboardEnabled;
 
   useEffect(() => {
-    // Don't run protection if all disabled or still loading
-    if (loading || !protectionEnabled) {
+    // Don't run if still loading or no protection enabled
+    if (loading || !anyProtectionEnabled) {
       return;
     }
 
@@ -136,7 +139,7 @@ export const MediaProtectionProvider = () => {
       }
     };
 
-    // Add event listeners based on granular settings
+    // Add event listeners based on granular settings (independently)
     if (rightClickEnabled) {
       document.addEventListener('contextmenu', handleContextMenu);
       document.addEventListener('dragstart', handleDragStart);
@@ -152,40 +155,46 @@ export const MediaProtectionProvider = () => {
       document.addEventListener('cut', handleCut);
     }
     
-    // Check DevTools periodically (always when main protection is on)
-    const devToolsInterval = setInterval(checkDevTools, 500);
-    window.addEventListener('resize', checkDevTools);
-    checkDevTools(); // Initial check
+    // Check DevTools periodically only if overlay is enabled
+    let devToolsInterval: NodeJS.Timeout | null = null;
+    if (devToolsOverlayEnabled) {
+      devToolsInterval = setInterval(checkDevTools, 500);
+      window.addEventListener('resize', checkDevTools);
+      checkDevTools(); // Initial check
+    }
 
-    // Add CSS to prevent text selection
-    const style = document.createElement('style');
-    style.id = 'media-protection-styles';
-    style.textContent = `
-      body {
-        -webkit-user-select: none !important;
-        -moz-user-select: none !important;
-        -ms-user-select: none !important;
-        user-select: none !important;
-        -webkit-touch-callout: none !important;
-      }
-      
-      input, 
-      textarea, 
-      [contenteditable="true"],
-      .allow-select {
-        -webkit-user-select: text !important;
-        -moz-user-select: text !important;
-        -ms-user-select: text !important;
-        user-select: text !important;
-      }
-      
-      img, video, audio {
-        -webkit-user-drag: none !important;
-        user-drag: none !important;
-        pointer-events: auto;
-      }
-    `;
-    document.head.appendChild(style);
+    // Add CSS to prevent text selection only if copy protection is enabled
+    let style: HTMLStyleElement | null = null;
+    if (copyEnabled) {
+      style = document.createElement('style');
+      style.id = 'media-protection-styles';
+      style.textContent = `
+        body {
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          -ms-user-select: none !important;
+          user-select: none !important;
+          -webkit-touch-callout: none !important;
+        }
+        
+        input, 
+        textarea, 
+        [contenteditable="true"],
+        .allow-select {
+          -webkit-user-select: text !important;
+          -moz-user-select: text !important;
+          -ms-user-select: text !important;
+          user-select: text !important;
+        }
+        
+        img, video, audio {
+          -webkit-user-drag: none !important;
+          user-drag: none !important;
+          pointer-events: auto;
+        }
+      `;
+      document.head.appendChild(style);
+    }
 
     // Cleanup
     return () => {
@@ -196,17 +205,17 @@ export const MediaProtectionProvider = () => {
       document.removeEventListener('paste', handlePaste);
       document.removeEventListener('cut', handleCut);
       window.removeEventListener('resize', checkDevTools);
-      clearInterval(devToolsInterval);
+      if (devToolsInterval) clearInterval(devToolsInterval);
       
       const existingStyle = document.getElementById('media-protection-styles');
       if (existingStyle) {
         existingStyle.remove();
       }
     };
-  }, [loading, protectionEnabled, rightClickEnabled, copyEnabled, keyboardEnabled]);
+  }, [loading, devToolsOverlayEnabled, rightClickEnabled, copyEnabled, keyboardEnabled, anyProtectionEnabled]);
 
-  // Show blocking overlay when DevTools detected and protection is enabled
-  if (protectionEnabled && devToolsDetected) {
+  // Show blocking overlay when DevTools detected and overlay protection is enabled
+  if (devToolsOverlayEnabled && devToolsDetected) {
     return (
       <div 
         style={{

@@ -238,103 +238,88 @@ export function SecuritySettings() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Lock className="h-5 w-5" />
-                Protection Anti-DevTools
+                Protection du site
               </CardTitle>
               <CardDescription>
-                Protégez votre site contre l'accès aux outils de développement et la copie de contenu
+                Activez/désactivez individuellement chaque type de protection
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className={`flex items-center justify-between p-4 border rounded-lg ${devToolsProtectionEnabled ? 'bg-green-50 dark:bg-green-900/20' : 'bg-muted/50'}`}>
-                <div className="flex items-center gap-3">
-                  {devToolsProtectionEnabled ? (
-                    <ShieldCheck className="h-8 w-8 text-green-600" />
-                  ) : (
-                    <ShieldX className="h-8 w-8 text-muted-foreground" />
-                  )}
-                  <div>
-                    <h3 className={`font-semibold ${devToolsProtectionEnabled ? 'text-green-800 dark:text-green-200' : 'text-foreground'}`}>
-                      {devToolsProtectionEnabled ? 'Protection activée' : 'Protection désactivée'}
-                    </h3>
-                    <p className={`text-sm ${devToolsProtectionEnabled ? 'text-green-600 dark:text-green-300' : 'text-muted-foreground'}`}>
-                      {devToolsProtectionEnabled 
-                        ? 'Les protections sont actives sur le site' 
-                        : 'Les protections sont désactivées (mode développement)'}
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  checked={devToolsProtectionEnabled}
-                  onCheckedChange={() => toggleVisibility('devtools_protection')}
-                  disabled={visibilityLoading}
-                />
-              </div>
-
               <Alert>
                 <Shield className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Attention :</strong> Désactivez cette option lorsque vous travaillez sur l'environnement de développement Lovable.
+                  <strong>Attention :</strong> Désactivez ces options lorsque vous travaillez sur l'environnement de développement Lovable.
                 </AlertDescription>
               </Alert>
 
-              {devToolsProtectionEnabled && (
-                <div className="space-y-4 pt-4 border-t">
-                  <h4 className="font-medium text-sm">Options granulaires</h4>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full ${rightClickEnabled ? 'bg-green-500' : 'bg-muted-foreground'}`} />
-                        <div>
-                          <p className="font-medium text-sm">Blocage clic droit</p>
-                          <p className="text-xs text-muted-foreground">Désactive le menu contextuel et le drag</p>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={rightClickEnabled}
-                        onCheckedChange={() => toggleVisibility('protection_right_click')}
-                        disabled={visibilityLoading}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full ${copyEnabled ? 'bg-green-500' : 'bg-muted-foreground'}`} />
-                        <div>
-                          <p className="font-medium text-sm">Blocage copie</p>
-                          <p className="text-xs text-muted-foreground">Bloque copier/coller/couper (sauf champs de saisie)</p>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={copyEnabled}
-                        onCheckedChange={() => toggleVisibility('protection_copy')}
-                        disabled={visibilityLoading}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full ${keyboardEnabled ? 'bg-green-500' : 'bg-muted-foreground'}`} />
-                        <div>
-                          <p className="font-medium text-sm">Blocage raccourcis clavier</p>
-                          <p className="text-xs text-muted-foreground">F12, Ctrl+U, Ctrl+S, Ctrl+Shift+I/J/C</p>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={keyboardEnabled}
-                        onCheckedChange={() => toggleVisibility('protection_keyboard')}
-                        disabled={visibilityLoading}
-                      />
+              <div className="space-y-3">
+                {/* DevTools Overlay Protection */}
+                <div className={`flex items-center justify-between p-4 border rounded-lg ${devToolsProtectionEnabled ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-muted/50'}`}>
+                  <div className="flex items-center gap-3">
+                    {devToolsProtectionEnabled ? (
+                      <ShieldCheck className="h-6 w-6 text-green-600" />
+                    ) : (
+                      <ShieldX className="h-6 w-6 text-muted-foreground" />
+                    )}
+                    <div>
+                      <p className="font-medium">Protection Anti-DevTools</p>
+                      <p className="text-xs text-muted-foreground">Affiche un écran bloquant si DevTools est détecté</p>
                     </div>
                   </div>
+                  <Switch
+                    checked={devToolsProtectionEnabled}
+                    onCheckedChange={() => toggleVisibility('devtools_protection')}
+                    disabled={visibilityLoading}
+                  />
                 </div>
-              )}
 
-              <div className="space-y-2 pt-4">
-                <h4 className="font-medium text-sm">Note :</h4>
-                <p className="text-sm text-muted-foreground">
-                  La détection DevTools et l'écran de blocage sont toujours actifs quand la protection principale est activée.
-                </p>
+                {/* Right-click Protection */}
+                <div className={`flex items-center justify-between p-4 border rounded-lg ${rightClickEnabled ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-muted/50'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${rightClickEnabled ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+                    <div>
+                      <p className="font-medium">Blocage clic droit</p>
+                      <p className="text-xs text-muted-foreground">Désactive le menu contextuel et le glisser-déposer des médias</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={rightClickEnabled}
+                    onCheckedChange={() => toggleVisibility('protection_right_click')}
+                    disabled={visibilityLoading}
+                  />
+                </div>
+
+                {/* Copy Protection */}
+                <div className={`flex items-center justify-between p-4 border rounded-lg ${copyEnabled ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-muted/50'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${copyEnabled ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+                    <div>
+                      <p className="font-medium">Blocage copie</p>
+                      <p className="text-xs text-muted-foreground">Bloque copier/coller/couper et la sélection (sauf champs de saisie)</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={copyEnabled}
+                    onCheckedChange={() => toggleVisibility('protection_copy')}
+                    disabled={visibilityLoading}
+                  />
+                </div>
+
+                {/* Keyboard Shortcuts Protection */}
+                <div className={`flex items-center justify-between p-4 border rounded-lg ${keyboardEnabled ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-muted/50'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${keyboardEnabled ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+                    <div>
+                      <p className="font-medium">Blocage raccourcis clavier</p>
+                      <p className="text-xs text-muted-foreground">F12, Ctrl+U, Ctrl+S, Ctrl+Shift+I/J/C</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={keyboardEnabled}
+                    onCheckedChange={() => toggleVisibility('protection_keyboard')}
+                    disabled={visibilityLoading}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
