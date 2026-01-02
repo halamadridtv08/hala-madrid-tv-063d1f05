@@ -1,43 +1,46 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
+import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 
 export const MediaProtectionProvider = () => {
   const [devToolsDetected, setDevToolsDetected] = useState(false);
+  const { isVisible, loading } = useSiteVisibility();
+  
+  // Check if protection is enabled in admin settings
+  const protectionEnabled = isVisible('devtools_protection');
 
   useEffect(() => {
-    // Block ALL right-click globally
+    // Don't run protection if disabled or still loading
+    if (loading || !protectionEnabled) {
+      return;
+    }
+
+    // Prevent right-click on the entire page
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
       return false;
     };
 
-    // Disable drag on media elements
+    // Prevent dragging of media elements
     const handleDragStart = (e: DragEvent) => {
       const target = e.target as HTMLElement;
-      if (
-        target.tagName === 'IMG' ||
-        target.tagName === 'VIDEO' ||
-        target.tagName === 'AUDIO'
-      ) {
+      if (target.tagName === 'IMG' || target.tagName === 'VIDEO' || target.tagName === 'AUDIO') {
         e.preventDefault();
         return false;
       }
     };
 
-    // Helper to check if target is an input field
-    const isInputField = (target: HTMLElement): boolean => {
-      return (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable ||
-        target.closest('input') !== null ||
-        target.closest('textarea') !== null ||
-        target.closest('[contenteditable="true"]') !== null
-      );
+    // Helper function to check if element is an input field
+    const isInputField = (element: HTMLElement): boolean => {
+      return element.tagName === 'INPUT' || 
+             element.tagName === 'TEXTAREA' || 
+             element.isContentEditable ||
+             element.closest('[contenteditable="true"]') !== null;
     };
 
-    // Block keyboard shortcuts
+    // Block various keyboard shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
+      const isInput = isInputField(target);
       
       // Ctrl+U - View Source
       if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
@@ -45,26 +48,22 @@ export const MediaProtectionProvider = () => {
         return false;
       }
       
-      // Ctrl+S - Save page
+      // Ctrl+S - Save
       if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
         return false;
       }
       
       // Ctrl+C - Copy (except in input fields)
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
-        if (!isInputField(target)) {
-          e.preventDefault();
-          return false;
-        }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C') && !isInput) {
+        e.preventDefault();
+        return false;
       }
       
-      // Ctrl+A - Select all (except in input fields)
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
-        if (!isInputField(target)) {
-          e.preventDefault();
-          return false;
-        }
+      // Ctrl+A - Select All (except in input fields)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A') && !isInput) {
+        e.preventDefault();
+        return false;
       }
       
       // Ctrl+Shift+I - DevTools
@@ -119,27 +118,33 @@ export const MediaProtectionProvider = () => {
       }
     };
 
-    // DevTools detection via window size
-    let devToolsOpen = false;
+    // DevTools detection using window size difference
     const checkDevTools = () => {
       const threshold = 160;
       const widthThreshold = window.outerWidth - window.innerWidth > threshold;
       const heightThreshold = window.outerHeight - window.innerHeight > threshold;
       
       if (widthThreshold || heightThreshold) {
-        if (!devToolsOpen) {
-          devToolsOpen = true;
-          setDevToolsDetected(true);
-        }
+        setDevToolsDetected(true);
       } else {
-        if (devToolsOpen) {
-          devToolsOpen = false;
-          setDevToolsDetected(false);
-        }
+        setDevToolsDetected(false);
       }
     };
 
-    // Add global CSS to prevent selection
+    // Add all event listeners
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('dragstart', handleDragStart);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('copy', handleCopy);
+    document.addEventListener('paste', handlePaste);
+    document.addEventListener('cut', handleCut);
+    
+    // Check DevTools periodically
+    const devToolsInterval = setInterval(checkDevTools, 500);
+    window.addEventListener('resize', checkDevTools);
+    checkDevTools(); // Initial check
+
+    // Add CSS to prevent text selection
     const style = document.createElement('style');
     style.id = 'media-protection-styles';
     style.textContent = `
@@ -150,43 +155,26 @@ export const MediaProtectionProvider = () => {
         user-select: none !important;
         -webkit-touch-callout: none !important;
       }
-      input, textarea, [contenteditable="true"], .allow-select {
+      
+      input, 
+      textarea, 
+      [contenteditable="true"],
+      .allow-select {
         -webkit-user-select: text !important;
         -moz-user-select: text !important;
         -ms-user-select: text !important;
         user-select: text !important;
       }
+      
       img, video, audio {
-        -webkit-user-select: none !important;
-        -moz-user-select: none !important;
-        -ms-user-select: none !important;
-        user-select: none !important;
-        -webkit-touch-callout: none !important;
-        pointer-events: auto;
-      }
-      img {
         -webkit-user-drag: none !important;
-        -khtml-user-drag: none !important;
-        -moz-user-drag: none !important;
-        -o-user-drag: none !important;
         user-drag: none !important;
+        pointer-events: auto;
       }
     `;
     document.head.appendChild(style);
 
-    // Add event listeners
-    document.addEventListener('contextmenu', handleContextMenu);
-    document.addEventListener('dragstart', handleDragStart);
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('copy', handleCopy);
-    document.addEventListener('paste', handlePaste);
-    document.addEventListener('cut', handleCut);
-    
-    // Start DevTools detection
-    const devToolsInterval = setInterval(checkDevTools, 500);
-    window.addEventListener('resize', checkDevTools);
-    checkDevTools();
-
+    // Cleanup
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('dragstart', handleDragStart);
@@ -196,26 +184,43 @@ export const MediaProtectionProvider = () => {
       document.removeEventListener('cut', handleCut);
       window.removeEventListener('resize', checkDevTools);
       clearInterval(devToolsInterval);
+      
       const existingStyle = document.getElementById('media-protection-styles');
       if (existingStyle) {
         existingStyle.remove();
       }
     };
-  }, []);
+  }, [loading, protectionEnabled]);
 
-  // Show warning overlay when DevTools is detected
-  if (devToolsDetected) {
+  // Show blocking overlay when DevTools detected and protection is enabled
+  if (protectionEnabled && devToolsDetected) {
     return (
-      <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-background">
-        <div className="text-center p-8 max-w-md">
-          <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold text-foreground mb-4">
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'hsl(var(--background))',
+          color: 'hsl(var(--foreground))',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 999999,
+          fontFamily: 'system-ui, sans-serif',
+          textAlign: 'center',
+          padding: '20px'
+        }}
+      >
+        <div>
+          <h1 style={{ fontSize: '2rem', marginBottom: '1rem', color: 'hsl(var(--destructive))' }}>
             Accès non autorisé
           </h1>
-          <p className="text-muted-foreground mb-2">
+          <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>
             Les outils de développement ne sont pas autorisés sur ce site.
           </p>
-          <p className="text-muted-foreground">
+          <p style={{ fontSize: '1rem', opacity: 0.7 }}>
             Veuillez les fermer pour continuer.
           </p>
         </div>
