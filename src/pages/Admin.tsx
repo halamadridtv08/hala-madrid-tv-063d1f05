@@ -81,6 +81,8 @@ import { BrandingManager } from "@/components/admin/BrandingManager";
 import { WelcomePopupManager } from "@/components/admin/WelcomePopupManager";
 import { SocialLinksManager } from "@/components/admin/SocialLinksManager";
 import { ExploreCardsManager } from "@/components/admin/ExploreCardsManager";
+import { SeasonResetManager } from "@/components/admin/SeasonResetManager";
+import { SeasonArchiveViewer } from "@/components/admin/SeasonArchiveViewer";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -129,6 +131,7 @@ const VALID_ADMIN_TABS = [
   "social-links",
   "explore-cards",
   "footer-links",
+  "season-management",
   "settings",
 ] as const;
 
@@ -788,6 +791,12 @@ const Admin = () => {
           </TabsContent>
           <TabsContent value="footer-links">
             <FooterLinksManager />
+          </TabsContent>
+          <TabsContent value="season-management">
+            <div className="space-y-6">
+              <SeasonResetManager />
+              <SeasonArchiveViewer />
+            </div>
           </TabsContent>
           <TabsContent value="settings">{renderSettings()}</TabsContent>
         </Tabs>
