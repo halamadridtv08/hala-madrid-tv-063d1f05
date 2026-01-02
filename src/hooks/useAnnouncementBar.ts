@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 interface AnnouncementBar {
   id: string;
@@ -12,31 +13,42 @@ interface AnnouncementBar {
   text_color: string | null;
 }
 
+const fetchActiveAnnouncement = async (): Promise<AnnouncementBar | null> => {
+  const { data, error } = await supabase
+    .from('announcement_bar')
+    .select('*')
+    .eq('is_active', true)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+};
+
+const fetchAnnouncement = async (): Promise<AnnouncementBar | null> => {
+  const { data, error } = await supabase
+    .from('announcement_bar')
+    .select('*')
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+};
+
 export function useAnnouncementBar() {
-  const [announcement, setAnnouncement] = useState<AnnouncementBar | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchAnnouncement = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('announcement_bar')
-        .select('*')
-        .eq('is_active', true)
-        .limit(1)
-        .maybeSingle();
+  const { data: announcement = null, isLoading: loading } = useQuery({
+    queryKey: ['announcement-bar', 'active'],
+    queryFn: fetchActiveAnnouncement,
+    staleTime: 1000 * 60 * 5, // 5 min cache
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+  });
 
-      if (error) throw error;
-      setAnnouncement(data);
-    } catch (error) {
-      console.error('Error fetching announcement:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Subscribe to real-time changes
   useEffect(() => {
-    fetchAnnouncement();
-
     const channel = supabase
       .channel('announcement-bar-changes')
       .on(
@@ -47,7 +59,7 @@ export function useAnnouncementBar() {
           table: 'announcement_bar'
         },
         () => {
-          fetchAnnouncement();
+          queryClient.invalidateQueries({ queryKey: ['announcement-bar'] });
         }
       )
       .subscribe();
@@ -55,31 +67,25 @@ export function useAnnouncementBar() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [queryClient]);
 
-  return { announcement, loading, refetch: fetchAnnouncement };
+  return { 
+    announcement, 
+    loading, 
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['announcement-bar'] })
+  };
 }
 
 export function useAnnouncementBarAdmin() {
-  const [announcement, setAnnouncement] = useState<AnnouncementBar | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchAnnouncement = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('announcement_bar')
-        .select('*')
-        .limit(1)
-        .maybeSingle();
-
-      if (error) throw error;
-      setAnnouncement(data);
-    } catch (error) {
-      console.error('Error fetching announcement:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: announcement = null, isLoading: loading } = useQuery({
+    queryKey: ['announcement-bar', 'admin'],
+    queryFn: fetchAnnouncement,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+  });
 
   const updateAnnouncement = async (updates: Partial<AnnouncementBar>) => {
     if (!announcement) return;
@@ -91,7 +97,7 @@ export function useAnnouncementBarAdmin() {
         .eq('id', announcement.id);
 
       if (error) throw error;
-      await fetchAnnouncement();
+      queryClient.invalidateQueries({ queryKey: ['announcement-bar'] });
       return true;
     } catch (error) {
       console.error('Error updating announcement:', error);
@@ -99,9 +105,10 @@ export function useAnnouncementBarAdmin() {
     }
   };
 
-  useEffect(() => {
-    fetchAnnouncement();
-  }, []);
-
-  return { announcement, loading, updateAnnouncement, refetch: fetchAnnouncement };
+  return { 
+    announcement, 
+    loading, 
+    updateAnnouncement, 
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['announcement-bar'] })
+  };
 }

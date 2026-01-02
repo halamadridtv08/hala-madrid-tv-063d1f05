@@ -139,10 +139,16 @@ export function LiveMatchBar() {
   // Determine which minute to display
   const displayMinute = timerSettings?.timer_started_at ? manualMinute : `${autoMatchMinute}`;
 
-  // Don't show if hidden from admin, loading, or no relevant match (unless forced)
+  // Don't show during loading to prevent flash of incorrect content
   const loading = matchesLoading || settingsLoading;
   
-  if (!isVisible('live_match_bar') || loading) {
+  // Return null during loading - prevents flash
+  if (loading) {
+    return null;
+  }
+  
+  // Don't show if hidden from admin
+  if (!isVisible('live_match_bar')) {
     return null;
   }
 

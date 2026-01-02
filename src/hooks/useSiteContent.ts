@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 interface SiteContent {
   id: string;
@@ -11,51 +12,48 @@ interface SiteContent {
   language: string;
 }
 
+const fetchContent = async (): Promise<SiteContent[]> => {
+  const { data, error } = await supabase
+    .from('site_content')
+    .select('*')
+    .order('section', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+};
+
 export function useSiteContent() {
-  const [content, setContent] = useState<Record<string, string>>({});
-  const [allContent, setAllContent] = useState<SiteContent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchContent = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('site_content')
-        .select('*')
-        .order('section', { ascending: true });
+  const { data: allContent = [], isLoading: loading } = useQuery({
+    queryKey: ['site-content'],
+    queryFn: fetchContent,
+    staleTime: 1000 * 60 * 5, // 5 min cache
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
+  });
 
-      if (error) throw error;
+  // Build content map from allContent
+  const content = allContent.reduce<Record<string, string>>((acc, item) => {
+    acc[item.content_key] = item.content_value;
+    return acc;
+  }, {});
 
-      if (data) {
-        setAllContent(data);
-        const contentMap: Record<string, string> = {};
-        data.forEach(item => {
-          contentMap[item.content_key] = item.content_value;
-        });
-        setContent(contentMap);
-      }
-    } catch (error) {
-      console.error('Error fetching site content:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Subscribe to real-time changes
   useEffect(() => {
-    fetchContent();
-
     const channel = supabase
       .channel('site-content-changes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'site_content' },
-        () => fetchContent()
+        () => queryClient.invalidateQueries({ queryKey: ['site-content'] })
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [queryClient]);
 
   const getContent = (key: string, fallback: string = ''): string => {
     return content[key] || fallback;
@@ -70,7 +68,7 @@ export function useSiteContent() {
 
       if (error) throw error;
       
-      setContent(prev => ({ ...prev, [key]: value }));
+      queryClient.invalidateQueries({ queryKey: ['site-content'] });
     } catch (error) {
       console.error('Error updating content:', error);
       throw error;
@@ -84,7 +82,7 @@ export function useSiteContent() {
         .insert(newContent);
 
       if (error) throw error;
-      await fetchContent();
+      queryClient.invalidateQueries({ queryKey: ['site-content'] });
     } catch (error) {
       console.error('Error creating content:', error);
       throw error;
@@ -99,7 +97,7 @@ export function useSiteContent() {
         .eq('content_key', key);
 
       if (error) throw error;
-      await fetchContent();
+      queryClient.invalidateQueries({ queryKey: ['site-content'] });
     } catch (error) {
       console.error('Error deleting content:', error);
       throw error;
@@ -114,6 +112,6 @@ export function useSiteContent() {
     updateContent,
     createContent,
     deleteContent,
-    refetch: fetchContent
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['site-content'] })
   };
 }
