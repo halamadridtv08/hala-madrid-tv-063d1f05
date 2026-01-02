@@ -6,7 +6,7 @@ import { SecuritySettings } from "@/components/admin/SecuritySettings";
 
 const AdminSecurity = () => {
   return (
-    <ProtectedRoute requireAdmin={true}>
+    <ProtectedRoute requireAdminOnly={true}>
       <Navbar />
       <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="madrid-container py-8">
