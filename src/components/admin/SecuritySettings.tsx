@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,11 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, ShieldCheck, ShieldX, Eye, Clock, MapPin, Smartphone } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Shield, ShieldCheck, ShieldX, Eye, Clock, MapPin, Smartphone, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { TwoFactorSetup } from "@/components/auth/TwoFactorSetup";
+import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 
 interface LoginAttempt {
   id: string;
@@ -30,6 +31,9 @@ export function SecuritySettings() {
   const [showSetup, setShowSetup] = useState(false);
   const { toast } = useToast();
   const { user, isAdmin } = useAuth();
+  const { isVisible, toggleVisibility, loading: visibilityLoading } = useSiteVisibility();
+  
+  const devToolsProtectionEnabled = isVisible('devtools_protection');
   
   // Check if we should open logs tab by default
   const defaultTab = searchParams.get('tab') === 'logs' ? 'logs' : '2fa';
@@ -163,6 +167,7 @@ export function SecuritySettings() {
       <Tabs defaultValue={defaultTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="2fa">Authentification 2FA</TabsTrigger>
+          <TabsTrigger value="protection">Protection du site</TabsTrigger>
           <TabsTrigger value="logs">Historique des connexions</TabsTrigger>
         </TabsList>
 
@@ -221,6 +226,65 @@ export function SecuritySettings() {
                   Authy, ou Microsoft Authenticator installée sur votre téléphone.
                 </AlertDescription>
               </Alert>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="protection" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                Protection Anti-DevTools
+              </CardTitle>
+              <CardDescription>
+                Protégez votre site contre l'accès aux outils de développement et la copie de contenu
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className={`flex items-center justify-between p-4 border rounded-lg ${devToolsProtectionEnabled ? 'bg-green-50 dark:bg-green-900/20' : 'bg-muted/50'}`}>
+                <div className="flex items-center gap-3">
+                  {devToolsProtectionEnabled ? (
+                    <ShieldCheck className="h-8 w-8 text-green-600" />
+                  ) : (
+                    <ShieldX className="h-8 w-8 text-muted-foreground" />
+                  )}
+                  <div>
+                    <h3 className={`font-semibold ${devToolsProtectionEnabled ? 'text-green-800 dark:text-green-200' : 'text-foreground'}`}>
+                      {devToolsProtectionEnabled ? 'Protection activée' : 'Protection désactivée'}
+                    </h3>
+                    <p className={`text-sm ${devToolsProtectionEnabled ? 'text-green-600 dark:text-green-300' : 'text-muted-foreground'}`}>
+                      {devToolsProtectionEnabled 
+                        ? 'Les protections sont actives sur le site' 
+                        : 'Les protections sont désactivées (mode développement)'}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={devToolsProtectionEnabled}
+                  onCheckedChange={() => toggleVisibility('devtools_protection')}
+                  disabled={visibilityLoading}
+                />
+              </div>
+
+              <Alert>
+                <Shield className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Attention :</strong> Désactivez cette option lorsque vous travaillez sur l'environnement de développement Lovable.
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-2 pt-4">
+                <h4 className="font-medium text-sm">Quand la protection est activée :</h4>
+                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>Blocage de l'accès aux outils de développement (F12, Ctrl+Shift+I)</li>
+                  <li>Blocage du clic droit sur tout le site</li>
+                  <li>Blocage du copier-coller du contenu</li>
+                  <li>Blocage de Ctrl+U (voir la source)</li>
+                  <li>Affichage d'un écran de blocage si DevTools est détecté</li>
+                  <li>Désactivation de la sélection de texte</li>
+                </ul>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
