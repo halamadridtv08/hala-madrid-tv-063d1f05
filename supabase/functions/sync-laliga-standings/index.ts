@@ -8,7 +8,6 @@ const corsHeaders = {
 
 const FOOTBALL_API_BASE = 'https://v3.football.api-sports.io';
 const LA_LIGA_ID = 140;
-const CURRENT_SEASON = new Date().getFullYear();
 
 interface StandingTeam {
   rank: number;
@@ -29,6 +28,30 @@ interface StandingTeam {
       against: number;
     };
   };
+}
+
+// Get season year from site_content (e.g., "2025/26" -> 2025)
+async function getCurrentSeasonYear(supabase: any): Promise<number> {
+  try {
+    const { data, error } = await supabase
+      .from('site_content')
+      .select('content_value')
+      .eq('content_key', 'current_season')
+      .single();
+    
+    if (error || !data?.content_value) {
+      console.log('No season found in site_content, using current year');
+      return new Date().getFullYear();
+    }
+    
+    // Parse "2025/26" to 2025
+    const seasonYear = parseInt(data.content_value.split('/')[0]);
+    console.log(`Using season year from site_content: ${seasonYear}`);
+    return isNaN(seasonYear) ? new Date().getFullYear() : seasonYear;
+  } catch (err) {
+    console.error('Error fetching season:', err);
+    return new Date().getFullYear();
+  }
 }
 
 serve(async (req) => {
@@ -92,6 +115,9 @@ serve(async (req) => {
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Get current season dynamically
+    const CURRENT_SEASON = await getCurrentSeasonYear(supabaseAdmin);
 
     // Fetch standings from Football API
     console.log(`Fetching La Liga standings for season ${CURRENT_SEASON}...`);

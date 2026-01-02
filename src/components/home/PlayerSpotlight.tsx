@@ -10,6 +10,8 @@ import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext
 import { motion, AnimatePresence } from "framer-motion";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSiteContent } from "@/hooks/useSiteContent";
+
 export function PlayerSpotlight() {
   const [featuredPlayers, setFeaturedPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +19,8 @@ export function PlayerSpotlight() {
   const [progress, setProgress] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const { t } = useLanguage();
+  const { getContent } = useSiteContent();
+  const currentSeason = getContent("current_season", "2025/26");
   useEffect(() => {
     fetchFeaturedPlayers();
   }, []);
@@ -132,7 +136,7 @@ export function PlayerSpotlight() {
           <div className="mt-8">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp className="h-5 w-5 text-madrid-gold" />
-              <h4 className="text-xl font-semibold">Saison 2025/26</h4>
+              <h4 className="text-xl font-semibold">Saison {currentSeason}</h4>
             </div>
             
             <div className="grid grid-cols-2 gap-4">

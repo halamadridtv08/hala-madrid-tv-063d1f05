@@ -4,8 +4,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { BarChart3, RefreshCw, Trophy, Target, Shield, TrendingUp } from "lucide-react";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 export const TeamStatsLive = () => {
+  const { getContent } = useSiteContent();
+  const currentSeason = getContent("current_season", "2025/26");
   const { stats, loading, error, refetch } = useTeamStats();
 
   if (loading) {
@@ -81,7 +84,7 @@ export const TeamStatsLive = () => {
           />
           <div>
             <CardTitle>{stats.team.name}</CardTitle>
-            <p className="text-sm text-muted-foreground">Statistiques La Liga 2025/26</p>
+            <p className="text-sm text-muted-foreground">Statistiques La Liga {currentSeason}</p>
           </div>
         </div>
         <Button onClick={refetch} variant="ghost" size="sm">
