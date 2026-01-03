@@ -20,22 +20,28 @@ import { useLanguage } from "@/contexts/LanguageContext";
 // Convertit le HTML en texte simple avec retours à la ligne
 const stripHtmlToText = (html: string): string => {
   if (!html) return "";
-  // Remplacer les divs, br et p par des retours à la ligne
-  let text = html
-    .replace(/<div>/gi, '\n')
-    .replace(/<\/div>/gi, '')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<p>/gi, '\n')
-    .replace(/<\/p>/gi, '')
-    .replace(/&nbsp;/gi, ' ');
-  // Supprimer toutes les autres balises HTML
-  text = text.replace(/<[^>]*>/g, '');
-  // Décoder les entités HTML restantes
-  const textarea = document.createElement('textarea');
-  textarea.innerHTML = text;
-  text = textarea.value;
+  
+  // Créer un élément temporaire pour parser le HTML correctement
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  
+  // Remplacer les balises de bloc par des retours à la ligne
+  const blockTags = tempDiv.querySelectorAll('div, p, br');
+  blockTags.forEach(tag => {
+    if (tag.tagName === 'BR') {
+      tag.replaceWith('\n');
+    } else if (tag.tagName === 'DIV' || tag.tagName === 'P') {
+      tag.insertAdjacentText('beforebegin', '\n');
+    }
+  });
+  
+  // Récupérer le texte pur (cela décode automatiquement les entités HTML)
+  let text = tempDiv.textContent || tempDiv.innerText || '';
+  
   // Nettoyer les retours à la ligne multiples et les espaces
-  return text.trim().replace(/\n{3,}/g, '\n\n');
+  text = text.trim().replace(/\n{3,}/g, '\n\n');
+  
+  return text;
 };
 
 const categoryLabels: Record<FlashNewsCategory, string> = {
