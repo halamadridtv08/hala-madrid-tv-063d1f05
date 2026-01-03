@@ -9,6 +9,7 @@ import { AuthButtons } from "./AuthButtons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteVisibility } from "@/hooks/useSiteVisibility";
+import { useBranding } from "@/hooks/useBranding";
 import { AddContentMenu } from "./AddContentMenu";
 import { AnimatedSearchBar } from "./AnimatedSearchBar";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
@@ -27,6 +28,7 @@ export function Navbar() {
   const {
     isVisible
   } = useSiteVisibility();
+  const { logoUrl, siteName } = useBranding();
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -54,7 +56,7 @@ export function Navbar() {
       <div className="madrid-container py-2 md:py-4 flex justify-between items-center">
         <Link to="/" className="flex items-center gap-2 md:gap-3" onClick={closeMenu}>
           <div className="relative w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center hover:scale-105 transition-all duration-300">
-            <img alt="Hala Madrid Logo" className="h-10 w-10 md:h-12 md:w-12 object-contain" width="48" height="48" src="/lovable-uploads/68f70788-6521-4d69-a55f-56bf305adf1d.png" />
+            <img alt={siteName} className="h-10 w-10 md:h-12 md:w-12 object-contain" width="48" height="48" src={logoUrl} />
           </div>
           <span className="font-montserrat font-bold text-sm sm:text-lg md:text-xl lg:text-2xl tracking-tight">
             <span className="text-madrid-blue">HALA</span>
