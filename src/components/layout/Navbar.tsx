@@ -59,9 +59,9 @@ export function Navbar() {
             <img alt={siteName} className="h-10 w-10 md:h-12 md:w-12 object-contain" width="48" height="48" src={logoUrl} />
           </div>
           <span className="font-montserrat font-bold text-sm sm:text-lg md:text-xl lg:text-2xl tracking-tight">
-            <span className="text-madrid-blue">HALA</span>
-            <span className="text-black dark:text-white">MADRID</span>
-            <span className="text-madrid-gold">TV</span>
+            <span className="text-primary">HALA</span>
+            <span className="text-foreground">MADRID</span>
+            <span className="text-secondary">TV</span>
           </span>
         </Link>
 
