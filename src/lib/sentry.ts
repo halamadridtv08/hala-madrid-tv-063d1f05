@@ -6,6 +6,8 @@ export const initSentry = () => {
   if (import.meta.env.PROD) {
     Sentry.init({
       dsn: import.meta.env.VITE_SENTRY_DSN || "",
+      // Send default PII data (IP address, etc.)
+      sendDefaultPii: true,
       integrations: [
         Sentry.browserTracingIntegration(),
         Sentry.replayIntegration({
