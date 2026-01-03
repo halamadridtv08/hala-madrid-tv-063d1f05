@@ -5,18 +5,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Save, Loader2, Upload, Palette } from "lucide-react";
+import { Save, Loader2, Upload, Palette, Info } from "lucide-react";
 import { MediaUploader } from "./MediaUploader";
 
 interface BrandingSettings {
   id: string;
   logo_url: string | null;
   favicon_url: string | null;
-  primary_color: string;
-  secondary_color: string;
-  accent_color: string;
   site_name: string;
 }
+
+// Couleurs réelles du site (définies dans index.css)
+const SITE_COLORS = {
+  primary: { hex: '#1976D2', name: 'Bleu Madrid', css: '210 79% 46%' },
+  secondary: { hex: '#FFD700', name: 'Or Madrid', css: '47 100% 50%' },
+  accent: { hex: '#F59E0B', name: 'Ambre', css: '38 92% 50%' }
+};
 
 export function BrandingManager() {
   const { toast } = useToast();
@@ -32,7 +36,7 @@ export function BrandingManager() {
     try {
       const { data, error } = await supabase
         .from('branding_settings')
-        .select('*')
+        .select('id, logo_url, favicon_url, site_name')
         .limit(1)
         .single();
 
@@ -55,15 +59,12 @@ export function BrandingManager() {
         .update({
           logo_url: settings.logo_url,
           favicon_url: settings.favicon_url,
-          primary_color: settings.primary_color,
-          secondary_color: settings.secondary_color,
-          accent_color: settings.accent_color,
           site_name: settings.site_name
         })
         .eq('id', settings.id);
 
       if (error) throw error;
-      toast({ title: "Succès", description: "Branding sauvegardé" });
+      toast({ title: "Succès", description: "Branding sauvegardé avec succès" });
     } catch (error) {
       console.error('Error saving:', error);
       toast({ title: "Erreur", description: "Impossible de sauvegarder", variant: "destructive" });
@@ -98,7 +99,7 @@ export function BrandingManager() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* General Settings */}
+        {/* Identity Settings */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -147,29 +148,27 @@ export function BrandingManager() {
           </CardContent>
         </Card>
 
-        {/* Colors */}
+        {/* Colors - Read Only */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Palette className="h-5 w-5" />
-              Couleurs
+              Couleurs du site
+              <span className="text-xs font-normal text-muted-foreground ml-2">(lecture seule)</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label>Couleur principale</Label>
               <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={settings.primary_color}
-                  onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })}
-                  className="h-10 w-14 rounded cursor-pointer border-0"
+                <div 
+                  className="h-10 w-14 rounded border border-border"
+                  style={{ backgroundColor: SITE_COLORS.primary.hex }}
                 />
                 <Input
-                  value={settings.primary_color}
-                  onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })}
-                  placeholder="#8B5CF6"
-                  className="flex-1"
+                  value={`${SITE_COLORS.primary.hex} - ${SITE_COLORS.primary.name}`}
+                  readOnly
+                  className="flex-1 bg-muted"
                 />
               </div>
             </div>
@@ -177,17 +176,14 @@ export function BrandingManager() {
             <div className="space-y-2">
               <Label>Couleur secondaire</Label>
               <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={settings.secondary_color}
-                  onChange={(e) => setSettings({ ...settings, secondary_color: e.target.value })}
-                  className="h-10 w-14 rounded cursor-pointer border-0"
+                <div 
+                  className="h-10 w-14 rounded border border-border"
+                  style={{ backgroundColor: SITE_COLORS.secondary.hex }}
                 />
                 <Input
-                  value={settings.secondary_color}
-                  onChange={(e) => setSettings({ ...settings, secondary_color: e.target.value })}
-                  placeholder="#D946EF"
-                  className="flex-1"
+                  value={`${SITE_COLORS.secondary.hex} - ${SITE_COLORS.secondary.name}`}
+                  readOnly
+                  className="flex-1 bg-muted"
                 />
               </div>
             </div>
@@ -195,17 +191,14 @@ export function BrandingManager() {
             <div className="space-y-2">
               <Label>Couleur d'accent</Label>
               <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={settings.accent_color}
-                  onChange={(e) => setSettings({ ...settings, accent_color: e.target.value })}
-                  className="h-10 w-14 rounded cursor-pointer border-0"
+                <div 
+                  className="h-10 w-14 rounded border border-border"
+                  style={{ backgroundColor: SITE_COLORS.accent.hex }}
                 />
                 <Input
-                  value={settings.accent_color}
-                  onChange={(e) => setSettings({ ...settings, accent_color: e.target.value })}
-                  placeholder="#F97316"
-                  className="flex-1"
+                  value={`${SITE_COLORS.accent.hex} - ${SITE_COLORS.accent.name}`}
+                  readOnly
+                  className="flex-1 bg-muted"
                 />
               </div>
             </div>
@@ -216,19 +209,19 @@ export function BrandingManager() {
               <div className="flex gap-2">
                 <div 
                   className="flex-1 h-16 rounded-lg flex items-center justify-center text-white font-medium text-sm"
-                  style={{ backgroundColor: settings.primary_color }}
+                  style={{ backgroundColor: SITE_COLORS.primary.hex }}
                 >
                   Principale
                 </div>
                 <div 
-                  className="flex-1 h-16 rounded-lg flex items-center justify-center text-white font-medium text-sm"
-                  style={{ backgroundColor: settings.secondary_color }}
+                  className="flex-1 h-16 rounded-lg flex items-center justify-center text-gray-900 font-medium text-sm"
+                  style={{ backgroundColor: SITE_COLORS.secondary.hex }}
                 >
                   Secondaire
                 </div>
                 <div 
                   className="flex-1 h-16 rounded-lg flex items-center justify-center text-white font-medium text-sm"
-                  style={{ backgroundColor: settings.accent_color }}
+                  style={{ backgroundColor: SITE_COLORS.accent.hex }}
                 >
                   Accent
                 </div>
@@ -239,11 +232,12 @@ export function BrandingManager() {
       </div>
 
       {/* Info Card */}
-      <Card className="bg-muted/50">
-        <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground">
-            <strong>Note:</strong> Les changements de couleurs nécessitent une modification manuelle du fichier <code>index.css</code> pour être appliqués. 
-            Les valeurs configurées ici sont sauvegardées pour référence.
+      <Card className="bg-blue-500/10 border-blue-500/30">
+        <CardContent className="pt-6 flex gap-3">
+          <Info className="h-5 w-5 text-blue-400 shrink-0 mt-0.5" />
+          <p className="text-sm text-blue-300">
+            Les couleurs du site sont définies dans le code CSS et ne peuvent pas être modifiées depuis cette interface. 
+            Seuls le <strong>logo</strong>, le <strong>favicon</strong> et le <strong>nom du site</strong> sont appliqués dynamiquement au site public.
           </p>
         </CardContent>
       </Card>
