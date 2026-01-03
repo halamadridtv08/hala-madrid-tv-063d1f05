@@ -58,7 +58,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }, 0);
 
         if (event === "SIGNED_IN") {
-          showLoginSuccessToast(session?.user?.email ?? undefined);
+          // Prefer display name from user metadata over email
+          const displayName = session?.user?.user_metadata?.full_name 
+            || session?.user?.user_metadata?.name 
+            || session?.user?.email;
+          showLoginSuccessToast(displayName ?? undefined);
         }
       } else {
         currentUserIdRef.current = null;

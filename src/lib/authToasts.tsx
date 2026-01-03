@@ -1,7 +1,29 @@
 import { toast } from "sonner";
 import { Crown, LogIn, LogOut, UserPlus, ShieldCheck } from "lucide-react";
 
-export const showLoginSuccessToast = (email?: string) => {
+const TOAST_COOLDOWN_KEY = 'lastLoginToastTime';
+const TOAST_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+
+const canShowLoginToast = (): boolean => {
+  const lastShown = localStorage.getItem(TOAST_COOLDOWN_KEY);
+  if (!lastShown) return true;
+  
+  const timeSinceLastToast = Date.now() - parseInt(lastShown, 10);
+  return timeSinceLastToast >= TOAST_COOLDOWN_MS;
+};
+
+const markLoginToastShown = () => {
+  localStorage.setItem(TOAST_COOLDOWN_KEY, Date.now().toString());
+};
+
+export const showLoginSuccessToast = (displayName?: string) => {
+  // Check cooldown to avoid showing toast too frequently (e.g., when switching tabs)
+  if (!canShowLoginToast()) {
+    return;
+  }
+  
+  markLoginToastShown();
+  
   toast.custom(
     (t) => (
       <div className="w-full max-w-md bg-gradient-to-r from-green-500/10 via-background to-green-500/5 border border-green-500/20 rounded-xl p-4 shadow-2xl shadow-green-500/10 animate-fade-in">
@@ -17,9 +39,9 @@ export const showLoginSuccessToast = (email?: string) => {
             <p className="text-sm text-muted-foreground">
               Connexion réussie. Hala Madrid y nada más!
             </p>
-            {email && (
+            {displayName && (
               <p className="text-xs text-muted-foreground/70 mt-1 truncate">
-                {email}
+                {displayName}
               </p>
             )}
           </div>
