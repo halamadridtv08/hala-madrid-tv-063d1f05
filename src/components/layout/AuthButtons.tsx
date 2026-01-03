@@ -5,13 +5,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/auth/AuthModal";
 
 export function AuthButtons() {
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, isModerator, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   if (user) {
     return (
       <div className="flex items-center gap-2">
-        {isAdmin && (
+        {isModerator && (
           <Button asChild variant="outline" size="sm" className="hidden md:flex">
             <Link to="/admin">Administration</Link>
           </Button>
