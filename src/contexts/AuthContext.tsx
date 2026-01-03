@@ -114,10 +114,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       const roles = data?.map(r => r.role) || [];
-      console.log("User roles:", roles);
+      console.log("User roles for", userId, ":", roles, "Raw data:", data);
       
       const hasAdmin = roles.includes('admin');
       const hasModerator = roles.includes('moderator');
+      
+      console.log("Role check - hasAdmin:", hasAdmin, "hasModerator:", hasModerator, "isModerator will be:", hasAdmin || hasModerator);
       
       setIsAdmin(hasAdmin);
       // Moderator access = admin OR moderator role
