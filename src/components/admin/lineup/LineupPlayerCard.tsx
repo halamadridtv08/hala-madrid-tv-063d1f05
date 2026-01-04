@@ -1,8 +1,7 @@
 import { useDraggable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
-import { X, GripVertical, Plus, UserPlus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Trash2, Plus, UserPlus } from 'lucide-react';
 
 interface LineupPlayerCardProps {
   id: string;
@@ -33,7 +32,13 @@ export const LineupPlayerCard = ({
   variant = 'list',
   style,
 }: LineupPlayerCardProps) => {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    isDragging,
+  } = useDraggable({
     id: id,
     data: {
       playerId,
@@ -45,62 +50,88 @@ export const LineupPlayerCard = ({
     },
   });
 
-  const dragStyle = {
-    transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.5 : 1,
-    ...style,
-  };
+  const transformStyle = transform
+    ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
+    : undefined;
 
   if (variant === 'field') {
+    // Séparer la position (left, top) du transform de drag - comme DraggablePlayer
+    const { left, top, transform: _transform, ...restStyle } = style || {};
+    
+    const combinedStyle = {
+      left,
+      top,
+      ...restStyle,
+      transition: isDragging ? 'none' : 'left 0.3s ease-out, top 0.3s ease-out',
+    };
+
     return (
       <div
         ref={setNodeRef}
-        style={dragStyle}
+        style={{ ...combinedStyle, ...transformStyle }}
         {...listeners}
         {...attributes}
-        className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing z-10 group"
+        className={`absolute cursor-move ${isDragging ? 'opacity-50 z-50' : 'z-10'}`}
       >
-        <div className="relative">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-card border-2 border-primary shadow-lg overflow-hidden">
-            {playerImage ? (
-              <img src={playerImage} alt={playerName} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-primary/70">
-                <span className="text-xs font-bold text-primary-foreground">
-                  {playerName.split(' ').map(n => n[0]).join('').substring(0, 2)}
+        <div 
+          className="relative flex flex-col items-center"
+          style={{ transform: 'translate(-50%, -50%)' }}
+        >
+          {/* Photo du joueur */}
+          <div className="relative">
+            <div className="w-12 h-12 rounded-full border-2 border-white shadow-lg overflow-hidden bg-muted">
+              {playerImage ? (
+                <img 
+                  src={playerImage} 
+                  alt={playerName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                  <span className="text-sm font-bold text-primary-foreground">
+                    {playerName.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                  </span>
+                </div>
+              )}
+            </div>
+            
+            {/* Numéro de maillot */}
+            {jerseyNumber && (
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                <span className="text-xs font-bold text-white">
+                  {jerseyNumber}
                 </span>
               </div>
             )}
+            
+            {/* Bouton supprimer - en dehors du drag handler */}
+            {onDelete && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="absolute -top-1 -left-7 h-5 w-5 z-20 bg-red-500 hover:bg-red-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onDelete();
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <Trash2 className="h-3 w-3 text-white" />
+              </Button>
+            )}
           </div>
-          {jerseyNumber && (
-            <div className="absolute -bottom-1 -left-1 w-5 h-5 bg-secondary rounded-full flex items-center justify-center border border-secondary-foreground/20">
-              <span className="text-[10px] font-bold text-secondary-foreground">{jerseyNumber}</span>
-            </div>
-          )}
-          {onDelete && (
-            <Button
-              variant="destructive"
-              size="icon"
-              className="absolute -top-1 -right-1 w-5 h-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          )}
-        </div>
-        <div className="bg-card/95 backdrop-blur-sm px-2 py-0.5 rounded-full shadow-sm">
-          <span className="text-[10px] sm:text-xs font-medium text-foreground truncate max-w-[80px] block">
+          
+          {/* Nom du joueur */}
+          <div className="mt-1 bg-black/80 text-white px-2 py-0.5 rounded text-[10px] font-medium whitespace-nowrap">
             {playerName.split(' ').pop()}
-          </span>
+          </div>
         </div>
       </div>
     );
   }
 
-  // List variant with optional add buttons
+  // List variant
   const showAddButtons = onAddToStarters || onAddToSubstitutes;
 
   return (
@@ -108,12 +139,12 @@ export const LineupPlayerCard = ({
       {/* Draggable part */}
       <div
         ref={setNodeRef}
-        style={dragStyle}
+        style={transformStyle}
         {...listeners}
         {...attributes}
-        className="flex items-center gap-2 flex-1 min-w-0 cursor-grab active:cursor-grabbing"
+        className={`flex items-center gap-2 flex-1 min-w-0 cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
       >
-        <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        <Badge variant="secondary" className="shrink-0">{jerseyNumber}</Badge>
         
         <div className="w-8 h-8 rounded-full bg-muted overflow-hidden flex-shrink-0">
           {playerImage ? (
@@ -131,15 +162,9 @@ export const LineupPlayerCard = ({
           <p className="text-sm font-medium text-foreground truncate">{playerName}</p>
           <p className="text-xs text-muted-foreground">{position}</p>
         </div>
-
-        {jerseyNumber && (
-          <Badge variant="secondary" className="text-xs">
-            {jerseyNumber}
-          </Badge>
-        )}
       </div>
 
-      {/* Action buttons */}
+      {/* Action buttons - en dehors du drag handler */}
       {showAddButtons && (
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {onAddToStarters && (
@@ -151,6 +176,7 @@ export const LineupPlayerCard = ({
                 e.stopPropagation();
                 onAddToStarters();
               }}
+              onPointerDown={(e) => e.stopPropagation()}
               title="Ajouter comme titulaire"
             >
               <Plus className="h-4 w-4" />
@@ -165,6 +191,7 @@ export const LineupPlayerCard = ({
                 e.stopPropagation();
                 onAddToSubstitutes();
               }}
+              onPointerDown={(e) => e.stopPropagation()}
               title="Ajouter comme remplaçant"
             >
               <UserPlus className="h-4 w-4" />
@@ -173,17 +200,18 @@ export const LineupPlayerCard = ({
         </div>
       )}
 
-      {onDelete && (
+      {onDelete && !showAddButtons && (
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive shrink-0"
           onClick={(e) => {
             e.stopPropagation();
             onDelete();
           }}
+          onPointerDown={(e) => e.stopPropagation()}
         >
-          <X className="h-3 w-3" />
+          <Trash2 className="h-3 w-3" />
         </Button>
       )}
     </div>
