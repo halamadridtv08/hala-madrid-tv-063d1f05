@@ -125,26 +125,26 @@ export function NewsCarousel() {
   }
 
   return (
-    <div className="flex flex-col lg:grid lg:grid-cols-[1fr_300px] gap-4 min-h-[500px]">
+    <div className="flex flex-col lg:grid lg:grid-cols-[1fr_300px] gap-4 min-h-[508px]" style={{ contentVisibility: 'auto', containIntrinsicSize: '0 508px' }}>
       <div 
-        className="relative overflow-hidden"
+        className="relative overflow-hidden min-h-[500px]"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
         <Carousel 
           setApi={setApi}
-          className="w-full"
+          className="w-full h-full"
           opts={{ 
             loop: true,
             duration: 30
           }}
         >
-        <CarouselContent>
-          {slides.map((slide) => (
-            <CarouselItem key={slide.id}>
-              <div className="p-1">
-                <Card className="overflow-hidden border-none">
-                  <CardContent className="p-0">
+        <CarouselContent className="h-full">
+          {slides.map((slide, index) => (
+            <CarouselItem key={slide.id} className="h-full">
+              <div className="p-1 h-full">
+                <Card className="overflow-hidden border-none h-full">
+                  <CardContent className="p-0 h-full">
                     <div className="relative h-[500px] w-full">
                       <img
                         src={slide.image_url || "https://via.placeholder.com/1200x500?text=Real+Madrid"}
@@ -152,6 +152,8 @@ export function NewsCarousel() {
                         className="w-full h-full object-cover object-center"
                         width="1200"
                         height="500"
+                        loading={index === 0 ? "eager" : "lazy"}
+                        fetchPriority={index === 0 ? "high" : "auto"}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
                       <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
