@@ -87,8 +87,8 @@ const SettingsDashboard = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex-1">
               <h4 className="font-medium">Mode maintenance</h4>
               <p className="text-sm text-muted-foreground">Activer le mode maintenance du site</p>
             </div>
@@ -96,12 +96,13 @@ const SettingsDashboard = () => {
               variant={maintenanceMode ? "default" : "secondary"}
               size="sm"
               onClick={handleToggleMaintenance}
+              className="w-full sm:w-auto"
             >
               {maintenanceMode ? "Activé" : "Désactivé"}
             </Button>
           </div>
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex-1">
               <h4 className="font-medium">Notifications push</h4>
               <p className="text-sm text-muted-foreground">Envoyer des notifications aux utilisateurs</p>
             </div>
@@ -109,6 +110,7 @@ const SettingsDashboard = () => {
               variant={pushNotifications ? "default" : "secondary"}
               size="sm"
               onClick={handleToggleNotifications}
+              className="w-full sm:w-auto"
             >
               {pushNotifications ? "Activé" : "Désactivé"}
             </Button>
@@ -126,8 +128,8 @@ const SettingsDashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex-1">
                 <h4 className="font-medium">Authentification à deux facteurs</h4>
                 <p className="text-sm text-muted-foreground">Protection supplémentaire pour les administrateurs</p>
               </div>
@@ -135,12 +137,13 @@ const SettingsDashboard = () => {
                 variant="outline" 
                 size="sm"
                 onClick={() => navigate('/admin/security')}
+                className="w-full sm:w-auto"
               >
                 Configurer
               </Button>
             </div>
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex-1">
                 <h4 className="font-medium">Logs de sécurité</h4>
                 <p className="text-sm text-muted-foreground">Consulter les tentatives de connexion</p>
               </div>
@@ -148,6 +151,7 @@ const SettingsDashboard = () => {
                 variant="outline" 
                 size="sm"
                 onClick={() => navigate('/admin/security?tab=logs')}
+                className="w-full sm:w-auto"
               >
                 Voir les logs
               </Button>
@@ -164,8 +168,8 @@ const SettingsDashboard = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex-1">
               <h4 className="font-medium">Sauvegarde automatique</h4>
               <p className="text-sm text-muted-foreground">Dernière sauvegarde: il y a 2 heures</p>
             </div>
@@ -173,12 +177,13 @@ const SettingsDashboard = () => {
               variant={autoBackup ? "default" : "secondary"}
               size="sm"
               onClick={handleToggleBackup}
+              className="w-full sm:w-auto"
             >
               {autoBackup ? "Activé" : "Désactivé"}
             </Button>
           </div>
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex-1">
               <h4 className="font-medium">Optimisation</h4>
               <p className="text-sm text-muted-foreground">Optimiser les performances de la base</p>
             </div>
@@ -186,6 +191,7 @@ const SettingsDashboard = () => {
               variant="outline" 
               size="sm"
               onClick={() => setShowOptimizeDialog(true)}
+              className="w-full sm:w-auto"
             >
               Optimiser
             </Button>
@@ -201,8 +207,8 @@ const SettingsDashboard = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex-1">
               <h4 className="font-medium">Cache du site</h4>
               <p className="text-sm text-muted-foreground">Vider le cache pour appliquer les changements</p>
             </div>
@@ -210,12 +216,13 @@ const SettingsDashboard = () => {
               variant="outline" 
               size="sm"
               onClick={() => setShowClearCacheDialog(true)}
+              className="w-full sm:w-auto"
             >
               Vider le cache
             </Button>
           </div>
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex-1">
               <h4 className="font-medium">SEO</h4>
               <p className="text-sm text-muted-foreground">Configuration du référencement</p>
             </div>
@@ -223,6 +230,7 @@ const SettingsDashboard = () => {
               variant="outline" 
               size="sm"
               onClick={handleConfigureSEO}
+              className="w-full sm:w-auto"
             >
               Configurer
             </Button>
