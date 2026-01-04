@@ -114,7 +114,7 @@ export function Footer() {
 
   return (
     <>
-      <footer className={`text-white mt-12 relative overflow-hidden ${showCustomBackground || showSpline ? 'bg-transparent' : 'bg-madrid-blue'}`}>
+      <footer className={`text-white relative overflow-hidden ${showCustomBackground || showSpline ? 'bg-transparent' : 'bg-madrid-blue'}`}>
         {/* Custom Background Image/Video */}
         {showCustomBackground && (
           <div className="absolute inset-0 z-0">
