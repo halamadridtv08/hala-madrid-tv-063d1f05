@@ -7,6 +7,7 @@ import { FooterSplineAnimation } from "./FooterSplineAnimation";
 import { useFooterLinks, FooterLink } from "@/hooks/useFooterLinks";
 import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 import { useSplineSettings } from "@/hooks/useSplineSettings";
+import { useFooterBackground } from "@/hooks/useFooterBackground";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteContent } from "@/hooks/useSiteContent";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -25,9 +26,14 @@ export function Footer() {
   const { links, loading } = useFooterLinks();
   const { isVisible } = useSiteVisibility();
   const { splineUrl, isSplineVisible } = useSplineSettings();
+  const { isEnabled: footerBgEnabled, type: footerBgType, url: footerBgUrl } = useFooterBackground();
   const { t } = useLanguage();
   const { getContent } = useSiteContent();
   const [modalContent, setModalContent] = useState<FooterLink | null>(null);
+  
+  // Determine background priority: Custom bg > Spline > Default blue
+  const showCustomBackground = footerBgEnabled && footerBgUrl;
+  const showSpline = !showCustomBackground && isSplineVisible && splineUrl;
   
   // Get dynamic content from site_content table
   const siteName = getContent('site_name', 'HALA MADRID TV');
@@ -108,9 +114,33 @@ export function Footer() {
 
   return (
     <>
-      <footer className={`text-white mt-12 relative overflow-hidden ${isSplineVisible && splineUrl ? 'bg-transparent' : 'bg-madrid-blue'}`}>
-        {/* Spline 3D Animation Overlay */}
-        {isSplineVisible && splineUrl && (
+      <footer className={`text-white mt-12 relative overflow-hidden ${showCustomBackground || showSpline ? 'bg-transparent' : 'bg-madrid-blue'}`}>
+        {/* Custom Background Image/Video */}
+        {showCustomBackground && (
+          <div className="absolute inset-0 z-0">
+            {footerBgType === 'video' ? (
+              <video
+                src={footerBgUrl}
+                className="w-full h-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            ) : (
+              <img
+                src={footerBgUrl}
+                alt="Footer background"
+                className="w-full h-full object-cover"
+              />
+            )}
+            {/* Overlay for text readability */}
+            <div className="absolute inset-0 bg-black/60" />
+          </div>
+        )}
+        
+        {/* Spline 3D Animation Overlay (only if no custom background) */}
+        {showSpline && (
           <FooterSplineAnimation url={splineUrl} />
         )}
         
