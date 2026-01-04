@@ -81,62 +81,85 @@ function detectEntryType(content: string): { type: string; title: string; isImpo
   return { type: 'comment', title: 'Commentaire', isImportant: false };
 }
 
-// Check if content is a social media/spam comment to skip
-function isSocialMediaOrSpam(content: string): boolean {
-  const lowerContent = content.toLowerCase();
+// Check if content is spam/navigation/social to skip
+function shouldSkipContent(content: string): boolean {
+  // Skip markdown links that are just navigation (e.g., "[Más información](url)")
+  if (/^\[.*\]\(https?:\/\//i.test(content)) {
+    return true;
+  }
+  
+  // Skip entries that contain realmadrid.com news URLs (not match events)
+  if (/realmadrid\.com\/.*\/noticias\//i.test(content)) {
+    return true;
+  }
   
   // Skip Instagram/Twitter/social media links and embeds
   if (/instagram\.com|twitter\.com|x\.com|facebook\.com|tiktok\.com/i.test(content)) {
     return true;
   }
   
-  // Skip image/media only entries with no real content
-  if (/^\!\[.*\]\(https?:\/\/cdn\.|^\[.*likes?\]|^\[view all.*comments\]/i.test(content)) {
+  // Skip monterosa URLs (CDN/reactions)
+  if (/monterosa/i.test(content)) {
     return true;
   }
   
-  // Skip reaction/emoji only entries
-  if (/^\!\[(heart|blowmind|fire|clap|like|wow)\]/i.test(content)) {
+  // Skip image/media markdown syntax with no real content
+  if (/^\!\[.*\]\(https?:\/\//i.test(content)) {
     return true;
   }
   
-  // Skip monterosa.cloud CDN assets (reaction images)
-  if (/monterosa\.cloud/i.test(content)) {
+  // Skip "Más información", "More info", etc.
+  if (/más información|more info|leer más|read more|ver más|see more/i.test(content)) {
     return true;
   }
   
-  // Skip entries that are just numbers or very short
-  if (/^[\d\s\-\:\.\,]+$/.test(content.trim())) {
+  // Skip entries that are primarily URLs (more than 50% URL content)
+  const urlMatches = content.match(/https?:\/\/[^\s\)]+/g) || [];
+  const urlLength = urlMatches.reduce((sum, url) => sum + url.length, 0);
+  if (urlLength > content.length * 0.5) {
     return true;
   }
   
   // Skip "view all X comments" type entries
-  if (/view all \d+ comments|ver todos los|voir tous les/i.test(content)) {
+  if (/view all \d+ comments|ver todos los|voir tous les|\d+\s*(likes?|comments?|views?)/i.test(content)) {
     return true;
   }
   
+  // Skip entries that are just numbers, timestamps
+  if (/^[\d\s\-\:\.\,\+\'′]+$/.test(content.trim())) {
+    return true;
+  }
+  
+  // Skip reaction emojis only
+  if (/^[\p{Emoji}\s]+$/u.test(content.trim()) && content.trim().length < 20) {
+    return true;
+  }
+
   return false;
 }
 
-// Check if content looks like a real match event
-function isMatchEvent(content: string): boolean {
+// Check if content looks like a REAL match event (stricter)
+function isRealMatchEvent(content: string): boolean {
+  // Must not be a link-only entry
+  if (/^\[.*\]\(.*\)$/.test(content.trim())) {
+    return false;
+  }
+  
+  // Strict event patterns - must have descriptive text
   const eventPatterns = [
-    /\b(goal|gol|but|⚽|golazo|marca|scores?)\b/i,
-    /\b(yellow|red|card|carton|tarjeta|🟨|🟥)\b/i,
-    /\b(substit|cambio|changement|reemplaz|🔄|entra|sale|on for|off for)\b/i,
-    /\b(kick[-\s]?off|coup d'envoi|inicio|empieza|arranca)\b/i,
-    /\b(half[-\s]?time|mi[-\s]?temps|descanso|entretiempo)\b/i,
-    /\b(full[-\s]?time|fin|final|termina|over)\b/i,
-    /\b(var|video assistant|penalt|penal)\b/i,
-    /\b(corner|falta|foul|offside|fuera de juego|hors-jeu)\b/i,
-    /\b(save|saves?|parada|arrêt|portero|keeper)\b/i,
-    /\b(shot|tiro|frappe|disparo|chance|occasion)\b/i,
-    /\b(header|cabeza|tête|cross|centro|pase)\b/i,
-    /\b(free[-\s]?kick|coup franc|tiro libre)\b/i,
-    /\b(injury|bless|lesión|injured|down|hurt)\b/i,
-    /\b(extra[-\s]?time|prolongation|prórroga|added time|stoppage)\b/i,
-    /\b(whistle|referee|arbitro|árbitro)\b/i,
-    /\d+[''′]\s*[-–—]?\s*\w+/i, // Minute followed by text (e.g., "45' - Goal")
+    /\b(goal|gol|but)\b.{5,}/i, // Goal with some context
+    /⚽.{3,}/i, // Goal emoji with context
+    /\b(carton|card|tarjeta)\b.{5,}/i, // Card with context
+    /🟨|🟥/i, // Card emojis
+    /\b(substit|cambio|changement)\b.{5,}/i, // Substitution with context
+    /🔄.{3,}/i, // Substitution emoji with context
+    /\b(kick[-\s]?off|coup d'envoi|inicio del partido)\b/i,
+    /\b(half[-\s]?time|mi[-\s]?temps|descanso)\b/i,
+    /\b(full[-\s]?time|fin du match|final del partido)\b/i,
+    /\b(var|video assistant referee)\b/i,
+    /\b(penalty|penalti|p[eé]nalty)\b.{3,}/i,
+    /\b(expuls|red card|carton rouge|tarjeta roja)\b/i,
+    /^\d{1,3}[''′]\s*[-–—]?\s*[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+/i, // "45' - Rodrygo..."
   ];
   
   return eventPatterns.some(pattern => pattern.test(content));
@@ -154,15 +177,15 @@ function parseEntries(markdown: string): LiveBlogEntry[] {
     const cleanLine = line.trim();
     
     // Skip headers, navigation elements, and short lines
-    if (cleanLine.startsWith('#') || cleanLine.length < 20) continue;
+    if (cleanLine.startsWith('#') || cleanLine.length < 25) continue;
     
-    // Skip social media and spam content
-    if (isSocialMediaOrSpam(cleanLine)) {
+    // Skip spam/navigation/social content
+    if (shouldSkipContent(cleanLine)) {
       continue;
     }
     
-    // Only keep actual match events
-    if (!isMatchEvent(cleanLine)) {
+    // Only keep REAL match events (stricter)
+    if (!isRealMatchEvent(cleanLine)) {
       continue;
     }
     
