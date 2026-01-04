@@ -40,6 +40,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
     read_time: article?.read_time || "",
     author_id: article?.author_id || user?.id || "",
     scheduled_at: article?.scheduled_at ? new Date(article.scheduled_at).toISOString().slice(0, 16) : "",
+    author_name: article?.author_name || "HALA MADRID TV",
   });
   
   const [showCropper, setShowCropper] = useState(false);
@@ -239,6 +240,19 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
                     onChange={(e) => setFormData({ ...formData, read_time: e.target.value })}
                     placeholder="Ex: 5 min"
                   />
+                </div>
+                
+                <div>
+                  <Label htmlFor="author_name">Nom de l'auteur</Label>
+                  <Input
+                    id="author_name"
+                    value={formData.author_name}
+                    onChange={(e) => setFormData({ ...formData, author_name: e.target.value })}
+                    placeholder="HALA MADRID TV"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Laissez "HALA MADRID TV" ou entrez votre nom
+                  </p>
                 </div>
                 
                 <div className="flex items-center space-x-4">

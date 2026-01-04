@@ -13,4 +13,5 @@ export interface Article {
   updated_at: string;
   author_id: string;
   read_time?: string;
+  author_name?: string;
 }
