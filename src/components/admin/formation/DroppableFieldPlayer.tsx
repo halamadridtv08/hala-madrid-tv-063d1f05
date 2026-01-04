@@ -4,7 +4,8 @@ import { DraggablePlayer } from './DraggablePlayer';
 interface DroppableFieldPlayerProps {
   player: {
     id?: string;
-    player_id: string;
+    player_id?: string | null;
+    opposing_player_id?: string | null;
     player_name: string;
     player_position: string;
     jersey_number: number;

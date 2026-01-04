@@ -50,7 +50,8 @@ interface Player {
 
 interface FormationPlayer {
   id?: string;
-  player_id: string;
+  player_id: string | null;
+  opposing_player_id?: string | null;
   player_name: string;
   player_position: string;
   jersey_number: number;
@@ -114,6 +115,12 @@ export const FormationManagerV2: React.FC = () => {
 
   const isMobile = useIsMobile();
 
+  const isAssigned = (playerId: string) => {
+    const match = (fp: FormationPlayer) =>
+      (activeTeam === "real_madrid" ? fp.player_id : fp.opposing_player_id) === playerId;
+
+    return fieldPlayers.some(match) || substitutes.some(match);
+  };
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -218,6 +225,7 @@ export const FormationManagerV2: React.FC = () => {
         match_formation_players (
           id,
           player_id,
+          opposing_player_id,
           position_x,
           position_y,
           is_starter,
@@ -759,9 +767,9 @@ export const FormationManagerV2: React.FC = () => {
       return;
     }
 
-    // Vérifier si le joueur est déjà sur le terrain
-    if (fieldPlayers.some(fp => fp.player_id === player.id)) {
-      toast.error("Ce joueur est déjà sur le terrain");
+    // Vérifier si le joueur est déjà assigné (terrain ou remplaçants)
+    if (isAssigned(player.id)) {
+      toast.error("Ce joueur est déjà utilisé");
       return;
     }
 
@@ -1416,10 +1424,7 @@ export const FormationManagerV2: React.FC = () => {
                           <ScrollArea className="h-[300px] lg:h-[500px]">
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-1">
                               {availablePlayers
-                                .filter(p => 
-                                  !fieldPlayers.some(fp => fp.player_id === p.id) &&
-                                  !substitutes.some(sp => sp.player_id === p.id)
-                                )
+                                .filter((p) => !isAssigned(p.id))
                                 .map((player) => (
                                   <DraggablePlayer
                                     key={player.id}
@@ -1467,10 +1472,7 @@ export const FormationManagerV2: React.FC = () => {
       <PlayerSearchDialog
         open={showPlayerSearch}
         onOpenChange={setShowPlayerSearch}
-        players={availablePlayers.filter(p => 
-          !fieldPlayers.some(fp => fp.player_id === p.id) &&
-          !substitutes.some(sp => sp.player_id === p.id)
-        )}
+        players={availablePlayers.filter((p) => !isAssigned(p.id))}
         onSelectPlayer={handleAddPlayerToPosition}
         selectedPosition={selectedPositionSlot?.position || ''}
         teamName={activeTeam === 'real_madrid' ? 'Real Madrid' : (() => {
