@@ -22,8 +22,10 @@ import {
   UserX,
   Calendar,
   Shield,
-  Loader2
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
+import { FORMATION_TEMPLATES } from './formation/FormationTemplates';
 import { LineupPlayerCard } from './lineup/LineupPlayerCard';
 import { LineupPitch } from './lineup/LineupPitch';
 import { SubstitutesZone } from './lineup/SubstitutesZone';
@@ -78,41 +80,18 @@ interface AbsentPlayer {
   player_image?: string;
 }
 
-// Default positions for 4-3-3 formation (percentages on vertical pitch)
-const getPositionCoordinates = (position: string, index: number, existingCount: number) => {
-  const posMap: Record<string, { x: number; y: number }> = {
-    'GK': { x: 50, y: 90 },
-    'Gardien': { x: 50, y: 90 },
-    'LB': { x: 15, y: 70 },
-    'Latéral gauche': { x: 15, y: 70 },
-    'CB': { x: existingCount % 2 === 0 ? 35 : 65, y: 75 },
-    'Défenseur central': { x: existingCount % 2 === 0 ? 35 : 65, y: 75 },
-    'RB': { x: 85, y: 70 },
-    'Latéral droit': { x: 85, y: 70 },
-    'CDM': { x: 50, y: 60 },
-    'Milieu défensif': { x: 50, y: 60 },
-    'CM': { x: existingCount === 0 ? 25 : existingCount === 1 ? 50 : 75, y: existingCount === 1 ? 55 : 50 },
-    'Milieu central': { x: existingCount === 0 ? 25 : existingCount === 1 ? 50 : 75, y: existingCount === 1 ? 55 : 50 },
-    'CAM': { x: 50, y: 35 },
-    'Milieu offensif': { x: 50, y: 35 },
-    'LW': { x: 15, y: 25 },
-    'Ailier gauche': { x: 15, y: 25 },
-    'RW': { x: 85, y: 25 },
-    'Ailier droit': { x: 85, y: 25 },
-    'ST': { x: 50, y: 18 },
-    'Attaquant': { x: 50, y: 18 },
-    'CF': { x: 50, y: 22 },
-    'Avant-centre': { x: 50, y: 22 },
-  };
-  
-  return posMap[position] || { x: 20 + (index * 15) % 60, y: 30 + (index * 12) % 50 };
+// Get position coordinates from formation template
+const getPositionFromTemplate = (formation: string, index: number) => {
+  const template = FORMATION_TEMPLATES.find(t => t.formation === formation);
+  if (template && index < template.positions.length) {
+    return { x: template.positions[index].x, y: template.positions[index].y };
+  }
+  // Fallback if no template found
+  return { x: 20 + (index * 15) % 60, y: 30 + (index * 12) % 50 };
 };
 
-// Available formations
-const FORMATIONS = [
-  '4-3-3', '4-4-2', '4-2-3-1', '3-5-2', '3-4-3', '5-3-2', '5-4-1', '4-5-1',
-  '4-1-4-1', '4-3-2-1', '4-4-1-1', '3-4-2-1', '4-1-2-1-2', '5-2-3'
-];
+// Available formations from templates
+const FORMATIONS = FORMATION_TEMPLATES.map(t => t.formation);
 
 export function MatchLineupManager() {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -805,8 +784,7 @@ export function MatchLineupManager() {
                         
                         <LineupPitch id="pitch">
                           {starters.map((player, index) => {
-                            const existingCount = starters.slice(0, index).filter(p => p.position === player.position).length;
-                            const pos = getPositionCoordinates(player.position, index, existingCount);
+                            const pos = getPositionFromTemplate(selectedFormation, index);
                             return (
                               <LineupPlayerCard
                                 key={player.id}
