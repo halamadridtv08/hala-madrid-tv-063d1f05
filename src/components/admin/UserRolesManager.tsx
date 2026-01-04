@@ -98,8 +98,19 @@ export const UserRolesManager = () => {
       filtered = filtered.filter(role => role.role === roleFilter);
     }
 
-    // Sort
+    // Role priority: admin > moderator > user
+    const rolePriority: Record<string, number> = {
+      admin: 0,
+      moderator: 1,
+      user: 2,
+    };
+
+    // Sort by role priority first, then by secondary sort
     filtered.sort((a, b) => {
+      const priorityDiff = rolePriority[a.role] - rolePriority[b.role];
+      if (priorityDiff !== 0) return priorityDiff;
+      
+      // Secondary sort
       if (sortBy === "email") {
         return a.email.localeCompare(b.email);
       } else {
