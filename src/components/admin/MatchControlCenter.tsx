@@ -897,8 +897,29 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
       {/* Timeline */}
       {selectedMatchId && (
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Timeline des événements ({entries.length})</CardTitle>
+            {entries.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={async () => {
+                  if (!confirm(`Supprimer les ${entries.length} entrées ?`)) return;
+                  const { error } = await supabase
+                    .from('live_blog_entries')
+                    .delete()
+                    .eq('match_id', selectedMatchId);
+                  if (error) {
+                    toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+                  } else {
+                    toast({ title: 'Succès', description: `${entries.length} entrées supprimées` });
+                  }
+                }}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Tout supprimer
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             {blogLoading ? (
