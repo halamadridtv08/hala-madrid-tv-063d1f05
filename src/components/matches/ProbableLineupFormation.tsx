@@ -20,60 +20,85 @@ interface ProbableLineupFormationProps {
   homeTeamName: string;
 }
 
+const stripDiacritics = (value: string) =>
+  value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+/**
+ * Normalise les libellés "position" venant de la BDD (ex: "Défenseur Central", "Milieu", "Gardien")
+ * vers des codes courts utilisés par le placement sur le terrain.
+ */
+const normalizePosition = (raw: string): string => {
+  const v = stripDiacritics(raw ?? '').toLowerCase().trim();
+  const eq = (s: string) => v === s;
+  const has = (s: string) => v.includes(s);
+
+  // GK
+  if (eq('gk') || eq('gb') || eq('gardien') || has('gardien') || has('goalkeeper') || has('portero')) return 'GK';
+
+  // Défense
+  if (eq('dc') || has('defenseur central') || has('central defender') || has('defensa central') || has('centre-back')) return 'CB';
+  if (eq('dg') || has('lateral gauche') || has('arriere gauche') || has('left back')) return 'LB';
+  if (eq('dd') || has('lateral droit') || has('arriere droit') || has('right back')) return 'RB';
+
+  // Milieux
+  if (eq('mdc') || has('milieu defensif') || has('defensive midfielder')) return 'CDM';
+  if (eq('moc') || eq('cam') || has('milieu offensif') || has('attacking midfielder')) return 'CAM';
+  if (eq('mg') || has('milieu gauche') || has('left midfielder')) return 'LM';
+  if (eq('md') || has('milieu droit') || has('right midfielder')) return 'RM';
+  if (eq('mc') || has('milieu central') || (has('milieu') && !has('offensif') && !has('defensif') && !has('gauche') && !has('droit'))) return 'CM';
+
+  // Attaque
+  if (eq('ag') || has('ailier gauche') || has('left winger')) return 'LW';
+  if (eq('ad') || has('ailier droit') || has('right winger')) return 'RW';
+  if (eq('bu') || has('buteur') || has('avant-centre') || has('attaquant') || has('striker') || has('forward')) return 'ST';
+
+  return stripDiacritics(raw ?? '').toUpperCase().trim();
+};
+
 // Get position coordinates based on position type and index for multiple same positions
-const getPositionCoordinates = (position: string, samePositionIndex: number, totalSamePosition: number): { x: number; y: number } => {
-  const pos = position.toUpperCase();
-  
+const getPositionCoordinates = (
+  normalizedPosition: string,
+  samePositionIndex: number,
+  _totalSamePosition: number
+): { x: number; y: number } => {
+  const pos = normalizedPosition.toUpperCase();
+
   // Base positions for each role
   const basePositions: Record<string, { x: number; y: number }[]> = {
     // Goalkeeper
-    'GK': [{ x: 50, y: 92 }],
-    'POR': [{ x: 50, y: 92 }],
-    'PT': [{ x: 50, y: 92 }],
-    
+    GK: [{ x: 50, y: 92 }],
+
     // Defenders
-    'LB': [{ x: 12, y: 75 }],
-    'RB': [{ x: 88, y: 75 }],
-    'CB': [{ x: 35, y: 78 }, { x: 65, y: 78 }, { x: 50, y: 80 }],
-    'DF': [{ x: 35, y: 78 }, { x: 65, y: 78 }, { x: 50, y: 80 }],
-    'DEF': [{ x: 35, y: 78 }, { x: 65, y: 78 }, { x: 50, y: 80 }],
-    
+    LB: [{ x: 12, y: 75 }],
+    RB: [{ x: 88, y: 75 }],
+    CB: [{ x: 35, y: 78 }, { x: 65, y: 78 }, { x: 50, y: 80 }],
+
     // Defensive midfielders
-    'CDM': [{ x: 40, y: 62 }, { x: 60, y: 62 }],
-    'DM': [{ x: 40, y: 62 }, { x: 60, y: 62 }],
-    'MC': [{ x: 40, y: 62 }, { x: 60, y: 62 }],
-    
+    CDM: [{ x: 40, y: 62 }, { x: 60, y: 62 }],
+
     // Midfielders
-    'CM': [{ x: 30, y: 50 }, { x: 50, y: 52 }, { x: 70, y: 50 }],
-    'MF': [{ x: 30, y: 50 }, { x: 50, y: 52 }, { x: 70, y: 50 }],
-    'MED': [{ x: 30, y: 50 }, { x: 50, y: 52 }, { x: 70, y: 50 }],
-    'LM': [{ x: 15, y: 50 }],
-    'RM': [{ x: 85, y: 50 }],
-    'CAM': [{ x: 50, y: 40 }],
-    'AM': [{ x: 50, y: 40 }],
-    
+    CM: [{ x: 30, y: 50 }, { x: 50, y: 52 }, { x: 70, y: 50 }],
+    LM: [{ x: 15, y: 50 }],
+    RM: [{ x: 85, y: 50 }],
+    CAM: [{ x: 50, y: 40 }],
+
     // Wingers
-    'LW': [{ x: 18, y: 32 }],
-    'RW': [{ x: 82, y: 32 }],
-    'EXT': [{ x: 18, y: 32 }, { x: 82, y: 32 }],
-    
+    LW: [{ x: 18, y: 32 }],
+    RW: [{ x: 82, y: 32 }],
+
     // Forwards
-    'ST': [{ x: 40, y: 18 }, { x: 60, y: 18 }],
-    'CF': [{ x: 50, y: 22 }],
-    'FW': [{ x: 40, y: 18 }, { x: 60, y: 18 }],
-    'ATT': [{ x: 40, y: 18 }, { x: 60, y: 18 }],
-    'DEL': [{ x: 50, y: 18 }],
+    ST: [{ x: 40, y: 18 }, { x: 60, y: 18 }],
+    CF: [{ x: 50, y: 22 }],
   };
 
   const positions = basePositions[pos];
-  
   if (positions) {
     const index = Math.min(samePositionIndex, positions.length - 1);
     return positions[index];
   }
-  
+
   // Fallback: distribute unknown positions across midfield
-  const fallbackX = 25 + (samePositionIndex * 25) % 50;
+  const fallbackX = 25 + ((samePositionIndex * 25) % 50);
   return { x: fallbackX, y: 50 };
 };
 
@@ -88,24 +113,24 @@ export const ProbableLineupFormation: React.FC<ProbableLineupFormationProps> = (
   const [activeTeam, setActiveTeam] = useState<'real_madrid' | 'opposing'>('real_madrid');
 
   const assignPositionsToPlayers = (players: PlayerType[]) => {
-    // Count how many players have each position
+    // Count how many players have each normalized position
     const positionCounts: Record<string, number> = {};
-    players.forEach(p => {
-      const pos = p.position.toUpperCase();
+    players.forEach((p) => {
+      const pos = normalizePosition(p.position);
       positionCounts[pos] = (positionCounts[pos] || 0) + 1;
     });
-    
+
     // Track current index for each position
     const positionIndexes: Record<string, number> = {};
-    
+
     return players.map((player) => {
-      const pos = player.position.toUpperCase();
+      const pos = normalizePosition(player.position);
       const currentIndex = positionIndexes[pos] || 0;
       const total = positionCounts[pos] || 1;
-      
+
       const coords = getPositionCoordinates(pos, currentIndex, total);
       positionIndexes[pos] = currentIndex + 1;
-      
+
       return {
         ...player,
         position_x: coords.x,
