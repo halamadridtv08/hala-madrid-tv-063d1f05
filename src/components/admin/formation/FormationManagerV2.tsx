@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, Users, Shield, Trash2, Plus, Grid3x3, Layout, Columns2, Rows2, Undo, Lock, Unlock } from 'lucide-react';
+import { Save, Users, Shield, Trash2, Plus, Grid3x3, Layout, Columns2, Rows2, Undo, Lock, Unlock, ChevronDown, ChevronUp } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -105,6 +105,8 @@ export const FormationManagerV2: React.FC = () => {
   const [showPlayerSearch, setShowPlayerSearch] = useState(false);
   const [selectedPositionSlot, setSelectedPositionSlot] = useState<{ position: string; x: number; y: number } | null>(null);
   const [activeDragPlayer, setActiveDragPlayer] = useState<FormationPlayer | Player | null>(null);
+  const [isAvailablePlayersOpen, setIsAvailablePlayersOpen] = useState(true);
+  const [isSubstitutesOpen, setIsSubstitutesOpen] = useState(true);
   
   const [availablePlayers, setAvailablePlayers] = useState<Player[]>([]);
   const [fieldPlayers, setFieldPlayers] = useState<FormationPlayer[]>([]);
@@ -1215,8 +1217,19 @@ export const FormationManagerV2: React.FC = () => {
                             <ResizablePanel defaultSize={35} minSize={25}>
                               <Card className="h-full border-0 rounded-none">
                                 <CardHeader className="py-2">
-                                  <CardTitle className="text-sm">Remplaçants</CardTitle>
+                                  <button
+                                    onClick={() => setIsSubstitutesOpen(!isSubstitutesOpen)}
+                                    className="flex items-center justify-between w-full"
+                                  >
+                                    <CardTitle className="text-sm">Remplaçants ({substitutes.length})</CardTitle>
+                                    {isSubstitutesOpen ? (
+                                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                    ) : (
+                                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                  </button>
                                 </CardHeader>
+                                {isSubstitutesOpen && (
                                 <CardContent className="p-2">
                                   <DroppableSubstitutes id="substitutes">
                                     <ScrollArea className="h-[380px]">
@@ -1241,6 +1254,7 @@ export const FormationManagerV2: React.FC = () => {
                                     </ScrollArea>
                                   </DroppableSubstitutes>
                                 </CardContent>
+                                )}
                               </Card>
                             </ResizablePanel>
                           </ResizablePanelGroup>
@@ -1387,8 +1401,19 @@ export const FormationManagerV2: React.FC = () => {
                             {/* Remplaçants */}
                             <Card>
                               <CardHeader className="py-2">
-                                <CardTitle className="text-sm">Remplaçants</CardTitle>
+                                <button
+                                  onClick={() => setIsSubstitutesOpen(!isSubstitutesOpen)}
+                                  className="flex items-center justify-between w-full"
+                                >
+                                  <CardTitle className="text-sm">Remplaçants ({substitutes.length})</CardTitle>
+                                  {isSubstitutesOpen ? (
+                                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </button>
                               </CardHeader>
+                              {isSubstitutesOpen && (
                               <CardContent className="p-2">
                                 <DroppableSubstitutes id="substitutes">
                                   <div className="flex flex-wrap gap-1.5 min-h-[100px]">
@@ -1398,7 +1423,7 @@ export const FormationManagerV2: React.FC = () => {
                                     {substitutes.map((player) => (
                                       <DraggablePlayer
                                         key={player.id}
-                                        id={player.id || player.player_id}
+                                        id={player.id || player.player_id || player.opposing_player_id || ''}
                                         name={player.player_name}
                                         position={player.player_position}
                                         jerseyNumber={player.jersey_number}
@@ -1410,6 +1435,7 @@ export const FormationManagerV2: React.FC = () => {
                                   </div>
                                 </DroppableSubstitutes>
                               </CardContent>
+                              )}
                             </Card>
                           </div>
                         )}
@@ -1418,8 +1444,21 @@ export const FormationManagerV2: React.FC = () => {
                       {/* Liste des joueurs disponibles - En dessous sur mobile */}
                       <Card className="lg:col-span-1 order-2 lg:order-1">
                         <CardHeader className="py-3">
-                          <CardTitle className="text-sm">Joueurs disponibles</CardTitle>
+                          <button
+                            onClick={() => setIsAvailablePlayersOpen(!isAvailablePlayersOpen)}
+                            className="flex items-center justify-between w-full"
+                          >
+                            <CardTitle className="text-sm">
+                              Joueurs disponibles ({availablePlayers.filter((p) => !isAssigned(p.id)).length})
+                            </CardTitle>
+                            {isAvailablePlayersOpen ? (
+                              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </button>
                         </CardHeader>
+                        {isAvailablePlayersOpen && (
                         <CardContent className="p-2">
                           <ScrollArea className="h-[300px] lg:h-[500px]">
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-1">
@@ -1438,6 +1477,7 @@ export const FormationManagerV2: React.FC = () => {
                             </div>
                           </ScrollArea>
                         </CardContent>
+                        )}
                       </Card>
                     </div>
                   )}
