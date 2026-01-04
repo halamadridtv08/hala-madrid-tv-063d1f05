@@ -129,7 +129,12 @@ export const UserRolesManager = () => {
         .rpc('get_users_with_roles');
 
       if (error) throw error;
-      setUserRoles(data || []);
+      // Cast the role to the correct type
+      const typedData = (data || []).map(item => ({
+        ...item,
+        role: item.role as 'admin' | 'moderator' | 'user'
+      }));
+      setUserRoles(typedData);
     } catch (error: any) {
       console.error('Error fetching user roles:', error);
       toast({

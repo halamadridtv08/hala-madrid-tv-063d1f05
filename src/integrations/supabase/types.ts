@@ -3603,7 +3603,7 @@ export type Database = {
         Returns: {
           created_at: string
           email: string
-          role: Database["public"]["Enums"]["app_role"]
+          role: string
           user_id: string
         }[]
       }
