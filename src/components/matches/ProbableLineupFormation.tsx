@@ -49,10 +49,11 @@ const normalizePosition = (raw: string): string => {
   if (eq('md') || has('milieu droit') || has('right midfielder')) return 'RM';
   if (eq('mc') || has('milieu central') || (has('milieu') && !has('offensif') && !has('defensif') && !has('gauche') && !has('droit'))) return 'CM';
 
-  // Attaque
-  if (eq('ag') || has('ailier gauche') || has('left winger')) return 'LW';
-  if (eq('ad') || has('ailier droit') || has('right winger')) return 'RW';
-  if (eq('bu') || has('buteur') || has('avant-centre') || has('attaquant') || has('striker') || has('forward')) return 'ST';
+  // Attaque (on distingue "attaquant gauche/droit" des 9)
+  if (eq('ag') || has('ailier gauche') || has('left winger') || (has('attaquant') && has('gauche'))) return 'LW';
+  if (eq('ad') || has('ailier droit') || has('right winger') || (has('attaquant') && has('droit'))) return 'RW';
+  if (eq('sa') || has('second attaquant') || has('support striker')) return 'CF';
+  if (eq('bu') || has('buteur') || has('avant-centre') || has('avant centre') || has('attaquant') || has('striker') || has('forward')) return 'ST';
 
   return stripDiacritics(raw ?? '').toUpperCase().trim();
 };
@@ -61,9 +62,44 @@ const normalizePosition = (raw: string): string => {
 const getPositionCoordinates = (
   normalizedPosition: string,
   samePositionIndex: number,
-  _totalSamePosition: number
+  totalSamePosition: number
 ): { x: number; y: number } => {
   const pos = normalizedPosition.toUpperCase();
+
+  const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
+  const spread = (i: number, total: number, minX: number, maxX: number) =>
+    total <= 1 ? (minX + maxX) / 2 : minX + (i * (maxX - minX)) / (total - 1);
+
+  const safeTotal = Math.max(1, totalSamePosition || 1);
+  const safeIndex = clamp(samePositionIndex || 0, 0, safeTotal - 1);
+
+  const finalize = (x: number, y: number) => ({
+    x: clamp(x, 6, 94),
+    y: clamp(y, 8, 92),
+  });
+
+  // Attaquants : si la BDD ne distingue pas "AG/BU/AD" et met juste "Attaquant",
+  // on répartit quand même un trio en (gauche / axe / droite) pour un rendu cohérent.
+  if (pos === 'ST') {
+    if (safeTotal === 3) {
+      const trio = [
+        { x: 18, y: 32 }, // gauche
+        { x: 50, y: 22 }, // axe
+        { x: 82, y: 32 }, // droite
+      ];
+      return finalize(trio[safeIndex].x, trio[safeIndex].y);
+    }
+
+    const minX = safeTotal === 1 ? 50 : safeTotal === 2 ? 40 : safeTotal === 4 ? 22 : 16;
+    const maxX = safeTotal === 1 ? 50 : safeTotal === 2 ? 60 : safeTotal === 4 ? 78 : 84;
+    return finalize(spread(safeIndex, safeTotal, minX, maxX), 22);
+  }
+
+  if (pos === 'CF') {
+    const minX = safeTotal === 1 ? 50 : 44;
+    const maxX = safeTotal === 1 ? 50 : 56;
+    return finalize(spread(safeIndex, safeTotal, minX, maxX), 28);
+  }
 
   // Base positions for each role
   const basePositions: Record<string, { x: number; y: number }[]> = {
@@ -87,10 +123,6 @@ const getPositionCoordinates = (
     // Wingers
     LW: [{ x: 18, y: 32 }],
     RW: [{ x: 82, y: 32 }],
-
-    // Forwards
-    ST: [{ x: 40, y: 18 }, { x: 60, y: 18 }],
-    CF: [{ x: 50, y: 22 }],
   };
 
   const positions = basePositions[pos];
