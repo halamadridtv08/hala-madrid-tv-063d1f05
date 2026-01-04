@@ -57,7 +57,13 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
           player_name,
           player_position,
           player_image_url,
-          player_rating
+          player_rating,
+          opposing_players:opposing_player_id (
+            photo_url
+          ),
+          players:player_id (
+            profile_image_url
+          )
         )
       `).eq('match_id', match.id);
     if (error) {
@@ -70,7 +76,14 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
       formationsData[formation.team_type] = {
         id: formation.id,
         formation: formation.formation,
-        players: formation.match_formation_players || []
+        players: (formation.match_formation_players || []).map((player: any) => ({
+          ...player,
+          // Use photo from opposing_players or players table if player_image_url is not set
+          player_image_url: player.player_image_url 
+            || player.opposing_players?.photo_url 
+            || player.players?.profile_image_url 
+            || null
+        }))
       };
     });
     setFormations(formationsData);
