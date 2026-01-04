@@ -25,10 +25,8 @@ function parseMinute(text: string): number | null {
 
 // Detect entry type from content
 function detectEntryType(content: string): { type: string; title: string; isImportant: boolean } {
-  const lowerContent = content.toLowerCase();
-  
   // Goals
-  if (/\b(goal|gol|but|⚽|golazo)\b/i.test(content)) {
+  if (/\b(goal|gol|but|⚽|golazo|marca)\b/i.test(content)) {
     return { type: 'goal', title: 'BUT !', isImportant: true };
   }
   
@@ -43,7 +41,7 @@ function detectEntryType(content: string): { type: string; title: string; isImpo
   }
   
   // Substitutions
-  if (/\b(substitution|changement|sustituci[oó]n|cambio|🔄|in:|out:|↔|↩|↪|entra|sale)\b/i.test(content)) {
+  if (/\b(substitution|changement|sustituci[oó]n|cambio|🔄|↔|↩|↪|entra|sale)\b/i.test(content)) {
     return { type: 'substitution', title: 'REMPLACEMENT', isImportant: false };
   }
   
@@ -58,17 +56,17 @@ function detectEntryType(content: string): { type: string; title: string; isImpo
   }
   
   // Half-time
-  if (/\b(half[-\s]?time|mi[-\s]?temps|descanso|ht|mt)\b/i.test(content)) {
+  if (/\b(half[-\s]?time|mi[-\s]?temps|descanso)\b/i.test(content)) {
     return { type: 'halftime', title: 'MI-TEMPS', isImportant: false };
   }
   
   // Full-time
-  if (/\b(full[-\s]?time|fin du match|final del partido|ft)\b/i.test(content)) {
+  if (/\b(full[-\s]?time|fin du match|final del partido)\b/i.test(content)) {
     return { type: 'fulltime', title: 'FIN DU MATCH', isImportant: false };
   }
   
   // Kick-off
-  if (/\b(kick[-\s]?off|coup d'envoi|inicio|empieza)\b/i.test(content)) {
+  if (/\b(kick[-\s]?off|coup d'envoi|inicio|empieza|comienza)\b/i.test(content)) {
     return { type: 'kickoff', title: 'COUP D\'ENVOI', isImportant: false };
   }
   
@@ -77,158 +75,179 @@ function detectEntryType(content: string): { type: string; title: string; isImpo
     return { type: 'injury', title: 'Blessure', isImportant: false };
   }
   
-  // Default comment
-  return { type: 'comment', title: 'Commentaire', isImportant: false };
+  // Default update
+  return { type: 'update', title: 'Mise à jour', isImportant: false };
 }
 
-// Check if content is spam/navigation/social to skip
+// Check if content should be completely skipped
 function shouldSkipContent(content: string): boolean {
-  // Skip markdown links that are just navigation (e.g., "[Más información](url)")
-  if (/^\[.*\]\(https?:\/\//i.test(content)) {
+  const lowerContent = content.toLowerCase();
+  
+  // Skip pure markdown image syntax
+  if (/^\!\[.*\]\(https?:\/\//i.test(content.trim())) {
     return true;
   }
   
-  // Skip entries that contain realmadrid.com news URLs (not match events)
-  if (/realmadrid\.com\/.*\/noticias\//i.test(content)) {
+  // Skip pure markdown link syntax (just a link, nothing else)
+  if (/^\[.*\]\(https?:\/\/.*\)$/i.test(content.trim())) {
     return true;
   }
   
-  // Skip Instagram/Twitter/social media links and embeds
-  if (/instagram\.com|twitter\.com|x\.com|facebook\.com|tiktok\.com/i.test(content)) {
+  // Skip CDN/asset URLs
+  if (/monterosa\.cloud|cdn\.|assets\./i.test(content)) {
     return true;
   }
   
-  // Skip monterosa URLs (CDN/reactions)
-  if (/monterosa/i.test(content)) {
+  // Skip "View post on X" type entries
+  if (/view post on|visit this post|ver publicación/i.test(lowerContent)) {
     return true;
   }
   
-  // Skip image/media markdown syntax with no real content
-  if (/^\!\[.*\]\(https?:\/\//i.test(content)) {
+  // Skip Twitter Embed markers
+  if (/^twitter embed$/i.test(content.trim())) {
     return true;
   }
   
-  // Skip "Más información", "More info", etc.
-  if (/más información|more info|leer más|read more|ver más|see more/i.test(content)) {
+  // Skip FanKit entries
+  if (/^fankit$/i.test(content.trim())) {
     return true;
   }
   
-  // Skip entries that are primarily URLs (more than 50% URL content)
-  const urlMatches = content.match(/https?:\/\/[^\s\)]+/g) || [];
+  // Skip "Más información" links
+  if (/^(\[)?más información/i.test(content.trim())) {
+    return true;
+  }
+  
+  // Skip entries that are mostly URLs (>60%)
+  const urlMatches = content.match(/https?:\/\/[^\s\)\]]+/g) || [];
   const urlLength = urlMatches.reduce((sum, url) => sum + url.length, 0);
-  if (urlLength > content.length * 0.5) {
+  if (urlLength > content.length * 0.6) {
     return true;
   }
   
-  // Skip "view all X comments" type entries
-  if (/view all \d+ comments|ver todos los|voir tous les|\d+\s*(likes?|comments?|views?)/i.test(content)) {
+  // Skip very short content
+  if (content.replace(/[^a-záéíóúñA-ZÁÉÍÓÚÑ]/g, '').length < 10) {
     return true;
   }
   
-  // Skip entries that are just numbers, timestamps
-  if (/^[\d\s\-\:\.\,\+\'′]+$/.test(content.trim())) {
-    return true;
-  }
-  
-  // Skip reaction emojis only
-  if (/^[\p{Emoji}\s]+$/u.test(content.trim()) && content.trim().length < 20) {
+  // Skip entries that are just team names or scores
+  if (/^(real madrid|betis|barcelona|atletico|[\d\s\-:]+)$/i.test(content.trim())) {
     return true;
   }
 
   return false;
 }
 
-// Check if content looks like a REAL match event (stricter)
-function isRealMatchEvent(content: string): boolean {
-  // Must not be a link-only entry
-  if (/^\[.*\]\(.*\)$/.test(content.trim())) {
-    return false;
-  }
+// Check if content is a meaningful match update
+function isMeaningfulContent(content: string): boolean {
+  // Has a player name pattern (capitalized words)
+  const hasPlayerName = /[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+/.test(content);
   
-  // Strict event patterns - must have descriptive text
-  const eventPatterns = [
-    /\b(goal|gol|but)\b.{5,}/i, // Goal with some context
-    /⚽.{3,}/i, // Goal emoji with context
-    /\b(carton|card|tarjeta)\b.{5,}/i, // Card with context
-    /🟨|🟥/i, // Card emojis
-    /\b(substit|cambio|changement)\b.{5,}/i, // Substitution with context
-    /🔄.{3,}/i, // Substitution emoji with context
-    /\b(kick[-\s]?off|coup d'envoi|inicio del partido)\b/i,
-    /\b(half[-\s]?time|mi[-\s]?temps|descanso)\b/i,
-    /\b(full[-\s]?time|fin du match|final del partido)\b/i,
-    /\b(var|video assistant referee)\b/i,
-    /\b(penalty|penalti|p[eé]nalty)\b.{3,}/i,
-    /\b(expuls|red card|carton rouge|tarjeta roja)\b/i,
-    /^\d{1,3}[''′]\s*[-–—]?\s*[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+/i, // "45' - Rodrygo..."
-  ];
+  // Has match-related keywords
+  const hasMatchKeywords = /\b(gol|goal|but|card|tarjeta|carton|substit|cambio|corner|falta|foul|tiro|shot|parada|save|oportunidad|chance|occasion|penal|var|medio|half|tiempo|minute|min|victoria|win|derrota|defeat|empate|draw|balón|ball|portería|keeper|defensa|defense|ataque|attack|pase|pass|jugada|play)\b/i.test(content);
   
-  return eventPatterns.some(pattern => pattern.test(content));
+  // Has minute reference
+  const hasMinute = /\d{1,3}[''′]/.test(content);
+  
+  // Content is long enough to be meaningful
+  const isLongEnough = content.length > 30;
+  
+  return (hasPlayerName && (hasMatchKeywords || hasMinute)) || (isLongEnough && hasMatchKeywords);
+}
+
+// Clean content by removing markdown syntax
+function cleanContent(content: string): string {
+  return content
+    // Remove markdown links but keep text: [text](url) -> text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Remove image syntax
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+    // Remove extra whitespace
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 // Parse scraped content into live blog entries
 function parseEntries(markdown: string): LiveBlogEntry[] {
   const entries: LiveBlogEntry[] = [];
-  const seenContent = new Set<string>(); // Avoid duplicates
+  const seenContent = new Set<string>();
   
-  // Split by common delimiters (newlines, bullets, numbered lists)
-  const lines = markdown.split(/\n+/).filter(line => line.trim().length > 10);
+  // Split by double newlines to get paragraphs/sections
+  const sections = markdown.split(/\n{2,}/).filter(s => s.trim().length > 15);
   
-  for (const line of lines) {
-    const cleanLine = line.trim();
+  for (const section of sections) {
+    // Also split by single newlines within sections
+    const lines = section.split(/\n/).filter(l => l.trim().length > 10);
     
-    // Skip headers, navigation elements, and short lines
-    if (cleanLine.startsWith('#') || cleanLine.length < 25) continue;
-    
-    // Skip spam/navigation/social content
-    if (shouldSkipContent(cleanLine)) {
-      continue;
-    }
-    
-    // Only keep REAL match events (stricter)
-    if (!isRealMatchEvent(cleanLine)) {
-      continue;
-    }
-    
-    // Try to extract minute from the beginning of the line
-    const minuteMatch = cleanLine.match(/^(\d+)[''′]?\s*[-–—:]?\s*/);
-    let minute: number | null = null;
-    let content = cleanLine;
-    
-    if (minuteMatch) {
-      minute = parseInt(minuteMatch[1], 10);
-      content = cleanLine.slice(minuteMatch[0].length).trim();
-    } else {
-      // Try to find minute anywhere in the line
-      const anyMinute = parseMinute(cleanLine);
-      if (anyMinute !== null && anyMinute <= 120) {
-        minute = anyMinute;
+    for (const line of lines) {
+      let cleanLine = line.trim();
+      
+      // Skip headers
+      if (cleanLine.startsWith('#')) continue;
+      
+      // Skip content that should be filtered
+      if (shouldSkipContent(cleanLine)) {
+        continue;
       }
+      
+      // Clean the content
+      cleanLine = cleanContent(cleanLine);
+      
+      // Skip if cleaned content is too short
+      if (cleanLine.length < 20) continue;
+      
+      // Check if it's meaningful match content
+      if (!isMeaningfulContent(cleanLine)) {
+        continue;
+      }
+      
+      // Extract minute if present
+      const minuteMatch = cleanLine.match(/^(\d{1,3})[''′]?\s*[-–—:]?\s*/);
+      let minute: number | null = null;
+      let content = cleanLine;
+      
+      if (minuteMatch) {
+        const parsedMinute = parseInt(minuteMatch[1], 10);
+        if (parsedMinute >= 0 && parsedMinute <= 120) {
+          minute = parsedMinute;
+          content = cleanLine.slice(minuteMatch[0].length).trim();
+        }
+      } else {
+        // Try to find minute pattern anywhere
+        const anyMinuteMatch = cleanLine.match(/\b(\d{1,3})[''′]/);
+        if (anyMinuteMatch) {
+          const parsedMinute = parseInt(anyMinuteMatch[1], 10);
+          if (parsedMinute >= 0 && parsedMinute <= 120) {
+            minute = parsedMinute;
+          }
+        }
+      }
+      
+      // Skip if content is too short
+      if (content.length < 15) continue;
+      
+      // Skip duplicates
+      const normalizedContent = content.toLowerCase().replace(/\s+/g, ' ').substring(0, 80);
+      if (seenContent.has(normalizedContent)) continue;
+      seenContent.add(normalizedContent);
+      
+      const { type, title, isImportant } = detectEntryType(content);
+      
+      // Determine team side
+      let teamSide: 'home' | 'away' | null = null;
+      if (/real madrid|blancos|merengue/i.test(content)) {
+        teamSide = 'home';
+      }
+      
+      entries.push({
+        minute,
+        entry_type: type,
+        title,
+        content: content.substring(0, 500),
+        is_important: isImportant,
+        team_side: teamSide,
+      });
     }
-    
-    // Skip if content is too short after extracting minute
-    if (content.length < 15) continue;
-    
-    // Skip duplicates (normalize for comparison)
-    const normalizedContent = content.toLowerCase().replace(/\s+/g, ' ').substring(0, 100);
-    if (seenContent.has(normalizedContent)) continue;
-    seenContent.add(normalizedContent);
-    
-    const { type, title, isImportant } = detectEntryType(content);
-    
-    // Determine team side based on content
-    let teamSide: 'home' | 'away' | null = null;
-    if (/real madrid|los blancos|madrid|merengues/i.test(content)) {
-      teamSide = 'home';
-    }
-    
-    entries.push({
-      minute,
-      entry_type: type,
-      title,
-      content: content.substring(0, 500), // Limit content length
-      is_important: isImportant,
-      team_side: teamSide,
-    });
   }
   
   return entries;
@@ -265,7 +284,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Format URL
     let formattedUrl = url.trim();
     if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
       formattedUrl = `https://${formattedUrl}`;
@@ -273,7 +291,6 @@ Deno.serve(async (req) => {
 
     console.log('Scraping live blog URL:', formattedUrl);
 
-    // Scrape with Firecrawl
     const scrapeResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
@@ -284,7 +301,7 @@ Deno.serve(async (req) => {
         url: formattedUrl,
         formats: ['markdown'],
         onlyMainContent: true,
-        waitFor: 3000, // Wait for dynamic content
+        waitFor: 5000,
       }),
     });
 
@@ -311,22 +328,24 @@ Deno.serve(async (req) => {
     }
 
     console.log('Scraped content length:', markdown.length);
+    console.log('Content preview:', markdown.substring(0, 1000));
 
-    // Parse entries from markdown
     const parsedEntries = parseEntries(markdown);
     
+    console.log('Parsed entries count:', parsedEntries.length);
+    
+    // Return success with 0 entries if none found (not an error - match may not have started)
     if (parsedEntries.length === 0) {
       return new Response(
         JSON.stringify({ 
-          success: false, 
-          error: 'No live blog entries could be extracted from the page',
-          rawContentPreview: markdown.substring(0, 500)
+          success: true, 
+          entriesImported: 0,
+          message: 'No new match events found. The live blog may not have started yet.',
+          entries: []
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    console.log('Parsed entries:', parsedEntries.length);
 
     // Insert entries into database
     const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
