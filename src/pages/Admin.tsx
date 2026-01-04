@@ -73,6 +73,7 @@ import { LiveMatchBarManager } from "@/components/admin/LiveMatchBarManager";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
 import { SplineManager } from "@/components/admin/SplineManager";
 import { HeroBackgroundManager } from "@/components/admin/HeroBackgroundManager";
+import { FooterBackgroundManager } from "@/components/admin/FooterBackgroundManager";
 import { TransfersManager } from "@/components/admin/TransfersManager";
 import { AnnouncementBarManager } from "@/components/admin/AnnouncementBarManager";
 import AnalyticsDashboard from "@/components/admin/AnalyticsDashboard";
@@ -597,6 +598,7 @@ const Admin = () => {
           <AccordionContent className="pt-4 space-y-4">
             <SiteVisibilityManager />
             <HeroBackgroundManager />
+            <FooterBackgroundManager />
             <SplineManager />
             <AuthImageManager />
           </AccordionContent>
