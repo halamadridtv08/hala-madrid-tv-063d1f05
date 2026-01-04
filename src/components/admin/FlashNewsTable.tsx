@@ -217,118 +217,174 @@ export const FlashNewsTable = ({ onEdit, refresh }: FlashNewsTableProps) => {
         categories={categories}
       />
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Auteur</TableHead>
-            <TableHead>Contenu</TableHead>
-            <TableHead>Catégorie</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead>Approbation</TableHead>
-            <TableHead>Publication</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredFlashNews.map((news) => {
-            const categoryInfo = getCategoryBadge(news.category);
-            const statusInfo = getStatusBadge(news.status);
-            return (
-              <TableRow key={news.id}>
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{news.author}</div>
-                    <div className="text-sm text-muted-foreground">{news.author_handle}</div>
-                  </div>
-                </TableCell>
-                <TableCell className="max-w-md">
-                  <div 
-                    className="line-clamp-2 whitespace-pre-wrap break-words" 
-                    style={{ 
-                      fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-                      unicodeBidi: 'isolate'
-                    }}
-                  >
-                    {news.content}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={categoryInfo.variant}>{categoryInfo.label}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                </TableCell>
-                <TableCell>
-                  {news.approved_by && news.approved_at ? (
-                    <div className="text-sm">
-                      <div className="text-muted-foreground">
-                        {new Date(news.approved_at).toLocaleDateString('fr-FR')} à{' '}
-                        {new Date(news.approved_at).toLocaleTimeString('fr-FR', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">—</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {news.scheduled_at ? (
-                    <div className="text-sm">
-                      <div className="font-medium">Programmé</div>
-                      <div className="text-muted-foreground">
-                        {new Date(news.scheduled_at).toLocaleDateString('fr-FR')} à{' '}
-                        {new Date(news.scheduled_at).toLocaleTimeString('fr-FR', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </div>
-                    </div>
-                  ) : (
-                    <Badge variant={news.is_published ? "default" : "secondary"}>
-                      {news.is_published ? "Publié" : "Brouillon"}
-                    </Badge>
-                  )}
-                </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+      {/* Vue mobile en cards */}
+      <div className="block md:hidden space-y-3">
+        {filteredFlashNews.map((news) => {
+          const categoryInfo = getCategoryBadge(news.category);
+          const statusInfo = getStatusBadge(news.status);
+          return (
+            <div key={news.id} className="border rounded-lg p-3 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm truncate">{news.author}</div>
+                  <div className="text-xs text-muted-foreground">{news.author_handle}</div>
+                </div>
+                <div className="flex gap-1">
+                  <Badge variant={categoryInfo.variant} className="text-[10px] px-1.5 py-0">
+                    {categoryInfo.label}
+                  </Badge>
+                  <Badge variant={statusInfo.variant} className="text-[10px] px-1.5 py-0">
+                    {statusInfo.label}
+                  </Badge>
+                </div>
+              </div>
+              <div 
+                className="text-sm line-clamp-2" 
+                style={{ 
+                  fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", system-ui, sans-serif',
+                }}
+              >
+                {news.content}
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t">
+                <span className="text-xs text-muted-foreground">
                   {new Date(news.created_at).toLocaleDateString('fr-FR')}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <FlashNewsVersionHistory flashNewsId={news.id} />
-                    {news.status === 'pending' && (
+                </span>
+                <div className="flex gap-1">
+                  <FlashNewsVersionHistory flashNewsId={news.id} />
+                  {news.status === 'pending' && (
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleApprove(news.id)}>
+                      <CheckCircle className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(news)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDeleteId(news.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Vue desktop en table */}
+      <div className="hidden md:block overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Auteur</TableHead>
+              <TableHead>Contenu</TableHead>
+              <TableHead>Catégorie</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead className="hidden lg:table-cell">Approbation</TableHead>
+              <TableHead className="hidden lg:table-cell">Publication</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredFlashNews.map((news) => {
+              const categoryInfo = getCategoryBadge(news.category);
+              const statusInfo = getStatusBadge(news.status);
+              return (
+                <TableRow key={news.id}>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{news.author}</div>
+                      <div className="text-sm text-muted-foreground">{news.author_handle}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="max-w-md">
+                    <div 
+                      className="line-clamp-2 whitespace-pre-wrap break-words" 
+                      style={{ 
+                        fontFamily: '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                        unicodeBidi: 'isolate'
+                      }}
+                    >
+                      {news.content}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={categoryInfo.variant}>{categoryInfo.label}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell">
+                    {news.approved_by && news.approved_at ? (
+                      <div className="text-sm">
+                        <div className="text-muted-foreground">
+                          {new Date(news.approved_at).toLocaleDateString('fr-FR')} à{' '}
+                          {new Date(news.approved_at).toLocaleTimeString('fr-FR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell">
+                    {news.scheduled_at ? (
+                      <div className="text-sm">
+                        <div className="font-medium">Programmé</div>
+                        <div className="text-muted-foreground">
+                          {new Date(news.scheduled_at).toLocaleDateString('fr-FR')} à{' '}
+                          {new Date(news.scheduled_at).toLocaleTimeString('fr-FR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <Badge variant={news.is_published ? "default" : "secondary"}>
+                        {news.is_published ? "Publié" : "Brouillon"}
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {new Date(news.created_at).toLocaleDateString('fr-FR')}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <FlashNewsVersionHistory flashNewsId={news.id} />
+                      {news.status === 'pending' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleApprove(news.id)}
+                          title="Approuver"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleApprove(news.id)}
-                        title="Approuver"
+                        onClick={() => onEdit(news)}
                       >
-                        <CheckCircle className="h-4 w-4" />
+                        <Pencil className="h-4 w-4" />
                       </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onEdit(news)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setDeleteId(news.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeleteId(news.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>

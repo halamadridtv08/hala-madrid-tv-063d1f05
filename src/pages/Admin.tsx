@@ -751,24 +751,24 @@ const Admin = () => {
       
       {/* Main content */}
       <div className={cn("flex-1 transition-all duration-300", sidebarCollapsed ? "lg:ml-[72px]" : "lg:ml-64")}>
-        <div className="madrid-container py-4 md:py-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 md:mb-8">
-            <div className="flex items-center gap-3 md:gap-4">
+        <div className="madrid-container px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
               <AdminMobileNav activeTab={activeTab} onTabChange={handleTabChange} />
-              <Button onClick={() => navigate('/')} variant="outline" size="sm" className="w-fit">
-                <ArrowLeft className="h-4 w-4 mr-2" />
+              <Button onClick={() => navigate('/')} variant="outline" size="sm" className="h-8 sm:h-9 px-2 sm:px-3">
+                <ArrowLeft className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Retour au site</span>
               </Button>
-              <div className="flex-1">
-                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold truncate">
                   Administration HALA MADRID TV
                 </h1>
-                <p className="hidden md:block text-sm md:text-base text-gray-600 dark:text-gray-300 mt-1 md:mt-2">
+                <p className="hidden md:block text-sm text-muted-foreground mt-1">
                   Gérez le contenu et les paramètres du site
                 </p>
               </div>
             </div>
-            <Badge variant="outline" className="px-3 py-1 w-fit">
+            <Badge variant="outline" className="px-2 py-0.5 text-xs w-fit hidden sm:inline-flex">
               Version 2.0
             </Badge>
           </div>

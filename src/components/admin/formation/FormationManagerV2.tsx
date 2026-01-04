@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, Users, Shield, Trash2, Plus, Grid3x3, Layout, Columns2, Rows2, Undo, Lock, Unlock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Save, Users, Shield, Trash2, Plus, Grid3x3, Layout, Columns2, Rows2, Undo, Lock, Unlock, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -1055,16 +1055,16 @@ export const FormationManagerV2: React.FC = () => {
                   )}
 
                   {formationId && (
-                    <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4">
+                    <div className="flex flex-col lg:grid lg:grid-cols-4 gap-3 sm:gap-4">
                       {/* Terrain + Remplaçants - En premier sur mobile */}
                       <div className="lg:col-span-3 order-1 lg:order-2">
-                        <div className="flex items-center justify-between mb-1">
-                          <Badge variant={fieldPlayers.length === 11 ? "default" : "secondary"} className="text-sm">
-                            {fieldPlayers.length}/11 joueurs sur le terrain
+                        <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
+                          <Badge variant={fieldPlayers.length === 11 ? "default" : "secondary"} className="text-xs sm:text-sm">
+                            {fieldPlayers.length}/11 joueurs
                           </Badge>
                           {fieldPlayers.length < 11 && (
-                            <span className="text-xs text-muted-foreground">
-                              Glissez {11 - fieldPlayers.length} joueur{11 - fieldPlayers.length > 1 ? 's' : ''} de plus
+                            <span className="text-[10px] sm:text-xs text-muted-foreground">
+                              +{11 - fieldPlayers.length} joueur{11 - fieldPlayers.length > 1 ? 's' : ''}
                             </span>
                           )}
                         </div>
@@ -1261,12 +1261,12 @@ export const FormationManagerV2: React.FC = () => {
                             </ResizablePanel>
                           </ResizablePanelGroup>
                         ) : (
-                          <div className="space-y-2">
-                            {/* Terrain */}
+                          <div className="space-y-2 sm:space-y-3">
+                            {/* Terrain mobile - optimisé pour le touch */}
                             <DroppableField id="field">
                               <div 
-                                className="relative w-full bg-gradient-to-b from-green-400 to-green-600 rounded-lg overflow-hidden shadow-lg" 
-                                style={{ aspectRatio: "16/11", maxHeight: "400px" }}
+                                className="relative w-full bg-gradient-to-b from-green-400 to-green-600 rounded-lg overflow-hidden shadow-lg touch-manipulation" 
+                                style={{ aspectRatio: "16/12", minHeight: "280px", maxHeight: "380px" }}
                                 data-pitch="true"
                               >
                                 {/* Lignes du terrain */}
@@ -1400,28 +1400,37 @@ export const FormationManagerV2: React.FC = () => {
                               </div>
                             </DroppableField>
 
-                            {/* Remplaçants */}
-                            <Card className="flex">
+                            {/* Remplaçants - Vue collapsible sur mobile */}
+                            <Card className="flex flex-col sm:flex-row">
                               <button
                                 onClick={() => setIsSubstitutesOpen(!isSubstitutesOpen)}
-                                className="flex items-center justify-center px-2 border-r border-border hover:bg-muted/50 transition-colors rounded-l-lg"
+                                className="flex sm:flex-col items-center justify-center p-2 sm:px-2 border-b sm:border-b-0 sm:border-r border-border hover:bg-muted/50 transition-colors rounded-t-lg sm:rounded-t-none sm:rounded-l-lg"
                               >
                                 {isSubstitutesOpen ? (
-                                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                                  <>
+                                    <ChevronLeft className="h-4 w-4 text-muted-foreground hidden sm:block" />
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground sm:hidden rotate-180" />
+                                  </>
                                 ) : (
-                                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                  <>
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground sm:hidden" />
+                                  </>
                                 )}
+                                <span className="text-xs text-muted-foreground sm:hidden ml-2">
+                                  Remplaçants ({substitutes.length})
+                                </span>
                               </button>
                               {isSubstitutesOpen && (
                                 <div className="flex-1">
-                                  <CardHeader className="py-2">
+                                  <CardHeader className="py-2 hidden sm:block">
                                     <CardTitle className="text-sm">Remplaçants ({substitutes.length})</CardTitle>
                                   </CardHeader>
                                   <CardContent className="p-2">
                                     <DroppableSubstitutes id="substitutes">
-                                      <div className="flex flex-wrap gap-1.5 min-h-[100px]">
+                                      <div className="grid grid-cols-3 sm:grid-cols-4 lg:flex lg:flex-wrap gap-1.5 min-h-[60px] sm:min-h-[100px]">
                                         {substitutes.length === 0 && (
-                                          <p className="text-xs text-muted-foreground p-2">Glissez des joueurs ici pour les ajouter aux remplaçants</p>
+                                          <p className="text-xs text-muted-foreground p-2 col-span-full">Glissez des joueurs ici</p>
                                         )}
                                         {substitutes.map((player) => (
                                           <DraggablePlayer
@@ -1446,27 +1455,36 @@ export const FormationManagerV2: React.FC = () => {
                       </div>
 
                       {/* Liste des joueurs disponibles - En dessous sur mobile */}
-                      <Card className="lg:col-span-1 order-2 lg:order-1 flex">
+                      <Card className="lg:col-span-1 order-2 lg:order-1 flex flex-col sm:flex-row">
                         <button
                           onClick={() => setIsAvailablePlayersOpen(!isAvailablePlayersOpen)}
-                          className="flex items-center justify-center px-2 border-r border-border hover:bg-muted/50 transition-colors rounded-l-lg"
+                          className="flex sm:flex-col items-center justify-center p-2 sm:px-2 border-b sm:border-b-0 sm:border-r border-border hover:bg-muted/50 transition-colors rounded-t-lg sm:rounded-t-none sm:rounded-l-lg"
                         >
                           {isAvailablePlayersOpen ? (
-                            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                            <>
+                              <ChevronLeft className="h-4 w-4 text-muted-foreground hidden sm:block" />
+                              <ChevronDown className="h-4 w-4 text-muted-foreground sm:hidden rotate-180" />
+                            </>
                           ) : (
-                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            <>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
+                              <ChevronDown className="h-4 w-4 text-muted-foreground sm:hidden" />
+                            </>
                           )}
+                          <span className="text-xs text-muted-foreground sm:hidden ml-2">
+                            Joueurs disponibles ({availablePlayers.filter((p) => !isAssigned(p.id)).length})
+                          </span>
                         </button>
                         {isAvailablePlayersOpen && (
                           <div className="flex-1">
-                            <CardHeader className="py-3">
+                            <CardHeader className="py-2 sm:py-3 hidden sm:block">
                               <CardTitle className="text-sm">
                                 Joueurs disponibles ({availablePlayers.filter((p) => !isAssigned(p.id)).length})
                               </CardTitle>
                             </CardHeader>
                             <CardContent className="p-2">
-                              <ScrollArea className="h-[300px] lg:h-[500px]">
-                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-1">
+                              <ScrollArea className="h-[180px] sm:h-[250px] lg:h-[450px]">
+                                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-1 gap-1">
                                   {availablePlayers
                                     .filter((p) => !isAssigned(p.id))
                                     .map((player) => (

@@ -300,15 +300,59 @@ export const UserRolesManager = () => {
             </Button>
           </div>
 
-          {/* Table */}
-          <div className="rounded-md border overflow-x-auto">
+          {/* Vue mobile en cards */}
+          <div className="block md:hidden space-y-3">
+            {filteredRoles.map((userRole) => (
+              <div key={userRole.user_id} className="border rounded-lg p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm truncate">{userRole.email}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(userRole.created_at).toLocaleDateString('fr-FR')}
+                    </div>
+                  </div>
+                  <Badge variant={getRoleBadgeVariant(userRole.role)}>
+                    {getRoleLabel(userRole.role)}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={userRole.role}
+                    onValueChange={(value: 'admin' | 'moderator' | 'user') =>
+                      updateUserRole(userRole.user_id, value)
+                    }
+                  >
+                    <SelectTrigger className="flex-1 h-8 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="admin">Administrateur</SelectItem>
+                      <SelectItem value="moderator">Modérateur</SelectItem>
+                      <SelectItem value="user">Utilisateur</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => viewUserHistory(userRole.user_id)}
+                  >
+                    <History className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Vue desktop en table */}
+          <div className="hidden md:block rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Email</TableHead>
                   <TableHead>Rôle actuel</TableHead>
                   <TableHead>Modifier le rôle</TableHead>
-                  <TableHead>Date d'attribution</TableHead>
+                  <TableHead className="hidden lg:table-cell">Date d'attribution</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -340,7 +384,7 @@ export const UserRolesManager = () => {
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                       {new Date(userRole.created_at).toLocaleDateString('fr-FR')}
                     </TableCell>
                     <TableCell>
@@ -351,7 +395,7 @@ export const UserRolesManager = () => {
                         className="gap-2"
                       >
                         <History className="h-4 w-4" />
-                        Historique
+                        <span className="hidden lg:inline">Historique</span>
                       </Button>
                     </TableCell>
                   </TableRow>

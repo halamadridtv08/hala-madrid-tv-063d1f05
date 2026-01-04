@@ -122,20 +122,20 @@ const ArticleTable = ({ articles, setArticles, onManageEngagement }: ArticleTabl
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Articles ({sortedArticles.length})</CardTitle>
-          <Button onClick={handleAddArticle}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvel article
+      <CardHeader className="px-4 sm:px-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <CardTitle className="text-base sm:text-lg">Articles ({sortedArticles.length})</CardTitle>
+          <Button onClick={handleAddArticle} size="sm" className="h-8 sm:h-9">
+            <Plus className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Nouvel article</span>
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <CardContent className="px-3 sm:px-6">
+        <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {sortedArticles.map((article) => (
             <Card key={article.id} className="overflow-hidden group">
-              <div className="relative h-48 overflow-hidden">
+              <div className="relative h-32 sm:h-40 md:h-48 overflow-hidden">
                 {article.image_url ? (
                   <img
                     src={article.image_url}
@@ -144,62 +144,64 @@ const ArticleTable = ({ articles, setArticles, onManageEngagement }: ArticleTabl
                   />
                 ) : (
                   <div className="w-full h-full bg-muted flex items-center justify-center">
-                    <p className="text-muted-foreground">Pas d'image</p>
+                    <p className="text-muted-foreground text-sm">Pas d'image</p>
                   </div>
                 )}
-                <div className="absolute top-2 right-2 flex gap-2">
+                <div className="absolute top-2 right-2">
                   <Button
                     size="icon"
                     variant={article.is_published ? "default" : "secondary"}
                     onClick={() => togglePublished(article.id, article.is_published)}
                     disabled={loading}
-                    className="h-8 w-8"
+                    className="h-7 w-7 sm:h-8 sm:w-8"
                     title={article.is_published ? "Dépublier" : "Publier"}
                   >
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
               </div>
-              <CardHeader className="pb-2">
-                <CardTitle className="line-clamp-2 text-base">{article.title}</CardTitle>
-                <p className="text-sm text-muted-foreground line-clamp-2">
+              <CardHeader className="p-3 sm:pb-2">
+                <CardTitle className="line-clamp-2 text-sm sm:text-base">{article.title}</CardTitle>
+                <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                   {stripHtml(article.description)}
                 </p>
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge variant={article.is_published ? "default" : "secondary"}>
+                <div className="flex items-center gap-1.5 sm:gap-2 mt-2 flex-wrap">
+                  <Badge variant={article.is_published ? "default" : "secondary"} className="text-[10px] sm:text-xs">
                     {article.is_published ? "Publié" : "Brouillon"}
                   </Badge>
-                  <Badge variant="outline">{article.category}</Badge>
+                  <Badge variant="outline" className="text-[10px] sm:text-xs">{article.category}</Badge>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="flex gap-2">
+              <CardContent className="p-3 pt-0">
+                <div className="flex gap-1.5 sm:gap-2">
                   {onManageEngagement && (
                     <Button
                       variant="secondary"
                       size="sm"
                       onClick={() => onManageEngagement(article.id)}
                       title="Gérer engagement"
+                      className="h-7 w-7 sm:h-8 sm:w-8 p-0"
                     >
-                      <MessageCircle className="h-4 w-4" />
+                      <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
                   )}
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1"
+                    className="flex-1 h-7 sm:h-8 text-xs sm:text-sm"
                     onClick={() => handleEditArticle(article)}
                   >
-                    <Edit className="mr-2 h-4 w-4" />
-                    Modifier
+                    <Edit className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="hidden xs:inline">Modifier</span>
                   </Button>
                   <Button
                     variant="destructive"
                     size="sm"
                     onClick={() => handleDelete(article.id)}
                     disabled={loading}
+                    className="h-7 w-7 sm:h-8 sm:w-8 p-0"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
               </CardContent>
