@@ -33,6 +33,7 @@ interface Article {
   category: string;
   published_at: string;
   read_time: string | null;
+  author_name: string | null;
 }
 
 interface ArticleImage {
@@ -234,7 +235,7 @@ const ArticleDetail = () => {
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-6">
                   <div className="flex items-center">
                     <User className="h-4 w-4 mr-1" />
-                    <span>Administrateur</span>
+                    <span>{article.author_name || 'HALA MADRID TV'}</span>
                   </div>
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 mr-1" />
