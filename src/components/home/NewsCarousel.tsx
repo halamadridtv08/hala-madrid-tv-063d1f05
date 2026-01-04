@@ -107,7 +107,7 @@ export function NewsCarousel() {
 
   if (loading) {
     return (
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden min-h-[500px]">
         <Skeleton className="h-[500px] w-full" />
       </div>
     );
@@ -125,7 +125,7 @@ export function NewsCarousel() {
   }
 
   return (
-    <div className="flex flex-col lg:grid lg:grid-cols-[1fr_300px] gap-4">
+    <div className="flex flex-col lg:grid lg:grid-cols-[1fr_300px] gap-4 min-h-[500px]">
       <div 
         className="relative overflow-hidden"
         onMouseEnter={() => setIsPaused(true)}
