@@ -392,12 +392,14 @@ const AnalyticsDashboard = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-          <TabsTrigger value="audience">Audience</TabsTrigger>
-          <TabsTrigger value="content">Contenu</TabsTrigger>
-          <TabsTrigger value="realtime">Temps réel</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="grid w-full min-w-max grid-cols-4 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm whitespace-nowrap">Vue d'ensemble</TabsTrigger>
+            <TabsTrigger value="audience" className="text-xs sm:text-sm whitespace-nowrap">Audience</TabsTrigger>
+            <TabsTrigger value="content" className="text-xs sm:text-sm whitespace-nowrap">Contenu</TabsTrigger>
+            <TabsTrigger value="realtime" className="text-xs sm:text-sm whitespace-nowrap">Temps réel</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6 mt-6">

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Users, Trash2, Download, Send } from 'lucide-react';
+import { Mail, Users, Trash2, Download, Send, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -202,56 +202,110 @@ const SubscribersTable = ({ subscribers, onToggle, onDelete }: SubscribersTableP
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Email</TableHead>
-          <TableHead>Nom</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Statut</TableHead>
-          <TableHead>Date</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
+    <>
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-3">
         {subscribers.map((subscriber) => (
-          <TableRow key={subscriber.id}>
-            <TableCell className="font-medium">{subscriber.email}</TableCell>
-            <TableCell>{subscriber.name || '-'}</TableCell>
-            <TableCell>
-              <Badge variant={subscriber.subscription_type === 'daily' ? 'default' : 'secondary'}>
-                {subscriber.subscription_type === 'daily' ? 'Quotidien' : 'Hebdo'}
-              </Badge>
-            </TableCell>
-            <TableCell>
-              <Badge variant={subscriber.is_active ? 'default' : 'outline'}>
-                {subscriber.is_active ? 'Actif' : 'Inactif'}
-              </Badge>
-            </TableCell>
-            <TableCell>
-              {format(new Date(subscriber.subscribed_at), 'dd/MM/yyyy', { locale: fr })}
-            </TableCell>
-            <TableCell>
-              <div className="flex gap-2">
+          <div key={subscriber.id} className="p-4 border rounded-lg space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium truncate">{subscriber.email}</p>
+                {subscriber.name && (
+                  <p className="text-sm text-muted-foreground">{subscriber.name}</p>
+                )}
+              </div>
+              <div className="flex gap-1 flex-shrink-0">
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
+                  className="h-8 w-8"
                   onClick={() => onToggle(subscriber.id, subscriber.is_active)}
                 >
-                  {subscriber.is_active ? 'Désactiver' : 'Activer'}
+                  {subscriber.is_active ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
+                  className="h-8 w-8"
                   onClick={() => onDelete(subscriber.id)}
                 >
                   <Trash2 className="w-4 h-4 text-destructive" />
                 </Button>
               </div>
-            </TableCell>
-          </TableRow>
+            </div>
+            <div className="flex flex-wrap gap-2 items-center text-sm">
+              <Badge variant={subscriber.subscription_type === 'daily' ? 'default' : 'secondary'} className="text-xs">
+                {subscriber.subscription_type === 'daily' ? 'Quotidien' : 'Hebdo'}
+              </Badge>
+              <Badge variant={subscriber.is_active ? 'default' : 'outline'} className="text-xs">
+                {subscriber.is_active ? 'Actif' : 'Inactif'}
+              </Badge>
+              <span className="text-muted-foreground text-xs">
+                {format(new Date(subscriber.subscribed_at), 'dd/MM/yyyy', { locale: fr })}
+              </span>
+            </div>
+          </div>
         ))}
-      </TableBody>
-    </Table>
+      </div>
+
+      {/* Desktop table view */}
+      <div className="hidden md:block overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Email</TableHead>
+              <TableHead>Nom</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {subscribers.map((subscriber) => (
+              <TableRow key={subscriber.id}>
+                <TableCell className="font-medium">{subscriber.email}</TableCell>
+                <TableCell>{subscriber.name || '-'}</TableCell>
+                <TableCell>
+                  <Badge variant={subscriber.subscription_type === 'daily' ? 'default' : 'secondary'}>
+                    {subscriber.subscription_type === 'daily' ? 'Quotidien' : 'Hebdo'}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={subscriber.is_active ? 'default' : 'outline'}>
+                    {subscriber.is_active ? 'Actif' : 'Inactif'}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {format(new Date(subscriber.subscribed_at), 'dd/MM/yyyy', { locale: fr })}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onToggle(subscriber.id, subscriber.is_active)}
+                    >
+                      {subscriber.is_active ? 'Désactiver' : 'Activer'}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete(subscriber.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 };

@@ -506,105 +506,190 @@ export const TransfersManager = () => {
           {transfers.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">Aucun transfert enregistré</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Joueur</TableHead>
-                  <TableHead>Transfert</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              {/* Mobile card view */}
+              <div className="md:hidden space-y-4">
                 {transfers.map((transfer) => (
-                  <TableRow key={transfer.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {transfer.player_image && (
-                          <img 
-                            src={transfer.player_image} 
-                            alt={transfer.player_name}
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
-                        )}
-                        <span className="font-medium">{transfer.player_name}</span>
+                  <Card key={transfer.id} className="p-4">
+                    <div className="flex items-start gap-3">
+                      {transfer.player_image && (
+                        <img 
+                          src={transfer.player_image} 
+                          alt={transfer.player_name}
+                          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{transfer.player_name}</p>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                          <span className="truncate">{transfer.from_team}</span>
+                          <ArrowRight className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{transfer.to_team}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          <Badge variant="outline" className="text-xs">
+                            {transferTypeLabels[transfer.transfer_type]}
+                          </Badge>
+                          {transfer.is_official && (
+                            <Badge className="bg-green-600 text-xs">Officiel</Badge>
+                          )}
+                          <Badge variant={transfer.is_published ? "default" : "secondary"} className="text-xs">
+                            {transfer.is_published ? "Publié" : "Brouillon"}
+                          </Badge>
+                        </div>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 text-sm">
-                        <span>{transfer.from_team}</span>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                        <span>{transfer.to_team}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {transferTypeLabels[transfer.transfer_type]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        {transfer.is_official && (
-                          <Badge className="bg-green-600">Officiel</Badge>
-                        )}
-                        <Badge variant={transfer.is_published ? "default" : "secondary"}>
-                          {transfer.is_published ? "Publié" : "Brouillon"}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => toggleOfficial(transfer)}
-                          title={transfer.is_official ? "Retirer officiel" : "Marquer officiel"}
-                        >
-                          <Check className={`h-4 w-4 ${transfer.is_official ? "text-green-600" : ""}`} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => togglePublished(transfer)}
-                          title={transfer.is_published ? "Masquer" : "Publier"}
-                        >
-                          {transfer.is_published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenDialog(transfer)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Supprimer ce transfert ?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Cette action est irréversible.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(transfer.id)}>
-                                Supprimer
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                    <div className="flex justify-end gap-1 mt-3 pt-3 border-t">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => toggleOfficial(transfer)}
+                      >
+                        <Check className={`h-4 w-4 ${transfer.is_official ? "text-green-600" : ""}`} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => togglePublished(transfer)}
+                      >
+                        {transfer.is_published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleOpenDialog(transfer)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Supprimer ce transfert ?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Cette action est irréversible.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Annuler</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(transfer.id)}>
+                              Supprimer
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </Card>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+
+              {/* Desktop table view */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Joueur</TableHead>
+                      <TableHead>Transfert</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transfers.map((transfer) => (
+                      <TableRow key={transfer.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {transfer.player_image && (
+                              <img 
+                                src={transfer.player_image} 
+                                alt={transfer.player_name}
+                                className="w-8 h-8 rounded-full object-cover"
+                              />
+                            )}
+                            <span className="font-medium">{transfer.player_name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-sm">
+                            <span>{transfer.from_team}</span>
+                            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                            <span>{transfer.to_team}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {transferTypeLabels[transfer.transfer_type]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            {transfer.is_official && (
+                              <Badge className="bg-green-600">Officiel</Badge>
+                            )}
+                            <Badge variant={transfer.is_published ? "default" : "secondary"}>
+                              {transfer.is_published ? "Publié" : "Brouillon"}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => toggleOfficial(transfer)}
+                              title={transfer.is_official ? "Retirer officiel" : "Marquer officiel"}
+                            >
+                              <Check className={`h-4 w-4 ${transfer.is_official ? "text-green-600" : ""}`} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => togglePublished(transfer)}
+                              title={transfer.is_published ? "Masquer" : "Publier"}
+                            >
+                              {transfer.is_published ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenDialog(transfer)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Supprimer ce transfert ?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Cette action est irréversible.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDelete(transfer.id)}>
+                                    Supprimer
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
