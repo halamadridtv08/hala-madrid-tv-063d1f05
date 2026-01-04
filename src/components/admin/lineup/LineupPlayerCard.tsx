@@ -1,6 +1,6 @@
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { X, GripVertical } from 'lucide-react';
+import { X, GripVertical, Plus, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -13,6 +13,8 @@ interface LineupPlayerCardProps {
   playerImage?: string;
   isStarter?: boolean;
   onDelete?: () => void;
+  onAddToStarters?: () => void;
+  onAddToSubstitutes?: () => void;
   variant?: 'list' | 'field';
   style?: React.CSSProperties;
 }
@@ -26,6 +28,8 @@ export const LineupPlayerCard = ({
   playerImage,
   isStarter = true,
   onDelete,
+  onAddToStarters,
+  onAddToSubstitutes,
   variant = 'list',
   style,
 }: LineupPlayerCardProps) => {
@@ -96,37 +100,77 @@ export const LineupPlayerCard = ({
     );
   }
 
+  // List variant with optional add buttons
+  const showAddButtons = onAddToStarters || onAddToSubstitutes;
+
   return (
-    <div
-      ref={setNodeRef}
-      style={dragStyle}
-      {...listeners}
-      {...attributes}
-      className="flex items-center gap-2 p-2 bg-card border border-border rounded-lg hover:bg-accent/50 cursor-grab active:cursor-grabbing transition-colors group"
-    >
-      <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-      
-      <div className="w-8 h-8 rounded-full bg-muted overflow-hidden flex-shrink-0">
-        {playerImage ? (
-          <img src={playerImage} alt={playerName} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-primary/70">
-            <span className="text-[10px] font-bold text-primary-foreground">
-              {playerName.split(' ').map(n => n[0]).join('').substring(0, 2)}
-            </span>
-          </div>
+    <div className="flex items-center gap-2 p-2 bg-card border border-border rounded-lg hover:bg-accent/50 transition-colors group">
+      {/* Draggable part */}
+      <div
+        ref={setNodeRef}
+        style={dragStyle}
+        {...listeners}
+        {...attributes}
+        className="flex items-center gap-2 flex-1 min-w-0 cursor-grab active:cursor-grabbing"
+      >
+        <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        
+        <div className="w-8 h-8 rounded-full bg-muted overflow-hidden flex-shrink-0">
+          {playerImage ? (
+            <img src={playerImage} alt={playerName} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-primary/70">
+              <span className="text-[10px] font-bold text-primary-foreground">
+                {playerName.split(' ').map(n => n[0]).join('').substring(0, 2)}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-foreground truncate">{playerName}</p>
+          <p className="text-xs text-muted-foreground">{position}</p>
+        </div>
+
+        {jerseyNumber && (
+          <Badge variant="secondary" className="text-xs">
+            {jerseyNumber}
+          </Badge>
         )}
       </div>
 
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">{playerName}</p>
-        <p className="text-xs text-muted-foreground">{position}</p>
-      </div>
-
-      {jerseyNumber && (
-        <Badge variant="secondary" className="text-xs">
-          {jerseyNumber}
-        </Badge>
+      {/* Action buttons */}
+      {showAddButtons && (
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {onAddToStarters && (
+            <Button
+              variant="default"
+              size="icon"
+              className="h-7 w-7"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToStarters();
+              }}
+              title="Ajouter comme titulaire"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          )}
+          {onAddToSubstitutes && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-7 w-7"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToSubstitutes();
+              }}
+              title="Ajouter comme remplaçant"
+            >
+              <UserPlus className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       )}
 
       {onDelete && (
