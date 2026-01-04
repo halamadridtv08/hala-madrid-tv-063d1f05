@@ -108,6 +108,12 @@ const getPositionCoordinates = (position: string, index: number, existingCount: 
   return posMap[position] || { x: 20 + (index * 15) % 60, y: 30 + (index * 12) % 50 };
 };
 
+// Available formations
+const FORMATIONS = [
+  '4-3-3', '4-4-2', '4-2-3-1', '3-5-2', '3-4-3', '5-3-2', '5-4-1', '4-5-1',
+  '4-1-4-1', '4-3-2-1', '4-4-1-1', '3-4-2-1', '4-1-2-1-2', '5-2-3'
+];
+
 export function MatchLineupManager() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [selectedMatchId, setSelectedMatchId] = useState<string>('');
@@ -119,6 +125,7 @@ export function MatchLineupManager() {
   const [activeTeam, setActiveTeam] = useState<'real_madrid' | 'opposing'>('real_madrid');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [selectedFormation, setSelectedFormation] = useState<string>('4-3-3');
   
   // Refs for file inputs
   const lineupsFileInputRef = useRef<HTMLInputElement>(null);
@@ -139,6 +146,20 @@ export function MatchLineupManager() {
   });
 
   const selectedMatch = matches.find(m => m.id === selectedMatchId);
+  
+  // Computed values - must be defined before functions that use them
+  const currentPlayers = activeTeam === 'real_madrid' ? players : opposingPlayers;
+  const currentLineup = lineupPlayers.filter(lp => lp.team_type === activeTeam);
+  const starters = currentLineup.filter(lp => lp.is_starter);
+  const substitutes = currentLineup.filter(lp => !lp.is_starter);
+  const currentAbsents = absentPlayers.filter(ap => ap.team_type === activeTeam);
+  const lineupPlayerIds = currentLineup.map(lp => lp.player_id || lp.opposing_player_id);
+  const absentPlayerIds = currentAbsents.map(ap => ap.player_id || ap.opposing_player_id);
+  const availablePlayers = currentPlayers.filter(p => 
+    !lineupPlayerIds.includes(p.id) && 
+    !absentPlayerIds.includes(p.id) &&
+    p.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     fetchMatches();
@@ -580,21 +601,6 @@ export function MatchLineupManager() {
     });
   };
 
-  const currentPlayers = activeTeam === 'real_madrid' ? players : opposingPlayers;
-  const currentLineup = lineupPlayers.filter(lp => lp.team_type === activeTeam);
-  const starters = currentLineup.filter(lp => lp.is_starter);
-  const substitutes = currentLineup.filter(lp => !lp.is_starter);
-  const currentAbsents = absentPlayers.filter(ap => ap.team_type === activeTeam);
-
-  // Filter available players (not in lineup and not absent)
-  const lineupPlayerIds = currentLineup.map(lp => lp.player_id || lp.opposing_player_id);
-  const absentPlayerIds = currentAbsents.map(ap => ap.player_id || ap.opposing_player_id);
-  const availablePlayers = currentPlayers.filter(p => 
-    !lineupPlayerIds.includes(p.id) && 
-    !absentPlayerIds.includes(p.id) &&
-    p.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const activeDragPlayer = activeDragId 
     ? currentPlayers.find(p => p.id === activeDragId) || currentLineup.find(lp => lp.id === activeDragId)
     : null;
@@ -737,6 +743,8 @@ export function MatchLineupManager() {
                                   jerseyNumber={player.jersey_number}
                                   playerImage={'image_url' in player ? player.image_url : undefined}
                                   variant="list"
+                                  onAddToStarters={() => addToLineup(player.id, true)}
+                                  onAddToSubstitutes={() => addToLineup(player.id, false)}
                                 />
                               ))}
                               {availablePlayers.length === 0 && (
@@ -777,7 +785,24 @@ export function MatchLineupManager() {
                       </div>
 
                       {/* Pitch */}
-                      <div className="lg:col-span-2 order-1 lg:order-2">
+                      <div className="lg:col-span-2 order-1 lg:order-2 space-y-4">
+                        {/* Formation Selector */}
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Formation</Label>
+                          <Select value={selectedFormation} onValueChange={setSelectedFormation}>
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {FORMATIONS.map(formation => (
+                                <SelectItem key={formation} value={formation}>
+                                  {formation}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
                         <LineupPitch id="pitch">
                           {starters.map((player, index) => {
                             const existingCount = starters.slice(0, index).filter(p => p.position === player.position).length;
