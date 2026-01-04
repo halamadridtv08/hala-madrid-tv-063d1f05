@@ -1266,7 +1266,7 @@ export const FormationManagerV2: React.FC = () => {
                             <DroppableField id="field">
                               <div 
                                 className="relative w-full max-w-full bg-gradient-to-b from-green-400 to-green-600 rounded-lg overflow-hidden shadow-lg touch-manipulation" 
-                                style={{ aspectRatio: "16/11", maxHeight: "40vh", minHeight: "180px" }}
+                                style={{ height: "30vh", minHeight: "160px", maxHeight: "240px" }}
                                 data-pitch="true"
                               >
                                 {/* Lignes du terrain */}
