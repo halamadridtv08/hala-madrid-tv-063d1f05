@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Edit, Save, X } from "lucide-react";
+import { MediaUploader } from "./MediaUploader";
 
 interface Player {
   id: string;
@@ -175,12 +176,27 @@ export function PlayerEditForm({ player, onPlayerUpdated }: PlayerEditFormProps)
             </div>
 
             <div>
-              <Label htmlFor="edit-image">URL de l'image</Label>
-              <Input
-                id="edit-image"
-                value={formData.image_url}
-                onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-              />
+              <Label htmlFor="edit-image">Image du joueur</Label>
+              <div className="space-y-2">
+                <Input
+                  id="edit-image"
+                  value={formData.image_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+                  placeholder="URL de l'image ou utilisez l'uploader ci-dessous"
+                />
+                <MediaUploader
+                  onSuccess={(url) => setFormData(prev => ({ ...prev, image_url: url }))}
+                  acceptTypes="image/*"
+                  maxSizeMB={10}
+                  buttonText="Télécharger une image HD"
+                  folderPath="players"
+                  currentValue={formData.image_url}
+                  showPreview={true}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Recommandé: image PNG ou JPG de haute résolution (min. 800x800px)
+                </p>
+              </div>
             </div>
 
             <div className="md:col-span-2">
