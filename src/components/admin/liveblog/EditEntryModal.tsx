@@ -18,15 +18,21 @@ interface EditEntryModalProps {
 }
 
 const ENTRY_TYPES = [
+  { value: 'update', label: 'Mise à jour' },
   { value: 'goal', label: 'But' },
   { value: 'yellow_card', label: 'Carton jaune' },
   { value: 'red_card', label: 'Carton rouge' },
   { value: 'substitution', label: 'Remplacement' },
   { value: 'var', label: 'VAR' },
+  { value: 'penalty', label: 'Penalty' },
+  { value: 'corner', label: 'Corner' },
+  { value: 'chance', label: 'Occasion' },
   { value: 'injury', label: 'Blessure' },
+  { value: 'extra_time', label: 'Temps additionnel' },
   { value: 'kickoff', label: 'Coup d\'envoi' },
   { value: 'halftime', label: 'Mi-temps' },
   { value: 'fulltime', label: 'Fin du match' },
+  { value: 'media', label: 'Photo/Vidéo' },
   { value: 'comment', label: 'Commentaire' },
 ];
 
