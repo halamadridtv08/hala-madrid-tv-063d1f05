@@ -23,7 +23,6 @@ interface FormationPlayer {
 interface TeamFormationProps {
   match: Match;
 }
-
 export const TeamFormation: React.FC<TeamFormationProps> = ({
   match
 }) => {
@@ -35,13 +34,15 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
       fetchFormations();
     }
   }, [match?.id]);
-
   const fetchFormations = async () => {
     if (!match?.id) return;
     setLoading(true);
-    
+
     // Fetch formations with players
-    const { data, error } = await supabase.from('match_formations').select(`
+    const {
+      data,
+      error
+    } = await supabase.from('match_formations').select(`
         id,
         team_type,
         formation,
@@ -59,7 +60,6 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
           player_rating
         )
       `).eq('match_id', match.id);
-      
     if (error) {
       console.error('Error fetching formations:', error);
       setLoading(false);
@@ -69,7 +69,6 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
     // Collect all opposing_player_ids to fetch their photos
     const opposingPlayerIds: string[] = [];
     const playerIds: string[] = [];
-    
     data?.forEach(formation => {
       formation.match_formation_players?.forEach((player: any) => {
         if (player.opposing_player_id) {
@@ -84,11 +83,9 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
     // Fetch opposing players photos
     let opposingPlayersMap: Record<string, string> = {};
     if (opposingPlayerIds.length > 0) {
-      const { data: opposingPlayers } = await supabase
-        .from('opposing_players')
-        .select('id, photo_url')
-        .in('id', opposingPlayerIds);
-      
+      const {
+        data: opposingPlayers
+      } = await supabase.from('opposing_players').select('id, photo_url').in('id', opposingPlayerIds);
       opposingPlayers?.forEach(p => {
         if (p.photo_url) {
           opposingPlayersMap[p.id] = p.photo_url;
@@ -99,18 +96,15 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
     // Fetch Real Madrid players photos
     let playersMap: Record<string, string> = {};
     if (playerIds.length > 0) {
-      const { data: players } = await supabase
-        .from('players')
-        .select('id, profile_image_url')
-        .in('id', playerIds);
-      
+      const {
+        data: players
+      } = await supabase.from('players').select('id, profile_image_url').in('id', playerIds);
       players?.forEach(p => {
         if (p.profile_image_url) {
           playersMap[p.id] = p.profile_image_url;
         }
       });
     }
-
     const formationsData: any = {};
     data?.forEach(formation => {
       formationsData[formation.team_type] = {
@@ -118,22 +112,17 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
         formation: formation.formation,
         players: (formation.match_formation_players || []).map((player: any) => ({
           ...player,
-          player_image_url: player.player_image_url 
-            || (player.opposing_player_id ? opposingPlayersMap[player.opposing_player_id] : null)
-            || (player.player_id ? playersMap[player.player_id] : null)
-            || null
+          player_image_url: player.player_image_url || (player.opposing_player_id ? opposingPlayersMap[player.opposing_player_id] : null) || (player.player_id ? playersMap[player.player_id] : null) || null
         }))
       };
     });
     setFormations(formationsData);
     setLoading(false);
   };
-
   const getOpposingTeamName = () => {
     // Support both formats: direct properties and nested object format
     const homeTeam = match.home_team || (match as any).homeTeam?.name;
     const awayTeam = match.away_team || (match as any).awayTeam?.name;
-    
     if (homeTeam === 'Real Madrid') {
       return awayTeam || 'Équipe adverse';
     }
@@ -148,7 +137,6 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
     }
     const starters = formation.players.filter((p: FormationPlayer) => p.is_starter);
     const substitutes = formation.players.filter((p: FormationPlayer) => !p.is_starter);
-    
     return <div className="space-y-6">
         {/* Formation header */}
         <div className="flex items-center justify-between">
@@ -161,24 +149,18 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
         <div className="relative w-full overflow-x-auto">
           <div className="min-w-[320px]">
             <FootballPitch>
-              {starters.map((player: FormationPlayer) => (
-                <PlayerOnField 
-                  key={player.id} 
-                  player={{
-                    id: player.id,
-                    player_name: player.player_name,
-                    player_position: player.player_position,
-                    jersey_number: player.jersey_number,
-                    player_image_url: player.player_image_url,
-                    player_rating: player.player_rating
-                  }} 
-                  style={{
-                    left: `${player.position_x}%`,
-                    top: `${player.position_y}%`,
-                    zIndex: 10
-                  }} 
-                />
-              ))}
+              {starters.map((player: FormationPlayer) => <PlayerOnField key={player.id} player={{
+              id: player.id,
+              player_name: player.player_name,
+              player_position: player.player_position,
+              jersey_number: player.jersey_number,
+              player_image_url: player.player_image_url,
+              player_rating: player.player_rating
+            }} style={{
+              left: `${player.position_x}%`,
+              top: `${player.position_y}%`,
+              zIndex: 10
+            }} />)}
             </FootballPitch>
           </div>
         </div>
@@ -190,23 +172,14 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
               Remplaçants ({substitutes.length})
             </h4>
             <div className="flex flex-wrap gap-2 md:gap-3 p-3 md:p-4 bg-muted/50 rounded-lg">
-              {substitutes.map((player: FormationPlayer) => (
-                <div key={player.id} className="flex items-center gap-2 md:gap-3 bg-background p-2 rounded-lg border min-w-0 flex-shrink-0">
+              {substitutes.map((player: FormationPlayer) => <div key={player.id} className="flex items-center gap-2 md:gap-3 bg-background p-2 rounded-lg border min-w-0 flex-shrink-0">
                   {/* Photo du joueur */}
                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-blue-600 flex-shrink-0">
-                    {player.player_image_url ? (
-                      <img 
-                        src={player.player_image_url} 
-                        alt={player.player_name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                    {player.player_image_url ? <img src={player.player_image_url} alt={player.player_name} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                         <span className="text-xs font-bold text-primary-foreground">
                           {player.player_name.split(' ').map(n => n[0]).join('').substring(0, 2)}
                         </span>
-                      </div>
-                    )}
+                      </div>}
                   </div>
                   
                   {/* Numéro */}
@@ -223,15 +196,12 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
                   </div>
                   
                   {/* Note */}
-                  {player.player_rating > 0 && (
-                    <div className="w-8 h-8 md:w-10 md:h-10 bg-yellow-400 rounded-full flex items-center justify-center flex-shrink-0">
+                  {player.player_rating > 0 && <div className="w-8 h-8 md:w-10 md:h-10 bg-yellow-400 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-xs md:text-sm font-bold text-gray-900">
                         {player.player_rating?.toFixed(1)}
                       </span>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    </div>}
+                </div>)}
             </div>
           </div>}
       </div>;
@@ -252,9 +222,7 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
           <Users className="h-5 w-5" />
           Compositions d'équipe
         </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          {match.home_team} vs {match.away_team} - {new Date(match.match_date).toLocaleDateString('fr-FR')}
-        </p>
+        
       </CardHeader>
       <CardContent>
         <Tabs value={activeTeam} onValueChange={value => setActiveTeam(value as "real_madrid" | "opposing")}>
