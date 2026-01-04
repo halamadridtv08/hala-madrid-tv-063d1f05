@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Radio, Calendar, Download, Loader2, Link } from 'lucide-react';
-import { useLiveBlog, NewLiveBlogEntry } from '@/hooks/useLiveBlog';
+import { useLiveBlog, LiveBlogEntry, NewLiveBlogEntry } from '@/hooks/useLiveBlog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
@@ -18,7 +18,7 @@ import { GoalEntryModal } from './liveblog/GoalEntryModal';
 import { CardEntryModal } from './liveblog/CardEntryModal';
 import { SubstitutionModal } from './liveblog/SubstitutionModal';
 import { GroupedEntriesView } from './liveblog/GroupedEntriesView';
-
+import { EditEntryModal } from './liveblog/EditEntryModal';
 interface LiveBlogManagerProps {
   matchId?: string;
 }
@@ -37,7 +37,7 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
   const [players, setPlayers] = useState<Player[]>([]);
   const [loadingMatches, setLoadingMatches] = useState(true);
   
-  const { entries, addEntry, deleteEntry, loading } = useLiveBlog(selectedMatchId || undefined);
+  const { entries, addEntry, updateEntry, deleteEntry, loading } = useLiveBlog(selectedMatchId || undefined);
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -52,6 +52,8 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
   const [cardModalOpen, setCardModalOpen] = useState(false);
   const [substitutionModalOpen, setSubstitutionModalOpen] = useState(false);
   const [defaultCardType, setDefaultCardType] = useState<'yellow' | 'red'>('yellow');
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<LiveBlogEntry | null>(null);
 
   // Fetch matches
   useEffect(() => {
@@ -271,6 +273,25 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
     }
   };
 
+  const handleEdit = (entry: LiveBlogEntry) => {
+    setEditingEntry(entry);
+    setEditModalOpen(true);
+  };
+
+  const handleEditSubmit = async (id: string, updates: Partial<LiveBlogEntry>) => {
+    setSubmitting(true);
+    try {
+      await updateEntry(id, updates);
+      toast({ title: 'Entrée modifiée' });
+      setEditModalOpen(false);
+      setEditingEntry(null);
+    } catch (error) {
+      toast({ title: 'Erreur', variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleImportFromUrl = async () => {
     if (!selectedMatchId || !importUrl.trim()) {
       toast({ title: 'Veuillez entrer une URL', variant: 'destructive' });
@@ -416,6 +437,7 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
                 entries={entries}
                 players={players}
                 onDelete={handleDelete}
+                onEdit={handleEdit}
               />
             )}
           </CardContent>
@@ -456,6 +478,17 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
         onClose={() => setSubstitutionModalOpen(false)}
         onSubmit={handleSubstitutionSubmit}
         players={players}
+        isSubmitting={submitting}
+      />
+
+      <EditEntryModal
+        open={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setEditingEntry(null);
+        }}
+        onSubmit={handleEditSubmit}
+        entry={editingEntry}
         isSubmitting={submitting}
       />
     </div>
