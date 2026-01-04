@@ -9,6 +9,19 @@ initSentry();
 
 createRoot(document.getElementById("root")!).render(<App />);
 
+// PWA: Force update check and auto-reload on new service worker
+if ('serviceWorker' in navigator) {
+  // Reload when a new service worker takes control
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+  });
+
+  // Check for updates immediately on page load
+  navigator.serviceWorker.ready.then(registration => {
+    registration.update();
+  });
+}
+
 // Inject auth buttons when the app loads
 document.addEventListener('DOMContentLoaded', () => {
   injectAuthButtons();

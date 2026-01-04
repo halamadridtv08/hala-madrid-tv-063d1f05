@@ -63,6 +63,8 @@ export default defineConfig(({ mode }) => ({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/, /\.json$/, /^\/supabase/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/qjnppcfbywfazwolfppo\.supabase\.co\/storage\/.*/i,
