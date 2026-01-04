@@ -74,7 +74,7 @@ export function HeroSection() {
         </motion.div>
 
         {/* Carousel */}
-        <div className="w-full">
+        <div className="w-full min-h-[508px]">
           <NewsCarousel />
         </div>
       </>
@@ -149,7 +149,7 @@ export function HeroSection() {
       </motion.div>
 
       {/* Carousel */}
-      <div className="w-full">
+      <div className="w-full min-h-[508px]">
         <NewsCarousel />
       </div>
     </>

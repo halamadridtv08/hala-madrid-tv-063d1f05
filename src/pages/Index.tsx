@@ -80,19 +80,19 @@ const Index = () => {
         {isVisible('partners_section') && <PartnersSection />}
         
         {/* Section pour les liens rapides - dynamique depuis la base de données */}
-        <section className="py-6 sm:py-8 md:py-12 bg-gray-50 dark:bg-gray-900 min-h-[400px]">
+        <section className="py-6 sm:py-8 md:py-12 bg-gray-50 dark:bg-gray-900 min-h-[476px]" style={{ contentVisibility: 'auto', containIntrinsicSize: '0 476px' }}>
           <div className="madrid-container">
             <h2 className="section-title mb-4 sm:mb-6 md:mb-8 text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl">{t('home.explore')}</h2>
-            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 min-h-[300px]">
               {cardsLoading ? (
-                // Loading skeleton
+                // Loading skeleton with fixed dimensions
                 [...Array(4)].map((_, i) => (
-                  <Card key={i} className="animate-pulse">
-                    <CardContent className="p-3 sm:p-4 md:p-6 text-center flex flex-col items-center">
+                  <Card key={i} className="animate-pulse h-[200px]">
+                    <CardContent className="p-3 sm:p-4 md:p-6 text-center flex flex-col items-center h-full">
                       <div className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 bg-muted rounded mb-2 sm:mb-3 md:mb-4" />
                       <div className="h-4 w-24 bg-muted rounded mb-1 sm:mb-2" />
                       <div className="h-3 w-32 bg-muted rounded mb-2 sm:mb-3 md:mb-4" />
-                      <div className="h-8 w-full bg-muted rounded" />
+                      <div className="h-8 w-full bg-muted rounded mt-auto" />
                     </CardContent>
                   </Card>
                 ))

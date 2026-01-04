@@ -52,13 +52,13 @@ export function Navbar() {
       closeMenu();
     }
   };
-  return <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 shadow-sm">
-      <div className="madrid-container py-2 md:py-4 flex justify-between items-center">
+  return <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 shadow-sm min-h-[68px] md:min-h-[80px]">
+      <div className="madrid-container py-2 md:py-4 flex justify-between items-center h-full">
         <Link to="/" className="flex items-center gap-2 md:gap-3" onClick={closeMenu}>
           <div className="relative w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center hover:scale-105 transition-all duration-300">
-            <img alt={siteName} className="h-10 w-10 md:h-12 md:w-12 object-contain" width="48" height="48" src={logoUrl} />
+            <img alt={siteName} className="h-10 w-10 md:h-12 md:w-12 object-contain" width="48" height="48" loading="eager" fetchPriority="high" src={logoUrl} />
           </div>
-          <span className="font-montserrat font-bold text-sm sm:text-lg md:text-xl lg:text-2xl tracking-tight">
+          <span className="font-montserrat font-bold text-sm sm:text-lg md:text-xl lg:text-2xl tracking-tight min-w-[120px]">
             <span className="text-primary">HALA</span>
             <span className="text-foreground">MADRID</span>
             <span className="text-secondary">TV</span>
