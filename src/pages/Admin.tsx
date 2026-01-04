@@ -1,6 +1,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { QuickStatsCard } from "@/components/admin/QuickStatsCard";
 import { AdminMenuBar } from "@/components/layout/AdminMenuBar";
 import { AdminMobileNav } from "@/components/admin/AdminMobileNav";
@@ -573,54 +574,82 @@ const Admin = () => {
       <h2 className="text-2xl font-bold mb-4">Gestion des Équipes Adverses</h2>
       <OpposingTeamManager />
     </div>;
-  const renderSettings = () => <div className="space-y-8">
+  const renderSettings = () => (
+    <div className="space-y-6">
       <h2 className="text-2xl font-bold mb-6">Paramètres</h2>
       
-      {/* Section Configuration Générale */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Configuration générale</h3>
-        <SettingsDashboard />
-      </div>
+      <Accordion type="single" collapsible className="space-y-4">
+        {/* Section Configuration Générale */}
+        <AccordionItem value="config-generale" className="border rounded-lg px-4">
+          <AccordionTrigger className="text-lg font-semibold text-muted-foreground hover:no-underline">
+            Configuration générale
+          </AccordionTrigger>
+          <AccordionContent className="pt-4">
+            <SettingsDashboard />
+          </AccordionContent>
+        </AccordionItem>
 
-      {/* Section Visibilité & Affichage */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Visibilité & Affichage</h3>
-        <SiteVisibilityManager />
-        <HeroBackgroundManager />
-        <SplineManager />
-        <AuthImageManager />
-      </div>
+        {/* Section Visibilité & Affichage */}
+        <AccordionItem value="visibilite-affichage" className="border rounded-lg px-4">
+          <AccordionTrigger className="text-lg font-semibold text-muted-foreground hover:no-underline">
+            Visibilité & Affichage
+          </AccordionTrigger>
+          <AccordionContent className="pt-4 space-y-4">
+            <SiteVisibilityManager />
+            <HeroBackgroundManager />
+            <SplineManager />
+            <AuthImageManager />
+          </AccordionContent>
+        </AccordionItem>
 
-      {/* Section Contenu */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Gestion du contenu</h3>
-        <FlashNewsCategoryManager />
-        <FlashNewsSourceManager />
-        <ArticleAdsManager />
-      </div>
+        {/* Section Contenu */}
+        <AccordionItem value="gestion-contenu" className="border rounded-lg px-4">
+          <AccordionTrigger className="text-lg font-semibold text-muted-foreground hover:no-underline">
+            Gestion du contenu
+          </AccordionTrigger>
+          <AccordionContent className="pt-4 space-y-4">
+            <FlashNewsCategoryManager />
+            <FlashNewsSourceManager />
+            <ArticleAdsManager />
+          </AccordionContent>
+        </AccordionItem>
 
-      {/* Section Partenaires & Liens */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Partenaires & Liens</h3>
-        <PartnersManager />
-        <FooterLinksManager />
-      </div>
+        {/* Section Partenaires & Liens */}
+        <AccordionItem value="partenaires-liens" className="border rounded-lg px-4">
+          <AccordionTrigger className="text-lg font-semibold text-muted-foreground hover:no-underline">
+            Partenaires & Liens
+          </AccordionTrigger>
+          <AccordionContent className="pt-4 space-y-4">
+            <PartnersManager />
+            <FooterLinksManager />
+          </AccordionContent>
+        </AccordionItem>
 
-      {/* Section Utilisateurs & Rôles - Admin only */}
-      {isAdmin && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Utilisateurs & Rôles</h3>
-          <UserRolesManager />
-        </div>
-      )}
+        {/* Section Utilisateurs & Rôles - Admin only */}
+        {isAdmin && (
+          <AccordionItem value="utilisateurs-roles" className="border rounded-lg px-4">
+            <AccordionTrigger className="text-lg font-semibold text-muted-foreground hover:no-underline">
+              Utilisateurs & Rôles
+            </AccordionTrigger>
+            <AccordionContent className="pt-4">
+              <UserRolesManager />
+            </AccordionContent>
+          </AccordionItem>
+        )}
 
-      {/* Section Données & Synchronisation */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-muted-foreground border-b pb-2">Données & Synchronisation</h3>
-        <CompetitionAliasManager />
-        <DataInconsistencyDetector />
-      </div>
-    </div>;
+        {/* Section Données & Synchronisation */}
+        <AccordionItem value="donnees-sync" className="border rounded-lg px-4">
+          <AccordionTrigger className="text-lg font-semibold text-muted-foreground hover:no-underline">
+            Données & Synchronisation
+          </AccordionTrigger>
+          <AccordionContent className="pt-4 space-y-4">
+            <CompetitionAliasManager />
+            <DataInconsistencyDetector />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </div>
+  );
   const renderKits = () => <div>
       <h2 className="text-2xl font-bold mb-4">Gestion des Maillots</h2>
       <KitTable kits={kits} setKits={setKits} />
