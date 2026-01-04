@@ -20,40 +20,61 @@ interface ProbableLineupFormationProps {
   homeTeamName: string;
 }
 
-// Default positions for 4-3-3 formation
-const DEFAULT_POSITIONS: Record<string, { x: number; y: number }> = {
-  'GK': { x: 50, y: 90 },
-  'LB': { x: 15, y: 72 },
-  'CB_L': { x: 35, y: 75 },
-  'CB_R': { x: 65, y: 75 },
-  'RB': { x: 85, y: 72 },
-  'CDM': { x: 50, y: 60 },
-  'CM_L': { x: 30, y: 50 },
-  'CM_R': { x: 70, y: 50 },
-  'LW': { x: 20, y: 30 },
-  'ST': { x: 50, y: 20 },
-  'RW': { x: 80, y: 30 },
-};
-
-// Map positions to field coordinates
-const getPositionCoordinates = (position: string, index: number): { x: number; y: number } => {
-  const positionMap: Record<string, { x: number; y: number }> = {
-    'GK': { x: 50, y: 90 },
-    'LB': { x: 15, y: 72 },
-    'CB': { x: index % 2 === 0 ? 35 : 65, y: 75 },
-    'RB': { x: 85, y: 72 },
-    'CDM': { x: 50, y: 60 },
-    'CM': { x: 30 + (index % 3) * 20, y: 50 },
-    'CAM': { x: 50, y: 42 },
-    'LM': { x: 20, y: 50 },
-    'RM': { x: 80, y: 50 },
-    'LW': { x: 20, y: 28 },
-    'RW': { x: 80, y: 28 },
-    'ST': { x: 50, y: 18 },
-    'CF': { x: 50, y: 25 },
+// Get position coordinates based on position type and index for multiple same positions
+const getPositionCoordinates = (position: string, samePositionIndex: number, totalSamePosition: number): { x: number; y: number } => {
+  const pos = position.toUpperCase();
+  
+  // Base positions for each role
+  const basePositions: Record<string, { x: number; y: number }[]> = {
+    // Goalkeeper
+    'GK': [{ x: 50, y: 92 }],
+    'POR': [{ x: 50, y: 92 }],
+    'PT': [{ x: 50, y: 92 }],
+    
+    // Defenders
+    'LB': [{ x: 12, y: 75 }],
+    'RB': [{ x: 88, y: 75 }],
+    'CB': [{ x: 35, y: 78 }, { x: 65, y: 78 }, { x: 50, y: 80 }],
+    'DF': [{ x: 35, y: 78 }, { x: 65, y: 78 }, { x: 50, y: 80 }],
+    'DEF': [{ x: 35, y: 78 }, { x: 65, y: 78 }, { x: 50, y: 80 }],
+    
+    // Defensive midfielders
+    'CDM': [{ x: 40, y: 62 }, { x: 60, y: 62 }],
+    'DM': [{ x: 40, y: 62 }, { x: 60, y: 62 }],
+    'MC': [{ x: 40, y: 62 }, { x: 60, y: 62 }],
+    
+    // Midfielders
+    'CM': [{ x: 30, y: 50 }, { x: 50, y: 52 }, { x: 70, y: 50 }],
+    'MF': [{ x: 30, y: 50 }, { x: 50, y: 52 }, { x: 70, y: 50 }],
+    'MED': [{ x: 30, y: 50 }, { x: 50, y: 52 }, { x: 70, y: 50 }],
+    'LM': [{ x: 15, y: 50 }],
+    'RM': [{ x: 85, y: 50 }],
+    'CAM': [{ x: 50, y: 40 }],
+    'AM': [{ x: 50, y: 40 }],
+    
+    // Wingers
+    'LW': [{ x: 18, y: 32 }],
+    'RW': [{ x: 82, y: 32 }],
+    'EXT': [{ x: 18, y: 32 }, { x: 82, y: 32 }],
+    
+    // Forwards
+    'ST': [{ x: 40, y: 18 }, { x: 60, y: 18 }],
+    'CF': [{ x: 50, y: 22 }],
+    'FW': [{ x: 40, y: 18 }, { x: 60, y: 18 }],
+    'ATT': [{ x: 40, y: 18 }, { x: 60, y: 18 }],
+    'DEL': [{ x: 50, y: 18 }],
   };
 
-  return positionMap[position] || { x: 50, y: 50 };
+  const positions = basePositions[pos];
+  
+  if (positions) {
+    const index = Math.min(samePositionIndex, positions.length - 1);
+    return positions[index];
+  }
+  
+  // Fallback: distribute unknown positions across midfield
+  const fallbackX = 25 + (samePositionIndex * 25) % 50;
+  return { x: fallbackX, y: 50 };
 };
 
 export const ProbableLineupFormation: React.FC<ProbableLineupFormationProps> = ({
@@ -67,14 +88,23 @@ export const ProbableLineupFormation: React.FC<ProbableLineupFormationProps> = (
   const [activeTeam, setActiveTeam] = useState<'real_madrid' | 'opposing'>('real_madrid');
 
   const assignPositionsToPlayers = (players: PlayerType[]) => {
-    // Count positions for proper distribution
+    // Count how many players have each position
     const positionCounts: Record<string, number> = {};
+    players.forEach(p => {
+      const pos = p.position.toUpperCase();
+      positionCounts[pos] = (positionCounts[pos] || 0) + 1;
+    });
+    
+    // Track current index for each position
+    const positionIndexes: Record<string, number> = {};
     
     return players.map((player) => {
-      const pos = player.position;
-      positionCounts[pos] = (positionCounts[pos] || 0);
-      const coords = getPositionCoordinates(pos, positionCounts[pos]);
-      positionCounts[pos]++;
+      const pos = player.position.toUpperCase();
+      const currentIndex = positionIndexes[pos] || 0;
+      const total = positionCounts[pos] || 1;
+      
+      const coords = getPositionCoordinates(pos, currentIndex, total);
+      positionIndexes[pos] = currentIndex + 1;
       
       return {
         ...player,
