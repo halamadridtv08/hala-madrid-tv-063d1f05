@@ -89,6 +89,9 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
   // Import from URL states
   const [importUrl, setImportUrl] = useState('');
   const [importing, setImporting] = useState(false);
+  const [autoSync, setAutoSync] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const autoSyncIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch matches
   useEffect(() => {
@@ -128,6 +131,49 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
       if (data) setPlayers(data);
     };
     fetchPlayers();
+  }, []);
+
+  // Auto-sync effect
+  useEffect(() => {
+    if (autoSync && importUrl.trim() && selectedMatchId) {
+      const syncLiveBlog = async () => {
+        try {
+          const result = await liveBlogScraperApi.importFromUrl(importUrl.trim(), selectedMatchId);
+          if (result.success && result.entriesImported > 0) {
+            toast({ title: 'Sync auto', description: `${result.entriesImported} nouvelles entrées` });
+          }
+          setLastSyncTime(new Date());
+        } catch (error) {
+          console.error('Auto-sync error:', error);
+        }
+      };
+
+      // Initial sync
+      syncLiveBlog();
+
+      // Set interval for auto-sync every 5 seconds
+      autoSyncIntervalRef.current = setInterval(syncLiveBlog, 5000);
+
+      return () => {
+        if (autoSyncIntervalRef.current) {
+          clearInterval(autoSyncIntervalRef.current);
+        }
+      };
+    } else {
+      if (autoSyncIntervalRef.current) {
+        clearInterval(autoSyncIntervalRef.current);
+        autoSyncIntervalRef.current = null;
+      }
+    }
+  }, [autoSync, importUrl, selectedMatchId, toast]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSyncIntervalRef.current) {
+        clearInterval(autoSyncIntervalRef.current);
+      }
+    };
   }, []);
 
   // Handle image upload
@@ -460,13 +506,13 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
               Importer depuis Real Madrid
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-0 space-y-4">
             <div className="flex gap-2">
               <Input
                 placeholder="https://www.realmadrid.com/en/live-blog/..."
                 value={importUrl}
                 onChange={(e) => setImportUrl(e.target.value)}
-                disabled={importing}
+                disabled={importing || autoSync}
                 className="flex-1"
               />
               <Button 
@@ -477,7 +523,6 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
                     const result = await liveBlogScraperApi.importFromUrl(importUrl.trim(), selectedMatchId);
                     if (result.success) {
                       toast({ title: 'Import réussi', description: `${result.entriesImported} entrées importées` });
-                      setImportUrl('');
                     } else {
                       toast({ title: 'Erreur d\'import', description: result.error, variant: 'destructive' });
                     }
@@ -487,7 +532,7 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
                     setImporting(false);
                   }
                 }}
-                disabled={importing || !importUrl.trim()}
+                disabled={importing || !importUrl.trim() || autoSync}
                 variant="secondary"
               >
                 {importing ? (
@@ -497,8 +542,36 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
                 )}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Collez l'URL du live blog officiel du Real Madrid pour importer automatiquement les événements
+            
+            {/* Auto-sync toggle */}
+            <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={autoSync}
+                  onCheckedChange={setAutoSync}
+                  disabled={!importUrl.trim()}
+                />
+                <div>
+                  <Label className="text-sm font-medium">
+                    Synchronisation auto (5s)
+                  </Label>
+                  {autoSync && lastSyncTime && (
+                    <p className="text-xs text-muted-foreground">
+                      Dernière sync: {format(lastSyncTime, 'HH:mm:ss', { locale: fr })}
+                    </p>
+                  )}
+                </div>
+              </div>
+              {autoSync && (
+                <Badge variant="destructive" className="animate-pulse">
+                  <Radio className="w-3 h-3 mr-1" />
+                  SYNC ACTIVE
+                </Badge>
+              )}
+            </div>
+            
+            <p className="text-xs text-muted-foreground">
+              Collez l'URL puis activez la sync auto pour récupérer les nouvelles entrées toutes les 5 secondes
             </p>
           </CardContent>
         </Card>
