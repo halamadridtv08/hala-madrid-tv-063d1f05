@@ -16,9 +16,11 @@ import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileTabSelector } from "./MobileTabSelector";
 interface PlayerType {
+  id?: string;
   name: string;
   position: string;
   number: number;
+  imageUrl?: string;
 }
 interface MatchDetailProps {
   match: any;
@@ -30,6 +32,7 @@ interface OpposingPlayer {
   name: string;
   position: string;
   jersey_number: number | null;
+  photo_url: string | null;
   is_starter: boolean;
 }
 export const MatchDetail = ({
@@ -74,17 +77,23 @@ export const MatchDetail = ({
       const {
         data: realMadridData,
         error: realMadridError
-      } = await supabase.from('players').select('name, position, jersey_number').eq('is_active', true).order('jersey_number', {
-        ascending: true
-      });
+      } = await supabase
+        .from('players')
+        .select('id, name, position, jersey_number, image_url, profile_image_url')
+        .eq('is_active', true)
+        .order('jersey_number', {
+          ascending: true
+        });
       if (realMadridError) {
         console.error("Erreur lors du chargement des joueurs Real Madrid:", realMadridError);
         toast.error("Erreur lors du chargement des joueurs Real Madrid");
       } else {
-        const formattedPlayers = realMadridData.map(player => ({
+        const formattedPlayers: PlayerType[] = realMadridData.map(player => ({
+          id: player.id,
           name: player.name,
           position: player.position,
-          number: player.jersey_number || 0
+          number: player.jersey_number || 0,
+          imageUrl: player.profile_image_url || player.image_url || undefined
         }));
         setRealMadridPlayers(formattedPlayers);
       }
@@ -124,29 +133,59 @@ export const MatchDetail = ({
   };
   if (!match) return null;
 
+  const realMadridPhotoById = Object.fromEntries(
+    realMadridPlayers
+      .filter(p => p.id && p.imageUrl)
+      .map(p => [p.id as string, p.imageUrl as string])
+  ) as Record<string, string>;
+
+  const opposingPhotoById = Object.fromEntries(
+    opposingPlayers
+      .filter(p => p.id && p.photo_url)
+      .map(p => [p.id, p.photo_url as string])
+  ) as Record<string, string>;
+
   // Utiliser les compositions probables de la base de données
-  const realMadridLineup = probableLineups.filter(l => l.team_type === 'real_madrid' && l.is_starter).map(l => ({
-    name: l.player_name,
-    position: l.position,
-    number: l.jersey_number || 0
-  }));
-  const realMadridSubs = probableLineups.filter(l => l.team_type === 'real_madrid' && !l.is_starter).map(l => ({
-    name: l.player_name,
-    position: l.position,
-    number: l.jersey_number || 0
-  }));
+  const realMadridLineup: PlayerType[] = probableLineups
+    .filter(l => l.team_type === 'real_madrid' && l.is_starter)
+    .map(l => ({
+      id: l.player_id || undefined,
+      name: l.player_name,
+      position: l.position,
+      number: l.jersey_number || 0,
+      imageUrl: l.player_id ? realMadridPhotoById[l.player_id] : undefined
+    }));
+
+  const realMadridSubs: PlayerType[] = probableLineups
+    .filter(l => l.team_type === 'real_madrid' && !l.is_starter)
+    .map(l => ({
+      id: l.player_id || undefined,
+      name: l.player_name,
+      position: l.position,
+      number: l.jersey_number || 0,
+      imageUrl: l.player_id ? realMadridPhotoById[l.player_id] : undefined
+    }));
 
   // Utiliser les compositions probables de la base de données pour l'équipe adverse
-  const opposingLineup = probableLineups.filter(l => l.team_type === 'opposing' && l.is_starter).map(l => ({
-    name: l.player_name,
-    position: l.position,
-    number: l.jersey_number || 0
-  }));
-  const opposingSubs = probableLineups.filter(l => l.team_type === 'opposing' && !l.is_starter).map(l => ({
-    name: l.player_name,
-    position: l.position,
-    number: l.jersey_number || 0
-  }));
+  const opposingLineup: PlayerType[] = probableLineups
+    .filter(l => l.team_type === 'opposing' && l.is_starter)
+    .map(l => ({
+      id: l.opposing_player_id || undefined,
+      name: l.player_name,
+      position: l.position,
+      number: l.jersey_number || 0,
+      imageUrl: l.opposing_player_id ? opposingPhotoById[l.opposing_player_id] : undefined
+    }));
+
+  const opposingSubs: PlayerType[] = probableLineups
+    .filter(l => l.team_type === 'opposing' && !l.is_starter)
+    .map(l => ({
+      id: l.opposing_player_id || undefined,
+      name: l.player_name,
+      position: l.position,
+      number: l.jersey_number || 0,
+      imageUrl: l.opposing_player_id ? opposingPhotoById[l.opposing_player_id] : undefined
+    }));
 
   // Données par défaut si aucune composition n'est trouvée
   const defaultOpposingLineup = [{
