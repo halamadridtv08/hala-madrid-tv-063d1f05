@@ -1055,9 +1055,9 @@ export const FormationManagerV2: React.FC = () => {
                   )}
 
                   {formationId && (
-                    <div className="flex flex-col lg:grid lg:grid-cols-4 gap-3 sm:gap-4 overflow-hidden">
+                    <div className="flex flex-col lg:grid lg:grid-cols-4 gap-3 sm:gap-4 w-full max-w-full overflow-hidden">
                       {/* Terrain + Remplaçants - En premier sur mobile */}
-                      <div className="lg:col-span-3 order-1 lg:order-2">
+                      <div className="lg:col-span-3 order-1 lg:order-2 w-full max-w-full overflow-hidden">
                         <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
                           <Badge variant={fieldPlayers.length === 11 ? "default" : "secondary"} className="text-xs sm:text-sm">
                             {fieldPlayers.length}/11 joueurs
@@ -1261,12 +1261,12 @@ export const FormationManagerV2: React.FC = () => {
                             </ResizablePanel>
                           </ResizablePanelGroup>
                         ) : (
-                          <div className="space-y-2 sm:space-y-3 overflow-hidden">
+                          <div className="space-y-2 sm:space-y-3 w-full max-w-full overflow-hidden">
                             {/* Terrain mobile - optimisé pour le touch */}
                             <DroppableField id="field">
                               <div 
-                                className="relative w-full bg-gradient-to-b from-green-400 to-green-600 rounded-lg overflow-hidden shadow-lg touch-manipulation" 
-                                style={{ aspectRatio: "4/3", minHeight: "240px" }}
+                                className="relative w-full max-w-full bg-gradient-to-b from-green-400 to-green-600 rounded-lg overflow-hidden shadow-lg touch-manipulation" 
+                                style={{ aspectRatio: "1/1.2" }}
                                 data-pitch="true"
                               >
                                 {/* Lignes du terrain */}
