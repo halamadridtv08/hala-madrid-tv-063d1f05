@@ -80,7 +80,7 @@ const Index = () => {
         {isVisible('partners_section') && <PartnersSection />}
         
         {/* Section pour les liens rapides - dynamique depuis la base de données */}
-        <section className="py-6 sm:py-8 md:py-12 bg-gray-50 dark:bg-gray-900">
+        <section className="py-6 sm:py-8 md:py-12 bg-gray-50 dark:bg-gray-900 min-h-[400px]">
           <div className="madrid-container">
             <h2 className="section-title mb-4 sm:mb-6 md:mb-8 text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl">{t('home.explore')}</h2>
             <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
