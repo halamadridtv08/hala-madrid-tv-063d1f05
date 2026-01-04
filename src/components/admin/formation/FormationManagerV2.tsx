@@ -1055,7 +1055,7 @@ export const FormationManagerV2: React.FC = () => {
                   )}
 
                   {formationId && (
-                    <div className="flex flex-col lg:grid lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="flex flex-col lg:grid lg:grid-cols-4 gap-3 sm:gap-4 overflow-hidden">
                       {/* Terrain + Remplaçants - En premier sur mobile */}
                       <div className="lg:col-span-3 order-1 lg:order-2">
                         <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
@@ -1261,12 +1261,12 @@ export const FormationManagerV2: React.FC = () => {
                             </ResizablePanel>
                           </ResizablePanelGroup>
                         ) : (
-                          <div className="space-y-2 sm:space-y-3">
+                          <div className="space-y-2 sm:space-y-3 overflow-hidden">
                             {/* Terrain mobile - optimisé pour le touch */}
                             <DroppableField id="field">
                               <div 
                                 className="relative w-full bg-gradient-to-b from-green-400 to-green-600 rounded-lg overflow-hidden shadow-lg touch-manipulation" 
-                                style={{ aspectRatio: "16/12", minHeight: "280px", maxHeight: "380px" }}
+                                style={{ aspectRatio: "4/3", minHeight: "240px" }}
                                 data-pitch="true"
                               >
                                 {/* Lignes du terrain */}
@@ -1428,7 +1428,7 @@ export const FormationManagerV2: React.FC = () => {
                                   </CardHeader>
                                   <CardContent className="p-2">
                                     <DroppableSubstitutes id="substitutes">
-                                      <div className="grid grid-cols-3 sm:grid-cols-4 lg:flex lg:flex-wrap gap-1.5 min-h-[60px] sm:min-h-[100px]">
+                                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap gap-1.5 min-h-[60px] sm:min-h-[100px]">
                                         {substitutes.length === 0 && (
                                           <p className="text-xs text-muted-foreground p-2 col-span-full">Glissez des joueurs ici</p>
                                         )}
@@ -1484,7 +1484,7 @@ export const FormationManagerV2: React.FC = () => {
                             </CardHeader>
                             <CardContent className="p-2">
                               <ScrollArea className="h-[180px] sm:h-[250px] lg:h-[450px]">
-                                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-1 gap-1">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-1">
                                   {availablePlayers
                                     .filter((p) => !isAssigned(p.id))
                                     .map((player) => (
