@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Player } from "@/types/Player";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { MediaUploader } from "./MediaUploader";
 
 interface PlayerFormProps {
   player?: Player;
@@ -141,13 +142,28 @@ export const PlayerForm = ({ player, onSuccess, onCancel }: PlayerFormProps) => 
           </div>
           
           <div>
-            <Label htmlFor="image_url">URL de l'image</Label>
-            <Input
-              id="image_url"
-              type="url"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-            />
+            <Label htmlFor="image_url">Image du joueur</Label>
+            <div className="space-y-2">
+              <Input
+                id="image_url"
+                type="url"
+                value={formData.image_url}
+                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                placeholder="URL de l'image ou utilisez l'uploader ci-dessous"
+              />
+              <MediaUploader
+                onSuccess={(url) => setFormData({ ...formData, image_url: url })}
+                acceptTypes="image/*"
+                maxSizeMB={10}
+                buttonText="Télécharger une image HD"
+                folderPath="players"
+                currentValue={formData.image_url}
+                showPreview={true}
+              />
+              <p className="text-xs text-muted-foreground">
+                Recommandé: image PNG ou JPG de haute résolution (min. 800x800px)
+              </p>
+            </div>
           </div>
           
           <div>
