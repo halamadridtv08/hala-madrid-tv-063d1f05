@@ -111,56 +111,64 @@ export function PlayerSpotlight() {
   if (featuredPlayers.length === 0) {
     return null;
   }
-  const renderPlayerCard = (player: Player) => <div className="grid md:grid-cols-2 gap-0">
+  const renderPlayerCard = (player: Player) => (
+    <div className="flex flex-col md:grid md:grid-cols-2 gap-0">
       {/* Player Image */}
-      <div className="relative h-[500px] bg-gradient-to-br from-blue-600 to-blue-800 dark:from-gray-700 dark:to-gray-900">
-        <img src={player.image_url || "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=400&h=600&fit=crop"} alt={player.name} className="w-full h-full object-cover object-top" loading="lazy" width="400" height="500" />
-        <div className="absolute top-4 left-4 bg-madrid-gold text-black px-4 py-2 rounded-full font-bold text-lg">
+      <div className="relative h-[280px] sm:h-[350px] md:h-[500px] bg-gradient-to-br from-blue-600 to-blue-800 dark:from-gray-700 dark:to-gray-900">
+        <img
+          src={player.image_url || "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=400&h=600&fit=crop"}
+          alt={player.name}
+          className="w-full h-full object-cover object-top"
+          loading="lazy"
+          width="400"
+          height="500"
+        />
+        <div className="absolute top-3 left-3 md:top-4 md:left-4 bg-madrid-gold text-black px-3 py-1.5 md:px-4 md:py-2 rounded-full font-bold text-sm md:text-lg">
           #{player.jersey_number || "10"}
         </div>
-        <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/30">
-          <Star className="h-4 w-4 text-madrid-gold fill-madrid-gold" />
-          <span className="text-sm font-medium">Vedette</span>
+        <div className="absolute top-3 right-3 md:top-4 md:right-4 bg-white/20 backdrop-blur-sm text-white px-2 py-1 md:px-3 md:py-1.5 rounded-full flex items-center gap-1 md:gap-1.5 border border-white/30">
+          <Star className="h-3 w-3 md:h-4 md:w-4 text-madrid-gold fill-madrid-gold" />
+          <span className="text-xs md:text-sm font-medium">Vedette</span>
         </div>
       </div>
 
       {/* Player Info */}
-      <div className="p-8 flex flex-col justify-between text-white bg-gradient-to-br from-madrid-blue/95 to-blue-900/95 dark:from-gray-800/95 dark:to-gray-900/95">
+      <div className="p-4 sm:p-6 md:p-8 flex flex-col justify-between text-white bg-gradient-to-br from-madrid-blue/95 to-blue-900/95 dark:from-gray-800/95 dark:to-gray-900/95">
         <div>
-          <h3 className="text-4xl font-bold mb-2">{player.name}</h3>
-          <p className="text-xl text-blue-200 dark:text-blue-300 mb-2">
+          <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 md:mb-2">{player.name}</h3>
+          <p className="text-base sm:text-lg md:text-xl text-blue-200 dark:text-blue-300 mb-1 md:mb-2">
             <TranslatedText text={player.position} as="span" />
           </p>
-          <p className="text-lg text-blue-300 dark:text-blue-400">{player.nationality}</p>
+          <p className="text-sm md:text-lg text-blue-300 dark:text-blue-400">{player.nationality}</p>
 
-          <div className="mt-8">
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="h-5 w-5 text-madrid-gold" />
-              <h4 className="text-xl font-semibold">Saison {currentSeason}</h4>
+          <div className="mt-4 md:mt-8">
+            <div className="flex items-center gap-2 mb-3 md:mb-4">
+              <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-madrid-gold" />
+              <h4 className="text-base md:text-xl font-semibold">Saison {currentSeason}</h4>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
-                <div className="text-3xl font-bold text-madrid-gold">{player.stats?.goals || 0}</div>
-                <div className="text-sm text-blue-200 dark:text-blue-300"><TranslatedText text="Buts" as="span" /></div>
+
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
+              <div className="bg-white/10 backdrop-blur rounded-lg p-2.5 sm:p-3 md:p-4 border border-white/20">
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold text-madrid-gold">{player.stats?.goals || 0}</div>
+                <div className="text-xs md:text-sm text-blue-200 dark:text-blue-300"><TranslatedText text="Buts" as="span" /></div>
               </div>
-              <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
-                <div className="text-3xl font-bold text-madrid-gold">{player.stats?.assists || 0}</div>
-                <div className="text-sm text-blue-200 dark:text-blue-300"><TranslatedText text="Passes D." as="span" /></div>
+              <div className="bg-white/10 backdrop-blur rounded-lg p-2.5 sm:p-3 md:p-4 border border-white/20">
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold text-madrid-gold">{player.stats?.assists || 0}</div>
+                <div className="text-xs md:text-sm text-blue-200 dark:text-blue-300"><TranslatedText text="Passes D." as="span" /></div>
               </div>
-              <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
-                <div className="text-3xl font-bold text-madrid-gold">{player.stats?.matches || 0}</div>
-                <div className="text-sm text-blue-200 dark:text-blue-300"><TranslatedText text="Matchs" as="span" /></div>
+              <div className="bg-white/10 backdrop-blur rounded-lg p-2.5 sm:p-3 md:p-4 border border-white/20">
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold text-madrid-gold">{player.stats?.matches || 0}</div>
+                <div className="text-xs md:text-sm text-blue-200 dark:text-blue-300"><TranslatedText text="Matchs" as="span" /></div>
               </div>
-              <div className="bg-white/10 backdrop-blur rounded-lg p-4 border border-white/20">
-                <div className="text-3xl font-bold text-madrid-gold">{Math.round((player.stats?.minutesPlayed || 0) / 60)}</div>
-                <div className="text-sm text-blue-200 dark:text-blue-300"><TranslatedText text="Heures" as="span" /></div>
+              <div className="bg-white/10 backdrop-blur rounded-lg p-2.5 sm:p-3 md:p-4 border border-white/20">
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold text-madrid-gold">{Math.round((player.stats?.minutesPlayed || 0) / 60)}</div>
+                <div className="text-xs md:text-sm text-blue-200 dark:text-blue-300"><TranslatedText text="Heures" as="span" /></div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex gap-4 mt-8">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4 md:mt-8">
           <Button asChild className="flex-1 bg-madrid-gold text-black hover:bg-yellow-400">
             <Link to={`/players/${player.id}`}>
               <Trophy className="mr-2 h-4 w-4" />
@@ -174,7 +182,8 @@ export function PlayerSpotlight() {
           </Button>
         </div>
       </div>
-    </div>;
+    </div>
+  );
   return <section className="py-12 bg-gradient-to-br from-madrid-blue to-blue-900 dark:from-gray-900 dark:to-gray-800">
       <div className="madrid-container">
         <h2 className="section-title text-white mb-8">
