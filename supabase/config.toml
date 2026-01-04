@@ -49,3 +49,7 @@ verify_jwt = true
 # Weekly moderator report - CRON job
 [functions.weekly-moderator-report]
 verify_jwt = false
+
+# Live blog scraper - requires authentication
+[functions.scrape-live-blog]
+verify_jwt = true

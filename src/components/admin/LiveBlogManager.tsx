@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Radio, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Radio, Calendar, Download, Loader2, Link } from 'lucide-react';
 import { useLiveBlog, NewLiveBlogEntry } from '@/hooks/useLiveBlog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { Match } from '@/types/Match';
+import { liveBlogScraperApi } from '@/lib/api/liveBlogScraper';
 
 import { QuickActionBar } from './liveblog/QuickActionBar';
 import { GoalEntryModal } from './liveblog/GoalEntryModal';
@@ -39,6 +42,10 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
   const { toast } = useToast();
   
   const [submitting, setSubmitting] = useState(false);
+  
+  // Import from URL states
+  const [importUrl, setImportUrl] = useState('');
+  const [importing, setImporting] = useState(false);
   
   // Modal states
   const [goalModalOpen, setGoalModalOpen] = useState(false);
@@ -264,6 +271,40 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
     }
   };
 
+  const handleImportFromUrl = async () => {
+    if (!selectedMatchId || !importUrl.trim()) {
+      toast({ title: 'Veuillez entrer une URL', variant: 'destructive' });
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const result = await liveBlogScraperApi.importFromUrl(importUrl.trim(), selectedMatchId);
+      
+      if (result.success) {
+        toast({ 
+          title: 'Import réussi', 
+          description: `${result.entriesImported} entrées importées` 
+        });
+        setImportUrl('');
+      } else {
+        toast({ 
+          title: 'Erreur d\'import', 
+          description: result.error || 'Impossible d\'importer le live blog',
+          variant: 'destructive' 
+        });
+      }
+    } catch (error) {
+      toast({ 
+        title: 'Erreur', 
+        description: 'Une erreur est survenue lors de l\'import',
+        variant: 'destructive' 
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const selectedMatch = matches.find(m => m.id === selectedMatchId);
 
   return (
@@ -312,6 +353,49 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Import from URL */}
+      {selectedMatchId && (
+        <Card>
+          <CardHeader className="py-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Link className="w-4 h-4" />
+              Importer depuis Real Madrid
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex gap-2">
+              <Input
+                placeholder="https://www.realmadrid.com/en/live-blog/..."
+                value={importUrl}
+                onChange={(e) => setImportUrl(e.target.value)}
+                disabled={importing}
+                className="flex-1"
+              />
+              <Button 
+                onClick={handleImportFromUrl} 
+                disabled={importing || !importUrl.trim()}
+                variant="secondary"
+              >
+                {importing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Import...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Importer
+                  </>
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Collez l'URL du live blog officiel du Real Madrid pour importer automatiquement les événements
+            </p>
           </CardContent>
         </Card>
       )}
