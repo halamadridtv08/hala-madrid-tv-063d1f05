@@ -93,8 +93,10 @@ export const UserRolesManager = () => {
       );
     }
 
-    // Filter by role
-    if (roleFilter !== "all") {
+    // Filter by role - by default only show admin and moderator
+    if (roleFilter === "all") {
+      filtered = filtered.filter(role => role.role === 'admin' || role.role === 'moderator');
+    } else {
       filtered = filtered.filter(role => role.role === roleFilter);
     }
 
