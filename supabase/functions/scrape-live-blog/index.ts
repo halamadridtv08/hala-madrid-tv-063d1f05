@@ -81,9 +81,71 @@ function detectEntryType(content: string): { type: string; title: string; isImpo
   return { type: 'comment', title: 'Commentaire', isImportant: false };
 }
 
+// Check if content is a social media/spam comment to skip
+function isSocialMediaOrSpam(content: string): boolean {
+  const lowerContent = content.toLowerCase();
+  
+  // Skip Instagram/Twitter/social media links and embeds
+  if (/instagram\.com|twitter\.com|x\.com|facebook\.com|tiktok\.com/i.test(content)) {
+    return true;
+  }
+  
+  // Skip image/media only entries with no real content
+  if (/^\!\[.*\]\(https?:\/\/cdn\.|^\[.*likes?\]|^\[view all.*comments\]/i.test(content)) {
+    return true;
+  }
+  
+  // Skip reaction/emoji only entries
+  if (/^\!\[(heart|blowmind|fire|clap|like|wow)\]/i.test(content)) {
+    return true;
+  }
+  
+  // Skip monterosa.cloud CDN assets (reaction images)
+  if (/monterosa\.cloud/i.test(content)) {
+    return true;
+  }
+  
+  // Skip entries that are just numbers or very short
+  if (/^[\d\s\-\:\.\,]+$/.test(content.trim())) {
+    return true;
+  }
+  
+  // Skip "view all X comments" type entries
+  if (/view all \d+ comments|ver todos los|voir tous les/i.test(content)) {
+    return true;
+  }
+  
+  return false;
+}
+
+// Check if content looks like a real match event
+function isMatchEvent(content: string): boolean {
+  const eventPatterns = [
+    /\b(goal|gol|but|⚽|golazo|marca|scores?)\b/i,
+    /\b(yellow|red|card|carton|tarjeta|🟨|🟥)\b/i,
+    /\b(substit|cambio|changement|reemplaz|🔄|entra|sale|on for|off for)\b/i,
+    /\b(kick[-\s]?off|coup d'envoi|inicio|empieza|arranca)\b/i,
+    /\b(half[-\s]?time|mi[-\s]?temps|descanso|entretiempo)\b/i,
+    /\b(full[-\s]?time|fin|final|termina|over)\b/i,
+    /\b(var|video assistant|penalt|penal)\b/i,
+    /\b(corner|falta|foul|offside|fuera de juego|hors-jeu)\b/i,
+    /\b(save|saves?|parada|arrêt|portero|keeper)\b/i,
+    /\b(shot|tiro|frappe|disparo|chance|occasion)\b/i,
+    /\b(header|cabeza|tête|cross|centro|pase)\b/i,
+    /\b(free[-\s]?kick|coup franc|tiro libre)\b/i,
+    /\b(injury|bless|lesión|injured|down|hurt)\b/i,
+    /\b(extra[-\s]?time|prolongation|prórroga|added time|stoppage)\b/i,
+    /\b(whistle|referee|arbitro|árbitro)\b/i,
+    /\d+[''′]\s*[-–—]?\s*\w+/i, // Minute followed by text (e.g., "45' - Goal")
+  ];
+  
+  return eventPatterns.some(pattern => pattern.test(content));
+}
+
 // Parse scraped content into live blog entries
 function parseEntries(markdown: string): LiveBlogEntry[] {
   const entries: LiveBlogEntry[] = [];
+  const seenContent = new Set<string>(); // Avoid duplicates
   
   // Split by common delimiters (newlines, bullets, numbered lists)
   const lines = markdown.split(/\n+/).filter(line => line.trim().length > 10);
@@ -91,8 +153,18 @@ function parseEntries(markdown: string): LiveBlogEntry[] {
   for (const line of lines) {
     const cleanLine = line.trim();
     
-    // Skip headers and navigation elements
-    if (cleanLine.startsWith('#') || cleanLine.length < 15) continue;
+    // Skip headers, navigation elements, and short lines
+    if (cleanLine.startsWith('#') || cleanLine.length < 20) continue;
+    
+    // Skip social media and spam content
+    if (isSocialMediaOrSpam(cleanLine)) {
+      continue;
+    }
+    
+    // Only keep actual match events
+    if (!isMatchEvent(cleanLine)) {
+      continue;
+    }
     
     // Try to extract minute from the beginning of the line
     const minuteMatch = cleanLine.match(/^(\d+)[''′]?\s*[-–—:]?\s*/);
@@ -111,13 +183,18 @@ function parseEntries(markdown: string): LiveBlogEntry[] {
     }
     
     // Skip if content is too short after extracting minute
-    if (content.length < 10) continue;
+    if (content.length < 15) continue;
+    
+    // Skip duplicates (normalize for comparison)
+    const normalizedContent = content.toLowerCase().replace(/\s+/g, ' ').substring(0, 100);
+    if (seenContent.has(normalizedContent)) continue;
+    seenContent.add(normalizedContent);
     
     const { type, title, isImportant } = detectEntryType(content);
     
-    // Determine team side based on content (simplified detection)
+    // Determine team side based on content
     let teamSide: 'home' | 'away' | null = null;
-    if (/real madrid|los blancos|madrid/i.test(content)) {
+    if (/real madrid|los blancos|madrid|merengues/i.test(content)) {
       teamSide = 'home';
     }
     
