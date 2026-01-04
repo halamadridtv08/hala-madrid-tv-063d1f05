@@ -173,17 +173,17 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
         <MatchJsonImporter />
         
         <Card>
-          <CardHeader>
+          <CardHeader className="px-3 sm:px-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-              <CardTitle>Matchs ({matches.length})</CardTitle>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={handleSyncAllRecent} disabled={loading}>
-                  {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-                  Sync API
+              <CardTitle className="text-base sm:text-lg">Matchs ({matches.length})</CardTitle>
+              <div className="flex gap-1.5 sm:gap-2">
+                <Button variant="outline" size="sm" onClick={handleSyncAllRecent} disabled={loading} className="h-8 text-xs sm:text-sm">
+                  {loading ? <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin sm:mr-2" /> : <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" />}
+                  <span className="hidden sm:inline">Sync API</span>
                 </Button>
-                <Button onClick={handleAddMatch}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouveau match
+                <Button onClick={handleAddMatch} size="sm" className="h-8 text-xs sm:text-sm">
+                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Nouveau match</span>
                 </Button>
               </div>
             </div>

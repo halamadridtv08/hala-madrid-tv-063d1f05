@@ -58,20 +58,20 @@ export function QuickStatsCard({
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-6">
       {stats.map((stat) => (
         <Card key={stat.title} className="hover:shadow-lg transition-all duration-200 hover:scale-105">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
               {stat.title}
             </CardTitle>
-            <div className={`w-8 h-8 rounded-full ${stat.color} flex items-center justify-center`}>
-              <stat.icon className="h-4 w-4 text-white" />
+            <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full ${stat.color} flex items-center justify-center`}>
+              <stat.icon className="h-3 w-3 sm:h-4 sm:w-4 text-white" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-            <Badge variant="secondary" className="mt-1 text-xs">
+          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+            <div className="text-lg sm:text-2xl font-bold">{stat.value}</div>
+            <Badge variant="secondary" className="mt-1 text-[10px] sm:text-xs hidden sm:inline-flex">
               {stat.trend}
             </Badge>
           </CardContent>
