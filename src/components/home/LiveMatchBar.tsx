@@ -226,74 +226,57 @@ export function LiveMatchBar() {
             </p>
           )}
 
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
-            {/* Promo image */}
-            {settings?.promo_image_url && (
-              <a 
-                href={settings.promo_link || '#'} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="shrink-0 hidden lg:block"
-              >
-                <img 
-                  src={settings.promo_image_url} 
-                  alt="Promo" 
-                  className="h-10 w-auto object-contain"
-                />
-              </a>
-            )}
-
-            {/* Info compétition et lieu */}
-            <div className="flex flex-col text-sm text-white/70 min-w-0">
-              <span className="font-semibold text-white truncate">
+          <div className="flex flex-col items-center gap-3">
+            {/* Info compétition - Mobile optimized */}
+            <div className="flex flex-col items-center text-sm text-white/70">
+              <span className="font-semibold text-white text-center text-xs sm:text-sm">
                 {match.competition || "Football"}
               </span>
-              <div className="flex items-center gap-2 text-xs">
-                <Calendar className="h-3 w-3" />
+              <div className="flex items-center gap-2 text-[10px] sm:text-xs">
+                <Calendar className="h-3 w-3 shrink-0" />
                 <span>{format(matchDate, "EEEE dd MMMM", { locale: dateLocale })}</span>
               </div>
               {match.venue && (
-                <div className="flex items-center gap-2 text-xs">
-                  <MapPin className="h-3 w-3" />
-                  <span className="truncate">{match.venue}</span>
+                <div className="flex items-center gap-2 text-[10px] sm:text-xs">
+                  <MapPin className="h-3 w-3 shrink-0" />
+                  <span className="truncate max-w-[200px]">{match.venue}</span>
                 </div>
               )}
               <div className="flex items-center gap-2 text-xs mt-1">
-                <Monitor className="h-3 w-3" />
+                <Monitor className="h-3 w-3 shrink-0" />
                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getStatusColor()} ${state === 'live' ? 'animate-pulse' : ''}`}>
                   {getStatusLabel()}
                 </span>
               </div>
             </div>
 
-            {/* Équipes et score */}
-            <div className="flex items-center gap-4 lg:gap-8">
+            {/* Équipes et score - Mobile layout */}
+            <div className="flex items-center justify-center gap-2 sm:gap-4 w-full">
               {/* Équipe domicile */}
-              <div className="flex items-center gap-3">
-                <span className="text-lg lg:text-xl font-bold text-right min-w-[100px] lg:min-w-[150px] truncate">
+              <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-end min-w-0">
+                <span className="text-xs sm:text-base lg:text-xl font-bold text-right truncate max-w-[80px] sm:max-w-[120px] lg:max-w-[150px]">
                   {match.home_team}
                 </span>
                 {match.home_team_logo && (
                   <img 
                     src={match.home_team_logo} 
                     alt={match.home_team}
-                    className="w-10 h-10 lg:w-12 lg:h-12 object-contain"
+                    className="w-7 h-7 sm:w-10 sm:h-10 lg:w-12 lg:h-12 object-contain shrink-0"
                   />
                 )}
               </div>
 
-              {/* Score et minuteur */}
+              {/* Score */}
               {(settings?.show_scores !== false) && (
-                <div className="flex flex-col items-center gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl lg:text-3xl font-bold">{match.home_score ?? 0}</span>
-                    <span className="text-xl text-white/50">-</span>
-                    <span className="text-2xl lg:text-3xl font-bold">{match.away_score ?? 0}</span>
+                <div className="flex flex-col items-center gap-0.5 sm:gap-1 shrink-0 px-1 sm:px-2">
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    <span className="text-lg sm:text-2xl lg:text-3xl font-bold">{match.home_score ?? 0}</span>
+                    <span className="text-sm sm:text-xl text-white/50">-</span>
+                    <span className="text-lg sm:text-2xl lg:text-3xl font-bold">{match.away_score ?? 0}</span>
                   </div>
                   {state === 'live' && (settings?.show_timer !== false) && (
-                    <div className="px-3 py-1 bg-red-500/20 border border-red-500/50 rounded-full">
-                      <span className="text-sm font-bold text-red-400 animate-pulse">
+                    <div className="px-2 py-0.5 sm:px-3 sm:py-1 bg-red-500/20 border border-red-500/50 rounded-full">
+                      <span className="text-[10px] sm:text-sm font-bold text-red-400 animate-pulse">
                         {displayMinute}'
                       </span>
                     </div>
@@ -302,15 +285,15 @@ export function LiveMatchBar() {
               )}
 
               {/* Équipe extérieur */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-start min-w-0">
                 {match.away_team_logo && (
                   <img 
                     src={match.away_team_logo} 
                     alt={match.away_team}
-                    className="w-10 h-10 lg:w-12 lg:h-12 object-contain"
+                    className="w-7 h-7 sm:w-10 sm:h-10 lg:w-12 lg:h-12 object-contain shrink-0"
                   />
                 )}
-                <span className="text-lg lg:text-xl font-bold text-left min-w-[100px] lg:min-w-[150px] truncate">
+                <span className="text-xs sm:text-base lg:text-xl font-bold text-left truncate max-w-[80px] sm:max-w-[120px] lg:max-w-[150px]">
                   {match.away_team}
                 </span>
               </div>
@@ -319,14 +302,32 @@ export function LiveMatchBar() {
             {/* Bouton suivre */}
             <Button 
               variant="outline" 
+              size="sm"
               onClick={(e) => {
                 e.stopPropagation();
                 handleFollowMatch();
               }}
-              className="border-white/30 text-white hover:bg-white hover:text-[hsl(222,47%,20%)] transition-colors"
+              className="border-white/30 text-white hover:bg-white hover:text-[hsl(222,47%,20%)] transition-colors text-xs sm:text-sm"
             >
               {settings?.custom_cta_text || t.followMatch}
             </Button>
+
+            {/* Promo image - hidden on mobile */}
+            {settings?.promo_image_url && (
+              <a 
+                href={settings.promo_link || '#'} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="shrink-0 hidden lg:block absolute right-4 top-1/2 -translate-y-1/2"
+              >
+                <img 
+                  src={settings.promo_image_url} 
+                  alt="Promo" 
+                  className="h-10 w-auto object-contain"
+                />
+              </a>
+            )}
           </div>
         </div>
       </motion.div>
