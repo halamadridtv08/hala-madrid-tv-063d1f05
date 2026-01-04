@@ -9,18 +9,19 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
-  Play, Pause, Square, Timer, Radio, Trash2, Send, Calendar, 
+  Play, Pause, Square, Timer, Radio, Trash2, Pencil, Send, Calendar, 
   Image, Upload, X, Target, AlertCircle, Download, Link, Loader2
 } from 'lucide-react';
 import { liveBlogScraperApi } from '@/lib/api/liveBlogScraper';
 import { useMatchTimer } from '@/hooks/useMatchTimer';
-import { useLiveBlog } from '@/hooks/useLiveBlog';
+import { useLiveBlog, LiveBlogEntry } from '@/hooks/useLiveBlog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { Match } from '@/types/Match';
+import { EditEntryModal } from './liveblog/EditEntryModal';
 
 interface MatchControlCenterProps {
   matchId?: string;
@@ -67,7 +68,14 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
     loading: timerLoading 
   } = useMatchTimer(selectedMatchId);
   
-  const { entries, addEntry, deleteEntry, loading: blogLoading } = useLiveBlog(selectedMatchId);
+  const { 
+    entries,
+    addEntry,
+    updateEntry,
+    deleteEntry,
+    deleteAllEntries,
+    loading: blogLoading,
+  } = useLiveBlog(selectedMatchId);
   const { user } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -82,6 +90,11 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
   const [imagePreview, setImagePreview] = useState<string>('');
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<LiveBlogEntry | null>(null);
+  const [editSubmitting, setEditSubmitting] = useState(false);
   
   // Extra time input
   const [extraTimeInput, setExtraTimeInput] = useState<string>('');
@@ -452,11 +465,34 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
       await deleteEntry(entryId);
       toast({ title: 'Entrée supprimée' });
     } catch (error: any) {
-      toast({ 
-        title: 'Erreur', 
-        description: error.message || 'Impossible de supprimer', 
-        variant: 'destructive' 
+      toast({
+        title: 'Erreur',
+        description: error.message || 'Impossible de supprimer',
+        variant: 'destructive',
       });
+    }
+  };
+
+  const handleEditEntry = (entry: LiveBlogEntry) => {
+    setEditingEntry(entry);
+    setEditModalOpen(true);
+  };
+
+  const handleEditSubmit = async (id: string, updates: Partial<LiveBlogEntry>) => {
+    setEditSubmitting(true);
+    try {
+      await updateEntry(id, updates);
+      toast({ title: 'Entrée modifiée' });
+      setEditModalOpen(false);
+      setEditingEntry(null);
+    } catch (error: any) {
+      toast({
+        title: 'Erreur',
+        description: error.message || 'Impossible de modifier',
+        variant: 'destructive',
+      });
+    } finally {
+      setEditSubmitting(false);
     }
   };
 
@@ -908,6 +944,7 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
 
                   // Important: stop auto-sync first, otherwise entries will be re-imported
                   const wasAutoSync = autoSync;
+                  const deletedCount = entries.length;
                   if (autoSyncIntervalRef.current) {
                     clearInterval(autoSyncIntervalRef.current);
                     autoSyncIntervalRef.current = null;
@@ -917,17 +954,17 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
                     setLastSyncTime(null);
                   }
 
-                  const { error } = await supabase
-                    .from('live_blog_entries')
-                    .delete()
-                    .eq('match_id', selectedMatchId);
-
-                  if (error) {
-                    toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
-                  } else {
+                  try {
+                    await deleteAllEntries();
                     toast({
                       title: 'Succès',
-                      description: `${entries.length} entrées supprimées${wasAutoSync ? ' — sync auto désactivée' : ''}`,
+                      description: `${deletedCount} entrées supprimées${wasAutoSync ? ' — sync auto désactivée' : ''}`,
+                    });
+                  } catch (error: any) {
+                    toast({
+                      title: 'Erreur',
+                      description: error.message || 'Impossible de supprimer',
+                      variant: 'destructive',
                     });
                   }
                 }}
@@ -978,14 +1015,24 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
                         />
                       )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteEntry(entry.id)}
-                      className="hover:bg-destructive/10"
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditEntry(entry)}
+                        className="hover:bg-accent/50"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteEntry(entry.id)}
+                        className="hover:bg-destructive/10"
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1004,6 +1051,17 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
           </CardContent>
         </Card>
       )}
+
+      <EditEntryModal
+        open={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setEditingEntry(null);
+        }}
+        onSubmit={handleEditSubmit}
+        entry={editingEntry}
+        isSubmitting={editSubmitting}
+      />
     </div>
   );
 };

@@ -80,8 +80,7 @@ export const useLiveBlog = (matchId: string | undefined) => {
           
           if (payload.eventType === 'INSERT') {
             const newEntry = payload.new as LiveBlogEntry;
-            setEntries((prev) => [newEntry, ...prev]);
-            
+            setEntries((prev) => (prev.some((e) => e.id === newEntry.id) ? prev : [newEntry, ...prev]));
             if (newEntry.is_important) {
               toast({
                 title: `${newEntry.minute ? `${newEntry.minute}'` : ''} ${newEntry.title || 'Mise à jour'}`,
@@ -119,7 +118,13 @@ export const useLiveBlog = (matchId: string | undefined) => {
       console.error('Error adding live blog entry:', error);
       throw error;
     }
-    return data as LiveBlogEntry;
+
+    const created = data as LiveBlogEntry;
+
+    // Optimistic/local sync (realtime can be delayed)
+    setEntries((prev) => (prev.some((e) => e.id === created.id) ? prev : [created, ...prev]));
+
+    return created;
   };
 
   const updateEntry = async (id: string, updates: Partial<LiveBlogEntry>) => {
@@ -132,9 +137,15 @@ export const useLiveBlog = (matchId: string | undefined) => {
       console.error('Error updating live blog entry:', error);
       throw error;
     }
+
+    // Optimistic/local sync (merge fields)
+    setEntries((prev) => prev.map((e) => (e.id === id ? ({ ...e, ...updates } as LiveBlogEntry) : e)));
   };
 
   const deleteEntry = async (id: string) => {
+    const previous = entries;
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+
     const { error } = await supabase
       .from('live_blog_entries')
       .delete()
@@ -142,6 +153,27 @@ export const useLiveBlog = (matchId: string | undefined) => {
 
     if (error) {
       console.error('Error deleting live blog entry:', error);
+      // rollback
+      setEntries(previous);
+      throw error;
+    }
+  };
+
+  const deleteAllEntries = async () => {
+    if (!matchId) return;
+
+    const previous = entries;
+    setEntries([]);
+
+    const { error } = await supabase
+      .from('live_blog_entries')
+      .delete()
+      .eq('match_id', matchId);
+
+    if (error) {
+      console.error('Error deleting all live blog entries:', error);
+      // rollback
+      setEntries(previous);
       throw error;
     }
   };
@@ -151,6 +183,7 @@ export const useLiveBlog = (matchId: string | undefined) => {
     loading,
     addEntry,
     updateEntry,
-    deleteEntry
+    deleteEntry,
+    deleteAllEntries,
   };
 };
