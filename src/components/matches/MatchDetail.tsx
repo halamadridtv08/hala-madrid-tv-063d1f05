@@ -251,9 +251,9 @@ export const MatchDetail = ({
     number: 15
   }];
 
-  // Utiliser les vraies compos ou les données par défaut
-  const finalOpposingLineup = opposingLineup.length > 0 ? opposingLineup : defaultOpposingLineup;
-  const finalOpposingSubs = opposingSubs.length > 0 ? opposingSubs : defaultOpposingSubs;
+  // Utiliser les vraies compos uniquement - afficher message "aucune composition" sinon
+  const finalOpposingLineup = opposingLineup;
+  const finalOpposingSubs = opposingSubs;
 
   // Les joueurs absents viennent maintenant de la base de données via le state
 
