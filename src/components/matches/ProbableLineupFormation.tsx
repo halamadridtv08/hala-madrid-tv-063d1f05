@@ -6,9 +6,11 @@ import { PlayerOnField } from './PlayerOnField';
 import { Users } from 'lucide-react';
 
 interface PlayerType {
+  id?: string;
   name: string;
   position: string;
   number: number;
+  imageUrl?: string;
 }
 
 interface ProbableLineupFormationProps {
@@ -141,7 +143,7 @@ export const ProbableLineupFormation: React.FC<ProbableLineupFormationProps> = (
 
   const renderFormation = (lineup: PlayerType[], subs: PlayerType[], teamName: string) => {
     const playersWithPositions = assignPositionsToPlayers(lineup);
-    
+
     return (
       <div className="space-y-6">
         {/* Formation badge */}
@@ -157,13 +159,13 @@ export const ProbableLineupFormation: React.FC<ProbableLineupFormationProps> = (
             <FootballPitch>
               {playersWithPositions.map((player, index) => (
                 <PlayerOnField
-                  key={`${player.name}-${index}`}
+                  key={`${player.id || player.name}-${index}`}
                   player={{
-                    id: `player-${index}`,
+                    id: player.id || `player-${index}`,
                     player_name: player.name,
                     player_position: player.position,
                     jersey_number: player.number,
-                    player_image_url: undefined,
+                    player_image_url: player.imageUrl,
                     player_rating: 0,
                   }}
                   style={{
@@ -187,14 +189,24 @@ export const ProbableLineupFormation: React.FC<ProbableLineupFormationProps> = (
             <div className="flex flex-wrap gap-2 md:gap-3 p-3 md:p-4 bg-muted/50 rounded-lg">
               {subs.map((player, index) => (
                 <div
-                  key={`${player.name}-${index}`}
+                  key={`${player.id || player.name}-${index}`}
                   className="flex items-center gap-2 md:gap-3 bg-background p-2 rounded-lg border min-w-0 flex-shrink-0"
                 >
-                  {/* Player initials */}
+                  {/* Player avatar */}
                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-blue-600 flex-shrink-0 bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                    <span className="text-xs font-bold text-primary-foreground">
-                      {player.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                    </span>
+                    {player.imageUrl ? (
+                      <img
+                        src={player.imageUrl}
+                        alt={player.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <span className="text-xs font-bold text-primary-foreground">
+                        {player.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                      </span>
+                    )}
                   </div>
 
                   {/* Number */}
