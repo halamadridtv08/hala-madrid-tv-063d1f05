@@ -10,8 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
   Play, Pause, Square, Timer, Radio, Trash2, Send, Calendar, 
-  Image, Upload, X, Target, AlertCircle
+  Image, Upload, X, Target, AlertCircle, Download, Link, Loader2
 } from 'lucide-react';
+import { liveBlogScraperApi } from '@/lib/api/liveBlogScraper';
 import { useMatchTimer } from '@/hooks/useMatchTimer';
 import { useLiveBlog } from '@/hooks/useLiveBlog';
 import { useToast } from '@/hooks/use-toast';
@@ -84,6 +85,10 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
   
   // Extra time input
   const [extraTimeInput, setExtraTimeInput] = useState<string>('');
+  
+  // Import from URL states
+  const [importUrl, setImportUrl] = useState('');
+  const [importing, setImporting] = useState(false);
 
   // Fetch matches
   useEffect(() => {
@@ -442,6 +447,59 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
                 ))}
               </SelectContent>
             </Select>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Import from Real Madrid Live Blog */}
+      {selectedMatchId && (
+        <Card>
+          <CardHeader className="py-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Link className="w-4 h-4" />
+              Importer depuis Real Madrid
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex gap-2">
+              <Input
+                placeholder="https://www.realmadrid.com/en/live-blog/..."
+                value={importUrl}
+                onChange={(e) => setImportUrl(e.target.value)}
+                disabled={importing}
+                className="flex-1"
+              />
+              <Button 
+                onClick={async () => {
+                  if (!importUrl.trim()) return;
+                  setImporting(true);
+                  try {
+                    const result = await liveBlogScraperApi.importFromUrl(importUrl.trim(), selectedMatchId);
+                    if (result.success) {
+                      toast({ title: 'Import réussi', description: `${result.entriesImported} entrées importées` });
+                      setImportUrl('');
+                    } else {
+                      toast({ title: 'Erreur d\'import', description: result.error, variant: 'destructive' });
+                    }
+                  } catch (error) {
+                    toast({ title: 'Erreur', description: 'Impossible d\'importer le live blog', variant: 'destructive' });
+                  } finally {
+                    setImporting(false);
+                  }
+                }}
+                disabled={importing || !importUrl.trim()}
+                variant="secondary"
+              >
+                {importing ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Import...</>
+                ) : (
+                  <><Download className="w-4 h-4 mr-2" />Importer</>
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Collez l'URL du live blog officiel du Real Madrid pour importer automatiquement les événements
+            </p>
           </CardContent>
         </Card>
       )}
