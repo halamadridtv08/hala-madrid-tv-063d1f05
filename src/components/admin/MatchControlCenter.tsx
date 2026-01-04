@@ -905,14 +905,30 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
                 size="sm"
                 onClick={async () => {
                   if (!confirm(`Supprimer les ${entries.length} entrées ?`)) return;
+
+                  // Important: stop auto-sync first, otherwise entries will be re-imported
+                  const wasAutoSync = autoSync;
+                  if (autoSyncIntervalRef.current) {
+                    clearInterval(autoSyncIntervalRef.current);
+                    autoSyncIntervalRef.current = null;
+                  }
+                  if (wasAutoSync) {
+                    setAutoSync(false);
+                    setLastSyncTime(null);
+                  }
+
                   const { error } = await supabase
                     .from('live_blog_entries')
                     .delete()
                     .eq('match_id', selectedMatchId);
+
                   if (error) {
                     toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
                   } else {
-                    toast({ title: 'Succès', description: `${entries.length} entrées supprimées` });
+                    toast({
+                      title: 'Succès',
+                      description: `${entries.length} entrées supprimées${wasAutoSync ? ' — sync auto désactivée' : ''}`,
+                    });
                   }
                 }}
               >
