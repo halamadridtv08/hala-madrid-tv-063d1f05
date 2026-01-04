@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Save, Users, Shield, Trash2, Plus, Grid3x3, Layout, Columns2, Rows2, Undo, Lock, Unlock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Save, Users, Shield, Trash2, Plus, Grid3x3, Layout, Columns2, Rows2, Undo, Lock, Unlock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -1214,46 +1214,48 @@ export const FormationManagerV2: React.FC = () => {
                             <ResizableHandle withHandle />
 
                             {/* Remplaçants - Redimensionnable */}
-                            <ResizablePanel defaultSize={35} minSize={25}>
-                              <Card className="h-full border-0 rounded-none">
-                                <CardHeader className="py-2">
-                                  <button
-                                    onClick={() => setIsSubstitutesOpen(!isSubstitutesOpen)}
-                                    className="flex items-center justify-between w-full"
-                                  >
-                                    <CardTitle className="text-sm">Remplaçants ({substitutes.length})</CardTitle>
-                                    {isSubstitutesOpen ? (
-                                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                                    ) : (
-                                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                    )}
-                                  </button>
-                                </CardHeader>
+                            <ResizablePanel defaultSize={isSubstitutesOpen ? 35 : 5} minSize={5} maxSize={isSubstitutesOpen ? 50 : 5}>
+                              <Card className="h-full border-0 rounded-none flex">
+                                <button
+                                  onClick={() => setIsSubstitutesOpen(!isSubstitutesOpen)}
+                                  className="flex items-center justify-center px-1 border-l border-border hover:bg-muted/50 transition-colors"
+                                >
+                                  {isSubstitutesOpen ? (
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </button>
                                 {isSubstitutesOpen && (
-                                <CardContent className="p-2">
-                                  <DroppableSubstitutes id="substitutes">
-                                    <ScrollArea className="h-[380px]">
-                                      <div className="space-y-1.5 pr-2">
-                                        {substitutes.length === 0 && (
-                                          <p className="text-xs text-muted-foreground p-2">Glissez des joueurs ici</p>
-                                        )}
-                                        {substitutes.map((player) => (
-                                          <DraggablePlayer
-                                            key={player.id}
-                                            id={player.id || player.player_id}
-                                            name={player.player_name}
-                                            position={player.player_position}
-                                            jerseyNumber={player.jersey_number}
-                                            imageUrl={player.player_image_url}
-                                            variant="list"
-                                            showDelete
-                                            onDelete={() => deletePlayer(player.id!)}
-                                          />
-                                        ))}
-                                      </div>
-                                    </ScrollArea>
-                                  </DroppableSubstitutes>
-                                </CardContent>
+                                  <div className="flex-1 flex flex-col overflow-hidden">
+                                    <CardHeader className="py-2">
+                                      <CardTitle className="text-sm">Remplaçants ({substitutes.length})</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-2 flex-1 overflow-hidden">
+                                      <DroppableSubstitutes id="substitutes">
+                                        <ScrollArea className="h-[380px]">
+                                          <div className="space-y-1.5 pr-2">
+                                            {substitutes.length === 0 && (
+                                              <p className="text-xs text-muted-foreground p-2">Glissez des joueurs ici</p>
+                                            )}
+                                            {substitutes.map((player) => (
+                                              <DraggablePlayer
+                                                key={player.id}
+                                                id={player.id || player.player_id}
+                                                name={player.player_name}
+                                                position={player.player_position}
+                                                jerseyNumber={player.jersey_number}
+                                                imageUrl={player.player_image_url}
+                                                variant="list"
+                                                showDelete
+                                                onDelete={() => deletePlayer(player.id!)}
+                                              />
+                                            ))}
+                                          </div>
+                                        </ScrollArea>
+                                      </DroppableSubstitutes>
+                                    </CardContent>
+                                  </div>
                                 )}
                               </Card>
                             </ResizablePanel>
@@ -1399,42 +1401,44 @@ export const FormationManagerV2: React.FC = () => {
                             </DroppableField>
 
                             {/* Remplaçants */}
-                            <Card>
-                              <CardHeader className="py-2">
-                                <button
-                                  onClick={() => setIsSubstitutesOpen(!isSubstitutesOpen)}
-                                  className="flex items-center justify-between w-full"
-                                >
-                                  <CardTitle className="text-sm">Remplaçants ({substitutes.length})</CardTitle>
-                                  {isSubstitutesOpen ? (
-                                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                                  ) : (
-                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                </button>
-                              </CardHeader>
+                            <Card className="flex">
+                              <button
+                                onClick={() => setIsSubstitutesOpen(!isSubstitutesOpen)}
+                                className="flex items-center justify-center px-2 border-r border-border hover:bg-muted/50 transition-colors rounded-l-lg"
+                              >
+                                {isSubstitutesOpen ? (
+                                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </button>
                               {isSubstitutesOpen && (
-                              <CardContent className="p-2">
-                                <DroppableSubstitutes id="substitutes">
-                                  <div className="flex flex-wrap gap-1.5 min-h-[100px]">
-                                    {substitutes.length === 0 && (
-                                      <p className="text-xs text-muted-foreground p-2">Glissez des joueurs ici pour les ajouter aux remplaçants</p>
-                                    )}
-                                    {substitutes.map((player) => (
-                                      <DraggablePlayer
-                                        key={player.id}
-                                        id={player.id || player.player_id || player.opposing_player_id || ''}
-                                        name={player.player_name}
-                                        position={player.player_position}
-                                        jerseyNumber={player.jersey_number}
-                                        variant="list"
-                                        showDelete
-                                        onDelete={() => deletePlayer(player.id!)}
-                                      />
-                                    ))}
-                                  </div>
-                                </DroppableSubstitutes>
-                              </CardContent>
+                                <div className="flex-1">
+                                  <CardHeader className="py-2">
+                                    <CardTitle className="text-sm">Remplaçants ({substitutes.length})</CardTitle>
+                                  </CardHeader>
+                                  <CardContent className="p-2">
+                                    <DroppableSubstitutes id="substitutes">
+                                      <div className="flex flex-wrap gap-1.5 min-h-[100px]">
+                                        {substitutes.length === 0 && (
+                                          <p className="text-xs text-muted-foreground p-2">Glissez des joueurs ici pour les ajouter aux remplaçants</p>
+                                        )}
+                                        {substitutes.map((player) => (
+                                          <DraggablePlayer
+                                            key={player.id}
+                                            id={player.id || player.player_id || player.opposing_player_id || ''}
+                                            name={player.player_name}
+                                            position={player.player_position}
+                                            jerseyNumber={player.jersey_number}
+                                            variant="list"
+                                            showDelete
+                                            onDelete={() => deletePlayer(player.id!)}
+                                          />
+                                        ))}
+                                      </div>
+                                    </DroppableSubstitutes>
+                                  </CardContent>
+                                </div>
                               )}
                             </Card>
                           </div>
@@ -1442,41 +1446,43 @@ export const FormationManagerV2: React.FC = () => {
                       </div>
 
                       {/* Liste des joueurs disponibles - En dessous sur mobile */}
-                      <Card className="lg:col-span-1 order-2 lg:order-1">
-                        <CardHeader className="py-3">
-                          <button
-                            onClick={() => setIsAvailablePlayersOpen(!isAvailablePlayersOpen)}
-                            className="flex items-center justify-between w-full"
-                          >
-                            <CardTitle className="text-sm">
-                              Joueurs disponibles ({availablePlayers.filter((p) => !isAssigned(p.id)).length})
-                            </CardTitle>
-                            {isAvailablePlayersOpen ? (
-                              <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                            )}
-                          </button>
-                        </CardHeader>
+                      <Card className="lg:col-span-1 order-2 lg:order-1 flex">
+                        <button
+                          onClick={() => setIsAvailablePlayersOpen(!isAvailablePlayersOpen)}
+                          className="flex items-center justify-center px-2 border-r border-border hover:bg-muted/50 transition-colors rounded-l-lg"
+                        >
+                          {isAvailablePlayersOpen ? (
+                            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </button>
                         {isAvailablePlayersOpen && (
-                        <CardContent className="p-2">
-                          <ScrollArea className="h-[300px] lg:h-[500px]">
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-1">
-                              {availablePlayers
-                                .filter((p) => !isAssigned(p.id))
-                                .map((player) => (
-                                  <DraggablePlayer
-                                    key={player.id}
-                                    id={player.id}
-                                    name={player.name}
-                                    position={player.position}
-                                    jerseyNumber={player.jersey_number}
-                                    variant="list"
-                                  />
-                                ))}
-                            </div>
-                          </ScrollArea>
-                        </CardContent>
+                          <div className="flex-1">
+                            <CardHeader className="py-3">
+                              <CardTitle className="text-sm">
+                                Joueurs disponibles ({availablePlayers.filter((p) => !isAssigned(p.id)).length})
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-2">
+                              <ScrollArea className="h-[300px] lg:h-[500px]">
+                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-1">
+                                  {availablePlayers
+                                    .filter((p) => !isAssigned(p.id))
+                                    .map((player) => (
+                                      <DraggablePlayer
+                                        key={player.id}
+                                        id={player.id}
+                                        name={player.name}
+                                        position={player.position}
+                                        jerseyNumber={player.jersey_number}
+                                        variant="list"
+                                      />
+                                    ))}
+                                </div>
+                              </ScrollArea>
+                            </CardContent>
+                          </div>
                         )}
                       </Card>
                     </div>
