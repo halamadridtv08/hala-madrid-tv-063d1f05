@@ -39,10 +39,9 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
   const fetchFormations = async () => {
     if (!match?.id) return;
     setLoading(true);
-    const {
-      data,
-      error
-    } = await supabase.from('match_formations').select(`
+    
+    // Fetch formations with players
+    const { data, error } = await supabase.from('match_formations').select(`
         id,
         team_type,
         formation,
@@ -57,20 +56,61 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
           player_name,
           player_position,
           player_image_url,
-          player_rating,
-          opposing_players:opposing_player_id (
-            photo_url
-          ),
-          players:player_id (
-            profile_image_url
-          )
+          player_rating
         )
       `).eq('match_id', match.id);
+      
     if (error) {
       console.error('Error fetching formations:', error);
       setLoading(false);
       return;
     }
+
+    // Collect all opposing_player_ids to fetch their photos
+    const opposingPlayerIds: string[] = [];
+    const playerIds: string[] = [];
+    
+    data?.forEach(formation => {
+      formation.match_formation_players?.forEach((player: any) => {
+        if (player.opposing_player_id) {
+          opposingPlayerIds.push(player.opposing_player_id);
+        }
+        if (player.player_id) {
+          playerIds.push(player.player_id);
+        }
+      });
+    });
+
+    // Fetch opposing players photos
+    let opposingPlayersMap: Record<string, string> = {};
+    if (opposingPlayerIds.length > 0) {
+      const { data: opposingPlayers } = await supabase
+        .from('opposing_players')
+        .select('id, photo_url')
+        .in('id', opposingPlayerIds);
+      
+      opposingPlayers?.forEach(p => {
+        if (p.photo_url) {
+          opposingPlayersMap[p.id] = p.photo_url;
+        }
+      });
+    }
+
+    // Fetch Real Madrid players photos
+    let playersMap: Record<string, string> = {};
+    if (playerIds.length > 0) {
+      const { data: players } = await supabase
+        .from('players')
+        .select('id, profile_image_url')
+        .in('id', playerIds);
+      
+      players?.forEach(p => {
+        if (p.profile_image_url) {
+          playersMap[p.id] = p.profile_image_url;
+        }
+      });
+    }
+
     const formationsData: any = {};
     data?.forEach(formation => {
       formationsData[formation.team_type] = {
@@ -78,10 +118,9 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
         formation: formation.formation,
         players: (formation.match_formation_players || []).map((player: any) => ({
           ...player,
-          // Use photo from opposing_players or players table if player_image_url is not set
           player_image_url: player.player_image_url 
-            || player.opposing_players?.photo_url 
-            || player.players?.profile_image_url 
+            || (player.opposing_player_id ? opposingPlayersMap[player.opposing_player_id] : null)
+            || (player.player_id ? playersMap[player.player_id] : null)
             || null
         }))
       };
