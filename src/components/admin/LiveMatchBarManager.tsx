@@ -394,7 +394,7 @@ export function LiveMatchBarManager() {
                       </div>}
 
                     {/* CTA Button */}
-                    <Button variant="outline" size="sm" className="border-white/30 text-white hover:text-black bg-white">
+                    <Button variant="outline" size="sm" className="border-white bg-white/10 text-white hover:bg-white hover:text-[hsl(222,47%,20%)] font-medium">
                       {formData.custom_cta_text || 'Suivre le match'}
                     </Button>
                   </div>
