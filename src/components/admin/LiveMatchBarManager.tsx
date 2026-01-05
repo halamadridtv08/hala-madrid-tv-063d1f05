@@ -13,13 +13,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Save, Eye, Image, Link, Palette, MessageSquare, Play, Monitor } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-
 export function LiveMatchBarManager() {
-  const { settings, loading, updateSettings } = useLiveMatchBarSettings();
-  const { matches, loading: matchesLoading } = useMatches();
+  const {
+    settings,
+    loading,
+    updateSettings
+  } = useLiveMatchBarSettings();
+  const {
+    matches,
+    loading: matchesLoading
+  } = useMatches();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     active_match_id: "",
@@ -53,7 +59,6 @@ export function LiveMatchBarManager() {
       });
     }
   }, [settings]);
-
   const handleSave = async () => {
     setSaving(true);
     const result = await updateSettings({
@@ -70,34 +75,32 @@ export function LiveMatchBarManager() {
       theme_color: formData.theme_color
     });
     setSaving(false);
-    
     if (result.success) {
       toast.success("Paramètres de la barre live enregistrés");
     } else {
       toast.error("Erreur lors de la sauvegarde");
     }
   };
-
   const handleImageUpload = async (file: File, field: 'background_image_url' | 'promo_image_url') => {
     if (!file) return;
-    
     setUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `live-bar-${field}-${Date.now()}.${fileExt}`;
       const filePath = `live-match-bar/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('media')
-        .upload(filePath, file);
-
+      const {
+        error: uploadError
+      } = await supabase.storage.from('media').upload(filePath, file);
       if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('media')
-        .getPublicUrl(filePath);
-
-      setFormData(prev => ({ ...prev, [field]: publicUrl }));
+      const {
+        data: {
+          publicUrl
+        }
+      } = supabase.storage.from('media').getPublicUrl(filePath);
+      setFormData(prev => ({
+        ...prev,
+        [field]: publicUrl
+      }));
       toast.success("Image uploadée avec succès");
     } catch (error: any) {
       toast.error("Erreur lors de l'upload: " + error.message);
@@ -108,17 +111,12 @@ export function LiveMatchBarManager() {
 
   // Get selected match details for preview
   const selectedMatch = matches?.find(m => m.id === formData.active_match_id);
-
   if (loading || matchesLoading) {
-    return (
-      <div className="flex items-center justify-center p-12">
+    return <div className="flex items-center justify-center p-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Barre Live Match</h2>
@@ -154,29 +152,28 @@ export function LiveMatchBarManager() {
                     Afficher la barre même si aucun match n'est en cours
                   </p>
                 </div>
-                <Switch
-                  id="forced-active"
-                  checked={formData.is_forced_active}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_forced_active: checked }))}
-                />
+                <Switch id="forced-active" checked={formData.is_forced_active} onCheckedChange={checked => setFormData(prev => ({
+                ...prev,
+                is_forced_active: checked
+              }))} />
               </div>
 
               <div className="space-y-2">
                 <Label>Match à afficher</Label>
-                <Select 
-                  value={formData.active_match_id || "__auto__"} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, active_match_id: value === "__auto__" ? "" : value }))}
-                >
+                <Select value={formData.active_match_id || "__auto__"} onValueChange={value => setFormData(prev => ({
+                ...prev,
+                active_match_id: value === "__auto__" ? "" : value
+              }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner un match (optionnel)" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__auto__">Auto-détection</SelectItem>
-                    {matches?.map(match => (
-                      <SelectItem key={match.id} value={match.id}>
-                        {match.home_team} vs {match.away_team} - {format(new Date(match.match_date), "dd/MM/yyyy HH:mm", { locale: fr })}
-                      </SelectItem>
-                    ))}
+                    {matches?.map(match => <SelectItem key={match.id} value={match.id}>
+                        {match.home_team} vs {match.away_team} - {format(new Date(match.match_date), "dd/MM/yyyy HH:mm", {
+                      locale: fr
+                    })}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
@@ -197,19 +194,17 @@ export function LiveMatchBarManager() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label htmlFor="show-scores">Afficher les scores</Label>
-                <Switch
-                  id="show-scores"
-                  checked={formData.show_scores}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, show_scores: checked }))}
-                />
+                <Switch id="show-scores" checked={formData.show_scores} onCheckedChange={checked => setFormData(prev => ({
+                ...prev,
+                show_scores: checked
+              }))} />
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="show-timer">Afficher le minuteur</Label>
-                <Switch
-                  id="show-timer"
-                  checked={formData.show_timer}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, show_timer: checked }))}
-                />
+                <Switch id="show-timer" checked={formData.show_timer} onCheckedChange={checked => setFormData(prev => ({
+                ...prev,
+                show_timer: checked
+              }))} />
               </div>
             </CardContent>
           </Card>
@@ -223,12 +218,10 @@ export function LiveMatchBarManager() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Textarea
-                placeholder="Ex: Match de gala! Ne manquez pas ce classique..."
-                value={formData.custom_message}
-                onChange={(e) => setFormData(prev => ({ ...prev, custom_message: e.target.value }))}
-                rows={3}
-              />
+              <Textarea placeholder="Ex: Match de gala! Ne manquez pas ce classique..." value={formData.custom_message} onChange={e => setFormData(prev => ({
+              ...prev,
+              custom_message: e.target.value
+            }))} rows={3} />
             </CardContent>
           </Card>
 
@@ -244,80 +237,55 @@ export function LiveMatchBarManager() {
               <div className="space-y-2">
                 <Label>Image de fond</Label>
                 <div className="flex gap-2">
-                  <Input
-                    placeholder="URL de l'image de fond"
-                    value={formData.background_image_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, background_image_url: e.target.value }))}
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    disabled={uploading}
-                    onClick={() => {
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = 'image/*';
-                      input.onchange = (e) => {
-                        const file = (e.target as HTMLInputElement).files?.[0];
-                        if (file) handleImageUpload(file, 'background_image_url');
-                      };
-                      input.click();
-                    }}
-                  >
+                  <Input placeholder="URL de l'image de fond" value={formData.background_image_url} onChange={e => setFormData(prev => ({
+                  ...prev,
+                  background_image_url: e.target.value
+                }))} />
+                  <Button variant="outline" size="icon" disabled={uploading} onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.onchange = e => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) handleImageUpload(file, 'background_image_url');
+                  };
+                  input.click();
+                }}>
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Image className="h-4 w-4" />}
                   </Button>
                 </div>
-                {formData.background_image_url && (
-                  <img 
-                    src={formData.background_image_url} 
-                    alt="Fond" 
-                    className="h-20 w-full object-cover rounded border"
-                  />
-                )}
+                {formData.background_image_url && <img src={formData.background_image_url} alt="Fond" className="h-20 w-full object-cover rounded border" />}
               </div>
 
               <div className="space-y-2">
                 <Label>Image promo (optionnel)</Label>
                 <div className="flex gap-2">
-                  <Input
-                    placeholder="URL de l'image promo"
-                    value={formData.promo_image_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, promo_image_url: e.target.value }))}
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    disabled={uploading}
-                    onClick={() => {
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = 'image/*';
-                      input.onchange = (e) => {
-                        const file = (e.target as HTMLInputElement).files?.[0];
-                        if (file) handleImageUpload(file, 'promo_image_url');
-                      };
-                      input.click();
-                    }}
-                  >
+                  <Input placeholder="URL de l'image promo" value={formData.promo_image_url} onChange={e => setFormData(prev => ({
+                  ...prev,
+                  promo_image_url: e.target.value
+                }))} />
+                  <Button variant="outline" size="icon" disabled={uploading} onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.onchange = e => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) handleImageUpload(file, 'promo_image_url');
+                  };
+                  input.click();
+                }}>
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Image className="h-4 w-4" />}
                   </Button>
                 </div>
-                {formData.promo_image_url && (
-                  <img 
-                    src={formData.promo_image_url} 
-                    alt="Promo" 
-                    className="h-16 w-auto object-contain rounded border"
-                  />
-                )}
+                {formData.promo_image_url && <img src={formData.promo_image_url} alt="Promo" className="h-16 w-auto object-contain rounded border" />}
               </div>
 
               <div className="space-y-2">
                 <Label>Lien de l'image promo</Label>
-                <Input
-                  placeholder="https://..."
-                  value={formData.promo_link}
-                  onChange={(e) => setFormData(prev => ({ ...prev, promo_link: e.target.value }))}
-                />
+                <Input placeholder="https://..." value={formData.promo_link} onChange={e => setFormData(prev => ({
+                ...prev,
+                promo_link: e.target.value
+              }))} />
               </div>
             </CardContent>
           </Card>
@@ -333,19 +301,17 @@ export function LiveMatchBarManager() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Texte du bouton</Label>
-                <Input
-                  placeholder="Suivre le match"
-                  value={formData.custom_cta_text}
-                  onChange={(e) => setFormData(prev => ({ ...prev, custom_cta_text: e.target.value }))}
-                />
+                <Input placeholder="Suivre le match" value={formData.custom_cta_text} onChange={e => setFormData(prev => ({
+                ...prev,
+                custom_cta_text: e.target.value
+              }))} />
               </div>
               <div className="space-y-2">
                 <Label>Lien du bouton</Label>
-                <Input
-                  placeholder="/live-blog/[match-id]"
-                  value={formData.custom_cta_link}
-                  onChange={(e) => setFormData(prev => ({ ...prev, custom_cta_link: e.target.value }))}
-                />
+                <Input placeholder="/live-blog/[match-id]" value={formData.custom_cta_link} onChange={e => setFormData(prev => ({
+                ...prev,
+                custom_cta_link: e.target.value
+              }))} />
               </div>
             </CardContent>
           </Card>
@@ -361,17 +327,14 @@ export function LiveMatchBarManager() {
             <CardContent>
               <div className="flex items-center gap-4">
                 <Label>Couleur de fond</Label>
-                <input
-                  type="color"
-                  value={formData.theme_color}
-                  onChange={(e) => setFormData(prev => ({ ...prev, theme_color: e.target.value }))}
-                  className="w-12 h-10 rounded border cursor-pointer"
-                />
-                <Input
-                  value={formData.theme_color}
-                  onChange={(e) => setFormData(prev => ({ ...prev, theme_color: e.target.value }))}
-                  className="w-32"
-                />
+                <input type="color" value={formData.theme_color} onChange={e => setFormData(prev => ({
+                ...prev,
+                theme_color: e.target.value
+              }))} className="w-12 h-10 rounded border cursor-pointer" />
+                <Input value={formData.theme_color} onChange={e => setFormData(prev => ({
+                ...prev,
+                theme_color: e.target.value
+              }))} className="w-32" />
               </div>
             </CardContent>
           </Card>
@@ -390,41 +353,23 @@ export function LiveMatchBarManager() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div 
-                className="rounded-lg overflow-hidden text-white relative"
-                style={{ 
-                  backgroundColor: formData.theme_color,
-                  backgroundImage: formData.background_image_url ? `url(${formData.background_image_url})` : undefined,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center'
-                }}
-              >
-                {formData.background_image_url && (
-                  <div className="absolute inset-0 bg-black/50" />
-                )}
+              <div className="rounded-lg overflow-hidden text-white relative" style={{
+              backgroundColor: formData.theme_color,
+              backgroundImage: formData.background_image_url ? `url(${formData.background_image_url})` : undefined,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}>
+                {formData.background_image_url && <div className="absolute inset-0 bg-black/50" />}
                 <div className="relative p-4">
-                  {formData.custom_message && (
-                    <p className="text-sm text-white/90 mb-3 text-center font-medium">
+                  {formData.custom_message && <p className="text-sm text-white/90 mb-3 text-center font-medium">
                       {formData.custom_message}
-                    </p>
-                  )}
+                    </p>}
                   
                   <div className="flex items-center justify-between gap-4">
                     {/* Promo image */}
-                    {formData.promo_image_url && (
-                      <a 
-                        href={formData.promo_link || '#'} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="shrink-0"
-                      >
-                        <img 
-                          src={formData.promo_image_url} 
-                          alt="Promo" 
-                          className="h-12 w-auto object-contain"
-                        />
-                      </a>
-                    )}
+                    {formData.promo_image_url && <a href={formData.promo_link || '#'} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                        <img src={formData.promo_image_url} alt="Promo" className="h-12 w-auto object-contain" />
+                      </a>}
 
                     {/* Match info */}
                     <div className="flex items-center gap-4 flex-1 justify-center">
@@ -432,13 +377,11 @@ export function LiveMatchBarManager() {
                         {selectedMatch?.home_team || 'Équipe A'}
                       </span>
                       
-                      {formData.show_scores && (
-                        <div className="flex items-center gap-2">
+                      {formData.show_scores && <div className="flex items-center gap-2">
                           <span className="text-2xl font-bold">{selectedMatch?.home_score ?? 0}</span>
                           <span className="text-white/50">-</span>
                           <span className="text-2xl font-bold">{selectedMatch?.away_score ?? 0}</span>
-                        </div>
-                      )}
+                        </div>}
                       
                       <span className="font-bold text-lg">
                         {selectedMatch?.away_team || 'Équipe B'}
@@ -446,14 +389,12 @@ export function LiveMatchBarManager() {
                     </div>
 
                     {/* Timer */}
-                    {formData.show_timer && (
-                      <div className="px-3 py-1 bg-red-500/20 border border-red-500/50 rounded-full">
+                    {formData.show_timer && <div className="px-3 py-1 bg-red-500/20 border border-red-500/50 rounded-full">
                         <span className="text-sm font-bold text-red-400 animate-pulse">45'</span>
-                      </div>
-                    )}
+                      </div>}
 
                     {/* CTA Button */}
-                    <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white hover:text-black">
+                    <Button variant="outline" size="sm" className="border-white/30 text-white hover:text-black bg-white">
                       {formData.custom_cta_text || 'Suivre le match'}
                     </Button>
                   </div>
@@ -463,13 +404,7 @@ export function LiveMatchBarManager() {
               <div className="mt-4 p-3 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground">
                   <strong>Status:</strong>{' '}
-                  {formData.is_forced_active ? (
-                    <span className="text-green-500">Forcée active</span>
-                  ) : formData.active_match_id ? (
-                    <span className="text-blue-500">Match sélectionné</span>
-                  ) : (
-                    <span className="text-orange-500">Auto-détection</span>
-                  )}
+                  {formData.is_forced_active ? <span className="text-green-500">Forcée active</span> : formData.active_match_id ? <span className="text-blue-500">Match sélectionné</span> : <span className="text-orange-500">Auto-détection</span>}
                 </p>
               </div>
             </CardContent>
@@ -481,25 +416,24 @@ export function LiveMatchBarManager() {
               <CardTitle>Actions rapides</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => {
-                  setFormData(prev => ({ ...prev, is_forced_active: true }));
-                  toast.info("N'oubliez pas d'enregistrer pour appliquer les changements");
-                }}
-              >
+              <Button variant="outline" className="w-full justify-start" onClick={() => {
+              setFormData(prev => ({
+                ...prev,
+                is_forced_active: true
+              }));
+              toast.info("N'oubliez pas d'enregistrer pour appliquer les changements");
+            }}>
                 <Play className="h-4 w-4 mr-2" />
                 Activer maintenant
               </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => {
-                  setFormData(prev => ({ ...prev, is_forced_active: false, active_match_id: "" }));
-                  toast.info("N'oubliez pas d'enregistrer pour appliquer les changements");
-                }}
-              >
+              <Button variant="outline" className="w-full justify-start" onClick={() => {
+              setFormData(prev => ({
+                ...prev,
+                is_forced_active: false,
+                active_match_id: ""
+              }));
+              toast.info("N'oubliez pas d'enregistrer pour appliquer les changements");
+            }}>
                 <Monitor className="h-4 w-4 mr-2" />
                 Repasser en auto-détection
               </Button>
@@ -507,6 +441,5 @@ export function LiveMatchBarManager() {
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
