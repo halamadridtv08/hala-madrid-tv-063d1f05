@@ -286,21 +286,32 @@ export function FooterLinksManager() {
                 </Select>
               </div>
 
-              {formData.link_type !== 'modal' && (
+              {formData.link_type === 'external' && (
                 <div>
                   <Label>URL</Label>
                   <Input
                     value={formData.url}
                     onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                    placeholder={formData.link_type === 'internal' ? '/page' : 'https://...'}
+                    placeholder="https://..."
                   />
                 </div>
               )}
 
-              {formData.link_type === 'modal' && (
+              {formData.link_type === 'internal' && (
+                <div>
+                  <Label>URL (page interne)</Label>
+                  <Input
+                    value={formData.url}
+                    onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                    placeholder="/mentions-legales"
+                  />
+                </div>
+              )}
+
+              {(formData.link_type === 'modal' || formData.link_type === 'internal') && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label>Contenu (HTML)</Label>
+                    <Label>Contenu de la page (HTML)</Label>
                     <Button
                       type="button"
                       variant="outline"
