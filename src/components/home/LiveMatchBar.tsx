@@ -226,10 +226,10 @@ export function LiveMatchBar() {
             </p>
           )}
 
-          <div className="flex flex-col items-center gap-3">
-            {/* Info compétition - Mobile optimized */}
-            <div className="flex flex-col items-center text-sm text-white/70">
-              <span className="font-semibold text-white text-center text-xs sm:text-sm">
+          <div className="flex items-center justify-between gap-4 w-full">
+            {/* Info compétition - Aligné à gauche */}
+            <div className="flex flex-col items-start text-sm text-white/70 min-w-0 shrink-0">
+              <span className="font-semibold text-white text-xs sm:text-sm">
                 {match.competition || "Football"}
               </span>
               <div className="flex items-center gap-2 text-[10px] sm:text-xs">
@@ -239,7 +239,7 @@ export function LiveMatchBar() {
               {match.venue && (
                 <div className="flex items-center gap-2 text-[10px] sm:text-xs">
                   <MapPin className="h-3 w-3 shrink-0" />
-                  <span className="truncate max-w-[200px]">{match.venue}</span>
+                  <span className="truncate max-w-[120px] sm:max-w-[200px]">{match.venue}</span>
                 </div>
               )}
               <div className="flex items-center gap-2 text-xs mt-1">
@@ -250,18 +250,18 @@ export function LiveMatchBar() {
               </div>
             </div>
 
-            {/* Équipes et score - Mobile layout */}
-            <div className="flex items-center justify-center gap-2 sm:gap-4 w-full">
+            {/* Équipes et score - Centre */}
+            <div className="flex items-center justify-center gap-2 sm:gap-4 flex-1">
               {/* Équipe domicile */}
-              <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-end min-w-0">
-                <span className="text-xs sm:text-base lg:text-xl font-bold text-right truncate max-w-[80px] sm:max-w-[120px] lg:max-w-[150px]">
+              <div className="flex items-center gap-1 sm:gap-2 justify-end min-w-0">
+                <span className="text-xs sm:text-base lg:text-xl font-bold text-right truncate max-w-[60px] sm:max-w-[100px] lg:max-w-[150px]">
                   {match.home_team}
                 </span>
                 {match.home_team_logo && (
                   <img 
                     src={match.home_team_logo} 
                     alt={match.home_team}
-                    className="w-7 h-7 sm:w-10 sm:h-10 lg:w-12 lg:h-12 object-contain shrink-0"
+                    className="w-6 h-6 sm:w-10 sm:h-10 lg:w-12 lg:h-12 object-contain shrink-0"
                   />
                 )}
               </div>
@@ -285,21 +285,21 @@ export function LiveMatchBar() {
               )}
 
               {/* Équipe extérieur */}
-              <div className="flex items-center gap-1 sm:gap-2 flex-1 justify-start min-w-0">
+              <div className="flex items-center gap-1 sm:gap-2 justify-start min-w-0">
                 {match.away_team_logo && (
                   <img 
                     src={match.away_team_logo} 
                     alt={match.away_team}
-                    className="w-7 h-7 sm:w-10 sm:h-10 lg:w-12 lg:h-12 object-contain shrink-0"
+                    className="w-6 h-6 sm:w-10 sm:h-10 lg:w-12 lg:h-12 object-contain shrink-0"
                   />
                 )}
-                <span className="text-xs sm:text-base lg:text-xl font-bold text-left truncate max-w-[80px] sm:max-w-[120px] lg:max-w-[150px]">
+                <span className="text-xs sm:text-base lg:text-xl font-bold text-left truncate max-w-[60px] sm:max-w-[100px] lg:max-w-[150px]">
                   {match.away_team}
                 </span>
               </div>
             </div>
 
-            {/* Bouton suivre */}
+            {/* Bouton suivre - Aligné à droite */}
             <Button 
               variant="outline" 
               size="sm"
@@ -307,7 +307,7 @@ export function LiveMatchBar() {
                 e.stopPropagation();
                 handleFollowMatch();
               }}
-              className="border-white bg-white/10 text-white hover:bg-white hover:text-[hsl(222,47%,20%)] transition-colors text-xs sm:text-sm font-medium"
+              className="border-white bg-white/10 text-white hover:bg-white hover:text-[hsl(222,47%,20%)] transition-colors text-xs sm:text-sm font-medium shrink-0"
             >
               {settings?.custom_cta_text || t.followMatch}
             </Button>
