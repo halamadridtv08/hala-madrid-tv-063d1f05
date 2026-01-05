@@ -3,7 +3,6 @@ import { useFooterLinksAdmin, FooterLink } from "@/hooks/useFooterLinks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -13,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, FileText, Shield, Cookie, Mail, ScrollText, Link, ExternalLink, Wand2, Eye } from "lucide-react";
 import DOMPurify from "dompurify";
+import { SimpleRichTextEditor } from "./SimpleRichTextEditor";
 
 const iconOptions = [
   { value: 'FileText', label: 'Document', icon: FileText },
@@ -311,7 +311,7 @@ export function FooterLinksManager() {
               {(formData.link_type === 'modal' || formData.link_type === 'internal') && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label>Contenu de la page (HTML)</Label>
+                    <Label>Contenu de la page</Label>
                     <Button
                       type="button"
                       variant="outline"
@@ -333,12 +333,11 @@ export function FooterLinksManager() {
                       </TabsTrigger>
                     </TabsList>
                     <TabsContent value="edit">
-                      <Textarea
+                      <SimpleRichTextEditor
                         value={formData.content}
-                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                        rows={12}
-                        placeholder="<h2>Mentions légales</h2><p>...</p>"
-                        className="font-mono text-sm"
+                        onChange={(value) => setFormData({ ...formData, content: value })}
+                        placeholder="Écrivez votre contenu ici..."
+                        minRows={10}
                       />
                     </TabsContent>
                     <TabsContent value="preview">
@@ -353,9 +352,6 @@ export function FooterLinksManager() {
                       />
                     </TabsContent>
                   </Tabs>
-                  <p className="text-xs text-muted-foreground">
-                    Balises supportées: h2, h3, h4, p, ul, ol, li, strong, em, a
-                  </p>
                 </div>
               )}
 
