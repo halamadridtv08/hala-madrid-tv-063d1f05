@@ -307,7 +307,7 @@ export function LiveMatchBar() {
                 e.stopPropagation();
                 handleFollowMatch();
               }}
-              className="border-white/30 text-white hover:bg-white hover:text-[hsl(222,47%,20%)] transition-colors text-xs sm:text-sm"
+              className="border-white bg-white/10 text-white hover:bg-white hover:text-[hsl(222,47%,20%)] transition-colors text-xs sm:text-sm font-medium"
             >
               {settings?.custom_cta_text || t.followMatch}
             </Button>
