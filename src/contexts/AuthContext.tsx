@@ -36,9 +36,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRoleLoading, setIsRoleLoading] = useState(false);
-  
+
   // Track current user to avoid race conditions
   const currentUserIdRef = useRef<string | null>(null);
+
+  // Avoid UI "refresh" (loading skeleton) on harmless auth events like token refresh / tab focus
+  const rolesLoadedRef = useRef(false);
+  const loginToastShownRef = useRef(false);
 
   useEffect(() => {
     // Set up auth state listener first (keep callback synchronous)
@@ -46,26 +50,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, session?.user?.id);
+
       setSession(session ?? null);
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        currentUserIdRef.current = session.user.id;
-        // Defer Supabase calls to avoid auth deadlocks
-        setIsRoleLoading(true);
-        setTimeout(() => {
-          checkUserRole(session.user.id);
-        }, 0);
+        const userId = session.user.id;
+        const userChanged = currentUserIdRef.current !== userId;
 
-        if (event === "SIGNED_IN") {
+        if (userChanged) {
+          currentUserIdRef.current = userId;
+          rolesLoadedRef.current = false;
+          loginToastShownRef.current = false;
+        }
+
+        // Only re-check role when needed (first load or user actually changed)
+        if (userChanged || !rolesLoadedRef.current) {
+          setIsRoleLoading(true);
+          // Defer Supabase calls to avoid auth deadlocks
+          setTimeout(() => {
+            checkUserRole(userId);
+          }, 0);
+        }
+
+        // Only show the login toast once per session (prevents a toast on tab focus)
+        if (event === "SIGNED_IN" && !loginToastShownRef.current) {
+          loginToastShownRef.current = true;
           // Prefer display name from user metadata over email
-          const displayName = session?.user?.user_metadata?.full_name 
-            || session?.user?.user_metadata?.name 
-            || session?.user?.email;
+          const displayName =
+            session?.user?.user_metadata?.full_name ||
+            session?.user?.user_metadata?.name ||
+            session?.user?.email;
           showLoginSuccessToast(displayName ?? undefined);
         }
       } else {
         currentUserIdRef.current = null;
+        rolesLoadedRef.current = false;
+        loginToastShownRef.current = false;
+
         setIsAdmin(false);
         setIsModerator(false);
         setUserRole(null);
@@ -75,7 +97,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Then check for existing session
     const initSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       setSession(session ?? null);
       setUser(session?.user ?? null);
 
@@ -102,35 +127,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .from('user_roles')
         .select('role')
         .eq('user_id', userId);
-      
+
       // Abort if user changed during fetch
       if (currentUserIdRef.current !== userId) {
         console.log("User changed during role check, aborting");
         return;
       }
-      
+
       if (error) {
         console.error('Error checking user role:', error);
+        rolesLoadedRef.current = false;
         setIsAdmin(false);
         setIsModerator(false);
         setUserRole('user');
         return;
       }
-      
-      const roles = data?.map(r => r.role) || [];
+
+      const roles = data?.map((r) => r.role) || [];
       console.log("User roles for", userId, ":", roles, "Raw data:", data);
-      
+
       const hasAdmin = roles.includes('admin');
       const hasModerator = roles.includes('moderator');
-      
-      console.log("Role check - hasAdmin:", hasAdmin, "hasModerator:", hasModerator, "isModerator will be:", hasAdmin || hasModerator);
-      
+
+      console.log(
+        "Role check - hasAdmin:",
+        hasAdmin,
+        "hasModerator:",
+        hasModerator,
+        "isModerator will be:",
+        hasAdmin || hasModerator
+      );
+
       setIsAdmin(hasAdmin);
       // Moderator access = admin OR moderator role
       setIsModerator(hasAdmin || hasModerator);
       setUserRole(hasAdmin ? 'admin' : hasModerator ? 'moderator' : 'user');
+      rolesLoadedRef.current = true;
     } catch (error) {
       console.error('Error checking user role:', error);
+      rolesLoadedRef.current = false;
       setIsAdmin(false);
       setIsModerator(false);
       setUserRole('user');
