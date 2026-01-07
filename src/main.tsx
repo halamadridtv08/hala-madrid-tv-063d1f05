@@ -9,11 +9,19 @@ initSentry();
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-// PWA: Force update check and auto-reload on new service worker
+// PWA: Check for updates but don't auto-reload
 if ('serviceWorker' in navigator) {
-  // Reload when a new service worker takes control
+  // Only reload on controller change if the page was just loaded (not on window focus)
+  let isInitialLoad = true;
+  setTimeout(() => {
+    isInitialLoad = false;
+  }, 5000);
+
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    window.location.reload();
+    // Only reload if this is happening during initial page load
+    if (isInitialLoad) {
+      window.location.reload();
+    }
   });
 
   // Check for updates immediately on page load
