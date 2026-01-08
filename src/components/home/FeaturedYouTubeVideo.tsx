@@ -70,13 +70,15 @@ const FeaturedYouTubeVideo = () => {
             </Button>
           </div>
           
-          <div className="relative aspect-video w-full bg-black">
+          <div className="relative w-full bg-black" style={{ paddingBottom: '56.25%' }}>
             <iframe
               src={getYouTubeEmbedUrl(video.youtube_url)}
               title={video.title}
-              className="absolute inset-0 w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              className="absolute top-0 left-0 w-full h-full border-0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
+              loading="lazy"
+              referrerPolicy="strict-origin-when-cross-origin"
             />
           </div>
           
