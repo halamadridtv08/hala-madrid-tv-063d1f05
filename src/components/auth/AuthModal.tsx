@@ -360,10 +360,12 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
     setError(null);
 
     try {
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: redirectUrl,
         },
       });
 
