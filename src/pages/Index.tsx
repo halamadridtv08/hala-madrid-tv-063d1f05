@@ -55,9 +55,9 @@ const Index = () => {
       
       {/* Predictions & Sticky Content Section */}
       {(isVisible('predictions_section') || isVisible('trending_section')) && (
-        <section className="py-8 bg-muted/30">
+        <section className="py-6 sm:py-8 bg-muted/30">
           <div className="madrid-container">
-            <div className="grid lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {isVisible('predictions_section') && (
                 <div className="lg:col-span-2">
                   <MatchPredictionsWidget />

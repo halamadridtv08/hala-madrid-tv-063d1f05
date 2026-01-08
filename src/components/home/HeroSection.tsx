@@ -16,6 +16,15 @@ export function HeroSection() {
   const heroCta1 = getContent('hero_cta_primary', 'Dernières Actualités');
   const heroCta2 = getContent('hero_cta_secondary', 'Voir les Vidéos');
 
+  // IMPORTANT: Show loading state to prevent flash of old content
+  if (isLoading) {
+    return (
+      <div className="min-h-[70vh] sm:min-h-[80vh] lg:min-h-[90vh] bg-madrid-blue/40 flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-madrid-gold border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   // Mode arrière-plan vidéo plein écran
   if (backgroundVideoEnabled && backgroundVideoUrl) {
     return (

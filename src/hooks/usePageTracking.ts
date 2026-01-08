@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Generate or get existing visitor ID
 const getVisitorId = (): string => {
@@ -50,9 +51,15 @@ const getBrowser = (): string => {
 export const usePageTracking = () => {
   const location = useLocation();
   const lastPathRef = useRef<string>('');
+  const { isAdmin, isModerator } = useAuth();
 
   useEffect(() => {
     const trackPageView = async () => {
+      // Skip tracking for admins and moderators
+      if (isAdmin || isModerator) {
+        return;
+      }
+
       // Avoid tracking the same page twice in a row
       if (location.pathname === lastPathRef.current) return;
       lastPathRef.current = location.pathname;
@@ -97,8 +104,6 @@ export const usePageTracking = () => {
           visitor_id: visitorId,
           user_id: userId,
         });
-
-        // Increment view_count on the article (this is already done in ArticleDetail, but keeping as backup)
       }
     };
 
@@ -106,7 +111,7 @@ export const usePageTracking = () => {
     const timeoutId = setTimeout(trackPageView, 100);
     
     return () => clearTimeout(timeoutId);
-  }, [location.pathname]);
+  }, [location.pathname, isAdmin, isModerator]);
 };
 
 export default usePageTracking;

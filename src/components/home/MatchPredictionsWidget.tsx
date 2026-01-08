@@ -34,32 +34,33 @@ export const MatchPredictionsWidget = () => {
 
   return (
     <Card className="overflow-hidden border-secondary/30">
-      <CardHeader className="bg-gradient-to-r from-primary/10 to-secondary/10">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Target className="w-5 h-5 text-secondary" />
-            {t('predictions.title')}
+      <CardHeader className="bg-gradient-to-r from-primary/10 to-secondary/10 p-3 sm:p-4 md:p-6">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm sm:text-base md:text-lg">
+            <Target className="w-4 h-4 sm:w-5 sm:h-5 text-secondary flex-shrink-0" />
+            <span className="truncate">{t('predictions.title')}</span>
           </CardTitle>
           <Link to="/predictions">
-            <Button variant="ghost" size="sm">
-              {t('home.viewAll')} <ChevronRight className="w-4 h-4 ml-1" />
+            <Button variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-3">
+              <span className="hidden xs:inline">{t('home.viewAll')}</span>
+              <ChevronRight className="w-4 h-4 xs:ml-1" />
             </Button>
           </Link>
         </div>
       </CardHeader>
-      <CardContent className="p-4 space-y-4">
+      <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
         {/* Mini Leaderboard */}
-        <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 bg-muted/50 rounded-lg p-2 sm:p-3">
           <div className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-secondary" />
-            <span className="text-sm font-medium">{t('predictions.top3')}</span>
+            <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-secondary flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium">{t('predictions.top3')}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1 sm:gap-2">
             {topPredictors.map((entry, index) => (
               <Badge 
                 key={entry.id} 
                 variant={index === 0 ? 'default' : 'secondary'}
-                className="text-xs"
+                className="text-[10px] sm:text-xs px-1.5 sm:px-2"
               >
                 {index + 1}. {`Player ${entry.user_id.slice(0, 4)}`} ({entry.total_points}pts)
               </Badge>
@@ -69,15 +70,15 @@ export const MatchPredictionsWidget = () => {
 
         {/* User rank if logged in */}
         {user && userRank && (
-          <div className="text-center text-sm">
+          <div className="text-center text-xs sm:text-sm">
             {t('predictions.yourRank')}: <span className="font-bold text-primary">#{userRank}</span>
           </div>
         )}
 
         {/* Next matches to predict */}
         {nextMatches.length > 0 ? (
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium text-muted-foreground">
+          <div className="space-y-2 sm:space-y-3">
+            <h4 className="text-xs sm:text-sm font-medium text-muted-foreground">
               {t('predictions.nextMatches')}
             </h4>
             {nextMatches.map((match) => (
@@ -95,8 +96,8 @@ export const MatchPredictionsWidget = () => {
         )}
 
         <Link to="/predictions" className="block">
-          <Button className="w-full" variant="outline">
-            <Trophy className="w-4 h-4 mr-2" />
+          <Button className="w-full text-xs sm:text-sm" variant="outline" size="sm">
+            <Trophy className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
             {t('predictions.viewLeaderboard')}
           </Button>
         </Link>
