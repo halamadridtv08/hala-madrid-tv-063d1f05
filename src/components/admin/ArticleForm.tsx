@@ -324,12 +324,27 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
                   </div>
                   
                   {formData.image_url && (
-                    <div className="relative aspect-video w-full max-w-md rounded-lg overflow-hidden border">
-                      <img 
-                        src={formData.image_url} 
-                        alt="Aperçu" 
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="space-y-2">
+                      <div className="relative aspect-video w-full max-w-md rounded-lg overflow-hidden border">
+                        <img 
+                          src={formData.image_url} 
+                          alt="Aperçu" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <Button 
+                        type="button" 
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          setImageToCrop(formData.image_url);
+                          setCropTarget('image');
+                          setShowCropper(true);
+                        }}
+                      >
+                        <Crop className="h-4 w-4 mr-2" />
+                        Recadrer pour positionner le visage
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -367,12 +382,27 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
                   </div>
                   
                   {formData.thumbnail_url && (
-                    <div className="relative w-48 aspect-square rounded-lg overflow-hidden border">
-                      <img 
-                        src={formData.thumbnail_url} 
-                        alt="Miniature" 
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="space-y-2">
+                      <div className="relative w-48 aspect-square rounded-lg overflow-hidden border">
+                        <img 
+                          src={formData.thumbnail_url} 
+                          alt="Miniature" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <Button 
+                        type="button" 
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          setImageToCrop(formData.thumbnail_url);
+                          setCropTarget('thumbnail');
+                          setShowCropper(true);
+                        }}
+                      >
+                        <Crop className="h-4 w-4 mr-2" />
+                        Recadrer la miniature
+                      </Button>
                     </div>
                   )}
                 </div>
