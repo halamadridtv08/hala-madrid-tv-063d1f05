@@ -1,13 +1,13 @@
-
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Video, Calendar } from "lucide-react";
+import { Video, Calendar, Youtube } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PressConference } from "@/types/PressConference";
+import { useYouTubeVideosByCategory } from "@/hooks/useYouTubeVideosByCategory";
 
 const Press = () => {
   const { data: pressConferences = [], isLoading, error } = useQuery({
@@ -30,6 +30,9 @@ const Press = () => {
     }
   });
 
+  // Fetch YouTube videos with "Conférence de presse" category
+  const { videos: youtubeVideos, loading: youtubeLoading } = useYouTubeVideosByCategory('Conférence de presse');
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('fr-FR', {
@@ -39,7 +42,9 @@ const Press = () => {
     }).format(date);
   };
 
-  if (isLoading) {
+  const isPageLoading = isLoading || youtubeLoading;
+
+  if (isPageLoading) {
     return (
       <>
         <Navbar />
@@ -83,6 +88,8 @@ const Press = () => {
     );
   }
 
+  const hasContent = pressConferences.length > 0 || youtubeVideos.length > 0;
+
   return (
     <>
       <Navbar />
@@ -90,7 +97,7 @@ const Press = () => {
         <div className="madrid-container py-8">
           <h1 className="section-title mb-8">Conférences de Presse</h1>
           
-          {pressConferences.length === 0 ? (
+          {!hasContent ? (
             <div className="text-center py-8">
               <p className="text-gray-500 dark:text-gray-400">
                 Aucune conférence de presse disponible pour le moment.
@@ -98,6 +105,46 @@ const Press = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* YouTube videos with Conférence de presse category */}
+              {youtubeVideos.map((video) => (
+                <Card key={`yt-${video.id}`} className="overflow-hidden card-hover">
+                  <div className="relative h-48 overflow-hidden">
+                    <img 
+                      src={video.thumbnail_url} 
+                      alt={video.title}
+                      className="w-full h-full object-cover object-center"
+                    />
+                    <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+                      <Youtube className="h-3 w-3" />
+                      YouTube
+                    </div>
+                  </div>
+                  <CardHeader>
+                    <div className="flex justify-between items-start mb-2">
+                      <Badge className="bg-purple-600 text-white">
+                        Conférence
+                      </Badge>
+                      <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {formatDate(video.created_at)}
+                      </span>
+                    </div>
+                    <CardTitle className="line-clamp-2">{video.title}</CardTitle>
+                  </CardHeader>
+                  <CardFooter>
+                    <Button 
+                      variant="secondary" 
+                      className="w-full"
+                      onClick={() => window.open(video.youtube_url, '_blank')}
+                    >
+                      <Video className="mr-2 h-4 w-4" /> 
+                      Regarder la conférence
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+
+              {/* Regular press conferences */}
               {pressConferences.map((conference) => (
                 <Card key={conference.id} className="overflow-hidden card-hover">
                   <div className="relative h-48 overflow-hidden">
