@@ -85,21 +85,21 @@ export const MatchPredictionCard = ({ match, existingPrediction }: MatchPredicti
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Teams and Prediction */}
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4 overflow-hidden">
           {/* Home Team */}
-          <div className="flex-1 text-center">
+          <div className="flex-1 min-w-0 text-center">
             {match.home_team_logo && (
               <img 
                 src={match.home_team_logo} 
                 alt={match.home_team}
-                className="w-12 h-12 mx-auto mb-2 object-contain"
+                className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 object-contain max-w-full"
               />
             )}
-            <p className="text-sm font-medium truncate">{match.home_team}</p>
+            <p className="text-xs sm:text-sm font-medium truncate">{match.home_team}</p>
           </div>
 
           {/* Score Input or Display */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {isUpcoming && !hasPrediction ? (
               <>
                 <Input
@@ -108,7 +108,7 @@ export const MatchPredictionCard = ({ match, existingPrediction }: MatchPredicti
                   max="15"
                   value={homeScore}
                   onChange={(e) => setHomeScore(parseInt(e.target.value) || 0)}
-                  className="w-12 text-center"
+                  className="w-10 sm:w-12 text-center"
                   disabled={!user}
                 />
                 <span className="text-lg font-bold">-</span>
@@ -118,18 +118,18 @@ export const MatchPredictionCard = ({ match, existingPrediction }: MatchPredicti
                   max="15"
                   value={awayScore}
                   onChange={(e) => setAwayScore(parseInt(e.target.value) || 0)}
-                  className="w-12 text-center"
+                  className="w-10 sm:w-12 text-center"
                   disabled={!user}
                 />
               </>
             ) : hasPrediction ? (
               <div className="text-center">
-                <div className="text-2xl font-bold">
+                <div className="text-xl sm:text-2xl font-bold">
                   {existingPrediction.home_score_prediction} - {existingPrediction.away_score_prediction}
                 </div>
                 <p className="text-xs text-muted-foreground">Votre prédiction</p>
                 {isFinished && (
-                  <div className="mt-1 text-sm">
+                  <div className="mt-1 text-xs sm:text-sm">
                     Résultat: {match.home_score} - {match.away_score}
                   </div>
                 )}
@@ -137,7 +137,7 @@ export const MatchPredictionCard = ({ match, existingPrediction }: MatchPredicti
             ) : (
               <div className="text-center text-muted-foreground">
                 {isFinished ? (
-                  <div className="text-2xl font-bold">
+                  <div className="text-xl sm:text-2xl font-bold">
                     {match.home_score} - {match.away_score}
                   </div>
                 ) : (
@@ -148,15 +148,15 @@ export const MatchPredictionCard = ({ match, existingPrediction }: MatchPredicti
           </div>
 
           {/* Away Team */}
-          <div className="flex-1 text-center">
+          <div className="flex-1 min-w-0 text-center">
             {match.away_team_logo && (
               <img 
                 src={match.away_team_logo} 
                 alt={match.away_team}
-                className="w-12 h-12 mx-auto mb-2 object-contain"
+                className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 object-contain max-w-full"
               />
             )}
-            <p className="text-sm font-medium truncate">{match.away_team}</p>
+            <p className="text-xs sm:text-sm font-medium truncate">{match.away_team}</p>
           </div>
         </div>
 
