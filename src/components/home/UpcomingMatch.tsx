@@ -254,18 +254,18 @@ export function UpcomingMatch() {
                 </motion.div>
 
                 <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
-                  {/* Les deux équipes alignées horizontalement sur la même ligne */}
+                  {/* Les deux équipes */}
                   <motion.div 
-                    className="flex items-center gap-3 sm:gap-6 justify-center flex-nowrap"
+                    className="flex items-center gap-2 sm:gap-4 justify-center w-full max-w-full overflow-hidden"
                     variants={itemVariants}
                   >
                     {/* Équipe 1 - Logo à gauche du nom */}
                     <motion.div 
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 justify-end"
                       variants={scaleVariants}
                       whileHover={{ scale: 1.05 }}
                     >
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center overflow-hidden bg-white flex-shrink-0">
+                      <div className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center overflow-hidden bg-white flex-shrink-0">
                         {upcomingMatch.home_team_logo ? (
                           <img 
                             src={upcomingMatch.home_team_logo} 
@@ -276,17 +276,17 @@ export function UpcomingMatch() {
                             }}
                           />
                         ) : (
-                          <div className="w-full h-full bg-madrid-blue rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-xl">
+                          <div className="w-full h-full bg-madrid-blue rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-lg">
                             {upcomingMatch.home_team.slice(0, 2).toUpperCase()}
                           </div>
                         )}
                       </div>
-                      <h3 className="text-base sm:text-lg lg:text-xl font-bold whitespace-nowrap">{upcomingMatch.home_team}</h3>
+                      <h3 className="text-sm sm:text-lg lg:text-xl font-bold truncate">{upcomingMatch.home_team}</h3>
                     </motion.div>
                     
                     {/* VS */}
                     <motion.div 
-                      className="text-2xl sm:text-3xl lg:text-4xl font-bold text-madrid-gold flex-shrink-0"
+                      className="text-lg sm:text-2xl lg:text-4xl font-bold text-madrid-gold flex-shrink-0 px-1 sm:px-2"
                       variants={scaleVariants}
                       animate={{ 
                         scale: [1, 1.1, 1],
@@ -302,12 +302,12 @@ export function UpcomingMatch() {
                     
                     {/* Équipe 2 - Nom à gauche du logo */}
                     <motion.div 
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 justify-start"
                       variants={scaleVariants}
                       whileHover={{ scale: 1.05 }}
                     >
-                      <h3 className="text-base sm:text-lg lg:text-xl font-bold whitespace-nowrap">{upcomingMatch.away_team}</h3>
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center overflow-hidden bg-white flex-shrink-0">
+                      <h3 className="text-sm sm:text-lg lg:text-xl font-bold truncate">{upcomingMatch.away_team}</h3>
+                      <div className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center overflow-hidden bg-white flex-shrink-0">
                         {upcomingMatch.away_team_logo ? (
                           <img 
                             src={upcomingMatch.away_team_logo} 
@@ -318,7 +318,7 @@ export function UpcomingMatch() {
                             }}
                           />
                         ) : (
-                          <div className="w-full h-full bg-gray-600 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-xl">
+                          <div className="w-full h-full bg-gray-600 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-lg">
                             {upcomingMatch.away_team.slice(0, 2).toUpperCase()}
                           </div>
                         )}
