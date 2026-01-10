@@ -17,9 +17,9 @@ import { ScrollToTopButton } from "./components/common/ScrollToTopButton";
 import { BadgeUnlockToast } from "./components/badges/BadgesDisplay";
 import { PageTracker } from "./components/common/PageTracker";
 import { PasswordResetHandler } from "./components/auth/PasswordResetHandler";
+import { SoundProvider } from "./components/sound/SoundProvider";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-
 // Lazy load non-critical pages for better Core Web Vitals
 const News = lazy(() => import("./pages/News"));
 const Players = lazy(() => import("./pages/Players"));
@@ -89,6 +89,7 @@ const App = () => (
               <BadgeUnlockToast />
               <PageTracker />
               <PasswordResetHandler />
+              <SoundProvider>
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -147,6 +148,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+              </SoundProvider>
             </BrowserRouter>
           </TooltipProvider>
         </LanguageProvider>

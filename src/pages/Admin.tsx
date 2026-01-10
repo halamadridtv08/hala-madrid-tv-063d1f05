@@ -85,9 +85,9 @@ import { SocialLinksManager } from "@/components/admin/SocialLinksManager";
 import { ExploreCardsManager } from "@/components/admin/ExploreCardsManager";
 import { SeasonResetManager } from "@/components/admin/SeasonResetManager";
 import { SeasonArchiveViewer } from "@/components/admin/SeasonArchiveViewer";
+import { SoundSettingsManager } from "@/components/admin/SoundSettingsManager";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-
 interface StatsData {
   totalPlayers: number;
   activePlayers: number;
@@ -601,6 +601,16 @@ const Admin = () => {
             <FooterBackgroundManager />
             <SplineManager />
             <AuthImageManager />
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Section Sons du site */}
+        <AccordionItem value="sons-site" className="border rounded-lg px-4">
+          <AccordionTrigger className="text-lg font-semibold text-muted-foreground hover:no-underline">
+            Sons du site
+          </AccordionTrigger>
+          <AccordionContent className="pt-4">
+            <SoundSettingsManager />
           </AccordionContent>
         </AccordionItem>
 
