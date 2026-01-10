@@ -16,6 +16,54 @@ const markLoginToastShown = () => {
   localStorage.setItem(TOAST_COOLDOWN_KEY, Date.now().toString());
 };
 
+// Sound playback utilities
+const getSoundSettings = async () => {
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data } = await supabase
+      .from("sound_settings")
+      .select("*")
+      .single();
+    return data;
+  } catch (error) {
+    console.error("Error fetching sound settings:", error);
+    return null;
+  }
+};
+
+const getUserLanguageForSound = (): "fr" | "en" => {
+  const browserLang = navigator.language.toLowerCase();
+  if (browserLang.startsWith("fr")) return "fr";
+  return "en";
+};
+
+const playAuthSound = async (type: "login" | "logout") => {
+  try {
+    const settings = await getSoundSettings();
+    if (!settings?.is_enabled) return;
+
+    const isEnabled = type === "login" 
+      ? settings.login_sound_enabled 
+      : settings.logout_sound_enabled;
+    
+    if (!isEnabled) return;
+
+    const lang = settings.auto_language_detection ? getUserLanguageForSound() : "fr";
+    
+    const soundUrl = type === "login"
+      ? (lang === "fr" ? settings.login_sound_url_fr : settings.login_sound_url_en)
+      : (lang === "fr" ? settings.logout_sound_url_fr : settings.logout_sound_url_en);
+
+    if (!soundUrl) return;
+
+    const audio = new Audio(soundUrl);
+    audio.volume = settings.volume ?? 0.5;
+    await audio.play();
+  } catch (error) {
+    console.error(`Error playing ${type} sound:`, error);
+  }
+};
+
 export const showLoginSuccessToast = (displayName?: string) => {
   // Check cooldown to avoid showing toast too frequently (e.g., when switching tabs)
   if (!canShowLoginToast()) {
@@ -23,6 +71,9 @@ export const showLoginSuccessToast = (displayName?: string) => {
   }
   
   markLoginToastShown();
+
+  // Play login sound
+  playAuthSound("login");
   
   toast.custom(
     (t) => (
@@ -56,6 +107,9 @@ export const showLoginSuccessToast = (displayName?: string) => {
 };
 
 export const showLogoutSuccessToast = () => {
+  // Play logout sound
+  playAuthSound("logout");
+
   toast.custom(
     (t) => (
       <div className="w-full max-w-md bg-gradient-to-r from-blue-500/10 via-background to-blue-500/5 border border-blue-500/20 rounded-xl p-4 shadow-2xl shadow-blue-500/10 animate-fade-in">
@@ -69,7 +123,7 @@ export const showLogoutSuccessToast = () => {
               <p className="font-semibold text-foreground">Déconnexion réussie</p>
             </div>
             <p className="text-sm text-muted-foreground">
-              À bientôt sur HALA MADRID TV! 👋
+              À très bientôt sur HALA MADRID TV! 👋
             </p>
           </div>
         </div>

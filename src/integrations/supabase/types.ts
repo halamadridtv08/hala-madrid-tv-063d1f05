@@ -3095,6 +3095,60 @@ export type Database = {
         }
         Relationships: []
       }
+      sound_settings: {
+        Row: {
+          auto_language_detection: boolean | null
+          created_at: string | null
+          id: string
+          is_enabled: boolean | null
+          login_sound_enabled: boolean | null
+          login_sound_url_en: string | null
+          login_sound_url_fr: string | null
+          logout_sound_enabled: boolean | null
+          logout_sound_url_en: string | null
+          logout_sound_url_fr: string | null
+          updated_at: string | null
+          volume: number | null
+          welcome_sound_enabled: boolean | null
+          welcome_sound_url_en: string | null
+          welcome_sound_url_fr: string | null
+        }
+        Insert: {
+          auto_language_detection?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          login_sound_enabled?: boolean | null
+          login_sound_url_en?: string | null
+          login_sound_url_fr?: string | null
+          logout_sound_enabled?: boolean | null
+          logout_sound_url_en?: string | null
+          logout_sound_url_fr?: string | null
+          updated_at?: string | null
+          volume?: number | null
+          welcome_sound_enabled?: boolean | null
+          welcome_sound_url_en?: string | null
+          welcome_sound_url_fr?: string | null
+        }
+        Update: {
+          auto_language_detection?: boolean | null
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          login_sound_enabled?: boolean | null
+          login_sound_url_en?: string | null
+          login_sound_url_fr?: string | null
+          logout_sound_enabled?: boolean | null
+          logout_sound_url_en?: string | null
+          logout_sound_url_fr?: string | null
+          updated_at?: string | null
+          volume?: number | null
+          welcome_sound_enabled?: boolean | null
+          welcome_sound_url_en?: string | null
+          welcome_sound_url_fr?: string | null
+        }
+        Relationships: []
+      }
       training_sessions: {
         Row: {
           category: string | null
