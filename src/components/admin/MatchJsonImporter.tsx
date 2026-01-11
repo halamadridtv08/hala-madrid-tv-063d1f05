@@ -284,8 +284,8 @@ export const MatchJsonImporter = () => {
         return transformed;
       }
       
-      // Check if it's the simple format (with score/possession/goals at root)
-      if (data.score || (data.possession && data.goals)) {
+      // Check if it's the simple format (with score/possession/goals/statistics at root)
+      if (data.score || data.possession || data.goals || data.statistics || data.yellow_cards || data.red_cards) {
         const transformed = await transformSimpleFormat(data);
         setParsedData(transformed);
         setValidationStatus("valid");
@@ -445,8 +445,9 @@ export const MatchJsonImporter = () => {
     }
 
     // 2. Cartons - format events.yellow_cards (array d'objets)
-    if (jsonData.events?.yellow_cards && Array.isArray(jsonData.events.yellow_cards)) {
-      for (const card of jsonData.events.yellow_cards) {
+    const yellowCardsArray = jsonData.events?.yellow_cards || jsonData.yellow_cards;
+    if (yellowCardsArray && Array.isArray(yellowCardsArray)) {
+      for (const card of yellowCardsArray) {
         const playerName = card.player;
         if (playerName) {
           const key = playerName;
@@ -457,8 +458,10 @@ export const MatchJsonImporter = () => {
         }
       }
     }
-    if (jsonData.events?.red_cards && Array.isArray(jsonData.events.red_cards)) {
-      for (const card of jsonData.events.red_cards) {
+    
+    const redCardsArray = jsonData.events?.red_cards || jsonData.red_cards;
+    if (redCardsArray && Array.isArray(redCardsArray)) {
+      for (const card of redCardsArray) {
         const playerName = card.player;
         if (playerName) {
           const key = playerName;
@@ -470,10 +473,11 @@ export const MatchJsonImporter = () => {
       }
     }
 
-    // 2b. Cartons - ancien format events.cards
-    if (jsonData.events?.cards) {
-      if (jsonData.events.cards.yellow) {
-        for (const [team, cards] of Object.entries(jsonData.events.cards.yellow)) {
+    // 2b. Cartons - ancien format events.cards ou cards à la racine
+    const cardsData = jsonData.events?.cards || jsonData.cards;
+    if (cardsData) {
+      if (cardsData.yellow) {
+        for (const [team, cards] of Object.entries(cardsData.yellow)) {
           if (Array.isArray(cards)) {
             for (const card of cards) {
               const playerName = typeof card === 'string' ? card : card.player;
@@ -489,8 +493,8 @@ export const MatchJsonImporter = () => {
         }
       }
       
-      if (jsonData.events.cards.red) {
-        for (const [team, cards] of Object.entries(jsonData.events.cards.red)) {
+      if (cardsData.red) {
+        for (const [team, cards] of Object.entries(cardsData.red)) {
           if (Array.isArray(cards)) {
             for (const card of cards) {
               const playerName = typeof card === 'string' ? card : card.player;
