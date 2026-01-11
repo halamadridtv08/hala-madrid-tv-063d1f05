@@ -996,6 +996,7 @@ export const MatchJsonImporter = () => {
 
         <div className="flex gap-2">
           <Button 
+            type="button"
             onClick={handleValidate}
             variant="outline"
             disabled={!jsonInput.trim() || !selectedMatchId || showPreview || showPlayerValidation}
@@ -1005,6 +1006,7 @@ export const MatchJsonImporter = () => {
           </Button>
           
           <Button 
+            type="button"
             onClick={handleImport}
             disabled={!selectedMatchId || !showPreview || isProcessing}
           >
@@ -1014,6 +1016,7 @@ export const MatchJsonImporter = () => {
 
           {(showPreview || showPlayerValidation) && (
             <Button 
+              type="button"
               onClick={() => {
                 setShowPreview(false);
                 setPreviewData(null);
