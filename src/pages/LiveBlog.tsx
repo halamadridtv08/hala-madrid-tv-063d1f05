@@ -238,6 +238,9 @@ const LiveBlog = () => {
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
 
+  // Detect halftime: timer is paused after first half (current_half = 1, is_paused = true)
+  const isHalftime = timerSettings?.current_half === 1 && timerSettings?.is_paused === true;
+
   const formatMinuteLabel = (minute: string | number) => {
     const s = String(minute);
     return s.includes("'") ? s : `${s}'`;
@@ -323,9 +326,17 @@ const LiveBlog = () => {
                 <span className="text-4xl md:text-6xl font-bold">{match.away_score ?? 0}</span>
               </div>
               {isLive && (
-                <div className="px-4 py-1 bg-red-500/20 border border-red-500/50 rounded-full">
-                  <span className="text-sm font-bold text-red-400 animate-pulse">
-                    {formatMinuteLabel(displayMinute)}
+                <div className={`px-4 py-1 rounded-full ${
+                  isHalftime 
+                    ? 'bg-amber-500/20 border border-amber-500/50' 
+                    : 'bg-red-500/20 border border-red-500/50'
+                }`}>
+                  <span className={`text-sm font-bold ${
+                    isHalftime 
+                      ? 'text-amber-400' 
+                      : 'text-red-400 animate-pulse'
+                  }`}>
+                    {isHalftime ? t.halftime : formatMinuteLabel(displayMinute)}
                   </span>
                 </div>
               )}
