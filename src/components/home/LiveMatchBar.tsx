@@ -16,19 +16,34 @@ const translations = {
     followMatch: "Suivre le match",
     live: "EN DIRECT",
     upcoming: "À VENIR",
-    finished: "TERMINÉ"
+    finished: "TERMINÉ",
+    halftime: "MI-TEMPS",
+    firstHalf: "1ÈRE MI-TEMPS",
+    secondHalf: "2ÈME MI-TEMPS",
+    extraTime1: "PROLONGATION 1",
+    extraTime2: "PROLONGATION 2"
   },
   en: {
     followMatch: "Follow match",
     live: "LIVE",
     upcoming: "UPCOMING",
-    finished: "FINISHED"
+    finished: "FINISHED",
+    halftime: "HALF-TIME",
+    firstHalf: "1ST HALF",
+    secondHalf: "2ND HALF",
+    extraTime1: "EXTRA TIME 1",
+    extraTime2: "EXTRA TIME 2"
   },
   es: {
     followMatch: "Seguir partido",
     live: "EN VIVO",
     upcoming: "PRÓXIMO",
-    finished: "FINALIZADO"
+    finished: "FINALIZADO",
+    halftime: "DESCANSO",
+    firstHalf: "1ª PARTE",
+    secondHalf: "2ª PARTE",
+    extraTime1: "PRÓRROGA 1",
+    extraTime2: "PRÓRROGA 2"
   }
 };
 
@@ -178,7 +193,25 @@ export function LiveMatchBar() {
     }
   };
 
+  // Determine if we're in halftime (paused after first half)
+  const isHalftime = timerSettings?.is_paused && timerSettings?.current_half === 1 && !timerSettings?.is_timer_running;
+  
+  // Get period-specific status
+  const getPeriodLabel = () => {
+    if (!timerSettings || state !== 'live') return null;
+    
+    if (isHalftime) return t.halftime;
+    
+    const half = timerSettings.current_half;
+    if (half === 1) return t.firstHalf;
+    if (half === 2) return t.secondHalf;
+    if (half === 3) return t.extraTime1;
+    if (half === 4) return t.extraTime2;
+    return null;
+  };
+
   const getStatusLabel = () => {
+    if (isHalftime) return t.halftime;
     switch (state) {
       case 'live': return t.live;
       case 'upcoming': return t.upcoming;
@@ -187,6 +220,7 @@ export function LiveMatchBar() {
   };
 
   const getStatusColor = () => {
+    if (isHalftime) return 'bg-amber-500';
     switch (state) {
       case 'live': return 'bg-red-500';
       case 'upcoming': return 'bg-orange-500';
@@ -231,7 +265,7 @@ export function LiveMatchBar() {
             {/* Status and competition */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getStatusColor()} ${state === 'live' ? 'animate-pulse' : ''}`}>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getStatusColor()} ${state === 'live' && !isHalftime ? 'animate-pulse' : ''}`}>
                   {getStatusLabel()}
                 </span>
                 <span className="font-semibold text-white text-xs">
@@ -269,9 +303,15 @@ export function LiveMatchBar() {
                     <span className="text-lg font-bold">{match.away_score ?? 0}</span>
                   </div>
                   {state === 'live' && (settings?.show_timer !== false) && (
-                    <span className="text-[10px] font-bold text-red-400 animate-pulse">
-                      {displayMinute}'
-                    </span>
+                    isHalftime ? (
+                      <span className="text-[10px] font-bold text-amber-400">
+                        {t.halftime}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-red-400 animate-pulse">
+                        {displayMinute}'
+                      </span>
+                    )
                   )}
                 </div>
               )}
@@ -324,7 +364,7 @@ export function LiveMatchBar() {
               )}
               <div className="flex items-center gap-2 text-xs mt-1">
                 <Monitor className="h-3 w-3 shrink-0" />
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getStatusColor()} ${state === 'live' ? 'animate-pulse' : ''}`}>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getStatusColor()} ${state === 'live' && !isHalftime ? 'animate-pulse' : ''}`}>
                   {getStatusLabel()}
                 </span>
               </div>
@@ -355,11 +395,19 @@ export function LiveMatchBar() {
                     <span className="text-2xl lg:text-3xl font-bold">{match.away_score ?? 0}</span>
                   </div>
                   {state === 'live' && (settings?.show_timer !== false) && (
-                    <div className="px-3 py-1 bg-red-500/20 border border-red-500/50 rounded-full">
-                      <span className="text-sm font-bold text-red-400 animate-pulse">
-                        {displayMinute}'
-                      </span>
-                    </div>
+                    isHalftime ? (
+                      <div className="px-3 py-1 bg-amber-500/20 border border-amber-500/50 rounded-full">
+                        <span className="text-sm font-bold text-amber-400">
+                          {t.halftime}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="px-3 py-1 bg-red-500/20 border border-red-500/50 rounded-full">
+                        <span className="text-sm font-bold text-red-400 animate-pulse">
+                          {displayMinute}'
+                        </span>
+                      </div>
+                    )
                   )}
                 </div>
               )}
