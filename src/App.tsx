@@ -51,6 +51,7 @@ const PolitiqueConfidentialite = lazy(() => import("./pages/legal/PolitiqueConfi
 const PreferencesCookies = lazy(() => import("./pages/legal/PreferencesCookies"));
 const Contact = lazy(() => import("./pages/legal/Contact"));
 const CGU = lazy(() => import("./pages/legal/CGU"));
+const DynamicLegalPage = lazy(() => import("./pages/legal/DynamicLegalPage"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -144,6 +145,9 @@ const App = () => (
                   <Route path="/preferences-cookies" element={<PreferencesCookies />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/cgu" element={<CGU />} />
+                  {/* Dynamic legal pages - catches any page created from admin */}
+                  <Route path="/legal/:slug" element={<DynamicLegalPage />} />
+                  <Route path="/:slug" element={<DynamicLegalPage />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
