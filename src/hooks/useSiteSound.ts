@@ -10,14 +10,21 @@ export const useSiteSound = () => {
   const { data: settings } = useSoundSettings();
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
 
-  // Detect user language
+  // Detect user language - plus robuste
   const getUserLanguage = useCallback((): "fr" | "en" => {
     if (!settings?.auto_language_detection) return "fr";
     
-    const browserLang = navigator.language.toLowerCase();
+    // Vérifier navigator.language et navigator.languages
+    const browserLang = navigator.language?.toLowerCase() || "";
+    const browserLangs = navigator.languages?.map(l => l.toLowerCase()) || [];
+    
     // French-speaking countries: fr, fr-FR, fr-CA, fr-BE, fr-CH, etc.
-    if (browserLang.startsWith("fr")) return "fr";
-    // Everything else defaults to English
+    const isFrench = browserLang.startsWith("fr") || 
+                     browserLangs.some(lang => lang.startsWith("fr"));
+    
+    if (isFrench) return "fr";
+    
+    // Tout le reste = anglais
     return "en";
   }, [settings?.auto_language_detection]);
 
