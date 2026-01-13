@@ -184,7 +184,7 @@ export function LiveMatchBar() {
     if (settings?.custom_cta_link) {
       // Handle external or custom links
       if (settings.custom_cta_link.startsWith('http')) {
-        window.open(settings.custom_cta_link, '_blank');
+        window.open(settings.custom_cta_link, '_blank', 'noopener,noreferrer');
       } else {
         navigate(settings.custom_cta_link);
       }
