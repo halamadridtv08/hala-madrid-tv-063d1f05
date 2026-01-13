@@ -302,4 +302,44 @@
   .dark .prose a {
     color: hsl(var(--primary)) !important;
   }
+  
+  /* Compact prose - reduced spacing for articles */
+  .prose-compact p {
+    margin-bottom: 0.75rem;
+    margin-top: 0;
+  }
+  
+  .prose-compact p:empty,
+  .prose-compact div:empty {
+    display: none;
+  }
+  
+  .prose-compact br + br {
+    display: none;
+  }
+  
+  .prose-compact h2 {
+    margin-top: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .prose-compact h3 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .prose-compact ul,
+  .prose-compact ol {
+    margin-top: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .prose-compact li {
+    margin-bottom: 0.25rem;
+  }
+  
+  .prose-compact blockquote {
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
 }

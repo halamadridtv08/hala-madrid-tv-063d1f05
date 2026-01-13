@@ -158,6 +158,32 @@ const ArticleDetail = () => {
       </>;
   }
 
+  // Fonction pour nettoyer et réduire les espaces vides excessifs dans le contenu
+  const cleanContent = (content: string): string => {
+    let cleaned = content;
+    
+    // Supprimer les multiples <br> consécutifs (garder max 1)
+    cleaned = cleaned.replace(/(<br\s*\/?>\s*){2,}/gi, '<br>');
+    
+    // Supprimer les paragraphes vides ou avec seulement des espaces/&nbsp;
+    cleaned = cleaned.replace(/<p[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '');
+    
+    // Supprimer les div vides
+    cleaned = cleaned.replace(/<div[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/div>/gi, '');
+    
+    // Supprimer les <br> au début ou à la fin des paragraphes
+    cleaned = cleaned.replace(/<p[^>]*>\s*<br\s*\/?>/gi, '<p>');
+    cleaned = cleaned.replace(/<br\s*\/?>\s*<\/p>/gi, '</p>');
+    
+    // Supprimer les multiples sauts de ligne entre les balises
+    cleaned = cleaned.replace(/>\s{2,}</g, '> <');
+    
+    // Supprimer les espaces multiples
+    cleaned = cleaned.replace(/\s{3,}/g, ' ');
+    
+    return cleaned.trim();
+  };
+
   // Fonction pour rendre en toute sécurité le contenu HTML
   const renderContent = () => {
     // Fonction pour convertir les sauts de ligne en paragraphes, tout en conservant les balises HTML
@@ -175,6 +201,9 @@ const ArticleDetail = () => {
           .join('');
       }
 
+      // Nettoyer les espaces vides excessifs
+      formattedContent = cleanContent(formattedContent);
+
       // Sanitize the HTML to prevent XSS attacks
       const sanitized = DOMPurify.sanitize(formattedContent, {
         ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'iframe', 'blockquote', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'section'],
@@ -185,7 +214,7 @@ const ArticleDetail = () => {
         __html: sanitized
       };
     };
-    return <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={formatContent(article.content)} />;
+    return <div className="prose prose-compact dark:prose-invert max-w-none" dangerouslySetInnerHTML={formatContent(article.content)} />;
   };
   return <>
       <SEOHead 
