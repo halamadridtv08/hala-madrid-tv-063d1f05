@@ -3613,6 +3613,20 @@ export type Database = {
       delete_totp_secret: { Args: { p_user_id: string }; Returns: undefined }
       get_admin_emails: { Args: never; Returns: string[] }
       get_encryption_key: { Args: never; Returns: string }
+      get_login_attempts_with_audit: {
+        Args: { p_email?: string; p_limit?: number; p_offset?: number }
+        Returns: {
+          attempted_at: string
+          country: string
+          device_fingerprint: string
+          email: string
+          failed_reason: string
+          id: string
+          ip_address: string
+          success: boolean
+          user_agent: string
+        }[]
+      }
       get_moderator_activity_stats: {
         Args: { p_days?: number }
         Returns: {
