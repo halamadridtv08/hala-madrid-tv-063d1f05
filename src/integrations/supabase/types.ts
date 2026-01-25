@@ -233,6 +233,42 @@ export type Database = {
         }
         Relationships: []
       }
+      article_comment_emails: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_email: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_email: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_comment_emails_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: true
+            referencedRelation: "article_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "article_comment_emails_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: true
+            referencedRelation: "article_comments_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       article_comments: {
         Row: {
           article_id: string
@@ -242,7 +278,6 @@ export type Database = {
           is_approved: boolean | null
           is_published: boolean | null
           updated_at: string | null
-          user_email: string | null
           user_name: string
         }
         Insert: {
@@ -253,7 +288,6 @@ export type Database = {
           is_approved?: boolean | null
           is_published?: boolean | null
           updated_at?: string | null
-          user_email?: string | null
           user_name: string
         }
         Update: {
@@ -264,7 +298,6 @@ export type Database = {
           is_approved?: boolean | null
           is_published?: boolean | null
           updated_at?: string | null
-          user_email?: string | null
           user_name?: string
         }
         Relationships: [
@@ -3612,6 +3645,20 @@ export type Database = {
       }
       delete_totp_secret: { Args: { p_user_id: string }; Returns: undefined }
       get_admin_emails: { Args: never; Returns: string[] }
+      get_article_comments_with_emails: {
+        Args: { p_article_id: string }
+        Returns: {
+          article_id: string
+          content: string
+          created_at: string
+          id: string
+          is_approved: boolean
+          is_published: boolean
+          updated_at: string
+          user_email: string
+          user_name: string
+        }[]
+      }
       get_encryption_key: { Args: never; Returns: string }
       get_login_attempts_with_audit: {
         Args: { p_email?: string; p_limit?: number; p_offset?: number }
@@ -3733,6 +3780,15 @@ export type Database = {
       }
       save_totp_secret: {
         Args: { p_secret: string; p_user_id: string }
+        Returns: string
+      }
+      submit_article_comment: {
+        Args: {
+          p_article_id: string
+          p_content: string
+          p_user_email: string
+          p_user_name: string
+        }
         Returns: string
       }
       subscribe_to_newsletter: {
