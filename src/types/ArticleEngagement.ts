@@ -2,7 +2,6 @@ export interface ArticleComment {
   id: string;
   article_id: string;
   user_name: string;
-  user_email?: string;
   content: string;
   is_approved: boolean;
   is_published: boolean;

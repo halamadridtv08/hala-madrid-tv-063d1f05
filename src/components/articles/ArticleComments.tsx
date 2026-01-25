@@ -45,12 +45,11 @@ export const ArticleComments = ({ articleId }: ArticleCommentsProps) => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.from("article_comments").insert({
-      article_id: articleId,
-      user_name: userName,
-      user_email: userEmail,
-      content: content,
-      is_approved: false,
+    const { error } = await supabase.rpc("submit_article_comment", {
+      p_article_id: articleId,
+      p_user_name: userName,
+      p_user_email: userEmail || null,
+      p_content: content,
     });
 
     if (error) {

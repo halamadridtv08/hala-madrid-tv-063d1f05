@@ -6,12 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { Check, X, Trash2 } from "lucide-react";
 import type { ArticleComment } from "@/types/ArticleEngagement";
 
+interface CommentWithEmail extends ArticleComment {
+  user_email?: string;
+}
+
 interface CommentsManagerProps {
   articleId: string;
 }
 
 export const CommentsManager = ({ articleId }: CommentsManagerProps) => {
-  const [comments, setComments] = useState<ArticleComment[]>([]);
+  const [comments, setComments] = useState<CommentWithEmail[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -20,11 +24,10 @@ export const CommentsManager = ({ articleId }: CommentsManagerProps) => {
   }, [articleId]);
 
   const fetchComments = async () => {
-    const { data, error } = await supabase
-      .from("article_comments")
-      .select("*")
-      .eq("article_id", articleId)
-      .order("created_at", { ascending: false });
+    // Use the secure function that only allows admins to see emails
+    const { data, error } = await supabase.rpc("get_article_comments_with_emails", {
+      p_article_id: articleId,
+    });
 
     if (!error && data) {
       setComments(data);
