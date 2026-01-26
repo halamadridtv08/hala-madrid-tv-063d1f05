@@ -67,6 +67,19 @@ export default defineConfig(({ mode }) => ({
         navigateFallbackDenylist: [/^\/api/, /\.json$/, /^\/supabase/],
         runtimeCaching: [
           {
+            // Force fresh JS/CSS bundles - always check network first
+            urlPattern: /\.(?:js|css)$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'static-resources',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+              },
+              networkTimeoutSeconds: 3
+            }
+          },
+          {
             urlPattern: /^https:\/\/qjnppcfbywfazwolfppo\.supabase\.co\/storage\/.*/i,
             handler: 'NetworkOnly',
           },
@@ -94,12 +107,12 @@ export default defineConfig(({ mode }) => ({
           },
           {
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
-            handler: 'CacheFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'images-cache',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
               }
             }
           }
