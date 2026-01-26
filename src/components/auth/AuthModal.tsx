@@ -4,13 +4,12 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Mail, Eye, EyeOff, X } from "lucide-react";
+import { Mail, Eye, EyeOff, X, Loader2 } from "lucide-react";
 
 import { TwoFactorVerification } from "@/components/auth/TwoFactorVerification";
 import { useAuthHeroImage } from "@/hooks/useAuthHeroImage";
 import { loginSchema, signUpSchema, isDisposableEmail } from "@/lib/validations/auth";
 import { generateDeviceFingerprint } from "@/lib/auditLog";
-import authHeroImage from "@/assets/auth-hero.jpg";
 import logoImage from "/lovable-uploads/b475ad56-9770-4b40-a504-a1e193850dc8.png";
 import {
   Dialog,
@@ -39,9 +38,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const { toast } = useToast();
   
-  const { imageUrl: heroImageFromDb } = useAuthHeroImage();
-
-  const heroImage = heroImageFromDb || authHeroImage;
+  const { imageUrl: heroImageFromDb, isLoading: isHeroLoading } = useAuthHeroImage();
 
   // Le modal est fermé explicitement après une connexion réussie (ou après validation 2FA)
   // pour éviter de le fermer prématurément pendant le flux 2FA.
@@ -399,12 +396,20 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
         <DialogTitle className="sr-only">Connexion</DialogTitle>
         <div className="grid md:grid-cols-2">
           {/* Left side - Hero Image */}
-          <div className="relative hidden md:block h-full min-h-[500px]">
-            <img
-              src={heroImage}
-              alt="Real Madrid Player"
-              className="w-full h-full object-cover"
-            />
+          <div className="relative hidden md:block h-full min-h-[500px] bg-muted">
+            {isHeroLoading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : heroImageFromDb ? (
+              <img
+                src={heroImageFromDb}
+                alt="Real Madrid Player"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-[#001F54]/90 via-[#001F54]/50 to-transparent flex items-end p-8">
               <div className="text-white">
                 <h2 className="text-3xl font-bold mb-2">HALA MADRID</h2>
