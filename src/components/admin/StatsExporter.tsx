@@ -7,8 +7,7 @@ import { toast } from "sonner";
 import { FileDown, Loader2 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
-import html2canvas from "html2canvas";
+import ExcelJS from "exceljs";
 
 export const StatsExporter = () => {
   const [players, setPlayers] = useState<any[]>([]);
@@ -110,27 +109,55 @@ export const StatsExporter = () => {
   };
 
   const exportToExcel = async (playerData: any, stats: any[]) => {
-    // Summary sheet
+    // Summary stats
     const totalGoals = stats.reduce((sum, s) => sum + (s.goals || 0), 0);
     const totalAssists = stats.reduce((sum, s) => sum + (s.assists || 0), 0);
     const totalMinutes = stats.reduce((sum, s) => sum + (s.minutes_played || 0), 0);
     const totalYellow = stats.reduce((sum, s) => sum + (s.yellow_cards || 0), 0);
     const totalRed = stats.reduce((sum, s) => sum + (s.red_cards || 0), 0);
     
-    const summaryData = [
-      ['Joueur', playerData.name],
-      ['Position', playerData.position],
-      ['Date d\'export', new Date().toLocaleDateString('fr-FR')],
-      [],
-      ['Statistiques Totales'],
-      ['Buts', 'Passes Décisives', 'Minutes Jouées', 'Cartons Jaunes', 'Cartons Rouges'],
-      [totalGoals, totalAssists, totalMinutes, totalYellow, totalRed]
-    ];
+    // Create workbook with ExcelJS
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Hala Madrid TV';
+    workbook.created = new Date();
+    
+    // Summary sheet
+    const summarySheet = workbook.addWorksheet('Résumé');
+    summarySheet.addRow(['Joueur', playerData.name]);
+    summarySheet.addRow(['Position', playerData.position]);
+    summarySheet.addRow(['Date d\'export', new Date().toLocaleDateString('fr-FR')]);
+    summarySheet.addRow([]);
+    summarySheet.addRow(['Statistiques Totales']);
+    summarySheet.addRow(['Buts', 'Passes Décisives', 'Minutes Jouées', 'Cartons Jaunes', 'Cartons Rouges']);
+    summarySheet.addRow([totalGoals, totalAssists, totalMinutes, totalYellow, totalRed]);
+    
+    // Style the header row
+    const headerRow = summarySheet.getRow(6);
+    headerRow.font = { bold: true };
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF4472C4' }
+    };
     
     // Details sheet
-    const detailsData = [
-      ['Date', 'Compétition', 'Match', 'Buts', 'Passes D.', 'Minutes', 'Cartons J.', 'Cartons R.', 'Tirs', 'Passes Réussies', 'Tacles'],
-      ...stats.map(stat => [
+    const detailsSheet = workbook.addWorksheet('Détails');
+    
+    // Add header row
+    detailsSheet.addRow(['Date', 'Compétition', 'Match', 'Buts', 'Passes D.', 'Minutes', 'Cartons J.', 'Cartons R.', 'Tirs', 'Passes Réussies', 'Tacles']);
+    
+    // Style details header
+    const detailsHeader = detailsSheet.getRow(1);
+    detailsHeader.font = { bold: true };
+    detailsHeader.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF4472C4' }
+    };
+    
+    // Add data rows
+    stats.forEach(stat => {
+      detailsSheet.addRow([
         new Date(stat.matches?.match_date || '').toLocaleDateString('fr-FR'),
         stat.matches?.competition || '-',
         `${stat.matches?.home_team} vs ${stat.matches?.away_team}`,
@@ -142,19 +169,23 @@ export const StatsExporter = () => {
         stat.shots || 0,
         stat.passes_completed || 0,
         stat.tackles || 0
-      ])
-    ];
+      ]);
+    });
     
-    // Create workbook
-    const wb = XLSX.utils.book_new();
-    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-    const wsDetails = XLSX.utils.aoa_to_sheet(detailsData);
+    // Auto-fit columns
+    detailsSheet.columns.forEach(column => {
+      column.width = 15;
+    });
     
-    XLSX.utils.book_append_sheet(wb, wsSummary, 'Résumé');
-    XLSX.utils.book_append_sheet(wb, wsDetails, 'Détails');
-    
-    // Save Excel
-    XLSX.writeFile(wb, `stats-${playerData.name}-${new Date().toISOString().split('T')[0]}.xlsx`);
+    // Generate buffer and download
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `stats-${playerData.name}-${new Date().toISOString().split('T')[0]}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleExport = async () => {
