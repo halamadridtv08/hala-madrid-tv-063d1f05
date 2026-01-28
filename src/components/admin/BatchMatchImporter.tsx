@@ -153,7 +153,13 @@ export const BatchMatchImporter = () => {
         cards: imported.events?.cards,
         substitutions: imported.events?.substitutions,
         fouls: imported.events?.fouls,
-        statistics: imported.statistics
+        statistics: imported.statistics,
+        // NOUVEAU: Conserver les événements de cartons détaillés
+        events: {
+          yellow_cards: imported.events?.yellow_cards || [],
+          second_yellow_cards: imported.events?.second_yellow_cards || [],
+          red_cards: imported.events?.red_cards || []
+        }
       }
     };
   };

@@ -213,7 +213,7 @@ export const MatchJsonImporter = () => {
       red: {} 
     };
     
-    // Format 1: events.yellow_cards / events.red_cards (array d'objets)
+    // Format 1: events.yellow_cards / events.red_cards / events.second_yellow_cards (array d'objets)
     if (data.events?.yellow_cards && Array.isArray(data.events.yellow_cards)) {
       for (const card of data.events.yellow_cards) {
         const team = card.team;
@@ -221,6 +221,17 @@ export const MatchJsonImporter = () => {
           formattedCards.yellow[team] = [];
         }
         formattedCards.yellow[team].push(`${card.player} (${card.minute}')`);
+      }
+    }
+    // NOUVEAU: Traiter les 2e cartons jaunes (expulsion) - les stocker comme red mais avec type second_yellow
+    if (data.events?.second_yellow_cards && Array.isArray(data.events.second_yellow_cards)) {
+      for (const card of data.events.second_yellow_cards) {
+        const team = card.team;
+        if (!formattedCards.red[team]) {
+          formattedCards.red[team] = [];
+        }
+        // Marquer comme second_yellow pour l'affichage correct
+        formattedCards.red[team].push(`${card.player} (${card.minute}') [2Y]`);
       }
     }
     if (data.events?.red_cards && Array.isArray(data.events.red_cards)) {
@@ -251,6 +262,13 @@ export const MatchJsonImporter = () => {
         substitutions: data.substitutions || [],
         cards: formattedCards,
         possession: data.possession || {},
+        
+        // NOUVEAU: Conserver les événements de cartons détaillés pour MatchEvents
+        events: {
+          yellow_cards: data.events?.yellow_cards || [],
+          second_yellow_cards: data.events?.second_yellow_cards || [],
+          red_cards: data.events?.red_cards || []
+        },
         
         // Statistiques sous statistics pour MatchStatistics
         statistics: data.statistics || {
@@ -361,6 +379,12 @@ export const MatchJsonImporter = () => {
           if (card.team === realMadridKey && card.player) playerNames.add(card.player);
         });
       }
+      // NOUVEAU: Collecter depuis les 2e cartons jaunes
+      if (jsonData.events?.second_yellow_cards && Array.isArray(jsonData.events.second_yellow_cards)) {
+        jsonData.events.second_yellow_cards.forEach((card: any) => {
+          if (card.team === realMadridKey && card.player) playerNames.add(card.player);
+        });
+      }
       if (jsonData.events?.red_cards && Array.isArray(jsonData.events.red_cards)) {
         jsonData.events.red_cards.forEach((card: any) => {
           if (card.team === realMadridKey && card.player) playerNames.add(card.player);
@@ -455,6 +479,23 @@ export const MatchJsonImporter = () => {
             playerStatsMap.set(key, { playerName: playerName.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
           }
           playerStatsMap.get(key).yellowCards = (playerStatsMap.get(key).yellowCards || 0) + 1;
+        }
+      }
+    }
+    
+    // NOUVEAU: 2e cartons jaunes (comptent comme rouge pour l'expulsion)
+    const secondYellowCardsArray = jsonData.events?.second_yellow_cards || jsonData.second_yellow_cards;
+    if (secondYellowCardsArray && Array.isArray(secondYellowCardsArray)) {
+      for (const card of secondYellowCardsArray) {
+        const playerName = card.player;
+        if (playerName) {
+          const key = playerName;
+          if (!playerStatsMap.has(key)) {
+            playerStatsMap.set(key, { playerName: playerName.replace(/_/g, ' '), goals: 0, assists: 0, minutesPlayed: 90 });
+          }
+          // Un 2e jaune = 1 jaune supplémentaire + 1 rouge (expulsion)
+          playerStatsMap.get(key).yellowCards = (playerStatsMap.get(key).yellowCards || 0) + 1;
+          playerStatsMap.get(key).redCards = (playerStatsMap.get(key).redCards || 0) + 1;
         }
       }
     }

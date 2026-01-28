@@ -194,6 +194,8 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
   // Supporter le format events.yellow_cards (array d'objets)
   const rawYellowCards = matchDetails.raw?.events?.yellow_cards || matchDetails.events?.yellow_cards || [];
   const rawRedCards = matchDetails.raw?.events?.red_cards || matchDetails.events?.red_cards || [];
+  // NOUVEAU: Supporter le format events.second_yellow_cards
+  const rawSecondYellowCards = matchDetails.raw?.events?.second_yellow_cards || matchDetails.events?.second_yellow_cards || [];
 
   // Fonction pour parser les cartons depuis le format "player (minute')"
   const parseCardString = (cardStr: string, team: string): { player: string; minute: number; team: string } | null => {
@@ -233,6 +235,19 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
           }
         });
       }
+    });
+  }
+
+  // NOUVEAU: Parser les 2e cartons jaunes (expulsion)
+  const secondYellowCardEvents: any[] = [];
+  if (Array.isArray(rawSecondYellowCards) && rawSecondYellowCards.length > 0) {
+    rawSecondYellowCards.forEach((card: any) => {
+      secondYellowCardEvents.push({
+        player: card.player,
+        minute: card.minute,
+        team: card.team,
+        type: 'second_yellow'
+      });
     });
   }
 
@@ -284,8 +299,8 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
     });
   }
 
-  // Combiner tous les événements de cartons
-  const allCardEvents = [...yellowCardEvents, ...redCardEvents];
+  // Combiner tous les événements de cartons (jaunes, 2e jaunes, rouges)
+  const allCardEvents = [...yellowCardEvents, ...secondYellowCardEvents, ...redCardEvents];
 
   // Fonction de tri
   const sortEvents = (events: any[]) => {
