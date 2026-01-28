@@ -1,130 +1,169 @@
 
-# Format JSON Mis à Jour pour les Événements de Match
+# Plan : Affichage des événements joueurs sur les compositions tactiques
 
-## Résumé du problème
-Le format JSON actuel ne supporte pas correctement les **2e cartons jaunes** (Double Jaune → Rouge). Quand un joueur reçoit 2 cartons jaunes, cela doit être affiché avec l'icône spéciale (jaune derrière + rouge devant).
+## Problème identifié
+Les icônes d'événements (buts, passes décisives, remplacements, cartons, homme du match) ne s'affichent pas sur les joueurs dans la section "Composition" car :
 
-## Format JSON Recommandé
+1. Le composant `TacticalFormation.tsx` cherche les événements dans `live_blog_entries` qui n'ont pas de `player_id` renseigné
+2. Les vraies données d'événements sont stockées dans `match_details` du match (goals, substitutions, events.yellow_cards, etc.) avec des **noms de joueurs** (ex: `k_mbappe`, `a_schjelderup`)
+3. La correspondance doit se faire **par nom de joueur** plutôt que par ID
 
-Voici le format JSON complet et mis à jour que vous devez utiliser. La clé **`second_yellow_cards`** a été ajoutée dans `events` :
+## Solution proposée
+Modifier `TacticalFormation.tsx` pour :
+1. Extraire les événements depuis `matchData.match_details` au lieu de `live_blog_entries`
+2. Utiliser le `playerNameMatcher` existant pour faire correspondre les noms de joueurs du JSON aux joueurs de la formation
+3. Ajouter l'icône "Homme du Match" (étoile) basée sur la meilleure note parmi tous les joueurs
 
-```json
-{
-  "score": {
-    "benfica": 4,
-    "real_madrid": 2
-  },
-  "possession": {
-    "benfica": "36%",
-    "real_madrid": "64%"
-  },
-  "cards": {
-    "yellow": {
-      "benfica": 2,
-      "real_madrid": 5
-    },
-    "red": {
-      "benfica": 0,
-      "real_madrid": 2
-    }
-  },
-  "goals": [
-    {
-      "minute": 30,
-      "team": "real_madrid",
-      "scorer": "k_mbappe"
-    },
-    {
-      "minute": 36,
-      "team": "benfica",
-      "scorer": "a_schjelderup"
-    },
-    {
-      "minute": "45+5",
-      "team": "benfica",
-      "scorer": "v_pavlidis",
-      "assist": "a_schjelderup"
-    },
-    {
-      "minute": 54,
-      "team": "benfica",
-      "scorer": "a_schjelderup"
-    },
-    {
-      "minute": 58,
-      "team": "real_madrid",
-      "scorer": "k_mbappe",
-      "assist": "arda_guler"
-    },
-    {
-      "minute": "90+8",
-      "team": "benfica",
-      "scorer": "a_tubin"
-    }
-  ],
-  "statistics": {
-    "offsides": { "benfica": 1, "real_madrid": 0 },
-    "corners": { "benfica": 6, "real_madrid": 5 },
-    "shots": {
-      "total": { "benfica": 22, "real_madrid": 16 },
-      "on_target": { "benfica": 12, "real_madrid": 6 },
-      "off_target": { "benfica": 3, "real_madrid": 5 },
-      "blocked": { "benfica": 7, "real_madrid": 5 }
-    },
-    "goalkeeper_saves": { "benfica": 4, "real_madrid": 7 },
-    "tackles": { "benfica": 23, "real_madrid": 15 },
-    "passes": {
-      "benfica": { "total": 296, "completed": 228, "accuracy": "77%" },
-      "real_madrid": { "total": 513, "completed": 454, "accuracy": "89%" }
-    },
-    "fouls": { "benfica": 11, "real_madrid": 15 }
-  },
-  "substitutions": [
-    { "minute": 55, "team": "real_madrid", "out": "e_camavinga", "in": "a_tchouameni" },
-    { "minute": 55, "team": "real_madrid", "out": "rodrygo", "in": "f_mastantuono" },
-    { "minute": 78, "team": "real_madrid", "out": "david_alaba", "in": "dean_huijsen" },
-    { "minute": 79, "team": "real_madrid", "out": "jorge_cestero", "in": "a_carreras" },
-    { "minute": 79, "team": "real_madrid", "out": "brahim_diaz", "in": "arda_guler" },
-    { "minute": 83, "team": "benfica", "out": "e_barenechea", "in": "g_silva" },
-    { "minute": 87, "team": "benfica", "out": "joao_rego", "in": "g_prestiani" }
-  ],
-  "events": {
-    "yellow_cards": [
-      { "minute": 3, "team": "real_madrid", "player": "a_tchouameni" },
-      { "minute": 10, "team": "benfica", "player": "l_barreiro" },
-      { "minute": "45+4", "team": "real_madrid", "player": "raul_asencio" },
-      { "minute": 62, "team": "real_madrid", "player": "dean_huijsen" },
-      { "minute": 66, "team": "real_madrid", "player": "a_carreras" },
-      { "minute": 85, "team": "benfica", "player": "samuel_dahl" }
-    ],
-    "second_yellow_cards": [
-      { "minute": "90+2", "team": "real_madrid", "player": "raul_asencio" },
-      { "minute": "90+7", "team": "real_madrid", "player": "rodrygo" }
-    ],
-    "red_cards": []
-  }
-}
+## Icônes à afficher selon l'image de référence
+
+| Événement | Icône | Couleur |
+|-----------|-------|---------|
+| But | Ballon de foot | Blanc/noir |
+| Passe décisive | Chaussure de foot | Vert |
+| Remplacement (sortie) | Flèche rouge vers le bas | Rouge |
+| Remplacement (entrée) | Flèche verte vers le haut | Vert |
+| Carton jaune | Rectangle jaune | Jaune |
+| Carton rouge | Rectangle rouge | Rouge |
+| 2e jaune (expulsion) | Jaune + Rouge superposés | Jaune/Rouge |
+| Homme du Match | Étoile | Bleu/Or |
+
+## Modifications techniques
+
+### Fichier : `src/components/matches/TacticalFormation.tsx`
+
+**1. Ajouter l'extraction des événements depuis match_details**
+```typescript
+// Extraire les événements du match depuis matchData
+const getMatchDetailsEvents = () => {
+  const details = matchData?.match_details || matchData?.rawData?.match_details;
+  if (!details) return { goals: [], substitutions: [], yellowCards: [], redCards: [], secondYellowCards: [] };
+  
+  return {
+    goals: details.goals || details.raw?.goals || [],
+    substitutions: details.substitutions || details.raw?.substitutions || [],
+    yellowCards: details.events?.yellow_cards || details.raw?.events?.yellow_cards || [],
+    redCards: details.events?.red_cards || details.raw?.events?.red_cards || [],
+    secondYellowCards: details.events?.second_yellow_cards || details.raw?.events?.second_yellow_cards || []
+  };
+};
 ```
 
-## Modifications Clés
+**2. Fonction de matching par nom de joueur**
+```typescript
+const normalizePlayerName = (name: string): string => {
+  return name.toLowerCase()
+    .replace(/_/g, ' ')
+    .replace(/[áàâä]/g, 'a')
+    .replace(/[éèêë]/g, 'e')
+    .replace(/[íìîï]/g, 'i')
+    .replace(/[óòôö]/g, 'o')
+    .replace(/[úùûü]/g, 'u')
+    .replace(/[ñ]/g, 'n')
+    .replace(/['-]/g, ' ')
+    .trim();
+};
 
-| Section | Avant | Après |
-|---------|-------|-------|
-| `events.yellow_cards` | Contenait tous les cartons jaunes y compris les 2e | Contient **uniquement** les 1ers cartons jaunes |
-| `events.second_yellow_cards` | N'existait pas | **Nouveau** - Contient les 2e cartons jaunes qui mènent à l'expulsion |
-| `events.red_cards` | - | Réservé aux cartons rouges directs (pas suite à 2 jaunes) |
+const playerNameMatches = (eventPlayerName: string, formationPlayerName: string): boolean => {
+  const normalized1 = normalizePlayerName(eventPlayerName);
+  const normalized2 = normalizePlayerName(formationPlayerName);
+  
+  if (normalized1 === normalized2) return true;
+  if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) return true;
+  
+  // Vérifier le nom de famille
+  const lastName1 = normalized1.split(' ').pop() || '';
+  const lastName2 = normalized2.split(' ').pop() || '';
+  return lastName1.length > 2 && lastName2.length > 2 && lastName1 === lastName2;
+};
+```
 
-## Règles Importantes
+**3. Nouvelles fonctions pour trouver les événements d'un joueur**
+```typescript
+const getPlayerGoalsFromDetails = (playerName: string, team: string) => {
+  const { goals } = getMatchDetailsEvents();
+  return goals.filter(g => 
+    playerNameMatches(g.scorer, playerName) && 
+    (team === 'real_madrid' ? g.team === 'real_madrid' : g.team !== 'real_madrid')
+  );
+};
 
-1. **Premier carton jaune** → `events.yellow_cards`
-2. **Deuxième carton jaune (= expulsion)** → `events.second_yellow_cards`
-3. **Carton rouge direct** → `events.red_cards`
-4. Un joueur avec 2e jaune ne doit **PAS** avoir son 2e carton dans `yellow_cards`
+const getPlayerAssistsFromDetails = (playerName: string, team: string) => {
+  const { goals } = getMatchDetailsEvents();
+  return goals.filter(g => 
+    g.assist && playerNameMatches(g.assist, playerName) &&
+    (team === 'real_madrid' ? g.team === 'real_madrid' : g.team !== 'real_madrid')
+  );
+};
 
-## Mise à jour du code nécessaire
+const getPlayerSubstitutionFromDetails = (playerName: string, team: string) => {
+  const { substitutions } = getMatchDetailsEvents();
+  return substitutions.find(s => 
+    (playerNameMatches(s.out, playerName) || playerNameMatches(s.in, playerName)) &&
+    (team === 'real_madrid' ? s.team === 'real_madrid' : s.team !== 'real_madrid')
+  );
+};
 
-Pour que ce nouveau format fonctionne, il faut modifier le parsing dans `MatchEvents.tsx` et `MatchJsonImporter.tsx` pour :
-1. Lire `events.second_yellow_cards` 
-2. Les afficher avec le type `second_yellow`
+const getPlayerCardsFromDetails = (playerName: string, team: string) => {
+  const { yellowCards, redCards, secondYellowCards } = getMatchDetailsEvents();
+  const cards = [];
+  
+  yellowCards.filter(c => 
+    playerNameMatches(c.player, playerName) &&
+    (team === 'real_madrid' ? c.team === 'real_madrid' : c.team !== 'real_madrid')
+  ).forEach(c => cards.push({ ...c, type: 'yellow' }));
+  
+  redCards.filter(c => 
+    playerNameMatches(c.player, playerName) &&
+    (team === 'real_madrid' ? c.team === 'real_madrid' : c.team !== 'real_madrid')
+  ).forEach(c => cards.push({ ...c, type: 'red' }));
+  
+  secondYellowCards.filter(c => 
+    playerNameMatches(c.player, playerName) &&
+    (team === 'real_madrid' ? c.team === 'real_madrid' : c.team !== 'real_madrid')
+  ).forEach(c => cards.push({ ...c, type: 'second_yellow' }));
+  
+  return cards;
+};
+```
 
-Voulez-vous que j'implémente ces modifications dans le code ?
+**4. Fonction pour déterminer l'homme du match**
+```typescript
+const getManOfTheMatch = () => {
+  let bestPlayer = null;
+  let bestRating = 0;
+  
+  Object.values(formations).forEach(formation => {
+    formation.players.forEach(player => {
+      if (player.player_rating > bestRating) {
+        bestRating = player.player_rating;
+        bestPlayer = player;
+      }
+    });
+  });
+  
+  return bestRating >= 8 ? bestPlayer : null; // Seulement si note >= 8
+};
+```
+
+**5. Mise à jour du composant PlayerOnPitch pour utiliser les nouvelles fonctions**
+- Remplacer les appels à `getPlayerGoals(player.player_id)` par `getPlayerGoalsFromDetails(player.player_name, isOpposing ? 'opposing' : 'real_madrid')`
+- Idem pour assists, cards, substitutions
+- Ajouter l'icône "Homme du Match" (étoile bleue/or)
+
+**6. Nouvelles icônes SVG**
+- **Chaussure de foot** pour les passes décisives (au lieu du cercle vert avec "A")
+- **Étoile** pour l'homme du match
+
+## Résumé des fichiers à modifier
+
+| Fichier | Description |
+|---------|-------------|
+| `src/components/matches/TacticalFormation.tsx` | Logique de matching par nom + affichage des icônes depuis match_details |
+
+## Comportement attendu après modification
+- Les buteurs auront un ballon avec la minute à côté de leur photo
+- Les passeurs décisifs auront une chaussure verte avec la minute
+- Les joueurs remplacés auront une flèche rouge avec la minute de sortie
+- Les joueurs entrés en jeu (remplaçants) auront une flèche verte avec la minute d'entrée
+- Les joueurs avec cartons auront l'icône carton correspondante
+- Le joueur avec la meilleure note (≥8) aura une étoile "Homme du Match"
