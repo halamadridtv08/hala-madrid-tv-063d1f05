@@ -185,7 +185,7 @@ export const TacticalFormation = ({
   const getPlayerCards = (playerId?: string) => {
     if (!playerId) return [];
     return matchEvents.filter(e => 
-      (e.entry_type === 'yellow_card' || e.entry_type === 'red_card') && 
+      (e.entry_type === 'yellow_card' || e.entry_type === 'red_card' || e.entry_type === 'second_yellow_card') && 
       e.player_id === playerId
     );
   };
@@ -247,9 +247,16 @@ export const TacticalFormation = ({
         {/* Cartons */}
         {cards.map((card, idx) => (
           <div key={`card-${idx}`} className="flex items-center gap-0.5">
-            <div className={`w-2.5 h-3.5 rounded-sm shadow-md ${
-              card.entry_type === 'red_card' ? 'bg-red-600' : 'bg-yellow-400'
-            }`} />
+            {card.card_type === 'second_yellow' || card.entry_type === 'second_yellow_card' ? (
+              <div className="relative w-3 h-4">
+                <div className="absolute w-2.5 h-3.5 rounded-sm shadow-md bg-yellow-400 left-0 top-0" />
+                <div className="absolute w-2.5 h-3.5 rounded-sm shadow-md bg-red-600 left-1 top-0.5" />
+              </div>
+            ) : (
+              <div className={`w-2.5 h-3.5 rounded-sm shadow-md ${
+                card.entry_type === 'red_card' ? 'bg-red-600' : 'bg-yellow-400'
+              }`} />
+            )}
             {card.minute && (
               <span className="text-[8px] text-white font-bold bg-black/60 px-0.5 rounded">
                 {card.minute}'
@@ -404,7 +411,14 @@ export const TacticalFormation = ({
               ))}
               {cards.map((card, idx) => (
                 <div key={`card-inline-${idx}`} className="flex items-center">
-                  <div className={`w-2 h-2.5 sm:w-2.5 sm:h-3 rounded-sm ${card.entry_type === 'red_card' ? 'bg-red-600' : 'bg-yellow-400'}`} />
+                  {card.card_type === 'second_yellow' || card.entry_type === 'second_yellow_card' ? (
+                    <div className="relative w-2.5 h-3">
+                      <div className="absolute w-2 h-2.5 rounded-sm bg-yellow-400 left-0 top-0" />
+                      <div className="absolute w-2 h-2.5 rounded-sm bg-red-600 left-0.5 top-0.5" />
+                    </div>
+                  ) : (
+                    <div className={`w-2 h-2.5 sm:w-2.5 sm:h-3 rounded-sm ${card.entry_type === 'red_card' ? 'bg-red-600' : 'bg-yellow-400'}`} />
+                  )}
                   <span className="text-[6px] text-white bg-black/60 px-0.5 rounded ml-0.5">{card.minute}'</span>
                 </div>
               ))}

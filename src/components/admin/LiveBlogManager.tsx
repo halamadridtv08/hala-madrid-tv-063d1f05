@@ -51,7 +51,7 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
   const [goalModalOpen, setGoalModalOpen] = useState(false);
   const [cardModalOpen, setCardModalOpen] = useState(false);
   const [substitutionModalOpen, setSubstitutionModalOpen] = useState(false);
-  const [defaultCardType, setDefaultCardType] = useState<'yellow' | 'red'>('yellow');
+  const [defaultCardType, setDefaultCardType] = useState<'yellow' | 'red' | 'second_yellow'>('yellow');
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<LiveBlogEntry | null>(null);
 
@@ -104,6 +104,10 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
         break;
       case 'yellow_card':
         setDefaultCardType('yellow');
+        setCardModalOpen(true);
+        break;
+      case 'second_yellow':
+        setDefaultCardType('second_yellow');
         setCardModalOpen(true);
         break;
       case 'red_card':
@@ -211,8 +215,10 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
       await addEntry({
         match_id: selectedMatchId,
         minute: data.minute,
-        entry_type: data.card_type === 'yellow' ? 'yellow_card' : 'red_card',
-        title: data.card_type === 'yellow' ? 'CARTON JAUNE' : 'CARTON ROUGE',
+        entry_type: data.card_type === 'yellow' ? 'yellow_card' : 
+                    data.card_type === 'second_yellow' ? 'second_yellow_card' : 'red_card',
+        title: data.card_type === 'yellow' ? 'CARTON JAUNE' : 
+               data.card_type === 'second_yellow' ? 'DOUBLE JAUNE - EXPULSION' : 'CARTON ROUGE',
         content: data.content,
         is_important: data.is_important,
         author_id: user?.id || null,
