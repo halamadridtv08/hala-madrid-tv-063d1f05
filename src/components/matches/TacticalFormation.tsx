@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Trophy } from "lucide-react";
+import { Users, Trophy, Star, ArrowDown, ArrowUp } from "lucide-react";
+import { normalizePlayerName, calculateSimilarity } from "@/utils/playerNameMatcher";
 
 interface FormationPlayer {
   id: string;
@@ -19,22 +20,31 @@ interface FormationPlayer {
   substitution_minute?: number;
 }
 
-interface MatchEvent {
-  id: string;
-  entry_type: string;
-  player_id?: string;
-  assist_player_id?: string;
-  substituted_player_id?: string;
-  minute?: number;
-  card_type?: string;
-  team_side?: string;
-}
-
 interface Formation {
   id: string;
   team_type: string;
   formation: string;
   players: FormationPlayer[];
+}
+
+interface GoalEvent {
+  minute: string | number;
+  team: string;
+  scorer: string;
+  assist?: string;
+}
+
+interface SubstitutionEvent {
+  minute: string | number;
+  team: string;
+  out: string;
+  in: string;
+}
+
+interface CardEvent {
+  minute: string | number;
+  team: string;
+  player: string;
 }
 
 interface TacticalFormationProps {
@@ -47,20 +57,17 @@ export const TacticalFormation = ({
   matchData
 }: TacticalFormationProps) => {
   const [formations, setFormations] = useState<{ [key: string]: Formation }>({});
-  const [matchEvents, setMatchEvents] = useState<MatchEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (matchId) {
       fetchFormations();
-      fetchMatchEvents();
     }
   }, [matchId]);
 
   const fetchFormations = async () => {
     setLoading(true);
     try {
-      // Récupérer les formations avec les joueurs
       const { data, error } = await supabase
         .from('match_formations')
         .select(`
@@ -89,12 +96,10 @@ export const TacticalFormation = ({
         return;
       }
 
-      // Récupérer les photos des joueurs Real Madrid
       const { data: players } = await supabase
         .from('players')
         .select('id, profile_image_url, image_url');
 
-      // Récupérer les photos des joueurs adverses
       const { data: opposingPlayers } = await supabase
         .from('opposing_players')
         .select('id, photo_url');
@@ -118,7 +123,6 @@ export const TacticalFormation = ({
         const playersWithPhotos = (formation.match_formation_players || []).map(player => {
           let imageUrl = player.player_image_url;
           
-          // Si pas d'image, chercher dans les tables de référence
           if (!imageUrl && player.player_id && playerPhotos[player.player_id]) {
             imageUrl = playerPhotos[player.player_id];
           }
@@ -152,137 +156,115 @@ export const TacticalFormation = ({
     }
   };
 
-  const fetchMatchEvents = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('live_blog_entries')
-        .select('id, entry_type, player_id, assist_player_id, substituted_player_id, minute, card_type, team_side')
-        .eq('match_id', matchId)
-        .in('entry_type', ['goal', 'yellow_card', 'red_card', 'substitution', 'assist']);
+  // Extraire les événements depuis match_details
+  const matchDetailsEvents = useMemo(() => {
+    const details = matchData?.match_details;
+    if (!details) return { goals: [], substitutions: [], yellowCards: [], redCards: [], secondYellowCards: [] };
+    
+    return {
+      goals: (details.goals || []) as GoalEvent[],
+      substitutions: (details.substitutions || []) as SubstitutionEvent[],
+      yellowCards: (details.events?.yellow_cards || []) as CardEvent[],
+      redCards: (details.events?.red_cards || []) as CardEvent[],
+      secondYellowCards: (details.events?.second_yellow_cards || []) as CardEvent[]
+    };
+  }, [matchData]);
 
-      if (error) {
-        console.error('Erreur lors du chargement des événements:', error);
-        return;
-      }
-
-      setMatchEvents(data || []);
-    } catch (error) {
-      console.error('Erreur:', error);
-    }
+  // Fonction de matching par nom de joueur
+  const playerNameMatches = (eventPlayerName: string | undefined, formationPlayerName: string): boolean => {
+    if (!eventPlayerName) return false;
+    
+    const normalized1 = normalizePlayerName(eventPlayerName);
+    const normalized2 = normalizePlayerName(formationPlayerName);
+    
+    if (normalized1 === normalized2) return true;
+    if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) return true;
+    
+    // Vérifier par nom de famille
+    const lastName1 = normalized1.split(' ').pop() || '';
+    const lastName2 = normalized2.split(' ').pop() || '';
+    if (lastName1.length > 2 && lastName2.length > 2 && lastName1 === lastName2) return true;
+    
+    // Utiliser la similarité
+    return calculateSimilarity(eventPlayerName, formationPlayerName) > 0.6;
   };
 
-  // Fonctions pour obtenir les événements d'un joueur
-  const getPlayerGoals = (playerId?: string) => {
-    if (!playerId) return [];
-    return matchEvents.filter(e => e.entry_type === 'goal' && e.player_id === playerId);
+  // Déterminer si un événement appartient à Real Madrid ou à l'équipe adverse
+  const isRealMadridEvent = (eventTeam: string): boolean => {
+    return eventTeam === 'real_madrid';
   };
 
-  const getPlayerAssists = (playerId?: string) => {
-    if (!playerId) return [];
-    return matchEvents.filter(e => e.assist_player_id === playerId);
-  };
-
-  const getPlayerCards = (playerId?: string) => {
-    if (!playerId) return [];
-    return matchEvents.filter(e => 
-      (e.entry_type === 'yellow_card' || e.entry_type === 'red_card' || e.entry_type === 'second_yellow_card') && 
-      e.player_id === playerId
+  // Fonctions pour obtenir les événements d'un joueur depuis match_details
+  const getPlayerGoalsFromDetails = (playerName: string, isOpposingTeam: boolean): GoalEvent[] => {
+    return matchDetailsEvents.goals.filter(g => 
+      playerNameMatches(g.scorer, playerName) && 
+      (isOpposingTeam ? !isRealMadridEvent(g.team) : isRealMadridEvent(g.team))
     );
   };
 
-  const getPlayerSubstitution = (playerId?: string) => {
-    if (!playerId) return null;
-    return matchEvents.find(e => 
-      e.entry_type === 'substitution' && 
-      (e.player_id === playerId || e.substituted_player_id === playerId)
+  const getPlayerAssistsFromDetails = (playerName: string, isOpposingTeam: boolean): GoalEvent[] => {
+    return matchDetailsEvents.goals.filter(g => 
+      g.assist && playerNameMatches(g.assist, playerName) &&
+      (isOpposingTeam ? !isRealMadridEvent(g.team) : isRealMadridEvent(g.team))
     );
   };
 
-  // Composant pour afficher les icônes d'événements
-  const PlayerEventIcons = ({ playerId, isOpposing = false }: { playerId?: string; isOpposing?: boolean }) => {
-    const goals = getPlayerGoals(playerId);
-    const assists = getPlayerAssists(playerId);
-    const cards = getPlayerCards(playerId);
-    const substitution = getPlayerSubstitution(playerId);
-
-    if (goals.length === 0 && assists.length === 0 && cards.length === 0 && !substitution) {
-      return null;
-    }
-
-    return (
-      <div className="absolute -left-2 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
-        {/* Buts */}
-        {goals.map((goal, idx) => (
-          <div key={`goal-${idx}`} className="flex items-center gap-0.5">
-            <div className="bg-white rounded-full p-0.5 shadow-md">
-              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" fill="#1a1a1a" stroke="#333" strokeWidth="1"/>
-                <path d="M12 2 L14 8 L20 8 L15 12 L17 19 L12 15 L7 19 L9 12 L4 8 L10 8 Z" fill="white"/>
-              </svg>
-            </div>
-            {goal.minute && (
-              <span className="text-[8px] text-white font-bold bg-black/60 px-0.5 rounded">
-                {goal.minute}'
-              </span>
-            )}
-          </div>
-        ))}
-
-        {/* Passes décisives */}
-        {assists.map((assist, idx) => (
-          <div key={`assist-${idx}`} className="flex items-center gap-0.5">
-            <div className="bg-green-500 rounded-full p-0.5 shadow-md">
-              <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-              </svg>
-            </div>
-            {assist.minute && (
-              <span className="text-[8px] text-white font-bold bg-black/60 px-0.5 rounded">
-                {assist.minute}'
-              </span>
-            )}
-          </div>
-        ))}
-
-        {/* Cartons */}
-        {cards.map((card, idx) => (
-          <div key={`card-${idx}`} className="flex items-center gap-0.5">
-            {card.card_type === 'second_yellow' || card.entry_type === 'second_yellow_card' ? (
-              <div className="relative w-3 h-4">
-                <div className="absolute w-2.5 h-3.5 rounded-sm shadow-md bg-yellow-400 left-0 top-0" />
-                <div className="absolute w-2.5 h-3.5 rounded-sm shadow-md bg-red-600 left-1 top-0.5" />
-              </div>
-            ) : (
-              <div className={`w-2.5 h-3.5 rounded-sm shadow-md ${
-                card.entry_type === 'red_card' ? 'bg-red-600' : 'bg-yellow-400'
-              }`} />
-            )}
-            {card.minute && (
-              <span className="text-[8px] text-white font-bold bg-black/60 px-0.5 rounded">
-                {card.minute}'
-              </span>
-            )}
-          </div>
-        ))}
-
-        {/* Substitution (sortie) */}
-        {substitution && substitution.substituted_player_id === playerId && (
-          <div className="flex items-center gap-0.5">
-            <div className="bg-red-500 rounded-full p-0.5 shadow-md">
-              <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7 7l5-5 5 5H7zm10 10l-5 5-5-5h10z"/>
-              </svg>
-            </div>
-            {substitution.minute && (
-              <span className="text-[8px] text-white font-bold bg-black/60 px-0.5 rounded">
-                {substitution.minute}'
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+  const getPlayerSubstitutionFromDetails = (playerName: string, isOpposingTeam: boolean): SubstitutionEvent | undefined => {
+    return matchDetailsEvents.substitutions.find(s => 
+      (playerNameMatches(s.out, playerName) || playerNameMatches(s.in, playerName)) &&
+      (isOpposingTeam ? !isRealMadridEvent(s.team) : isRealMadridEvent(s.team))
     );
   };
+
+  const getPlayerCardsFromDetails = (playerName: string, isOpposingTeam: boolean): Array<CardEvent & { type: string }> => {
+    const cards: Array<CardEvent & { type: string }> = [];
+    
+    matchDetailsEvents.yellowCards
+      .filter(c => playerNameMatches(c.player, playerName) && (isOpposingTeam ? !isRealMadridEvent(c.team) : isRealMadridEvent(c.team)))
+      .forEach(c => cards.push({ ...c, type: 'yellow' }));
+    
+    matchDetailsEvents.redCards
+      .filter(c => playerNameMatches(c.player, playerName) && (isOpposingTeam ? !isRealMadridEvent(c.team) : isRealMadridEvent(c.team)))
+      .forEach(c => cards.push({ ...c, type: 'red' }));
+    
+    matchDetailsEvents.secondYellowCards
+      .filter(c => playerNameMatches(c.player, playerName) && (isOpposingTeam ? !isRealMadridEvent(c.team) : isRealMadridEvent(c.team)))
+      .forEach(c => cards.push({ ...c, type: 'second_yellow' }));
+    
+    return cards;
+  };
+
+  // Déterminer l'homme du match (meilleure note >= 8)
+  const manOfTheMatch = useMemo(() => {
+    let bestPlayer: FormationPlayer | null = null;
+    let bestRating = 0;
+    
+    Object.values(formations).forEach(formation => {
+      formation.players.forEach(player => {
+        if (player.player_rating > bestRating) {
+          bestRating = player.player_rating;
+          bestPlayer = player;
+        }
+      });
+    });
+    
+    return bestRating >= 8 ? bestPlayer : null;
+  }, [formations]);
+
+  // Icône ballon de foot
+  const FootballIcon = ({ className = "w-3 h-3" }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10" fill="#1a1a1a" stroke="#333" strokeWidth="1"/>
+      <path d="M12 2 L14 8 L20 8 L15 12 L17 19 L12 15 L7 19 L9 12 L4 8 L10 8 Z" fill="white"/>
+    </svg>
+  );
+
+  // Icône chaussure de foot
+  const FootballBootIcon = ({ className = "w-3 h-3" }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M2 19h2v2H2v-2zm4 0h12v2H6v-2zm14 0h2v2h-2v-2zM5 17V7.83C4.6 7.55 4.26 7.16 4.05 6.68L2 2h3l1.57 3.84c.21.44.61.76 1.07.92L19 10.5c1.1.4 1.8 1.46 1.8 2.61v.89c0 .55-.45 1-1 1H19v2H5zm4-4h2v2H9v-2zm4 0h2v2h-2v-2z"/>
+    </svg>
+  );
 
   if (loading) {
     return (
@@ -329,12 +311,20 @@ export const TacticalFormation = ({
   }) => {
     const borderColor = isOpposing ? 'border-red-400' : 'border-white';
     const bgGradient = isOpposing ? 'from-red-600 to-red-700' : 'from-blue-600 to-blue-700';
-    const goals = getPlayerGoals(player.player_id || player.opposing_player_id);
-    const assists = getPlayerAssists(player.player_id || player.opposing_player_id);
-    const cards = getPlayerCards(player.player_id || player.opposing_player_id);
-    const substitution = getPlayerSubstitution(player.player_id || player.opposing_player_id);
+    
+    // Utiliser les événements depuis match_details avec matching par nom
+    const goals = getPlayerGoalsFromDetails(player.player_name, isOpposing);
+    const assists = getPlayerAssistsFromDetails(player.player_name, isOpposing);
+    const cards = getPlayerCardsFromDetails(player.player_name, isOpposing);
+    const substitution = getPlayerSubstitutionFromDetails(player.player_name, isOpposing);
+    
+    // Vérifier si c'est l'homme du match
+    const isManOfTheMatch = manOfTheMatch && manOfTheMatch.id === player.id;
+    
+    // Vérifier si le joueur est sorti ou entré
+    const wasSubstitutedOut = substitution && playerNameMatches(substitution.out, player.player_name);
+    const wasSubstitutedIn = substitution && playerNameMatches(substitution.in, player.player_name);
 
-    // Récupérer le nom court (nom de famille)
     const shortName = player.player_name.split(' ').pop() || player.player_name;
 
     return (
@@ -348,9 +338,6 @@ export const TacticalFormation = ({
         <div className="relative flex flex-col items-center">
           {/* Container photo avec événements */}
           <div className="relative">
-            {/* Icônes d'événements à gauche */}
-            <PlayerEventIcons playerId={player.player_id || player.opposing_player_id} isOpposing={isOpposing} />
-
             {/* Photo du joueur */}
             {player.player_image_url ? (
               <img
@@ -364,8 +351,8 @@ export const TacticalFormation = ({
               </div>
             )}
 
-            {/* Numéro du maillot en haut à gauche */}
-            <div className={`absolute -top-0.5 -left-0.5 sm:-top-1 sm:-left-1 ${isOpposing ? 'bg-red-600 text-white' : 'bg-white text-blue-600'} text-[8px] sm:text-[10px] font-bold rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center shadow-md`}>
+            {/* Numéro du maillot en bas à gauche (cercle ambre) */}
+            <div className="absolute -bottom-0.5 -left-0.5 sm:-bottom-1 sm:-left-1 bg-amber-500 text-black text-[8px] sm:text-[10px] font-bold rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center shadow-md">
               {player.jersey_number}
             </div>
 
@@ -374,56 +361,68 @@ export const TacticalFormation = ({
               {player.player_rating?.toFixed(1) || '0.0'}
             </div>
 
-            {/* Substitution sortie (flèche rouge en bas) */}
-            {substitution && substitution.substituted_player_id === (player.player_id || player.opposing_player_id) && (
-              <div className="absolute -bottom-0.5 -left-0.5 bg-red-500 text-white text-[6px] sm:text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-md">
-                <svg className="w-2 h-2" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M7 14l5 5 5-5H7z"/>
-                </svg>
+            {/* Étoile Homme du Match en haut à gauche */}
+            {isManOfTheMatch && (
+              <div className="absolute -top-0.5 -left-0.5 sm:-top-1 sm:-left-1 bg-gradient-to-r from-yellow-400 to-amber-500 text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center shadow-md">
+                <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current" />
               </div>
             )}
           </div>
 
-          {/* Nom du joueur - toujours visible sur mobile */}
+          {/* Nom du joueur */}
           <div className="mt-0.5 sm:mt-1 bg-black/70 text-white text-[7px] sm:text-[9px] md:text-[10px] px-1 sm:px-1.5 py-0.5 rounded whitespace-nowrap max-w-[50px] sm:max-w-[70px] truncate text-center">
             {shortName}
           </div>
 
           {/* Événements en ligne sous le nom */}
-          {(goals.length > 0 || assists.length > 0 || cards.length > 0) && (
-            <div className="flex items-center gap-0.5 mt-0.5">
-              {goals.map((goal, idx) => (
-                <div key={`goal-inline-${idx}`} className="flex items-center">
-                  <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" fill="#1a1a1a" stroke="#333" strokeWidth="1"/>
-                    <path d="M12 2 L14 8 L20 8 L15 12 L17 19 L12 15 L7 19 L9 12 L4 8 L10 8 Z" fill="white"/>
-                  </svg>
-                  <span className="text-[6px] text-white bg-black/60 px-0.5 rounded ml-0.5">{goal.minute}'</span>
-                </div>
-              ))}
-              {assists.map((assist, idx) => (
-                <div key={`assist-inline-${idx}`} className="flex items-center">
-                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full flex items-center justify-center">
-                    <span className="text-[5px] sm:text-[6px] text-white font-bold">A</span>
+          <div className="flex items-center gap-0.5 mt-0.5 flex-wrap justify-center max-w-[80px]">
+            {/* Buts avec icône ballon */}
+            {goals.map((goal, idx) => (
+              <div key={`goal-${idx}`} className="flex items-center bg-black/60 rounded px-0.5">
+                <FootballIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                <span className="text-[6px] sm:text-[7px] text-white font-medium ml-0.5">{goal.minute}'</span>
+              </div>
+            ))}
+
+            {/* Passes décisives avec icône chaussure */}
+            {assists.map((assist, idx) => (
+              <div key={`assist-${idx}`} className="flex items-center bg-green-600/80 rounded px-0.5">
+                <FootballBootIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                <span className="text-[6px] sm:text-[7px] text-white font-medium ml-0.5">{assist.minute}'</span>
+              </div>
+            ))}
+
+            {/* Cartons */}
+            {cards.map((card, idx) => (
+              <div key={`card-${idx}`} className="flex items-center bg-black/60 rounded px-0.5">
+                {card.type === 'second_yellow' ? (
+                  <div className="relative w-2.5 h-3">
+                    <div className="absolute w-2 h-2.5 rounded-sm bg-yellow-400 left-0 top-0" />
+                    <div className="absolute w-2 h-2.5 rounded-sm bg-red-600 left-0.5 top-0.5" />
                   </div>
-                  <span className="text-[6px] text-white bg-black/60 px-0.5 rounded ml-0.5">{assist.minute}'</span>
-                </div>
-              ))}
-              {cards.map((card, idx) => (
-                <div key={`card-inline-${idx}`} className="flex items-center">
-                  {card.card_type === 'second_yellow' || card.entry_type === 'second_yellow_card' ? (
-                    <div className="relative w-2.5 h-3">
-                      <div className="absolute w-2 h-2.5 rounded-sm bg-yellow-400 left-0 top-0" />
-                      <div className="absolute w-2 h-2.5 rounded-sm bg-red-600 left-0.5 top-0.5" />
-                    </div>
-                  ) : (
-                    <div className={`w-2 h-2.5 sm:w-2.5 sm:h-3 rounded-sm ${card.entry_type === 'red_card' ? 'bg-red-600' : 'bg-yellow-400'}`} />
-                  )}
-                  <span className="text-[6px] text-white bg-black/60 px-0.5 rounded ml-0.5">{card.minute}'</span>
-                </div>
-              ))}
-            </div>
-          )}
+                ) : (
+                  <div className={`w-2 h-2.5 sm:w-2.5 sm:h-3 rounded-sm ${card.type === 'red' ? 'bg-red-600' : 'bg-yellow-400'}`} />
+                )}
+                <span className="text-[6px] sm:text-[7px] text-white font-medium ml-0.5">{card.minute}'</span>
+              </div>
+            ))}
+
+            {/* Remplacement sortie (flèche rouge) */}
+            {wasSubstitutedOut && substitution && (
+              <div className="flex items-center bg-red-600/80 rounded px-0.5">
+                <ArrowDown className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                <span className="text-[6px] sm:text-[7px] text-white font-medium ml-0.5">{substitution.minute}'</span>
+              </div>
+            )}
+
+            {/* Remplacement entrée (flèche verte) - pour les remplaçants qui entrent */}
+            {wasSubstitutedIn && substitution && (
+              <div className="flex items-center bg-green-600/80 rounded px-0.5">
+                <ArrowUp className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                <span className="text-[6px] sm:text-[7px] text-white font-medium ml-0.5">{substitution.minute}'</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -438,10 +437,13 @@ export const TacticalFormation = ({
     isOpposing?: boolean 
   }) => {
     const bgColor = isOpposing ? 'bg-red-600' : 'bg-blue-600';
-    const substitution = getPlayerSubstitution(player.player_id || player.opposing_player_id);
-    const goals = getPlayerGoals(player.player_id || player.opposing_player_id);
-    const assists = getPlayerAssists(player.player_id || player.opposing_player_id);
-    const cards = getPlayerCards(player.player_id || player.opposing_player_id);
+    
+    const substitution = getPlayerSubstitutionFromDetails(player.player_name, isOpposing);
+    const goals = getPlayerGoalsFromDetails(player.player_name, isOpposing);
+    const assists = getPlayerAssistsFromDetails(player.player_name, isOpposing);
+    const cards = getPlayerCardsFromDetails(player.player_name, isOpposing);
+    
+    const wasSubstitutedIn = substitution && playerNameMatches(substitution.in, player.player_name);
 
     return (
       <div className="flex items-center space-x-2 sm:space-x-3 p-1.5 sm:p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -466,24 +468,26 @@ export const TacticalFormation = ({
             <div className="flex items-center gap-0.5 flex-shrink-0">
               {goals.map((goal, idx) => (
                 <div key={`g-${idx}`} className="flex items-center">
-                  <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" fill="#1a1a1a" stroke="#333" strokeWidth="1"/>
-                    <path d="M12 2 L14 8 L20 8 L15 12 L17 19 L12 15 L7 19 L9 12 L4 8 L10 8 Z" fill="white"/>
-                  </svg>
+                  <FootballIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                   <span className="text-[8px] text-muted-foreground ml-0.5">{goal.minute}'</span>
                 </div>
               ))}
               {assists.map((assist, idx) => (
                 <div key={`a-${idx}`} className="flex items-center">
-                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full flex items-center justify-center">
-                    <span className="text-[5px] sm:text-[6px] text-white font-bold">A</span>
-                  </div>
+                  <FootballBootIcon className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-green-500" />
                   <span className="text-[8px] text-muted-foreground ml-0.5">{assist.minute}'</span>
                 </div>
               ))}
               {cards.map((card, idx) => (
                 <div key={`c-${idx}`} className="flex items-center">
-                  <div className={`w-2 h-2.5 sm:w-2.5 sm:h-3 rounded-sm ${card.entry_type === 'red_card' ? 'bg-red-600' : 'bg-yellow-400'}`} />
+                  {card.type === 'second_yellow' ? (
+                    <div className="relative w-2.5 h-3">
+                      <div className="absolute w-2 h-2.5 rounded-sm bg-yellow-400 left-0 top-0" />
+                      <div className="absolute w-2 h-2.5 rounded-sm bg-red-600 left-0.5 top-0.5" />
+                    </div>
+                  ) : (
+                    <div className={`w-2 h-2.5 sm:w-2.5 sm:h-3 rounded-sm ${card.type === 'red' ? 'bg-red-600' : 'bg-yellow-400'}`} />
+                  )}
                   <span className="text-[8px] text-muted-foreground ml-0.5">{card.minute}'</span>
                 </div>
               ))}
@@ -491,11 +495,9 @@ export const TacticalFormation = ({
           </div>
           <p className="text-[10px] sm:text-xs text-muted-foreground">{player.player_position}</p>
           {/* Minute d'entrée */}
-          {substitution && substitution.player_id === (player.player_id || player.opposing_player_id) && substitution.minute && (
+          {wasSubstitutedIn && substitution && (
             <p className="text-[9px] sm:text-[10px] text-green-500 flex items-center gap-0.5">
-              <svg className="w-2 h-2" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7 17l5-5-5-5v10zm10 0l-5-5 5-5v10z"/>
-              </svg>
+              <ArrowUp className="w-2 h-2" />
               Entré {substitution.minute}'
             </p>
           )}
