@@ -20,6 +20,7 @@ export const QuickActionBar = ({ onAction, isLive }: QuickActionBarProps) => {
   const actions = [
     { type: 'goal', label: 'But', icon: CircleDot, color: 'bg-green-500 hover:bg-green-600 text-white' },
     { type: 'yellow_card', label: 'Jaune', icon: Square, color: 'bg-yellow-400 hover:bg-yellow-500 text-black' },
+    { type: 'second_yellow', label: '2e Jaune', icon: Square, color: 'bg-orange-500 hover:bg-orange-600 text-white' },
     { type: 'red_card', label: 'Rouge', icon: Square, color: 'bg-red-500 hover:bg-red-600 text-white' },
     { type: 'substitution', label: 'Remp.', icon: ArrowLeftRight, color: 'bg-blue-500 hover:bg-blue-600 text-white' },
     { type: 'halftime', label: 'Mi-temps', icon: Pause, color: 'bg-gray-500 hover:bg-gray-600 text-white' },

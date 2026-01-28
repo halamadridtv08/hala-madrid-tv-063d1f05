@@ -427,8 +427,14 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
         </div>
 
         {/* Carton visuel */}
-        <div className={`w-6 h-8 rounded-sm shadow-md ${isRed ? 'bg-red-600' : 'bg-yellow-400'}`}>
-        </div>
+        {card.card_type === 'second_yellow' || card.type === 'second_yellow' ? (
+          <div className="relative w-7 h-9">
+            <div className="absolute w-6 h-8 rounded-sm shadow-md bg-yellow-400 left-0 top-0" />
+            <div className="absolute w-6 h-8 rounded-sm shadow-md bg-red-600 left-1 top-1" />
+          </div>
+        ) : (
+          <div className={`w-6 h-8 rounded-sm shadow-md ${isRed ? 'bg-red-600' : 'bg-yellow-400'}`} />
+        )}
 
         <Badge className="bg-green-600 hover:bg-green-700 text-white min-w-[45px] justify-center font-bold">
           {card.minute}'

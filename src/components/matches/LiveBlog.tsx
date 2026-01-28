@@ -13,12 +13,25 @@ interface LiveBlogProps {
   isLive?: boolean;
 }
 
-const getEntryIcon = (entryType: string) => {
+const getEntryIcon = (entryType: string, cardType?: string) => {
+  // Gérer le double jaune (2e carton jaune = expulsion)
+  if (entryType === 'second_yellow_card' || cardType === 'second_yellow') {
+    return (
+      <div className="relative w-5 h-6">
+        <div className="absolute w-4 h-5 rounded-sm bg-yellow-400 left-0 top-0" />
+        <div className="absolute w-4 h-5 rounded-sm bg-red-600 left-1 top-0.5" />
+      </div>
+    );
+  }
+  
   switch (entryType) {
     case 'goal':
       return <Goal className="w-5 h-5 text-green-500" />;
+    case 'yellow_card':
     case 'card':
       return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
+    case 'red_card':
+      return <AlertTriangle className="w-5 h-5 text-red-500" />;
     case 'substitution':
       return <Zap className="w-5 h-5 text-blue-500" />;
     case 'important':
@@ -136,7 +149,7 @@ const LiveBlogEntryCard = ({ entry, index, locale }: LiveBlogEntryCardProps) => 
     >
       <div className="flex gap-3">
         <div className="flex-shrink-0 mt-1">
-          {getEntryIcon(entry.entry_type)}
+          {getEntryIcon(entry.entry_type, entry.card_type)}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">

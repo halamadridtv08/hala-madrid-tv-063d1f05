@@ -44,7 +44,7 @@ interface CardEntryModalProps {
   }) => void;
   players: Player[];
   isSubmitting?: boolean;
-  defaultCardType?: 'yellow' | 'red';
+  defaultCardType?: 'yellow' | 'red' | 'second_yellow';
 }
 
 const CARD_REASONS = [
