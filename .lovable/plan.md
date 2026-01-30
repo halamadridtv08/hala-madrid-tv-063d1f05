@@ -1,169 +1,137 @@
 
-# Plan : Affichage des événements joueurs sur les compositions tactiques
+# Plan de Correction : Sécurité du Leaderboard
 
-## Problème identifié
-Les icônes d'événements (buts, passes décisives, remplacements, cartons, homme du match) ne s'affichent pas sur les joueurs dans la section "Composition" car :
+## Résumé du Problème
 
-1. Le composant `TacticalFormation.tsx` cherche les événements dans `live_blog_entries` qui n'ont pas de `player_id` renseigné
-2. Les vraies données d'événements sont stockées dans `match_details` du match (goals, substitutions, events.yellow_cards, etc.) avec des **noms de joueurs** (ex: `k_mbappe`, `a_schjelderup`)
-3. La correspondance doit se faire **par nom de joueur** plutôt que par ID
+Le scanner de sécurité détecte que la table `prediction_leaderboard` contient une colonne `user_email`. Même si cette colonne n'est pas exposée dans la vue publique actuelle, sa simple existence représente un risque de sécurité.
 
-## Solution proposée
-Modifier `TacticalFormation.tsx` pour :
-1. Extraire les événements depuis `matchData.match_details` au lieu de `live_blog_entries`
-2. Utiliser le `playerNameMatcher` existant pour faire correspondre les noms de joueurs du JSON aux joueurs de la formation
-3. Ajouter l'icône "Homme du Match" (étoile) basée sur la meilleure note parmi tous les joueurs
+## Analyse Actuelle
 
-## Icônes à afficher selon l'image de référence
+| Élément | État |
+|---------|------|
+| Table `prediction_leaderboard` | Contient `user_email` (jamais remplie) |
+| Vue `prediction_leaderboard_public` | N'expose PAS `user_email` |
+| `security_invoker` | Activé sur la vue |
+| RLS | Activé avec politiques admin |
+| Fonction de calcul | N'utilise pas `user_email` |
 
-| Événement | Icône | Couleur |
-|-----------|-------|---------|
-| But | Ballon de foot | Blanc/noir |
-| Passe décisive | Chaussure de foot | Vert |
-| Remplacement (sortie) | Flèche rouge vers le bas | Rouge |
-| Remplacement (entrée) | Flèche verte vers le haut | Vert |
-| Carton jaune | Rectangle jaune | Jaune |
-| Carton rouge | Rectangle rouge | Rouge |
-| 2e jaune (expulsion) | Jaune + Rouge superposés | Jaune/Rouge |
-| Homme du Match | Étoile | Bleu/Or |
+## Solution Simplifiée
 
-## Modifications techniques
+Plutôt que d'utiliser le script complexe de Claude.ai (319 lignes), je propose une solution adaptée à votre projet existant :
 
-### Fichier : `src/components/matches/TacticalFormation.tsx`
+### Étape 1 : Modifications de la Base de Données
 
-**1. Ajouter l'extraction des événements depuis match_details**
-```typescript
-// Extraire les événements du match depuis matchData
-const getMatchDetailsEvents = () => {
-  const details = matchData?.match_details || matchData?.rawData?.match_details;
-  if (!details) return { goals: [], substitutions: [], yellowCards: [], redCards: [], secondYellowCards: [] };
-  
-  return {
-    goals: details.goals || details.raw?.goals || [],
-    substitutions: details.substitutions || details.raw?.substitutions || [],
-    yellowCards: details.events?.yellow_cards || details.raw?.events?.yellow_cards || [],
-    redCards: details.events?.red_cards || details.raw?.events?.red_cards || [],
-    secondYellowCards: details.events?.second_yellow_cards || details.raw?.events?.second_yellow_cards || []
-  };
-};
+```sql
+-- 1. Ajouter la colonne display_name pour les pseudonymes
+ALTER TABLE prediction_leaderboard 
+ADD COLUMN IF NOT EXISTS display_name TEXT;
+
+-- 2. Générer des pseudonymes pour les entrées existantes
+UPDATE prediction_leaderboard
+SET display_name = 'Madridista_' || SUBSTRING(user_id::TEXT FROM 1 FOR 6)
+WHERE display_name IS NULL;
+
+-- 3. Trigger pour auto-générer display_name sur insertion
+CREATE OR REPLACE FUNCTION generate_leaderboard_display_name()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NEW.display_name IS NULL THEN
+    NEW.display_name := 'Madridista_' || SUBSTRING(NEW.user_id::TEXT FROM 1 FOR 6);
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_generate_leaderboard_display_name ON prediction_leaderboard;
+CREATE TRIGGER trg_generate_leaderboard_display_name
+  BEFORE INSERT ON prediction_leaderboard
+  FOR EACH ROW
+  EXECUTE FUNCTION generate_leaderboard_display_name();
+
+-- 4. Supprimer la colonne user_email (jamais utilisée)
+ALTER TABLE prediction_leaderboard DROP COLUMN IF EXISTS user_email;
+
+-- 5. Recréer la vue publique avec display_name
+DROP VIEW IF EXISTS prediction_leaderboard_public;
+
+CREATE VIEW prediction_leaderboard_public
+WITH (security_invoker=on) AS
+SELECT 
+    id,
+    user_id,
+    display_name,
+    total_points,
+    correct_scores,
+    correct_outcomes,
+    total_predictions,
+    current_streak,
+    best_streak,
+    created_at,
+    updated_at
+FROM prediction_leaderboard
+ORDER BY total_points DESC NULLS LAST;
+
+GRANT SELECT ON prediction_leaderboard_public TO anon, authenticated;
 ```
 
-**2. Fonction de matching par nom de joueur**
-```typescript
-const normalizePlayerName = (name: string): string => {
-  return name.toLowerCase()
-    .replace(/_/g, ' ')
-    .replace(/[áàâä]/g, 'a')
-    .replace(/[éèêë]/g, 'e')
-    .replace(/[íìîï]/g, 'i')
-    .replace(/[óòôö]/g, 'o')
-    .replace(/[úùûü]/g, 'u')
-    .replace(/[ñ]/g, 'n')
-    .replace(/['-]/g, ' ')
-    .trim();
-};
+### Étape 2 : Mise à jour du Frontend
 
-const playerNameMatches = (eventPlayerName: string, formationPlayerName: string): boolean => {
-  const normalized1 = normalizePlayerName(eventPlayerName);
-  const normalized2 = normalizePlayerName(formationPlayerName);
-  
-  if (normalized1 === normalized2) return true;
-  if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) return true;
-  
-  // Vérifier le nom de famille
-  const lastName1 = normalized1.split(' ').pop() || '';
-  const lastName2 = normalized2.split(' ').pop() || '';
-  return lastName1.length > 2 && lastName2.length > 2 && lastName1 === lastName2;
-};
+**Fichier : `src/hooks/useMatchPredictions.ts`**
+- Mettre à jour l'interface `LeaderboardEntry` pour inclure `display_name`
+
+**Fichier : `src/components/predictions/PredictionLeaderboard.tsx`**
+- Afficher `display_name` au lieu de `Player ${user_id.slice(0,6)}`
+
+**Fichier : `src/components/home/MatchPredictionsWidget.tsx`**
+- Utiliser `display_name` pour les badges du mini-leaderboard
+
+### Changements Frontend Détaillés
+
+```typescript
+// useMatchPredictions.ts - Interface mise à jour
+export interface LeaderboardEntry {
+  id: string;
+  user_id: string;
+  display_name: string;  // Nouveau champ
+  total_points: number;
+  correct_scores: number;
+  correct_outcomes: number;
+  total_predictions: number;
+  current_streak: number;
+  best_streak: number;
+}
+
+// PredictionLeaderboard.tsx - Affichage
+<p className="font-medium">
+  {entry.display_name || `Madridista_${entry.user_id.slice(0, 6)}`}
+  {entry.user_id === user?.id && (
+    <Badge variant="outline" className="ml-2 text-xs">Vous</Badge>
+  )}
+</p>
+
+// MatchPredictionsWidget.tsx - Mini leaderboard
+<Badge>
+  {index + 1}. {entry.display_name || `Madridista_${entry.user_id.slice(0, 4)}`} ({entry.total_points}pts)
+</Badge>
 ```
 
-**3. Nouvelles fonctions pour trouver les événements d'un joueur**
-```typescript
-const getPlayerGoalsFromDetails = (playerName: string, team: string) => {
-  const { goals } = getMatchDetailsEvents();
-  return goals.filter(g => 
-    playerNameMatches(g.scorer, playerName) && 
-    (team === 'real_madrid' ? g.team === 'real_madrid' : g.team !== 'real_madrid')
-  );
-};
+## Avantages de cette Approche
 
-const getPlayerAssistsFromDetails = (playerName: string, team: string) => {
-  const { goals } = getMatchDetailsEvents();
-  return goals.filter(g => 
-    g.assist && playerNameMatches(g.assist, playerName) &&
-    (team === 'real_madrid' ? g.team === 'real_madrid' : g.team !== 'real_madrid')
-  );
-};
+| Aspect | Script Claude.ai | Cette Solution |
+|--------|------------------|----------------|
+| Complexité | 319 lignes | ~50 lignes |
+| Colonnes ajoutées | 2 (display_name, show_public_name) | 1 (display_name) |
+| Fonctions | 3 nouvelles fonctions | 1 trigger |
+| Tables | 1 table de logs ajoutée | Aucune |
+| Compatibilité | Nécessite adaptations | Compatible directement |
 
-const getPlayerSubstitutionFromDetails = (playerName: string, team: string) => {
-  const { substitutions } = getMatchDetailsEvents();
-  return substitutions.find(s => 
-    (playerNameMatches(s.out, playerName) || playerNameMatches(s.in, playerName)) &&
-    (team === 'real_madrid' ? s.team === 'real_madrid' : s.team !== 'real_madrid')
-  );
-};
+## Résultat Attendu
 
-const getPlayerCardsFromDetails = (playerName: string, team: string) => {
-  const { yellowCards, redCards, secondYellowCards } = getMatchDetailsEvents();
-  const cards = [];
-  
-  yellowCards.filter(c => 
-    playerNameMatches(c.player, playerName) &&
-    (team === 'real_madrid' ? c.team === 'real_madrid' : c.team !== 'real_madrid')
-  ).forEach(c => cards.push({ ...c, type: 'yellow' }));
-  
-  redCards.filter(c => 
-    playerNameMatches(c.player, playerName) &&
-    (team === 'real_madrid' ? c.team === 'real_madrid' : c.team !== 'real_madrid')
-  ).forEach(c => cards.push({ ...c, type: 'red' }));
-  
-  secondYellowCards.filter(c => 
-    playerNameMatches(c.player, playerName) &&
-    (team === 'real_madrid' ? c.team === 'real_madrid' : c.team !== 'real_madrid')
-  ).forEach(c => cards.push({ ...c, type: 'second_yellow' }));
-  
-  return cards;
-};
-```
-
-**4. Fonction pour déterminer l'homme du match**
-```typescript
-const getManOfTheMatch = () => {
-  let bestPlayer = null;
-  let bestRating = 0;
-  
-  Object.values(formations).forEach(formation => {
-    formation.players.forEach(player => {
-      if (player.player_rating > bestRating) {
-        bestRating = player.player_rating;
-        bestPlayer = player;
-      }
-    });
-  });
-  
-  return bestRating >= 8 ? bestPlayer : null; // Seulement si note >= 8
-};
-```
-
-**5. Mise à jour du composant PlayerOnPitch pour utiliser les nouvelles fonctions**
-- Remplacer les appels à `getPlayerGoals(player.player_id)` par `getPlayerGoalsFromDetails(player.player_name, isOpposing ? 'opposing' : 'real_madrid')`
-- Idem pour assists, cards, substitutions
-- Ajouter l'icône "Homme du Match" (étoile bleue/or)
-
-**6. Nouvelles icônes SVG**
-- **Chaussure de foot** pour les passes décisives (au lieu du cercle vert avec "A")
-- **Étoile** pour l'homme du match
-
-## Résumé des fichiers à modifier
-
-| Fichier | Description |
-|---------|-------------|
-| `src/components/matches/TacticalFormation.tsx` | Logique de matching par nom + affichage des icônes depuis match_details |
-
-## Comportement attendu après modification
-- Les buteurs auront un ballon avec la minute à côté de leur photo
-- Les passeurs décisifs auront une chaussure verte avec la minute
-- Les joueurs remplacés auront une flèche rouge avec la minute de sortie
-- Les joueurs entrés en jeu (remplaçants) auront une flèche verte avec la minute d'entrée
-- Les joueurs avec cartons auront l'icône carton correspondante
-- Le joueur avec la meilleure note (≥8) aura une étoile "Homme du Match"
+- La colonne `user_email` sera supprimée
+- Les utilisateurs auront un pseudonyme `Madridista_XXXXXX`
+- Le scanner de sécurité ne détectera plus de problème
+- L'affichage sera plus convivial avec des pseudonymes
