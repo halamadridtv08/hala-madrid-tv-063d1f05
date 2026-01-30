@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
+const SUPABASE_URL = "https://qjnppcfbywfazwolfppo.supabase.co";
+
 // Generate or get existing visitor ID
 const getVisitorId = (): string => {
   const key = 'hala_madrid_visitor_id';
@@ -48,6 +50,22 @@ const getBrowser = (): string => {
   return 'Other';
 };
 
+// Get country code from GeoIP Edge Function
+const getCountryCode = async (): Promise<string | null> => {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/geo-lookup`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.country_code || null;
+  } catch (error) {
+    console.error('Error getting country code:', error);
+    return null;
+  }
+};
+
 export const usePageTracking = () => {
   const location = useLocation();
   const lastPathRef = useRef<string>('');
@@ -76,6 +94,9 @@ export const usePageTracking = () => {
       // Get page title
       const pageTitle = document.title;
 
+      // Get country code from GeoIP (non-blocking)
+      const countryCode = await getCountryCode();
+
       // Track page view
       const { error } = await supabase.from('page_views').insert({
         page_path: location.pathname,
@@ -87,6 +108,7 @@ export const usePageTracking = () => {
         device_type: deviceType,
         browser: browser,
         session_id: sessionId,
+        country: countryCode,
       });
 
       if (error) {

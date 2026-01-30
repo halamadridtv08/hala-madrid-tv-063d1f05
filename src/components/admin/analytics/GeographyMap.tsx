@@ -48,6 +48,17 @@ const GeographyMap = ({ data, totalVisitors }: GeographyMapProps) => {
     'bg-pink-500',
   ];
 
+  // Filter out unknown and get known countries
+  const knownCountries = data.filter(c => c.code !== 'unknown');
+  const unknownData = data.find(c => c.code === 'unknown');
+  const unknownCount = unknownData?.visitors || 0;
+
+  // Clamp percentages to 100 max (just in case)
+  const displayData = knownCountries.map(c => ({
+    ...c,
+    percentage: Math.min(c.percentage, 100)
+  }));
+
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-4">
@@ -85,7 +96,7 @@ const GeographyMap = ({ data, totalVisitors }: GeographyMapProps) => {
             </svg>
           </div>
           {/* Map pins for top countries */}
-          {data.slice(0, 5).map((country, index) => {
+          {displayData.slice(0, 5).map((country, index) => {
             const positions = [
               { top: '35%', left: '45%' }, // France
               { top: '45%', left: '42%' }, // Spain
@@ -113,8 +124,8 @@ const GeographyMap = ({ data, totalVisitors }: GeographyMapProps) => {
 
         {/* Country List */}
         <div className="space-y-3">
-          {data.length > 0 ? (
-            data.slice(0, 6).map((country, index) => (
+          {displayData.length > 0 ? (
+            displayData.slice(0, 6).map((country, index) => (
               <div key={country.code} className="flex items-center gap-3">
                 <span className="text-xl">{countryFlags[country.code] || countryFlags.unknown}</span>
                 <div className="flex-1">
@@ -123,7 +134,7 @@ const GeographyMap = ({ data, totalVisitors }: GeographyMapProps) => {
                     <span className="text-sm text-muted-foreground">{country.percentage.toFixed(1)}%</span>
                   </div>
                   <Progress 
-                    value={country.percentage} 
+                    value={Math.min(country.percentage, 100)} 
                     className="h-2"
                   />
                 </div>
@@ -139,6 +150,16 @@ const GeographyMap = ({ data, totalVisitors }: GeographyMapProps) => {
             </div>
           )}
         </div>
+
+        {/* Unknown visitors note */}
+        {unknownCount > 0 && (
+          <div className="pt-2 border-t border-border/50">
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <MapPin className="h-3 w-3" />
+              {unknownCount.toLocaleString()} visiteur(s) avec localisation inconnue
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

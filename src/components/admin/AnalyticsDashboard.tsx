@@ -38,7 +38,7 @@ interface AnalyticsData {
   avgSessionDuration: number;
   previousSessionDuration: number;
   bounceRate: number;
-  topArticles: Array<{ id: string; title: string; category: string; view_count: number }>;
+  topArticles: Array<{ id: string; title: string; category: string; view_count: number; period_views?: number }>;
   pageViewsByDay: Array<{ date: string; views: number; visitors: number; sessions: number }>;
   weeklyActivity: Array<{ day: string; shortDay: string; views: number; isToday?: boolean }>;
   deviceStats: Array<{ name: string; value: number; percentage: number }>;
@@ -47,6 +47,9 @@ interface AnalyticsData {
   trafficSources: Array<{ name: string; value: number; percentage: number }>;
   recentVisits: Array<{ page_path: string; created_at: string; device_type: string }>;
   activeVisitors: number;
+  // New fields for dynamic article counts
+  articlesInPeriod: number;
+  totalArticlesPublished: number;
 }
 
 const AnalyticsDashboard = () => {
@@ -73,6 +76,8 @@ const AnalyticsDashboard = () => {
     trafficSources: [],
     recentVisits: [],
     activeVisitors: 0,
+    articlesInPeriod: 0,
+    totalArticlesPublished: 0,
   });
 
   const getPeriodDates = () => {
@@ -204,12 +209,15 @@ const AnalyticsDashboard = () => {
         'unknown': { name: 'Inconnu', code: 'unknown' },
       };
 
+      // Calculate country percentages based on total country visitors (not unique visitors)
+      const totalCountryVisitors = Object.values(countryCounts).reduce((sum, count) => sum + count, 0);
+      
       const countryStats = Object.entries(countryCounts)
         .map(([code, visitors]) => ({
           country: countryMapping[code]?.name || code,
           code: countryMapping[code]?.code || code,
           visitors,
-          percentage: uniqueVisitors > 0 ? (visitors / uniqueVisitors) * 100 : 0,
+          percentage: totalCountryVisitors > 0 ? (visitors / totalCountryVisitors) * 100 : 0,
         }))
         .sort((a, b) => b.visitors - a.visitors);
 
@@ -285,13 +293,66 @@ const AnalyticsDashboard = () => {
           .map(pv => pv.visitor_id)
       ).size;
 
-      // Top articles
-      const { data: articlesData } = await supabase
+      // Count articles published in the period
+      const { count: articlesInPeriod } = await supabase
         .from('articles')
-        .select('id, title, category, view_count')
+        .select('*', { count: 'exact', head: true })
         .eq('is_published', true)
-        .order('view_count', { ascending: false, nullsFirst: false })
-        .limit(10);
+        .gte('published_at', periodStart.toISOString());
+
+      // Count total published articles (global)
+      const { count: totalArticlesPublished } = await supabase
+        .from('articles')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_published', true);
+
+      // Get article views in the period from article_view_history
+      const { data: articleViewsInPeriod } = await supabase
+        .from('article_view_history')
+        .select('article_id')
+        .gte('created_at', periodStart.toISOString());
+
+      // Count views per article in the period
+      const articleViewCounts: Record<string, number> = {};
+      articleViewsInPeriod?.forEach(v => {
+        articleViewCounts[v.article_id] = (articleViewCounts[v.article_id] || 0) + 1;
+      });
+
+      // Get top article IDs sorted by period views
+      const topArticleIds = Object.entries(articleViewCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([id]) => id);
+
+      // Fetch article details for top articles
+      let topArticles: Array<{ id: string; title: string; category: string; view_count: number; period_views: number }> = [];
+      
+      if (topArticleIds.length > 0) {
+        const { data: topArticlesData } = await supabase
+          .from('articles')
+          .select('id, title, category, view_count')
+          .in('id', topArticleIds);
+
+        topArticles = (topArticlesData || []).map(a => ({
+          ...a,
+          view_count: a.view_count || 0,
+          period_views: articleViewCounts[a.id] || 0
+        })).sort((a, b) => b.period_views - a.period_views);
+      } else {
+        // Fallback: if no views in period, show top articles by all-time views
+        const { data: fallbackArticles } = await supabase
+          .from('articles')
+          .select('id, title, category, view_count')
+          .eq('is_published', true)
+          .order('view_count', { ascending: false, nullsFirst: false })
+          .limit(10);
+        
+        topArticles = (fallbackArticles || []).map(a => ({
+          ...a,
+          view_count: a.view_count || 0,
+          period_views: 0
+        }));
+      }
 
       setData({
         totalPageViews,
@@ -303,7 +364,7 @@ const AnalyticsDashboard = () => {
         avgSessionDuration: 0,
         previousSessionDuration: 0,
         bounceRate,
-        topArticles: articlesData || [],
+        topArticles,
         pageViewsByDay,
         weeklyActivity,
         deviceStats,
@@ -312,6 +373,8 @@ const AnalyticsDashboard = () => {
         trafficSources,
         recentVisits,
         activeVisitors,
+        articlesInPeriod: articlesInPeriod || 0,
+        totalArticlesPublished: totalArticlesPublished || 0,
       });
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -517,15 +580,16 @@ const AnalyticsDashboard = () => {
             />
             <AnalyticsStatCard
               title="Articles Publiés"
-              value={data.topArticles.length}
+              value={`${data.articlesInPeriod} / ${data.totalArticlesPublished}`}
               icon={<FileText className="h-5 w-5" />}
               iconBgColor="bg-emerald-500/10"
               iconColor="text-emerald-500"
+              trendLabel="période / total"
             />
             <AnalyticsStatCard
-              title="Vues Moyennes"
+              title="Vues Moyennes (période)"
               value={data.topArticles.length > 0 
-                ? Math.round(data.topArticles.reduce((sum, a) => sum + (a.view_count || 0), 0) / data.topArticles.length)
+                ? Math.round(data.topArticles.reduce((sum, a) => sum + (a.period_views || a.view_count || 0), 0) / data.topArticles.length)
                 : 0}
               icon={<BarChart3 className="h-5 w-5" />}
               iconBgColor="bg-amber-500/10"
@@ -533,14 +597,20 @@ const AnalyticsDashboard = () => {
             />
             <AnalyticsStatCard
               title="Meilleur Article"
-              value={data.topArticles[0]?.view_count || 0}
+              value={data.topArticles[0]?.period_views || data.topArticles[0]?.view_count || 0}
               icon={<Eye className="h-5 w-5" />}
               iconBgColor="bg-purple-500/10"
               iconColor="text-purple-500"
             />
           </div>
 
-          <TopContentTable articles={data.topArticles} />
+          <TopContentTable 
+            articles={data.topArticles.map(a => ({
+              ...a,
+              view_count: a.period_views || a.view_count
+            }))} 
+            title="Articles Les Plus Lus (période)"
+          />
         </TabsContent>
 
         {/* Real-time Tab */}

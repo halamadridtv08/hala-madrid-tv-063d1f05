@@ -53,3 +53,7 @@ verify_jwt = false
 # Live blog scraper - requires authentication
 [functions.scrape-live-blog]
 verify_jwt = true
+
+# GeoIP lookup for page tracking - public endpoint
+[functions.geo-lookup]
+verify_jwt = false
