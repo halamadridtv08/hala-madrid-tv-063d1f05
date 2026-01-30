@@ -16,6 +16,7 @@ export interface MatchPrediction {
 export interface LeaderboardEntry {
   id: string;
   user_id: string;
+  display_name: string | null;
   total_points: number;
   correct_scores: number;
   correct_outcomes: number;

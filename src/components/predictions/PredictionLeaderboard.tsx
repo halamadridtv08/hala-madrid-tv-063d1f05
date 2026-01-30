@@ -100,7 +100,7 @@ export const PredictionLeaderboard = () => {
                     {getRankIcon(index + 1)}
                     <div>
                       <p className="font-medium">
-                        {`Player ${entry.user_id.slice(0, 6)}`}
+                        {entry.display_name || `Madridista_${entry.user_id.slice(0, 6)}`}
                         {entry.user_id === user?.id && (
                           <Badge variant="outline" className="ml-2 text-xs">Vous</Badge>
                         )}
