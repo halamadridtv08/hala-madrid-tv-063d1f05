@@ -2521,11 +2521,11 @@ export type Database = {
           correct_scores: number | null
           created_at: string | null
           current_streak: number | null
+          display_name: string | null
           id: string
           total_points: number | null
           total_predictions: number | null
           updated_at: string | null
-          user_email: string | null
           user_id: string
         }
         Insert: {
@@ -2534,11 +2534,11 @@ export type Database = {
           correct_scores?: number | null
           created_at?: string | null
           current_streak?: number | null
+          display_name?: string | null
           id?: string
           total_points?: number | null
           total_predictions?: number | null
           updated_at?: string | null
-          user_email?: string | null
           user_id: string
         }
         Update: {
@@ -2547,11 +2547,11 @@ export type Database = {
           correct_scores?: number | null
           created_at?: string | null
           current_streak?: number | null
+          display_name?: string | null
           id?: string
           total_points?: number | null
           total_predictions?: number | null
           updated_at?: string | null
-          user_email?: string | null
           user_id?: string
         }
         Relationships: []
@@ -3537,6 +3537,7 @@ export type Database = {
           correct_scores: number | null
           created_at: string | null
           current_streak: number | null
+          display_name: string | null
           id: string | null
           total_points: number | null
           total_predictions: number | null
@@ -3549,6 +3550,7 @@ export type Database = {
           correct_scores?: number | null
           created_at?: string | null
           current_streak?: number | null
+          display_name?: string | null
           id?: string | null
           total_points?: number | null
           total_predictions?: number | null
@@ -3561,6 +3563,7 @@ export type Database = {
           correct_scores?: number | null
           created_at?: string | null
           current_streak?: number | null
+          display_name?: string | null
           id?: string | null
           total_points?: number | null
           total_predictions?: number | null
