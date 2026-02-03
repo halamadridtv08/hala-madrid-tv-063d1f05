@@ -157,8 +157,15 @@ const Players = () => {
     setActiveTab("all");
   };
 
-  // Find main coach (Entraîneur Principal)
-  const mainCoach = coaches.find(coach => coach.role.toLowerCase().includes('principal') || coach.role.toLowerCase().includes('entraîneur') || coach.name.toLowerCase().includes('ancelotti')) || coaches[0];
+  // Find main coach (Entraîneur Principal) - priorité stricte : "principal" doit être présent
+  const mainCoach = coaches.find(coach => 
+    coach.role.toLowerCase().includes('entraîneur principal') || 
+    coach.role.toLowerCase() === 'entraîneur principal'
+  ) || coaches.find(coach => 
+    coach.role.toLowerCase().includes('principal')
+  ) || coaches.find(coach => 
+    coach.name.toLowerCase().includes('ancelotti')
+  ) || coaches[0];
 
   // Get other staff members
   const allStaffMembers = coaches.filter(coach => coach.id !== mainCoach?.id);
