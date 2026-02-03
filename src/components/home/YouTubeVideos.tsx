@@ -42,7 +42,7 @@ const YouTubeVideos = () => {
         <h2 className="section-title mb-8">Dernières vidéos YouTube</h2>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-          {videos.map((video) => (
+          {videos.slice(0, 12).map((video) => (
             <a
               key={video.id}
               href={video.youtube_url}
