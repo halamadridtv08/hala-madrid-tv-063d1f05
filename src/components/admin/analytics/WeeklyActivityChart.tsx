@@ -36,9 +36,9 @@ const WeeklyActivityChart = ({ data }: WeeklyActivityChartProps) => {
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-primary" />
-          Activité de la Semaine
+          7 Derniers Jours
         </CardTitle>
-        <CardDescription>Visites par jour de la semaine</CardDescription>
+        <CardDescription>Visites par jour (période glissante)</CardDescription>
       </CardHeader>
       <CardContent>
         {data.some(d => d.views > 0) ? (

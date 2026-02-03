@@ -14,7 +14,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { format, subDays, subHours, startOfDay, startOfWeek, addDays } from 'date-fns';
+import { format, subDays, subHours, startOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 
@@ -206,6 +206,41 @@ const AnalyticsDashboard = () => {
         'IT': { name: 'Italie', code: 'IT' },
         'PT': { name: 'Portugal', code: 'PT' },
         'BE': { name: 'Belgique', code: 'BE' },
+        'NL': { name: 'Pays-Bas', code: 'NL' },
+        'SN': { name: 'Sénégal', code: 'SN' },
+        'MA': { name: 'Maroc', code: 'MA' },
+        'DZ': { name: 'Algérie', code: 'DZ' },
+        'CA': { name: 'Canada', code: 'CA' },
+        'MX': { name: 'Mexique', code: 'MX' },
+        'AR': { name: 'Argentine', code: 'AR' },
+        'CO': { name: 'Colombie', code: 'CO' },
+        'CL': { name: 'Chili', code: 'CL' },
+        'BR': { name: 'Brésil', code: 'BR' },
+        'IN': { name: 'Inde', code: 'IN' },
+        'ID': { name: 'Indonésie', code: 'ID' },
+        'PH': { name: 'Philippines', code: 'PH' },
+        'JP': { name: 'Japon', code: 'JP' },
+        'KR': { name: 'Corée du Sud', code: 'KR' },
+        'CN': { name: 'Chine', code: 'CN' },
+        'AU': { name: 'Australie', code: 'AU' },
+        'NZ': { name: 'Nouvelle-Zélande', code: 'NZ' },
+        'IE': { name: 'Irlande', code: 'IE' },
+        'CH': { name: 'Suisse', code: 'CH' },
+        'AT': { name: 'Autriche', code: 'AT' },
+        'PL': { name: 'Pologne', code: 'PL' },
+        'SE': { name: 'Suède', code: 'SE' },
+        'NO': { name: 'Norvège', code: 'NO' },
+        'DK': { name: 'Danemark', code: 'DK' },
+        'FI': { name: 'Finlande', code: 'FI' },
+        'RU': { name: 'Russie', code: 'RU' },
+        'TR': { name: 'Turquie', code: 'TR' },
+        'SA': { name: 'Arabie Saoudite', code: 'SA' },
+        'AE': { name: 'Émirats Arabes Unis', code: 'AE' },
+        'EG': { name: 'Égypte', code: 'EG' },
+        'NG': { name: 'Nigeria', code: 'NG' },
+        'ZA': { name: 'Afrique du Sud', code: 'ZA' },
+        'TN': { name: 'Tunisie', code: 'TN' },
+        'CI': { name: 'Côte d\'Ivoire', code: 'CI' },
         'unknown': { name: 'Inconnu', code: 'unknown' },
       };
 
@@ -221,14 +256,22 @@ const AnalyticsDashboard = () => {
         }))
         .sort((a, b) => b.visitors - a.visitors);
 
-      // Traffic sources from referrer
+      // Traffic sources from referrer - enriched categorization
       const referrerCounts: Record<string, number> = {};
+      const searchEngines = ['google', 'bing', 'yahoo', 'duckduckgo', 'baidu', 'yandex', 'ecosia', 'qwant'];
+      const socialNetworks = ['twitter', 'facebook', 'instagram', 'linkedin', 'tiktok', 'youtube', 'pinterest', 'reddit', 'snapchat', 'whatsapp', 'telegram', 't.co', 'x.com'];
+      
       pageViews.forEach(pv => {
         let source = 'Direct';
         if (pv.referrer) {
-          if (pv.referrer.includes('google')) source = 'Organic';
-          else if (pv.referrer.includes('twitter') || pv.referrer.includes('facebook') || pv.referrer.includes('instagram')) source = 'Social';
-          else source = 'Referral';
+          const ref = pv.referrer.toLowerCase();
+          if (searchEngines.some(engine => ref.includes(engine))) {
+            source = 'Organic';
+          } else if (socialNetworks.some(network => ref.includes(network))) {
+            source = 'Social';
+          } else {
+            source = 'Referral';
+          }
         }
         referrerCounts[source] = (referrerCounts[source] || 0) + 1;
       });
@@ -251,19 +294,19 @@ const AnalyticsDashboard = () => {
         viewsByDay[day].visitors.add(pv.visitor_id);
         if (pv.session_id) viewsByDay[day].sessions.add(pv.session_id);
       });
+      // FIXED: Sort by ISO date first BEFORE formatting
       const pageViewsByDay = Object.entries(viewsByDay)
+        .sort((a, b) => a[0].localeCompare(b[0])) // Sort by ISO date key (yyyy-MM-dd)
         .map(([date, data]) => ({
           date: format(new Date(date), 'dd MMM', { locale: fr }),
           views: data.views,
           visitors: data.visitors.size,
           sessions: data.sessions.size,
-        }))
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        }));
 
-      // Weekly activity (last 7 days)
-      const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+      // FIXED: Last 7 days sliding window (instead of calendar week)
       const weeklyActivity = Array.from({ length: 7 }, (_, i) => {
-        const day = addDays(weekStart, i);
+        const day = subDays(new Date(), 6 - i); // From oldest to newest (6 days ago to today)
         const dayStr = format(day, 'yyyy-MM-dd');
         const dayViews = viewsByDay[dayStr]?.views || 0;
         const isToday = format(new Date(), 'yyyy-MM-dd') === dayStr;
