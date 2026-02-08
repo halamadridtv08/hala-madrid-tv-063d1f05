@@ -3,13 +3,13 @@ import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 import { useLiveMatchBarSettings } from "@/hooks/useLiveMatchBarSettings";
 import { useMatchTimer } from "@/hooks/useMatchTimer";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { format, differenceInMinutes, addMinutes, subMinutes } from "date-fns";
+import { format, subMinutes, addMinutes } from "date-fns";
 import { fr, es, enUS } from "date-fns/locale";
 import { Monitor, MapPin, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 const translations = {
   fr: {
@@ -129,30 +129,13 @@ export function LiveMatchBar() {
     return null;
   }, [upcomingMatches, pastMatches, settings]);
 
-  // Use manual timer from match_timer_settings
+  // Use manual timer from match_timer_settings - ONLY if admin has started it
   const { currentMinute: manualMinute, timerSettings } = useMatchTimer(relevantMatch?.match?.id || '');
 
-  // Fallback to automatic calculation if no manual timer
-  const [autoMatchMinute, setAutoMatchMinute] = useState(0);
-
-  useEffect(() => {
-    if (!relevantMatch || relevantMatch.state !== 'live' || timerSettings?.is_timer_running) return;
-
-    const calculateMinute = () => {
-      const matchStart = new Date(relevantMatch.match.match_date);
-      const now = new Date();
-      const minutes = differenceInMinutes(now, matchStart);
-      setAutoMatchMinute(Math.max(0, Math.min(minutes, 120)));
-    };
-
-    calculateMinute();
-    const interval = setInterval(calculateMinute, 60000);
-
-    return () => clearInterval(interval);
-  }, [relevantMatch, timerSettings]);
-
-  // Determine which minute to display
-  const displayMinute = timerSettings?.timer_started_at ? manualMinute : `${autoMatchMinute}`;
+  // IMPORTANT: Only display timer if admin has manually started it via timer_started_at
+  // No automatic fallback - the timer must be controlled exclusively from admin
+  const isTimerManuallyStarted = !!timerSettings?.timer_started_at;
+  const displayMinute = isTimerManuallyStarted ? manualMinute : null;
 
   // Don't show during loading to prevent flash of incorrect content
   const loading = matchesLoading || settingsLoading;
@@ -302,7 +285,7 @@ export function LiveMatchBar() {
                     <span className="text-sm text-white/50">-</span>
                     <span className="text-lg font-bold">{match.away_score ?? 0}</span>
                   </div>
-                  {state === 'live' && (settings?.show_timer !== false) && (
+                  {state === 'live' && (settings?.show_timer !== false) && isTimerManuallyStarted && (
                     isHalftime ? (
                       <span className="text-[10px] font-bold text-amber-400">
                         {t.halftime}
@@ -394,7 +377,7 @@ export function LiveMatchBar() {
                     <span className="text-xl text-white/50">-</span>
                     <span className="text-2xl lg:text-3xl font-bold">{match.away_score ?? 0}</span>
                   </div>
-                  {state === 'live' && (settings?.show_timer !== false) && (
+                  {state === 'live' && (settings?.show_timer !== false) && isTimerManuallyStarted && (
                     isHalftime ? (
                       <div className="px-3 py-1 bg-amber-500/20 border border-amber-500/50 rounded-full">
                         <span className="text-sm font-bold text-amber-400">
