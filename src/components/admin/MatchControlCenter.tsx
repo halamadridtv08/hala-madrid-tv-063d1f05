@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
   Play, Pause, Square, Timer, Radio, Trash2, Pencil, Send, Calendar, 
-  Image, Upload, X, Target, AlertCircle, Download, Link, Loader2
+  Image, Upload, X, Target, AlertCircle, Download, Link, Loader2, Bot
 } from 'lucide-react';
 import { liveBlogScraperApi } from '@/lib/api/liveBlogScraper';
 import { useMatchTimer } from '@/hooks/useMatchTimer';
@@ -22,6 +22,7 @@ import { fr } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { Match } from '@/types/Match';
 import { EditEntryModal } from './liveblog/EditEntryModal';
+import { MatchAutomationPanel } from './MatchAutomationPanel';
 
 interface MatchControlCenterProps {
   matchId?: string;
@@ -531,6 +532,16 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
             </Select>
           </CardContent>
         </Card>
+      )}
+
+      {/* Automation Panel - NEW */}
+      {selectedMatch && (
+        <MatchAutomationPanel
+          matchId={selectedMatchId}
+          matchDate={selectedMatch.match_date}
+          homeTeam={selectedMatch.home_team}
+          awayTeam={selectedMatch.away_team}
+        />
       )}
 
       {/* Import from Real Madrid Live Blog */}

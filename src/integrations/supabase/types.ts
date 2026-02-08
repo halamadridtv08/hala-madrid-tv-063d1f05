@@ -1398,6 +1398,71 @@ export type Database = {
           },
         ]
       }
+      match_automation_settings: {
+        Row: {
+          api_fixture_id: number | null
+          auto_live_blog: boolean | null
+          auto_score: boolean | null
+          auto_timer: boolean | null
+          automation_enabled: boolean | null
+          created_at: string | null
+          events_synced: Json | null
+          id: string
+          last_api_sync: string | null
+          last_known_period: string | null
+          last_known_status: string | null
+          last_scraper_sync: string | null
+          match_id: string
+          scraper_url: string | null
+          sync_errors: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_fixture_id?: number | null
+          auto_live_blog?: boolean | null
+          auto_score?: boolean | null
+          auto_timer?: boolean | null
+          automation_enabled?: boolean | null
+          created_at?: string | null
+          events_synced?: Json | null
+          id?: string
+          last_api_sync?: string | null
+          last_known_period?: string | null
+          last_known_status?: string | null
+          last_scraper_sync?: string | null
+          match_id: string
+          scraper_url?: string | null
+          sync_errors?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          api_fixture_id?: number | null
+          auto_live_blog?: boolean | null
+          auto_score?: boolean | null
+          auto_timer?: boolean | null
+          automation_enabled?: boolean | null
+          created_at?: string | null
+          events_synced?: Json | null
+          id?: string
+          last_api_sync?: string | null
+          last_known_period?: string | null
+          last_known_status?: string | null
+          last_scraper_sync?: string | null
+          match_id?: string
+          scraper_url?: string | null
+          sync_errors?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_automation_settings_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: true
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_formation_players: {
         Row: {
           created_at: string

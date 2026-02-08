@@ -1,3 +1,5 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -10,6 +12,75 @@ interface LiveBlogEntry {
   content: string;
   is_important: boolean;
   team_side: 'home' | 'away' | null;
+}
+
+// Translate content from Spanish to French using DeepL
+async function translateToFrench(texts: string[], supabase: any): Promise<string[]> {
+  if (texts.length === 0) return texts;
+
+  try {
+    // Get DeepL API key from integrations table
+    const { data: integration } = await supabase
+      .from('integrations')
+      .select('config, is_enabled')
+      .eq('integration_key', 'deepl')
+      .single();
+
+    if (!integration?.is_enabled || !integration?.config?.api_key) {
+      console.warn('DeepL not configured or disabled, skipping translation');
+      return texts;
+    }
+
+    const apiKey = integration.config.api_key;
+    const apiUrl = apiKey.endsWith(':fx') 
+      ? 'https://api-free.deepl.com/v2/translate'
+      : 'https://api.deepl.com/v2/translate';
+
+    // Batch translate (DeepL supports multiple texts in one call)
+    const formData = new URLSearchParams();
+    texts.forEach(text => formData.append('text', text));
+    formData.append('source_lang', 'ES');
+    formData.append('target_lang', 'FR');
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `DeepL-Auth-Key ${apiKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData.toString(),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('DeepL translation error:', response.status, errorText);
+      return texts; // Return original texts on error
+    }
+
+    const data = await response.json();
+    return data.translations.map((t: any) => t.text);
+  } catch (error) {
+    console.error('Translation failed:', error);
+    return texts; // Return original texts on error
+  }
+}
+
+// Translate titles from Spanish to French
+function translateTitle(type: string): string {
+  const titleMap: Record<string, string> = {
+    'goal': 'BUT !',
+    'red_card': 'CARTON ROUGE',
+    'yellow_card': 'CARTON JAUNE',
+    'substitution': 'REMPLACEMENT',
+    'var': 'VAR',
+    'penalty': 'PENALTY',
+    'halftime': 'MI-TEMPS',
+    'fulltime': 'FIN DU MATCH',
+    'kickoff': 'COUP D\'ENVOI',
+    'injury': 'Blessure',
+    'update': 'Mise à jour',
+  };
+  return titleMap[type] || 'Mise à jour';
 }
 
 // Parse minute from text like "45'" or "90+3'"
@@ -347,18 +418,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Insert entries into database
-    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const entriesToInsert = parsedEntries.map(entry => ({
+    // TRANSLATION: Translate Spanish content to French
+    console.log('Translating content from Spanish to French...');
+    const contentsToTranslate = parsedEntries.map(e => e.content);
+    const translatedContents = await translateToFrench(contentsToTranslate, supabase);
+    console.log('Translation completed');
+
+    // Build entries with translated content and proper French titles
+    const entriesToInsert = parsedEntries.map((entry, index) => ({
       match_id,
       minute: entry.minute,
       entry_type: entry.entry_type,
-      title: entry.title,
-      content: entry.content,
+      title: translateTitle(entry.entry_type), // Use French title based on type
+      content: translatedContents[index] || entry.content, // Translated content
       is_important: entry.is_important,
       team_side: entry.team_side,
     }));
@@ -382,7 +459,8 @@ Deno.serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         entriesImported: insertedData?.length || 0,
-        entries: insertedData
+        entries: insertedData,
+        translated: true
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

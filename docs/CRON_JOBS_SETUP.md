@@ -90,7 +90,19 @@ x-cron-secret: [VOTRE_CRON_SECRET]
 Content-Type: application/json
 ```
 
-### 7. 🗃️ Archivage des anciens articles
+### 7. 🤖 Synchronisation des matchs en direct (Automatisation)
+
+**Fréquence :** Toutes les minutes pendant les matchs  
+**URL :** `https://qjnppcfbywfazwolfppo.supabase.co/functions/v1/sync-live-match`  
+**Méthode :** POST  
+**Headers :**
+```
+x-cron-secret: [VOTRE_CRON_SECRET]
+Content-Type: application/json
+```
+**Description :** Synchronise automatiquement le timer, le score et le live blog des matchs qui ont l'automatisation activée. Récupère les données de l'API Football et met à jour la base de données en temps réel.
+
+### 8. 🗃️ Archivage des anciens articles
 
 **Fréquence :** Une fois par semaine (dimanche à 3h00)  
 **URL :** `https://qjnppcfbywfazwolfppo.supabase.co/functions/v1/archive-old-articles`  
@@ -166,6 +178,7 @@ Configurez les notifications par email pour être alerté en cas d'échec.
 | Notifs match 3h | Horaire | `0 * * * *` |
 | Standings La Liga | 6h | `0 */6 * * *` |
 | Sync matchs | 12h | `0 */12 * * *` |
+| **Sync matchs LIVE** | **1 min** | **`* * * * *`** |
 | Archivage articles | Hebdo | `0 3 * * 0` |
 
 ---
