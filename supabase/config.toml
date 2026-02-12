@@ -27,10 +27,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.sync-match-details]
-verify_jwt = true
+verify_jwt = false
 
 [functions.send-push-notification]
-verify_jwt = true
+verify_jwt = false
 
 # New CRON job endpoints - validate CRON_SECRET internally
 [functions.match-notifications]
@@ -44,7 +44,7 @@ verify_jwt = false
 
 # Moderator notification endpoint - requires authentication
 [functions.notify-moderator-action]
-verify_jwt = true
+verify_jwt = false
 
 # Weekly moderator report - CRON job
 [functions.weekly-moderator-report]
@@ -52,7 +52,7 @@ verify_jwt = false
 
 # Live blog scraper - requires authentication
 [functions.scrape-live-blog]
-verify_jwt = true
+verify_jwt = false
 
 # GeoIP lookup for page tracking - public endpoint
 [functions.geo-lookup]

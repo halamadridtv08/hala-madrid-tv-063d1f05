@@ -7,7 +7,12 @@
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://pagead2.googlesyndication.com https://www.googletagmanager.com https://platform.twitter.com https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https: http:; connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://api.ipify.org https://v3.football.api-sports.io https://onesignal.com https://pagead2.googlesyndication.com https://www.google-analytics.com; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://platform.twitter.com https://td.doubleclick.net https://googleads.g.doubleclick.net; media-src 'self' https: blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests;" }
       ]
     }
   ]
