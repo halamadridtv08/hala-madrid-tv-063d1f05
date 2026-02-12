@@ -250,7 +250,7 @@ const ArticleDetail = () => {
                     url={typeof window !== "undefined" ? window.location.href : undefined}
                   />
                 </div>
-                <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">{article.title}</h1>
                 <div 
                   className="text-xl text-muted-foreground mb-4 prose dark:prose-invert max-w-none" 
                   dangerouslySetInnerHTML={{
