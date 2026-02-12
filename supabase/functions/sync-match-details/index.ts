@@ -260,9 +260,57 @@ serve(async (req) => {
   }
 
   try {
+    // Validate authentication: CRON_SECRET or admin JWT
+    const cronSecret = req.headers.get('x-cron-secret');
+    const authHeader = req.headers.get('Authorization');
+    
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    if (cronSecret) {
+      // CRON job authentication
+      const expectedSecret = Deno.env.get('CRON_SECRET');
+      if (!expectedSecret || cronSecret !== expectedSecret) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid CRON secret' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } else if (authHeader?.startsWith('Bearer ')) {
+      // Admin JWT authentication
+      const token = authHeader.replace('Bearer ', '');
+      const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+      const supabaseClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: `Bearer ${token}` } }
+      });
+      const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+      if (claimsError || !claimsData?.claims) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid authentication token' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      // Verify admin role
+      const userId = claimsData.claims.sub;
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .single();
+      if (!roleData) {
+        return new Response(
+          JSON.stringify({ error: 'Admin access required' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } else {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required (CRON_SECRET or admin JWT)' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Get current season dynamically
     const CURRENT_SEASON = await getCurrentSeasonYear(supabase);
