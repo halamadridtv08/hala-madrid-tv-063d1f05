@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Crown, Sparkles, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWelcomePopupSettings } from "@/hooks/useWelcomePopupSettings";
+import DOMPurify from "dompurify";
 
 export const WelcomePopup = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -76,10 +77,10 @@ export const WelcomePopup = () => {
                   transition={{ delay: 0.3, duration: 0.5 }}
                   className="text-2xl font-bold text-foreground mb-2"
                   dangerouslySetInnerHTML={{ 
-                    __html: settings.title.replace(
+                    __html: DOMPurify.sanitize(settings.title.replace(
                       'HALA MADRID TV', 
                       '<span class="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">HALA MADRID TV</span>'
-                    ) 
+                    ))
                   }}
                 />
 
