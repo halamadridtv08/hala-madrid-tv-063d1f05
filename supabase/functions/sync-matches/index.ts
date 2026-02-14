@@ -155,8 +155,14 @@ serve(async (req) => {
       );
     }
 
-    // Get user from token
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+    // Validate user token using anon key client
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      anonKey,
+      { global: { headers: { Authorization: `Bearer ${token}` } } }
+    );
+    const { data: { user }, error: authError } = await userClient.auth.getUser();
 
     if (authError || !user) {
       console.error('Match sync attempted with invalid token:', authError?.message);
