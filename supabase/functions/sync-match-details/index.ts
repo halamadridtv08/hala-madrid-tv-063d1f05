@@ -281,18 +281,18 @@ serve(async (req) => {
       // Admin JWT authentication
       const token = authHeader.replace('Bearer ', '');
       const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-      const supabaseClient = createClient(supabaseUrl, anonKey, {
+      const userClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: `Bearer ${token}` } }
       });
-      const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
-      if (claimsError || !claimsData?.claims) {
+      const { data: { user }, error: userError } = await userClient.auth.getUser();
+      if (userError || !user) {
         return new Response(
           JSON.stringify({ error: 'Invalid authentication token' }),
           { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       // Verify admin role
-      const userId = claimsData.claims.sub;
+      const userId = user.id;
       const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
