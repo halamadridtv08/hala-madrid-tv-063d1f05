@@ -57,3 +57,7 @@ verify_jwt = false
 # GeoIP lookup for page tracking - public endpoint
 [functions.geo-lookup]
 verify_jwt = false
+
+# Live match sync - validates CRON_SECRET or admin JWT internally
+[functions.sync-live-match]
+verify_jwt = false
