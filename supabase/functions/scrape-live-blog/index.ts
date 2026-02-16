@@ -457,12 +457,14 @@ Deno.serve(async (req) => {
 
     if (!scrapeResponse.ok || !scrapeData.success) {
       console.error('Firecrawl error:', scrapeData);
+      const errorMsg = scrapeData.error || `Scraping failed with status ${scrapeResponse.status}`;
+      console.error('Firecrawl error detail:', errorMsg);
       return new Response(
         JSON.stringify({
           success: false,
-          error: scrapeData.error || `Scraping failed with status ${scrapeResponse.status}`
+          error: errorMsg
         }),
-        { status: scrapeResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
