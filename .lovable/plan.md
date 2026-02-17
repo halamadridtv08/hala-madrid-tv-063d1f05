@@ -1,115 +1,98 @@
 
 
-# Plan : Renforcement de la Securite Globale du Site
+# Plan : Application Native avec Capacitor
 
-## Audit de securite - Problemes identifies
+## Objectif
 
-L'analyse de securite a revele plusieurs vulnerabilites importantes a corriger en priorite.
+Transformer votre application web HALA MADRID TV en application native Android et iOS en utilisant Capacitor, sans reecrire le code existant.
 
----
+## Ce que Capacitor fait
 
-## PRIORITE 1 : Politiques RLS trop permissives (CRITIQUE)
+Capacitor emballe votre application React existante dans une coquille native. Votre code reste identique, mais l'application peut etre publiee sur le Google Play Store et l'Apple App Store.
 
-**Probleme** : Plusieurs tables d'administration sont modifiables par N'IMPORTE QUEL utilisateur connecte, pas seulement les admins. Un simple utilisateur inscrit pourrait modifier le branding, les liens de navigation, le contenu du site, etc.
+## Etapes a realiser dans Lovable
 
-**Tables concernees** :
+### Etape 1 : Installer les dependances Capacitor
 
-| Table | Risque |
-|-------|--------|
-| `branding_settings` | Un utilisateur peut changer le logo, les couleurs du site |
-| `explore_cards` | Modification des cartes de la page Explorer |
-| `navigation_links` | Injection de liens malveillants dans la navigation |
-| `site_content` | Modification du contenu du site (CGU, etc.) |
-| `social_links` | Modification des liens vers les reseaux sociaux |
-| `welcome_popup_settings` | Modification du popup de bienvenue |
-| `kits` | Ajout de faux kits |
-| `player_stats` | N'importe qui peut inserer des stats joueurs |
+Ajouter les packages suivants au projet :
+- `@capacitor/core`
+- `@capacitor/cli` (dev)
+- `@capacitor/ios`
+- `@capacitor/android`
 
-**Correction** : Remplacer toutes ces politiques `WITH CHECK (true)` / `USING (true)` par des verifications de role admin/moderateur via `has_role(auth.uid(), 'admin')` ou `has_role(auth.uid(), 'moderator')`.
+### Etape 2 : Creer le fichier de configuration Capacitor
 
----
+Creer `capacitor.config.ts` a la racine du projet avec :
+- **appId** : `app.lovable.73064fd28b5240c2b76d341c01c8ff9d`
+- **appName** : `hala-madrid-tv`
+- **webDir** : `dist`
+- **server.url** : URL du sandbox pour le hot-reload en developpement
 
-## PRIORITE 2 : Edge Functions avec verify_jwt = true (deprece)
+### Etape 3 : Mettre a jour le service worker PWA
 
-**Probleme** : 3 Edge Functions utilisent `verify_jwt = true` dans `config.toml`, ce qui est l'approche deprecee et ne fonctionne pas avec le systeme signing-keys de Supabase.
-
-**Fonctions concernees** :
-- `sync-match-details`
-- `send-push-notification`
-- `notify-moderator-action`
-- `scrape-live-blog`
-
-**Correction** : Passer a `verify_jwt = false` et valider le JWT manuellement dans le code avec `getClaims()`.
+Ajouter `/~oauth` a la liste `navigateFallbackDenylist` dans `vite.config.ts` pour eviter les conflits avec l'authentification OAuth.
 
 ---
 
-## PRIORITE 3 : XSS dans WelcomePopup
+## Etapes a realiser sur votre ordinateur (apres approbation)
 
-**Probleme** : Le composant `WelcomePopup.tsx` utilise `dangerouslySetInnerHTML` avec `settings.title` sans sanitisation DOMPurify. Si un admin compromis injecte du HTML malveillant dans le titre, tous les visiteurs seront affectes.
+Une fois les modifications faites dans Lovable, vous devrez executer ces commandes sur votre machine :
 
-**Correction** : Ajouter `DOMPurify.sanitize()` autour du contenu.
+1. **Exporter vers GitHub** via le bouton dans les parametres du projet
+2. **Cloner et installer** :
+   ```
+   git clone <votre-repo>
+   cd <votre-repo>
+   npm install
+   ```
+3. **Ajouter les plateformes** :
+   ```
+   npx cap add android
+   npx cap add ios
+   ```
+4. **Builder et synchroniser** :
+   ```
+   npm run build
+   npx cap sync
+   ```
+5. **Lancer l'application** :
+   - Android : `npx cap run android` (necessite Android Studio)
+   - iOS : `npx cap run ios` (necessite un Mac avec Xcode)
 
 ---
 
-## PRIORITE 4 : Rate limiting sur les commentaires et votes
+## Pre-requis sur votre machine
 
-**Probleme** : Les tables `article_comments`, `poll_votes`, `dream_teams` et `page_views` acceptent des INSERT de n'importe qui (`WITH CHECK (true)` pour le role `public`). Sans rate limiting cote base de donnees, un attaquant peut spammer massivement.
-
-**Correction** : Ajouter un rate limiting via la fonction `check_rate_limit` existante dans les fonctions d'insertion (via trigger ou RPC).
-
----
-
-## PRIORITE 5 : Headers de securite renforces (Vercel)
-
-**Probleme** : Le fichier `vercel.json` ne contient que 2 headers basiques. Il manque des headers critiques.
-
-**Correction** : Ajouter les headers manquants :
-- `Content-Security-Policy` (reprise de l'index.html)
-- `Strict-Transport-Security`
-- `Referrer-Policy`
-- `Permissions-Policy`
+| Plateforme | Outil requis |
+|------------|-------------|
+| Android | Android Studio installe |
+| iOS | Mac avec Xcode installe |
 
 ---
 
-## Details techniques de l'implementation
+## Details techniques
 
-### Migration SQL (Priorite 1)
+### Fichiers a creer/modifier
 
-```sql
--- Supprimer les politiques trop permissives et les remplacer par des verifications admin
+| Fichier | Action |
+|---------|--------|
+| `capacitor.config.ts` | Creer - Configuration Capacitor |
+| `vite.config.ts` | Modifier - Ajouter `navigateFallbackDenylist` pour `/~oauth` |
+| `package.json` | Modifier - Ajouter les dependances Capacitor |
 
--- branding_settings
-DROP POLICY IF EXISTS "Authenticated users can insert branding_settings" ON branding_settings;
-DROP POLICY IF EXISTS "Authenticated users can update branding_settings" ON branding_settings;
-DROP POLICY IF EXISTS "Authenticated users can delete branding_settings" ON branding_settings;
+### Configuration Capacitor
 
-CREATE POLICY "Admins can manage branding" ON branding_settings
-  FOR ALL USING (has_role(auth.uid(), 'admin'))
-  WITH CHECK (has_role(auth.uid(), 'admin'));
-
--- (meme pattern pour explore_cards, navigation_links, site_content,
---  social_links, welcome_popup_settings, kits, player_stats)
+```text
+capacitor.config.ts
+├── appId: app.lovable.73064fd28b5240c2b76d341c01c8ff9d
+├── appName: hala-madrid-tv
+├── webDir: dist
+└── server
+    ├── url: https://73064fd2-8b52-40c2-b76d-341c01c8ff9d.lovableproject.com?forceHideBadge=true
+    └── cleartext: true
 ```
 
-### Fichiers a modifier
+### Ressource utile
 
-| Fichier | Modification |
-|---------|--------------|
-| Migration SQL | Corriger ~18 politiques RLS sur 8 tables |
-| `supabase/config.toml` | Passer 4 fonctions a `verify_jwt = false` |
-| `supabase/functions/sync-match-details/index.ts` | Ajouter validation JWT manuelle |
-| `supabase/functions/send-push-notification/index.ts` | Ajouter validation JWT manuelle |
-| `supabase/functions/notify-moderator-action/index.ts` | Ajouter validation JWT manuelle |
-| `supabase/functions/scrape-live-blog/index.ts` | Ajouter validation JWT manuelle |
-| `src/components/welcome/WelcomePopup.tsx` | Ajouter DOMPurify |
-| `vercel.json` | Ajouter headers de securite |
-
-### Recapitulatif des corrections
-
-| Categorie | Nombre de corrections | Severite |
-|-----------|----------------------|----------|
-| RLS trop permissives (tables admin) | ~18 politiques sur 8 tables | CRITIQUE |
-| Edge Functions JWT deprece | 4 fonctions | HAUTE |
-| XSS WelcomePopup | 1 composant | MOYENNE |
-| Headers Vercel | 1 fichier | MOYENNE |
+Pour plus de details, consultez le guide officiel : https://docs.lovable.dev/tips-tricks/self-hosting
 
