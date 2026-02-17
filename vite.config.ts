@@ -64,7 +64,7 @@ export default defineConfig(({ mode }) => ({
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api/, /\.json$/, /^\/supabase/],
+        navigateFallbackDenylist: [/^\/api/, /\.json$/, /^\/supabase/, /^\/~oauth/],
         runtimeCaching: [
           {
             // Force fresh JS/CSS bundles - always check network first
