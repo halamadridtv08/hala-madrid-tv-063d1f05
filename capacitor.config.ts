@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.73064fd28b5240c2b76d341c01c8ff9d',
+  appId: 'app.lovable.halamadridtv',
   appName: 'hala-madrid-tv',
   webDir: 'dist',
   server: {
