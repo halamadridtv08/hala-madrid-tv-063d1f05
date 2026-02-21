@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'hala-madrid-tv',
   webDir: 'dist',
   server: {
-    url: 'https://73064fd2-8b52-40c2-b76d-341c01c8ff9d.lovableproject.com?forceHideBadge=true',
+    url: 'https://hala-madrid-tv.lovable.app?forceHideBadge=true',
     cleartext: true
   }
 };
