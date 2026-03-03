@@ -278,11 +278,11 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
                   </div>
                 </div>
                 
-                <div className="flex space-x-2">
-                  <Button type="submit" disabled={loading}>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button type="submit" disabled={loading} className="w-full sm:w-auto">
                     {loading ? "Enregistrement..." : "Enregistrer"}
                   </Button>
-                  <Button type="button" variant="outline" onClick={onCancel}>
+                  <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
                     Annuler
                   </Button>
                 </div>
@@ -298,7 +298,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
                     Image de couverture
                   </Label>
                   
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <Input
                       type="url"
                       value={formData.image_url}
@@ -356,7 +356,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
                     Miniature (pour les widgets et cartes)
                   </Label>
                   
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <Input
                       type="url"
                       value={formData.thumbnail_url}

@@ -816,7 +816,7 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
                     <Label>Minute</Label>
                     <div className="h-10 px-3 flex items-center bg-muted rounded-md font-mono font-bold">

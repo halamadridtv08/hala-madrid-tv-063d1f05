@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { MediaUploader } from "./MediaUploader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Bold, Italic, AlignLeft, AlignCenter, AlignRight, Link, Video, Image as ImageIcon, Table, Twitter, Instagram, Youtube, Quote, List, ListOrdered } from "lucide-react";
 import DOMPurify from "dompurify";
 
@@ -11,6 +14,162 @@ interface RichTextEditorProps {
   placeholder?: string;
   minRows?: number;
   showPreview?: boolean;
+}
+
+// Extracted toolbar component to avoid duplication
+interface ToolbarProps {
+  onBold: () => void;
+  onItalic: () => void;
+  onLeftAlign: () => void;
+  onCenterAlign: () => void;
+  onRightAlign: () => void;
+  onLink: () => void;
+  onUnorderedList: () => void;
+  onOrderedList: () => void;
+  onTable: () => void;
+  onBlockquote: () => void;
+  onMedia: () => void;
+  onTwitter: () => void;
+  onInstagram: () => void;
+  onTikTok: () => void;
+}
+
+function EditorToolbar({ onBold, onItalic, onLeftAlign, onCenterAlign, onRightAlign, onLink, onUnorderedList, onOrderedList, onTable, onBlockquote, onMedia, onTwitter, onInstagram, onTikTok }: ToolbarProps) {
+  return (
+    <div className="flex flex-wrap items-center gap-1 p-1 border rounded-md bg-muted/30">
+      <Button type="button" variant="ghost" size="sm" onClick={onBold} className="h-8 px-2" title="Gras">
+        <Bold className="h-4 w-4" />
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={onItalic} className="h-8 px-2" title="Italique">
+        <Italic className="h-4 w-4" />
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={onLeftAlign} className="h-8 px-2" title="Aligner à gauche">
+        <AlignLeft className="h-4 w-4" />
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={onCenterAlign} className="h-8 px-2" title="Centrer">
+        <AlignCenter className="h-4 w-4" />
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={onRightAlign} className="h-8 px-2" title="Aligner à droite">
+        <AlignRight className="h-4 w-4" />
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={onLink} className="h-8 px-2" title="Insérer un lien">
+        <Link className="h-4 w-4" />
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={onUnorderedList} className="h-8 px-2" title="Liste à puces">
+        <List className="h-4 w-4" />
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={onOrderedList} className="h-8 px-2" title="Liste numérotée">
+        <ListOrdered className="h-4 w-4" />
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={onTable} className="h-8 px-2" title="Tableau">
+        <Table className="h-4 w-4" />
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={onBlockquote} className="h-8 px-2" title="Citation">
+        <Quote className="h-4 w-4" />
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={onMedia} className="h-8 px-2" title="Image/Vidéo">
+        <ImageIcon className="h-4 w-4" />
+      </Button>
+      <div className="h-6 w-px bg-border mx-1" />
+      <Button type="button" variant="ghost" size="sm" onClick={onTwitter} className="h-8 px-2" title="Twitter/X">
+        <Twitter className="h-4 w-4" />
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={onInstagram} className="h-8 px-2" title="Instagram">
+        <Instagram className="h-4 w-4" />
+      </Button>
+      <Button type="button" variant="ghost" size="sm" onClick={onTikTok} className="h-8 px-2" title="TikTok">
+        <Youtube className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
+// URL input dialog for links and embeds
+interface UrlDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  placeholder: string;
+  onSubmit: (url: string) => void;
+  error?: string;
+}
+
+function UrlInputDialog({ open, onOpenChange, title, placeholder, onSubmit, error }: UrlDialogProps) {
+  const [url, setUrl] = useState("");
+
+  const handleSubmit = () => {
+    if (url.trim()) {
+      onSubmit(url.trim());
+      setUrl("");
+      onOpenChange(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setUrl(""); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>URL</Label>
+            <Input
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder={placeholder}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              autoFocus
+            />
+          </div>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => { onOpenChange(false); setUrl(""); }}>Annuler</Button>
+          <Button onClick={handleSubmit} disabled={!url.trim()}>Insérer</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Table dialog
+function TableDialog({ open, onOpenChange, onSubmit }: { open: boolean; onOpenChange: (v: boolean) => void; onSubmit: (rows: number, cols: number) => void }) {
+  const [rows, setRows] = useState("3");
+  const [cols, setCols] = useState("3");
+
+  const handleSubmit = () => {
+    const r = parseInt(rows);
+    const c = parseInt(cols);
+    if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) {
+      onSubmit(r, c);
+      onOpenChange(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Insérer un tableau</DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label>Lignes</Label>
+            <Input type="number" min="1" value={rows} onChange={(e) => setRows(e.target.value)} />
+          </div>
+          <div>
+            <Label>Colonnes</Label>
+            <Input type="number" min="1" value={cols} onChange={(e) => setCols(e.target.value)} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
+          <Button onClick={handleSubmit}>Insérer</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 export function RichTextEditor({
@@ -25,6 +184,17 @@ export function RichTextEditor({
   const editorRef = useRef<HTMLDivElement>(null);
   const isUpdatingRef = useRef(false);
 
+  // Dialog states
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [linkError, setLinkError] = useState("");
+  const [twitterDialogOpen, setTwitterDialogOpen] = useState(false);
+  const [twitterError, setTwitterError] = useState("");
+  const [instagramDialogOpen, setInstagramDialogOpen] = useState(false);
+  const [instagramError, setInstagramError] = useState("");
+  const [tiktokDialogOpen, setTiktokDialogOpen] = useState(false);
+  const [tiktokError, setTiktokError] = useState("");
+  const [tableDialogOpen, setTableDialogOpen] = useState(false);
+
   // Sync editor content with value prop
   useEffect(() => {
     if (editorRef.current && !isUpdatingRef.current) {
@@ -32,8 +202,6 @@ export function RichTextEditor({
         ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'iframe', 'blockquote', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'section'],
         ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'width', 'height', 'controls', 'class', 'target', 'rel', 'style', 'frameborder', 'allow', 'allowfullscreen', 'scrolling', 'allowtransparency', 'data-theme', 'cite', 'data-video-id']
       });
-      
-      // Update if the editor content differs from the value
       if (editorRef.current.innerHTML !== sanitized) {
         editorRef.current.innerHTML = sanitized;
       }
@@ -45,26 +213,15 @@ export function RichTextEditor({
       isUpdatingRef.current = true;
       const content = editorRef.current.innerHTML;
       onChange(content);
-      setTimeout(() => {
-        isUpdatingRef.current = false;
-      }, 0);
+      setTimeout(() => { isUpdatingRef.current = false; }, 0);
     }
   };
 
-  const execCommand = (command: string, value: string | undefined = undefined) => {
-    document.execCommand(command, false, value);
+  const execCommand = (command: string, val: string | undefined = undefined) => {
+    document.execCommand(command, false, val);
     editorRef.current?.focus();
     handleInput();
   };
-
-  const insertBold = () => execCommand('bold');
-  const insertItalic = () => execCommand('italic');
-  const insertUnderline = () => execCommand('underline');
-  const insertLeftAlign = () => execCommand('justifyLeft');
-  const insertCenterAlign = () => execCommand('justifyCenter');
-  const insertRightAlign = () => execCommand('justifyRight');
-  const insertUnorderedList = () => execCommand('insertUnorderedList');
-  const insertOrderedList = () => execCommand('insertOrderedList');
 
   const escapeHtml = (text: string): string => {
     const div = document.createElement('div');
@@ -75,149 +232,90 @@ export function RichTextEditor({
   const validateUrl = (url: string): boolean => {
     try {
       const trimmed = url.trim();
-      // Block common XSS vectors
-      if (/^(javascript|data|vbscript|file):/i.test(trimmed)) {
-        return false;
-      }
+      if (/^(javascript|data|vbscript|file):/i.test(trimmed)) return false;
       const parsed = new URL(trimmed);
       return ['http:', 'https:'].includes(parsed.protocol);
-    } catch {
-      return false;
-    }
+    } catch { return false; }
   };
 
-  // Validate URLs for specific social media platforms with strict domain checking
   const validateSocialUrl = (url: string, allowedDomains: string[]): boolean => {
     if (!validateUrl(url)) return false;
-    
     try {
       const parsed = new URL(url.trim());
       const hostname = parsed.hostname.toLowerCase();
-      // Check if hostname matches or is a subdomain of allowed domains
-      return allowedDomains.some(domain => 
-        hostname === domain || hostname.endsWith('.' + domain)
-      );
-    } catch {
-      return false;
-    }
+      return allowedDomains.some(domain => hostname === domain || hostname.endsWith('.' + domain));
+    } catch { return false; }
   };
 
-  const insertLink = () => {
-    const url = prompt("Entrez l'URL du lien:", "https://");
-    if (url) {
-      const trimmedUrl = url.trim();
-      if (!validateUrl(trimmedUrl)) {
-        alert("URL invalide. Veuillez utiliser une URL commençant par http:// ou https://");
-        return;
-      }
-      const escapedUrl = escapeHtml(trimmedUrl);
-      execCommand('createLink', escapedUrl);
+  const handleInsertLink = (url: string) => {
+    if (!validateUrl(url)) {
+      setLinkError("URL invalide. Utilisez http:// ou https://");
+      return;
     }
+    setLinkError("");
+    execCommand('createLink', escapeHtml(url));
   };
 
   const handleMediaUploadSuccess = (url: string, type: string) => {
     if (editorRef.current) {
-      if (!validateUrl(url)) {
-        alert("URL de média invalide");
-        return;
-      }
+      if (!validateUrl(url)) return;
       const escapedUrl = escapeHtml(url);
       let html = '';
-      if (type === 'image') {
-        html = `<img src="${escapedUrl}" alt="Image" style="max-width: 100%; height: auto;" />`;
-      } else if (type === 'video') {
-        html = `<video controls src="${escapedUrl}" style="max-width: 100%;"></video>`;
-      }
-      
+      if (type === 'image') html = `<img src="${escapedUrl}" alt="Image" style="max-width: 100%; height: auto;" />`;
+      else if (type === 'video') html = `<video controls src="${escapedUrl}" style="max-width: 100%;"></video>`;
       document.execCommand('insertHTML', false, html);
       handleInput();
     }
     setShowMediaUploader(false);
   };
 
-  const insertTable = () => {
-    const rows = prompt("Nombre de lignes:", "3");
-    const cols = prompt("Nombre de colonnes:", "3");
-    
-    if (!rows || !cols) return;
-    
-    const numRows = parseInt(rows);
-    const numCols = parseInt(cols);
-    
-    if (isNaN(numRows) || isNaN(numCols) || numRows < 1 || numCols < 1) {
-      alert("Veuillez entrer des nombres valides");
-      return;
-    }
-    
+  const handleInsertTable = (numRows: number, numCols: number) => {
     let tableHTML = '<table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">';
     tableHTML += '<thead><tr>';
-    for (let j = 0; j < numCols; j++) {
-      tableHTML += '<th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">En-tête ' + (j + 1) + '</th>';
-    }
-    tableHTML += '</tr></thead>';
-    
-    tableHTML += '<tbody>';
+    for (let j = 0; j < numCols; j++) tableHTML += '<th style="border: 1px solid #ddd; padding: 8px; background-color: #f2f2f2;">En-tête ' + (j + 1) + '</th>';
+    tableHTML += '</tr></thead><tbody>';
     for (let i = 1; i < numRows; i++) {
       tableHTML += '<tr>';
-      for (let j = 0; j < numCols; j++) {
-        tableHTML += '<td style="border: 1px solid #ddd; padding: 8px;">Cellule ' + i + '-' + (j + 1) + '</td>';
-      }
+      for (let j = 0; j < numCols; j++) tableHTML += '<td style="border: 1px solid #ddd; padding: 8px;">Cellule ' + i + '-' + (j + 1) + '</td>';
       tableHTML += '</tr>';
     }
     tableHTML += '</tbody></table>';
-    
     document.execCommand('insertHTML', false, tableHTML);
     handleInput();
   };
 
-  const insertTwitterEmbed = () => {
-    const url = prompt("Entrez l'URL du tweet:", "https://twitter.com/");
-    if (!url) return;
-    
-    // Validate URL with strict domain checking
+  const handleInsertTwitter = (url: string) => {
     if (!validateSocialUrl(url, ['twitter.com', 'x.com'])) {
-      alert("URL Twitter/X invalide. Veuillez utiliser une URL valide de twitter.com ou x.com");
+      setTwitterError("URL Twitter/X invalide");
       return;
     }
-    
-    // Escape the URL for safe HTML insertion
-    const escapedUrl = escapeHtml(url.trim());
+    setTwitterError("");
+    const escapedUrl = escapeHtml(url);
     const embedHTML = `<blockquote class="twitter-tweet" data-theme="dark"><a href="${escapedUrl}"></a></blockquote><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>`;
     document.execCommand('insertHTML', false, embedHTML);
     handleInput();
   };
 
-  const insertInstagramEmbed = () => {
-    const url = prompt("Entrez l'URL du post Instagram:", "https://www.instagram.com/p/");
-    if (!url) return;
-    
-    // Validate URL with strict domain checking
+  const handleInsertInstagram = (url: string) => {
     if (!validateSocialUrl(url, ['instagram.com'])) {
-      alert("URL Instagram invalide. Veuillez utiliser une URL valide de instagram.com");
+      setInstagramError("URL Instagram invalide");
       return;
     }
-    
-    // Escape the URL for safe HTML insertion
-    const trimmedUrl = url.trim();
-    const embedUrl = trimmedUrl.endsWith('/') ? trimmedUrl + 'embed' : trimmedUrl + '/embed';
+    setInstagramError("");
+    const embedUrl = url.endsWith('/') ? url + 'embed' : url + '/embed';
     const escapedEmbedUrl = escapeHtml(embedUrl);
     const embedHTML = `<iframe src="${escapedEmbedUrl}" width="100%" height="600" frameborder="0" scrolling="no" allowtransparency="true" style="max-width: 540px; margin: 1rem auto; display: block;"></iframe>`;
     document.execCommand('insertHTML', false, embedHTML);
     handleInput();
   };
 
-  const insertTikTokEmbed = () => {
-    const url = prompt("Entrez l'URL de la vidéo TikTok:", "https://www.tiktok.com/@");
-    if (!url) return;
-    
-    // Validate URL with strict domain checking
+  const handleInsertTikTok = (url: string) => {
     if (!validateSocialUrl(url, ['tiktok.com'])) {
-      alert("URL TikTok invalide. Veuillez utiliser une URL valide de tiktok.com");
+      setTiktokError("URL TikTok invalide");
       return;
     }
-    
-    // Escape the URL for safe HTML insertion
-    const escapedUrl = escapeHtml(url.trim());
+    setTiktokError("");
+    const escapedUrl = escapeHtml(url);
     const embedHTML = `<blockquote class="tiktok-embed" cite="${escapedUrl}" data-video-id="" style="max-width: 605px; min-width: 325px; margin: 1rem auto;"><section><a href="${escapedUrl}">Voir sur TikTok</a></section></blockquote><script async src="https://www.tiktok.com/embed.js"></script>`;
     document.execCommand('insertHTML', false, embedHTML);
     handleInput();
@@ -226,8 +324,7 @@ export function RichTextEditor({
   const insertBlockquote = () => {
     const selection = window.getSelection();
     if (selection && selection.toString()) {
-      const html = `<blockquote><p>${selection.toString()}</p></blockquote>`;
-      document.execCommand('insertHTML', false, html);
+      document.execCommand('insertHTML', false, `<blockquote><p>${selection.toString()}</p></blockquote>`);
     } else {
       document.execCommand('insertHTML', false, '<blockquote><p>Votre citation ici...</p></blockquote>');
     }
@@ -239,71 +336,53 @@ export function RichTextEditor({
       ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'iframe', 'blockquote', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'section'],
       ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'width', 'height', 'controls', 'class', 'target', 'rel', 'style', 'frameborder', 'allow', 'allowfullscreen', 'scrolling', 'allowtransparency', 'data-theme', 'cite', 'data-video-id']
     });
-    
     return { __html: sanitized };
   };
 
   const minHeight = `${minRows * 24}px`;
 
+  const toolbarProps: ToolbarProps = {
+    onBold: () => execCommand('bold'),
+    onItalic: () => execCommand('italic'),
+    onLeftAlign: () => execCommand('justifyLeft'),
+    onCenterAlign: () => execCommand('justifyCenter'),
+    onRightAlign: () => execCommand('justifyRight'),
+    onLink: () => { setLinkError(""); setLinkDialogOpen(true); },
+    onUnorderedList: () => execCommand('insertUnorderedList'),
+    onOrderedList: () => execCommand('insertOrderedList'),
+    onTable: () => setTableDialogOpen(true),
+    onBlockquote: insertBlockquote,
+    onMedia: () => setShowMediaUploader(prev => !prev),
+    onTwitter: () => { setTwitterError(""); setTwitterDialogOpen(true); },
+    onInstagram: () => { setInstagramError(""); setInstagramDialogOpen(true); },
+    onTikTok: () => { setTiktokError(""); setTiktokDialogOpen(true); },
+  };
+
+  const dialogs = (
+    <>
+      <UrlInputDialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen} title="Insérer un lien" placeholder="https://" onSubmit={handleInsertLink} error={linkError} />
+      <UrlInputDialog open={twitterDialogOpen} onOpenChange={setTwitterDialogOpen} title="Embed Twitter/X" placeholder="https://twitter.com/..." onSubmit={handleInsertTwitter} error={twitterError} />
+      <UrlInputDialog open={instagramDialogOpen} onOpenChange={setInstagramDialogOpen} title="Embed Instagram" placeholder="https://www.instagram.com/p/..." onSubmit={handleInsertInstagram} error={instagramError} />
+      <UrlInputDialog open={tiktokDialogOpen} onOpenChange={setTiktokDialogOpen} title="Embed TikTok" placeholder="https://www.tiktok.com/@..." onSubmit={handleInsertTikTok} error={tiktokError} />
+      <TableDialog open={tableDialogOpen} onOpenChange={setTableDialogOpen} onSubmit={handleInsertTable} />
+    </>
+  );
+
+  const mediaUploader = showMediaUploader && (
+    <div className="p-4 border rounded-md bg-muted/10">
+      <MediaUploader 
+        onSuccess={handleMediaUploadSuccess} 
+        acceptTypes="image/*,video/*" 
+        buttonText="Télécharger un média"
+      />
+    </div>
+  );
+
   if (!showPreview) {
     return (
       <div className="space-y-2">
-        <div className="flex flex-wrap items-center gap-1 p-1 border rounded-md bg-muted/30">
-          <Button type="button" variant="ghost" size="sm" onClick={insertBold} className="h-8 px-2" title="Gras">
-            <Bold className="h-4 w-4" />
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertItalic} className="h-8 px-2" title="Italique">
-            <Italic className="h-4 w-4" />
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertLeftAlign} className="h-8 px-2" title="Aligner à gauche">
-            <AlignLeft className="h-4 w-4" />
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertCenterAlign} className="h-8 px-2" title="Centrer">
-            <AlignCenter className="h-4 w-4" />
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertRightAlign} className="h-8 px-2" title="Aligner à droite">
-            <AlignRight className="h-4 w-4" />
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertLink} className="h-8 px-2" title="Insérer un lien">
-            <Link className="h-4 w-4" />
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertUnorderedList} className="h-8 px-2" title="Liste à puces">
-            <List className="h-4 w-4" />
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertOrderedList} className="h-8 px-2" title="Liste numérotée">
-            <ListOrdered className="h-4 w-4" />
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertTable} className="h-8 px-2" title="Tableau">
-            <Table className="h-4 w-4" />
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertBlockquote} className="h-8 px-2" title="Citation">
-            <Quote className="h-4 w-4" />
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={() => setShowMediaUploader(prev => !prev)} className="h-8 px-2" title="Image/Vidéo">
-            <ImageIcon className="h-4 w-4" />
-          </Button>
-          <div className="h-6 w-px bg-border mx-1" />
-          <Button type="button" variant="ghost" size="sm" onClick={insertTwitterEmbed} className="h-8 px-2" title="Twitter/X">
-            <Twitter className="h-4 w-4" />
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertInstagramEmbed} className="h-8 px-2" title="Instagram">
-            <Instagram className="h-4 w-4" />
-          </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={insertTikTokEmbed} className="h-8 px-2" title="TikTok">
-            <Youtube className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        {showMediaUploader && (
-          <div className="p-4 border rounded-md bg-muted/10">
-            <MediaUploader 
-              onSuccess={handleMediaUploadSuccess} 
-              acceptTypes="image/*,video/*" 
-              buttonText="Télécharger un média"
-            />
-          </div>
-        )}
-        
+        <EditorToolbar {...toolbarProps} />
+        {mediaUploader}
         <div
           ref={editorRef}
           contentEditable
@@ -312,67 +391,15 @@ export function RichTextEditor({
           style={{ minHeight }}
           suppressContentEditableWarning
         />
+        {dialogs}
       </div>
     );
   }
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-1 p-1 border rounded-md bg-muted/30">
-        <Button type="button" variant="ghost" size="sm" onClick={insertBold} className="h-8 px-2" title="Gras">
-          <Bold className="h-4 w-4" />
-        </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={insertItalic} className="h-8 px-2" title="Italique">
-          <Italic className="h-4 w-4" />
-        </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={insertLeftAlign} className="h-8 px-2" title="Aligner à gauche">
-          <AlignLeft className="h-4 w-4" />
-        </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={insertCenterAlign} className="h-8 px-2" title="Centrer">
-          <AlignCenter className="h-4 w-4" />
-        </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={insertRightAlign} className="h-8 px-2" title="Aligner à droite">
-          <AlignRight className="h-4 w-4" />
-        </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={insertLink} className="h-8 px-2" title="Insérer un lien">
-          <Link className="h-4 w-4" />
-        </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={insertUnorderedList} className="h-8 px-2" title="Liste à puces">
-          <List className="h-4 w-4" />
-        </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={insertOrderedList} className="h-8 px-2" title="Liste numérotée">
-          <ListOrdered className="h-4 w-4" />
-        </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={insertTable} className="h-8 px-2" title="Insérer un tableau">
-          <Table className="h-4 w-4" />
-        </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={insertBlockquote} className="h-8 px-2" title="Insérer une citation">
-          <Quote className="h-4 w-4" />
-        </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={() => setShowMediaUploader(prev => !prev)} className="h-8 px-2" title="Image/Vidéo">
-          <ImageIcon className="h-4 w-4" />
-        </Button>
-        <div className="h-6 w-px bg-border mx-1" />
-        <Button type="button" variant="ghost" size="sm" onClick={insertTwitterEmbed} className="h-8 px-2" title="Embed Twitter/X">
-          <Twitter className="h-4 w-4" />
-        </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={insertInstagramEmbed} className="h-8 px-2" title="Embed Instagram">
-          <Instagram className="h-4 w-4" />
-        </Button>
-        <Button type="button" variant="ghost" size="sm" onClick={insertTikTokEmbed} className="h-8 px-2" title="Embed TikTok">
-          <Youtube className="h-4 w-4" />
-        </Button>
-      </div>
-      
-      {showMediaUploader && (
-        <div className="p-4 border rounded-md bg-muted/10">
-          <MediaUploader 
-            onSuccess={handleMediaUploadSuccess} 
-            acceptTypes="image/*,video/*" 
-            buttonText="Télécharger un média"
-          />
-        </div>
-      )}
+      <EditorToolbar {...toolbarProps} />
+      {mediaUploader}
       
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "edit" | "preview")} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
@@ -381,7 +408,6 @@ export function RichTextEditor({
         </TabsList>
         
         <div className="mt-2">
-          {/* Editor - always mounted but hidden when not active */}
           <div style={{ display: activeTab === "edit" ? "block" : "none" }}>
             <div
               ref={editorRef}
@@ -393,7 +419,6 @@ export function RichTextEditor({
             />
           </div>
           
-          {/* Preview - only shown when active */}
           {activeTab === "preview" && (
             <div 
               className="min-h-[300px] p-4 border rounded-md bg-background prose dark:prose-invert max-w-none"
@@ -402,6 +427,7 @@ export function RichTextEditor({
           )}
         </div>
       </Tabs>
+      {dialogs}
     </div>
   );
 }

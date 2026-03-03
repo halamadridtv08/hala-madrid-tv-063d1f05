@@ -242,24 +242,27 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
           
           <div>
             <Label htmlFor="status">Statut</Label>
-            <select
-              id="status"
+            <Select
               value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onValueChange={(value) => setFormData({ ...formData, status: value })}
             >
-              <option value="upcoming">À venir</option>
-              <option value="live">En cours</option>
-              <option value="finished">Terminé</option>
-              <option value="postponed">Reporté</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionner un statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="upcoming">À venir</SelectItem>
+                <SelectItem value="live">En cours</SelectItem>
+                <SelectItem value="finished">Terminé</SelectItem>
+                <SelectItem value="postponed">Reporté</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
-          <div className="flex space-x-2">
-            <Button type="submit" disabled={loading}>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? "Enregistrement..." : "Enregistrer"}
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
               Annuler
             </Button>
           </div>
