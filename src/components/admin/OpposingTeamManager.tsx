@@ -417,89 +417,95 @@ export const OpposingTeamManager = () => {
     }
   };
 
+  const renderPlayerCard = (player: OpposingPlayer) => (
+    <div key={player.id} className="flex items-center justify-between p-3 border rounded-lg">
+      <div className="flex items-center gap-3 min-w-0">
+        {player.photo_url ? (
+          <img src={player.photo_url} alt={player.name} className="w-8 h-8 object-cover rounded-full border shrink-0" />
+        ) : (
+          <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center shrink-0">
+            <span className="text-xs text-muted-foreground">{player.name.charAt(0)}</span>
+          </div>
+        )}
+        {player.jersey_number != null && (
+          <span className="text-xs font-mono text-muted-foreground shrink-0">#{player.jersey_number}</span>
+        )}
+        <span className="font-medium text-sm truncate">{player.name}</span>
+        <Badge className={`${getPositionColor(player.position)} text-[10px] shrink-0`}>{player.position}</Badge>
+      </div>
+      <div className="flex gap-1 shrink-0 ml-2">
+        <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openPlayerDialog(player)}>
+          <Edit className="w-3 h-3" />
+        </Button>
+        <Button variant="destructive" size="icon" className="h-7 w-7" onClick={() => handleDeletePlayer(player.id)}>
+          <Trash2 className="w-3 h-3" />
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Section des prochains matchs */}
       <Card>
-        <CardHeader>
-          <CardTitle>Prochains Matchs à Venir</CardTitle>
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="text-base sm:text-2xl">Prochains Matchs à Venir</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6 pt-0">
           {upcomingMatches.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {upcomingMatches.slice(0, 6).map((match) => {
-                // Déterminer quelle équipe est l'adversaire
                 const isRealMadridHome = match.home_team === "Real Madrid";
                 const opponentName = isRealMadridHome ? match.away_team : match.home_team;
                 const opponentLogo = isRealMadridHome ? match.away_team_logo : match.home_team_logo;
-                const realMadridLogo = isRealMadridHome ? match.home_team_logo : match.away_team_logo;
-                
+
                 return (
-                  <div key={match.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
+                  <div key={match.id} className="border rounded-lg p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
                         {(isRealMadridHome ? match.home_team_logo : match.away_team_logo) && (
-                          <img 
-                            src={isRealMadridHome ? match.home_team_logo : match.away_team_logo} 
-                            alt="Real Madrid" 
-                            className="w-6 h-6 object-contain" 
-                          />
+                          <img src={isRealMadridHome ? match.home_team_logo : match.away_team_logo} alt="Real Madrid" className="w-5 h-5 object-contain shrink-0" />
                         )}
-                        <span className="font-semibold text-sm">{isRealMadridHome ? "Real Madrid" : "Real Madrid"}</span>
+                        <span className="font-semibold text-xs sm:text-sm truncate">Real Madrid</span>
                       </div>
-                      <span className="text-xs text-gray-500">vs</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm">{opponentName}</span>
+                      <span className="text-[10px] text-muted-foreground shrink-0">vs</span>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-semibold text-xs sm:text-sm truncate">{opponentName}</span>
                         {opponentLogo && (
-                          <img 
-                            src={opponentLogo} 
-                            alt={opponentName} 
-                            className="w-6 h-6 object-contain" 
-                          />
+                          <img src={opponentLogo} alt={opponentName} className="w-5 h-5 object-contain shrink-0" />
                         )}
                       </div>
                     </div>
-                    <div className="text-xs text-gray-600 text-center">
+                    <div className="text-[10px] sm:text-xs text-muted-foreground text-center truncate">
                       {new Date(match.match_date).toLocaleDateString('fr-FR', {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit'
+                        weekday: 'short', day: 'numeric', month: 'short',
+                        hour: '2-digit', minute: '2-digit'
                       })} - {match.competition}
                     </div>
                     {match.venue && (
-                      <div className="text-xs text-gray-500 text-center">{match.venue}</div>
+                      <div className="text-[10px] text-muted-foreground text-center truncate">{match.venue}</div>
                     )}
                     {match.opposing_team_id ? (
-                      <Badge variant="outline" className="text-green-600 w-full justify-center">
+                      <Badge variant="outline" className="text-green-600 w-full justify-center text-[10px] sm:text-xs">
                         Équipe adverse liée
                       </Badge>
                     ) : (
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full"
+                        className="w-full text-xs h-8"
                         onClick={async () => {
-                          // Créer automatiquement l'équipe adverse
                           try {
                             const { data: newTeam, error } = await supabase
                               .from('opposing_teams')
-                              .insert([{
-                                name: opponentName,
-                                logo_url: opponentLogo || ""
-                              }])
+                              .insert([{ name: opponentName, logo_url: opponentLogo || "" }])
                               .select()
                               .single();
-
                             if (error) throw error;
-
-                            // Lier le match à la nouvelle équipe
                             await supabase
                               .from('matches')
                               .update({ opposing_team_id: newTeam.id })
                               .eq('id', match.id);
-
                             toast.success(`Équipe ${opponentName} créée et liée au match`);
                             fetchTeams();
                             fetchUpcomingMatches();
@@ -516,213 +522,199 @@ export const OpposingTeamManager = () => {
               })}
             </div>
           ) : (
-            <p className="text-gray-500">Aucun match à venir programmé</p>
+            <p className="text-muted-foreground text-sm">Aucun match à venir programmé</p>
           )}
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Gestion des Équipes Adverses
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-base sm:text-2xl">
+            <span>Gestion des Équipes Adverses</span>
             <Dialog open={isTeamDialogOpen} onOpenChange={setIsTeamDialogOpen}>
               <DialogTrigger asChild>
-                <Button onClick={() => openTeamDialog()}>
-                  <Plus className="w-4 h-4 mr-2" />
+                <Button size="sm" onClick={() => openTeamDialog()} className="text-xs h-8">
+                  <Plus className="w-3 h-3 mr-1" />
                   Nouvelle Équipe
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="w-[95vw] max-w-lg p-4 sm:p-6">
                 <DialogHeader>
-                  <DialogTitle>
+                  <DialogTitle className="text-base sm:text-lg">
                     {editingTeam ? "Modifier l'équipe" : "Nouvelle équipe"}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium">Nom de l'équipe</label>
-                    <Input
-                      value={teamForm.name}
-                      onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })}
-                      placeholder="Nom de l'équipe"
-                    />
+                    <Input value={teamForm.name} onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })} placeholder="Nom de l'équipe" className="h-9 text-sm" />
                   </div>
                   <div>
                     <label className="text-sm font-medium">URL du logo</label>
-                    <Input
-                      value={teamForm.logo_url}
-                      onChange={(e) => setTeamForm({ ...teamForm, logo_url: e.target.value })}
-                      placeholder="URL du logo"
-                    />
+                    <Input value={teamForm.logo_url} onChange={(e) => setTeamForm({ ...teamForm, logo_url: e.target.value })} placeholder="URL du logo" className="h-9 text-sm" />
                   </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleSaveTeam}>Enregistrer</Button>
-                    <Button variant="outline" onClick={() => setIsTeamDialogOpen(false)}>
-                      Annuler
-                    </Button>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button onClick={handleSaveTeam} className="h-9 text-sm">Enregistrer</Button>
+                    <Button variant="outline" onClick={() => setIsTeamDialogOpen(false)} className="h-9 text-sm">Annuler</Button>
                   </div>
                 </div>
               </DialogContent>
             </Dialog>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Logo</TableHead>
-                <TableHead>Nom</TableHead>
-                <TableHead>Matchs</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {teams.map((team) => (
-                <TableRow key={team.id}>
-                  <TableCell>
-                    {team.logo_url ? (
-                      <img src={team.logo_url} alt={team.name} className="w-10 h-10 object-contain rounded" />
-                    ) : (
-                      <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
-                        <span className="text-xs text-gray-500">Logo</span>
+        <CardContent className="p-4 sm:p-6 pt-0">
+          {/* Mobile: card layout */}
+          <div className="block sm:hidden space-y-3">
+            {teams.map((team) => (
+              <div key={team.id} className="border rounded-lg p-3 space-y-2">
+                <div className="flex items-center gap-3">
+                  {team.logo_url ? (
+                    <img src={team.logo_url} alt={team.name} className="w-8 h-8 object-contain rounded shrink-0" />
+                  ) : (
+                    <div className="w-8 h-8 bg-muted rounded flex items-center justify-center shrink-0">
+                      <span className="text-[10px] text-muted-foreground">Logo</span>
+                    </div>
+                  )}
+                  <span className="font-medium text-sm truncate">{team.name}</span>
+                </div>
+                {(team as any).matches?.length > 0 && (
+                  <div className="space-y-1">
+                    {(team as any).matches.slice(0, 2).map((match: any) => (
+                      <div key={match.id} className="text-[11px] text-muted-foreground truncate">
+                        {match.competition} - {new Date(match.match_date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                       </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">{team.name}</TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      {(team as any).matches?.length > 0 ? (
-                        (team as any).matches.slice(0, 2).map((match: any) => (
-                          <div key={match.id} className="text-sm text-gray-600 flex items-center gap-2">
-                            <span className="font-medium">{match.competition}</span>
-                            <span>-</span>
-                            <span>{new Date(match.match_date).toLocaleDateString('fr-FR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}</span>
-                            <Badge variant={match.status === 'upcoming' ? 'default' : 'secondary'} className="text-xs">
-                              {match.status === 'upcoming' ? 'À venir' : match.status === 'live' ? 'En cours' : 'Terminé'}
-                            </Badge>
-                          </div>
-                        ))
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-1.5">
+                  <Button variant="outline" size="sm" className="h-7 text-[11px] flex-1" onClick={() => setSelectedTeam(team.id)}>
+                    Joueurs
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => openTeamDialog(team)}>
+                    <Edit className="w-3 h-3" />
+                  </Button>
+                  <Button variant="destructive" size="icon" className="h-7 w-7" onClick={() => handleDeleteTeam(team.id)}>
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Desktop: table layout */}
+          <div className="hidden sm:block overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Logo</TableHead>
+                  <TableHead>Nom</TableHead>
+                  <TableHead>Matchs</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {teams.map((team) => (
+                  <TableRow key={team.id}>
+                    <TableCell>
+                      {team.logo_url ? (
+                        <img src={team.logo_url} alt={team.name} className="w-10 h-10 object-contain rounded" />
                       ) : (
-                        <span className="text-sm text-gray-400">Aucun match programmé</span>
-                      )}
-                      {(team as any).matches?.length > 2 && (
-                        <div className="text-sm text-gray-500">
-                          +{(team as any).matches.length - 2} autres matchs...
+                        <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
+                          <span className="text-xs text-muted-foreground">Logo</span>
                         </div>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedTeam(team.id)}
-                      >
-                        Gérer joueurs
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openTeamDialog(team)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteTeam(team.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    </TableCell>
+                    <TableCell className="font-medium">{team.name}</TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        {(team as any).matches?.length > 0 ? (
+                          (team as any).matches.slice(0, 2).map((match: any) => (
+                            <div key={match.id} className="text-sm text-muted-foreground flex items-center gap-2">
+                              <span className="font-medium">{match.competition}</span>
+                              <span>-</span>
+                              <span>{new Date(match.match_date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span>
+                              <Badge variant={match.status === 'upcoming' ? 'default' : 'secondary'} className="text-xs">
+                                {match.status === 'upcoming' ? 'À venir' : match.status === 'live' ? 'En cours' : 'Terminé'}
+                              </Badge>
+                            </div>
+                          ))
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Aucun match programmé</span>
+                        )}
+                        {(team as any).matches?.length > 2 && (
+                          <div className="text-sm text-muted-foreground">+{(team as any).matches.length - 2} autres matchs...</div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setSelectedTeam(team.id)}>Gérer joueurs</Button>
+                        <Button variant="outline" size="sm" onClick={() => openTeamDialog(team)}><Edit className="w-4 h-4" /></Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteTeam(team.id)}><Trash2 className="w-4 h-4" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
       {selectedTeam && (
         <Card ref={playersCardRef}>
-          <CardHeader>
-            <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <span>Joueurs de {teams.find(t => t.id === selectedTeam)?.name}</span>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex flex-col gap-3 text-base sm:text-2xl">
+              <span className="truncate">Joueurs de {teams.find(t => t.id === selectedTeam)?.name}</span>
               <div className="flex flex-wrap gap-2">
-                {/* JSON Import Button */}
                 <Dialog open={isJsonImportDialogOpen} onOpenChange={setIsJsonImportDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" onClick={() => {
-                      setJsonInput("");
-                      setJsonError(null);
-                    }}>
-                      <FileJson className="w-4 h-4 mr-2" />
+                    <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => { setJsonInput(""); setJsonError(null); }}>
+                      <FileJson className="w-3 h-3 mr-1" />
                       Import JSON
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
                     <DialogHeader>
-                      <DialogTitle>Importer des joueurs depuis JSON</DialogTitle>
+                      <DialogTitle className="text-base sm:text-lg">Importer des joueurs depuis JSON</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                       <Alert>
                         <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          Formats acceptés: tableau de joueurs ou objet avec clé "players" ou "squad".<br />
+                        <AlertDescription className="text-xs sm:text-sm">
+                          Formats acceptés: tableau de joueurs ou objet avec clé "players" ou "squad".
                           Champs: name/nom, position/poste, jersey_number/numero, is_starter/titulaire
                         </AlertDescription>
                       </Alert>
-                      
                       <div>
                         <label className="text-sm font-medium">JSON des joueurs</label>
                         <Textarea
                           value={jsonInput}
-                          onChange={(e) => {
-                            setJsonInput(e.target.value);
-                            setJsonError(null);
-                          }}
+                          onChange={(e) => { setJsonInput(e.target.value); setJsonError(null); }}
                           placeholder="Collez votre JSON ici..."
-                          className="font-mono text-xs min-h-[200px]"
+                          className="font-mono text-xs min-h-[150px] sm:min-h-[200px]"
                         />
                       </div>
-                      
                       {jsonError && (
                         <Alert variant="destructive">
                           <AlertCircle className="h-4 w-4" />
-                          <AlertDescription>{jsonError}</AlertDescription>
+                          <AlertDescription className="text-xs">{jsonError}</AlertDescription>
                         </Alert>
                       )}
-                      
-                      <div className="flex gap-2 flex-wrap">
-                        <Button onClick={handleJsonImport} disabled={isImporting || !jsonInput.trim()}>
-                          <Upload className="w-4 h-4 mr-2" />
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button onClick={handleJsonImport} disabled={isImporting || !jsonInput.trim()} className="h-9 text-sm">
+                          <Upload className="w-3 h-3 mr-1" />
                           {isImporting ? "Import en cours..." : "Importer"}
                         </Button>
-                        <Button variant="outline" onClick={() => setJsonInput(getExampleJson())}>
-                          Voir exemple
-                        </Button>
-                        <Button variant="ghost" onClick={() => setIsJsonImportDialogOpen(false)}>
-                          Annuler
-                        </Button>
+                        <Button variant="outline" onClick={() => setJsonInput(getExampleJson())} className="h-9 text-sm">Voir exemple</Button>
+                        <Button variant="ghost" onClick={() => setIsJsonImportDialogOpen(false)} className="h-9 text-sm">Annuler</Button>
                       </div>
-                      
                       <div className="border-t pt-4">
-                        <p className="text-sm text-muted-foreground mb-2">Exemple de format JSON:</p>
-                        <pre className="text-xs bg-muted p-3 rounded-md overflow-x-auto">
+                        <p className="text-xs text-muted-foreground mb-2">Exemple de format JSON:</p>
+                        <pre className="text-[10px] sm:text-xs bg-muted p-2 sm:p-3 rounded-md overflow-x-auto max-w-full">
 {`{
   "players": [
-    { "name": "Unai Simón", "position": "GK", "jersey_number": 1, "is_starter": true },
-    { "name": "Dani Vivian", "position": "CB", "jersey_number": 4, "is_starter": true },
-    { "name": "Oihan Sancet", "position": "CM", "jersey_number": 8, "is_starter": true },
-    { "name": "Nico Williams", "position": "LW", "jersey_number": 11, "is_starter": true },
-    { "name": "Gorka Guruzeta", "position": "ST", "jersey_number": 9, "is_starter": true },
-    { "name": "Remplaçant 1", "position": "GK", "jersey_number": 13, "is_starter": false }
+    { "name": "Unai Simón", "position": "GK", "jersey_number": 1 },
+    { "name": "Dani Vivian", "position": "CB", "jersey_number": 4 }
   ]
 }`}
                         </pre>
@@ -731,237 +723,177 @@ export const OpposingTeamManager = () => {
                   </DialogContent>
                 </Dialog>
 
-                {/* Export Button */}
                 {players.length > 0 && (
-                  <Button variant="outline" onClick={exportPlayersJson}>
-                    <Download className="w-4 h-4 mr-2" />
+                  <Button variant="outline" size="sm" className="text-xs h-8" onClick={exportPlayersJson}>
+                    <Download className="w-3 h-3 mr-1" />
                     Exporter
                   </Button>
                 )}
 
-                {/* New Player Button */}
                 <Dialog open={isPlayerDialogOpen} onOpenChange={setIsPlayerDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={() => openPlayerDialog()}>
-                      <Plus className="w-4 h-4 mr-2" />
+                    <Button size="sm" className="text-xs h-8" onClick={() => openPlayerDialog()}>
+                      <Plus className="w-3 h-3 mr-1" />
                       Nouveau Joueur
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingPlayer ? "Modifier le joueur" : "Nouveau joueur"}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium">Nom du joueur</label>
-                      <Input
-                        value={playerForm.name}
-                        onChange={(e) => setPlayerForm({ ...playerForm, name: e.target.value })}
-                        placeholder="Nom du joueur"
-                      />
+                  <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+                    <DialogHeader>
+                      <DialogTitle className="text-base sm:text-lg">
+                        {editingPlayer ? "Modifier le joueur" : "Nouveau joueur"}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium">Nom du joueur</label>
+                        <Input value={playerForm.name} onChange={(e) => setPlayerForm({ ...playerForm, name: e.target.value })} placeholder="Nom du joueur" className="h-9 text-sm" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Position</label>
+                        <Select value={playerForm.position} onValueChange={(value) => setPlayerForm({ ...playerForm, position: value })}>
+                          <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Sélectionner une position" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="GK">Gardien (GK)</SelectItem>
+                            <SelectItem value="RB">Arrière droit (RB)</SelectItem>
+                            <SelectItem value="CB">Défenseur central (CB)</SelectItem>
+                            <SelectItem value="LB">Arrière gauche (LB)</SelectItem>
+                            <SelectItem value="CDM">Milieu défensif (CDM)</SelectItem>
+                            <SelectItem value="CM">Milieu de terrain (CM)</SelectItem>
+                            <SelectItem value="RW">Ailier droit (RW)</SelectItem>
+                            <SelectItem value="LW">Ailier gauche (LW)</SelectItem>
+                            <SelectItem value="ST">Attaquant (ST)</SelectItem>
+                            <SelectItem value="AM">Milieu offensif (AM)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Numéro de maillot</label>
+                        <Input type="number" value={playerForm.jersey_number} onChange={(e) => setPlayerForm({ ...playerForm, jersey_number: e.target.value })} placeholder="Numéro" className="h-9 text-sm" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Photo du joueur (URL)</label>
+                        <Input value={playerForm.photo_url} onChange={(e) => setPlayerForm({ ...playerForm, photo_url: e.target.value })} placeholder="https://example.com/photo.jpg" className="h-9 text-sm" />
+                        {playerForm.photo_url && (
+                          <div className="mt-2">
+                            <img src={playerForm.photo_url} alt="Preview" className="w-12 h-12 object-cover rounded-full border" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Type</label>
+                        <Select value={playerForm.is_starter ? "starter" : "substitute"} onValueChange={(value) => setPlayerForm({ ...playerForm, is_starter: value === "starter" })}>
+                          <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="starter">Titulaire</SelectItem>
+                            <SelectItem value="substitute">Remplaçant</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button onClick={handleSavePlayer} className="h-9 text-sm">Enregistrer</Button>
+                        <Button variant="outline" onClick={() => setIsPlayerDialogOpen(false)} className="h-9 text-sm">Annuler</Button>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium">Position</label>
-                      <Select
-                        value={playerForm.position}
-                        onValueChange={(value) => setPlayerForm({ ...playerForm, position: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner une position" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="GK">Gardien (GK)</SelectItem>
-                          <SelectItem value="RB">Arrière droit (RB)</SelectItem>
-                          <SelectItem value="CB">Défenseur central (CB)</SelectItem>
-                          <SelectItem value="LB">Arrière gauche (LB)</SelectItem>
-                          <SelectItem value="CDM">Milieu défensif (CDM)</SelectItem>
-                          <SelectItem value="CM">Milieu de terrain (CM)</SelectItem>
-                          <SelectItem value="RW">Ailier droit (RW)</SelectItem>
-                          <SelectItem value="LW">Ailier gauche (LW)</SelectItem>
-                          <SelectItem value="ST">Attaquant (ST)</SelectItem>
-                          <SelectItem value="AM">Milieu offensif (AM)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Numéro de maillot</label>
-                      <Input
-                        type="number"
-                        value={playerForm.jersey_number}
-                        onChange={(e) => setPlayerForm({ ...playerForm, jersey_number: e.target.value })}
-                        placeholder="Numéro"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Photo du joueur (URL)</label>
-                      <Input
-                        value={playerForm.photo_url}
-                        onChange={(e) => setPlayerForm({ ...playerForm, photo_url: e.target.value })}
-                        placeholder="https://example.com/photo.jpg"
-                      />
-                      {playerForm.photo_url && (
-                        <div className="mt-2">
-                          <img 
-                            src={playerForm.photo_url} 
-                            alt="Preview" 
-                            className="w-16 h-16 object-cover rounded-full border"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Type</label>
-                      <Select
-                        value={playerForm.is_starter ? "starter" : "substitute"}
-                        onValueChange={(value) => setPlayerForm({ ...playerForm, is_starter: value === "starter" })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="starter">Titulaire</SelectItem>
-                          <SelectItem value="substitute">Remplaçant</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button onClick={handleSavePlayer}>Enregistrer</Button>
-                      <Button variant="outline" onClick={() => setIsPlayerDialogOpen(false)}>
-                        Annuler
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             <Tabs defaultValue="starters">
               <TabsList>
-                <TabsTrigger value="starters">Titulaires</TabsTrigger>
-                <TabsTrigger value="substitutes">Remplaçants</TabsTrigger>
+                <TabsTrigger value="starters" className="text-xs sm:text-sm">Titulaires</TabsTrigger>
+                <TabsTrigger value="substitutes" className="text-xs sm:text-sm">Remplaçants</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="starters">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Photo</TableHead>
-                      <TableHead>N°</TableHead>
-                      <TableHead>Nom</TableHead>
-                      <TableHead>Position</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {players.filter(p => p.is_starter).map((player) => (
-                      <TableRow key={player.id}>
-                        <TableCell>
-                          {player.photo_url ? (
-                            <img 
-                              src={player.photo_url} 
-                              alt={player.name} 
-                              className="w-10 h-10 object-cover rounded-full border"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                              <span className="text-xs text-gray-500">{player.name.charAt(0)}</span>
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>{player.jersey_number}</TableCell>
-                        <TableCell className="font-medium">{player.name}</TableCell>
-                        <TableCell>
-                          <Badge className={getPositionColor(player.position)}>
-                            {player.position}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openPlayerDialog(player)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeletePlayer(player.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                {/* Mobile: card layout */}
+                <div className="block sm:hidden space-y-2">
+                  {players.filter(p => p.is_starter).map(renderPlayerCard)}
+                </div>
+                {/* Desktop: table */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Photo</TableHead>
+                        <TableHead>N°</TableHead>
+                        <TableHead>Nom</TableHead>
+                        <TableHead>Position</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {players.filter(p => p.is_starter).map((player) => (
+                        <TableRow key={player.id}>
+                          <TableCell>
+                            {player.photo_url ? (
+                              <img src={player.photo_url} alt={player.name} className="w-10 h-10 object-cover rounded-full border" />
+                            ) : (
+                              <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+                                <span className="text-xs text-muted-foreground">{player.name.charAt(0)}</span>
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>{player.jersey_number}</TableCell>
+                          <TableCell className="font-medium">{player.name}</TableCell>
+                          <TableCell><Badge className={getPositionColor(player.position)}>{player.position}</Badge></TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm" onClick={() => openPlayerDialog(player)}><Edit className="w-4 h-4" /></Button>
+                              <Button variant="destructive" size="sm" onClick={() => handleDeletePlayer(player.id)}><Trash2 className="w-4 h-4" /></Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </TabsContent>
-              
+
               <TabsContent value="substitutes">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Photo</TableHead>
-                      <TableHead>N°</TableHead>
-                      <TableHead>Nom</TableHead>
-                      <TableHead>Position</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {players.filter(p => !p.is_starter).map((player) => (
-                      <TableRow key={player.id}>
-                        <TableCell>
-                          {player.photo_url ? (
-                            <img 
-                              src={player.photo_url} 
-                              alt={player.name} 
-                              className="w-10 h-10 object-cover rounded-full border"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                              <span className="text-xs text-gray-500">{player.name.charAt(0)}</span>
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>{player.jersey_number}</TableCell>
-                        <TableCell className="font-medium">{player.name}</TableCell>
-                        <TableCell>
-                          <Badge className={getPositionColor(player.position)}>
-                            {player.position}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openPlayerDialog(player)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeletePlayer(player.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                {/* Mobile: card layout */}
+                <div className="block sm:hidden space-y-2">
+                  {players.filter(p => !p.is_starter).map(renderPlayerCard)}
+                </div>
+                {/* Desktop: table */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Photo</TableHead>
+                        <TableHead>N°</TableHead>
+                        <TableHead>Nom</TableHead>
+                        <TableHead>Position</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {players.filter(p => !p.is_starter).map((player) => (
+                        <TableRow key={player.id}>
+                          <TableCell>
+                            {player.photo_url ? (
+                              <img src={player.photo_url} alt={player.name} className="w-10 h-10 object-cover rounded-full border" />
+                            ) : (
+                              <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+                                <span className="text-xs text-muted-foreground">{player.name.charAt(0)}</span>
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>{player.jersey_number}</TableCell>
+                          <TableCell className="font-medium">{player.name}</TableCell>
+                          <TableCell><Badge className={getPositionColor(player.position)}>{player.position}</Badge></TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm" onClick={() => openPlayerDialog(player)}><Edit className="w-4 h-4" /></Button>
+                              <Button variant="destructive" size="sm" onClick={() => handleDeletePlayer(player.id)}><Trash2 className="w-4 h-4" /></Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </TabsContent>
             </Tabs>
           </CardContent>
