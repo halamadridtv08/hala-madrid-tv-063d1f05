@@ -1,77 +1,41 @@
 
 
-## Problemes identifies et plan d'amelioration SEO
+## Corrections de responsivité — Gestion des Matchs (Admin)
 
-Apres audit complet, voici les **problemes critiques** qui empechent le referencement de tes articles :
-
----
-
-### Probleme 1 — URLs avec UUID (le plus grave)
-
-Actuellement tes articles ont des URLs comme :
-`www.hala-madrid-tv.com/news/a3f7b2c1-8d4e-4f5a-9b6c-1234567890ab`
-
-Google **penalise fortement** ces URLs car elles ne contiennent aucun mot-cle. L'URL ideale serait :
-`www.hala-madrid-tv.com/news/vinicius-jr-ballon-dor-2025`
-
-**Solution** : Ajouter une colonne `slug` a la table `articles`, generer automatiquement le slug depuis le titre, et modifier les routes pour utiliser le slug au lieu de l'UUID.
+D'après les captures d'écran et le code, voici les problèmes de dépassement sur mobile et les corrections à appliquer :
 
 ---
 
-### Probleme 2 — Domaine incorrect dans le SEO
+### Problèmes identifiés
 
-Le code SEO (`SEOHead.tsx` et `sitemap/index.ts`) utilise `https://halamadridtv.com` comme BASE_URL, mais ton vrai domaine est `https://www.hala-madrid-tv.com`. Resultat : toutes les URLs canoniques, Open Graph, et le sitemap pointent vers un mauvais domaine. Google indexe donc les mauvaises URLs.
+1. **MatchJsonImporter** — Le titre "Importateur JSON de Match" et sa description débordent (visible sur la capture). Les boutons "Valider et Prévisualiser" + "Confirmer l'import" sont en ligne et dépassent l'écran.
 
-**Solution** : Corriger `BASE_URL` partout vers `https://www.hala-madrid-tv.com`.
+2. **MatchTable** — Les boutons d'action (Sync API, Nouveau match) dans le header et les boutons par match (calendrier, éditer, supprimer) sont trop serrés. Le titre du match peut déborder.
 
----
+3. **MatchImportHistory** — Les boutons "Annuler" + corbeille sont en ligne avec le titre du match, ce qui fonctionne mais pourrait être plus compact.
 
-### Probleme 3 — Pas de prerendering (SPA)
-
-Le site est une Single Page Application (SPA) React. Quand Google visite une page, il voit une page blanche avant que le JavaScript s'execute. Google peut executer le JS mais c'est **plus lent et moins fiable** — beaucoup d'articles risquent de ne pas etre indexes correctement.
-
-**Solution** : Ajouter un service de prerendering (comme `prerender.io` ou un middleware Vercel/Edge) qui sert du HTML statique aux robots. Alternative plus simple : ajouter des meta tags dans `index.html` via le plugin `vite-plugin-html` pour au moins avoir le titre/description par defaut.
+4. **MatchImportPreview** — La grille `grid-cols-2` pour les infos du match peut être trop serrée sur très petit écran.
 
 ---
 
-### Probleme 4 — Cache-Control empeche le caching
+### Corrections prévues
 
-`index.html` contient `no-cache, no-store, must-revalidate` — cela force le navigateur a retelecharger tout a chaque visite, ralentit le site et penalise le score Core Web Vitals (critere de classement Google).
+**Fichier 1 — `MatchJsonImporter.tsx`** :
+- Titre et description : ajouter `break-words` et réduire la taille du titre sur mobile (`text-base sm:text-lg`)
+- Boutons d'action (ligne 1038) : passer de `flex gap-2` à `flex flex-col sm:flex-row gap-2` pour empiler sur mobile
+- Textarea : réduire `rows={15}` à `rows={8}` sur mobile ou utiliser une classe responsive
+- Exemple JSON `<pre>` : ajouter `max-w-full overflow-x-auto text-[10px] sm:text-xs`
 
-**Solution** : Retirer ces meta tags agressifs. Vite gere deja le cache-busting avec les hash de fichiers.
+**Fichier 2 — `MatchTable.tsx`** :
+- Déjà partiellement responsive (classes `sm:` présentes). Vérifier que le conteneur du score et des badges ne déborde pas avec `min-w-0` et `truncate` sur les noms d'équipe longs.
 
----
+**Fichier 3 — `MatchImportPreview.tsx`** :
+- Grille infos match : passer de `grid-cols-2` à `grid-cols-1 sm:grid-cols-2`
+- Titre : réduire la taille sur mobile
 
-### Plan d'implementation
+**Fichier 4 — `MatchImportHistory.tsx`** :
+- Layout de chaque entrée : empiler titre et boutons sur mobile avec `flex flex-col sm:flex-row`
+- Boutons : réduire la taille sur mobile (`h-8 text-xs`)
 
-**Etape 1 — Corriger les URLs (impact maximal sur le SEO)**
-- Ajouter colonne `slug` (text, unique) a la table `articles` via migration SQL
-- Generer les slugs pour les articles existants depuis leurs titres
-- Modifier `ArticleForm.tsx` pour auto-generer le slug a la creation
-- Modifier la route `/news/:id` pour accepter aussi `/news/:slug`
-- Modifier `ArticleDetail.tsx` pour chercher par slug ou par id (retro-compatible)
-- Ajouter une redirection 301 des anciennes URLs UUID vers les nouvelles URLs slug
-
-**Etape 2 — Corriger le domaine**
-- `SEOHead.tsx` : changer `BASE_URL` en `https://www.hala-madrid-tv.com`
-- `sitemap/index.ts` : idem
-- `robots.txt` : mettre a jour l'URL du sitemap
-
-**Etape 3 — Retirer le cache-control agressif**
-- Supprimer les 3 meta tags `Cache-Control`, `Pragma`, `Expires` de `index.html`
-
-**Etape 4 — Ameliorer le sitemap**
-- Ajouter `<lastmod>` avec `published_at` aux articles
-- Ajouter les matchs et kits dans le sitemap (actuellement les matchs sont fetchees mais pas ajoutees au XML)
-- Utiliser les slugs dans les URLs du sitemap
-
-### Fichiers a modifier
-- Migration SQL (nouvelle)
-- `src/pages/ArticleDetail.tsx`
-- `src/components/admin/ArticleForm.tsx`
-- `src/components/SEOHead.tsx`
-- `supabase/functions/sitemap/index.ts`
-- `public/robots.txt`
-- `index.html`
-- `src/App.tsx` (route)
+Ces corrections sont purement CSS/Tailwind, sans changement de logique.
 
