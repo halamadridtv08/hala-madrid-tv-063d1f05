@@ -277,9 +277,9 @@ const MatchTable = ({ matches, setMatches }: MatchTableProps) => {
       </div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto p-3 sm:p-6">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-base sm:text-lg">
               {editingMatch ? "Modifier le match" : "Nouveau match"}
             </DialogTitle>
           </DialogHeader>
