@@ -18,6 +18,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Article {
   id: string;
+  slug: string;
   title: string;
   description: string;
   image_url: string | null;
@@ -172,7 +173,7 @@ export function NewsCarousel() {
                           <TranslatedText text={stripHtml(slide.description)} as="span" />
                         </p>
                         <Button asChild className="bg-madrid-gold text-black hover:bg-yellow-400 text-sm py-1 h-8">
-                          <Link to={`/news/${slide.id}`}>{t('common.seeMore')}</Link>
+                          <Link to={`/news/${slide.slug || slide.id}`}>{t('common.seeMore')}</Link>
                         </Button>
                       </div>
                     </div>

@@ -210,7 +210,7 @@ export function AnimatedSearchBar({ value, onChange, onSubmit }: AnimatedSearchB
               name: a.title,
               type: "article",
               subtitle: a.category,
-              url: `/news/${a.id}`,
+              url: `/news/${a.slug || a.id}`,
               score,
             });
           }

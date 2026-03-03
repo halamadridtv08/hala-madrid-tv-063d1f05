@@ -14,6 +14,7 @@ import { User, ExternalLink } from "lucide-react";
 
 interface Article {
   id: string;
+  slug: string;
   title: string;
   description: string;
   image_url: string | null;
@@ -179,7 +180,7 @@ const News = () => {
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Link to={`/news/${article.id}`} className="w-full">
+                    <Link to={`/news/${article.slug || article.id}`} className="w-full">
                       <Button variant="outline" className="w-full">
                         Lire l'article
                         <ExternalLink className="ml-2 h-4 w-4" />

@@ -8,6 +8,7 @@ import { TrendingUp, Clock } from "lucide-react";
 
 interface Article {
   id: string;
+  slug: string;
   title: string;
   description: string;
   image_url?: string;
@@ -35,7 +36,7 @@ export const RelatedArticles = ({ currentArticleId, category }: RelatedArticlesP
 
     const { data, error } = await supabase
       .from("articles")
-      .select("id, title, description, image_url, category, published_at, read_time, view_count")
+      .select("id, slug, title, description, image_url, category, published_at, read_time, view_count")
       .eq("is_published", true)
       .neq("id", currentArticleId)
       .gte("published_at", twentyFourHoursAgo.toISOString())
@@ -48,7 +49,7 @@ export const RelatedArticles = ({ currentArticleId, category }: RelatedArticlesP
       // Fallback: if no articles in last 24h, get most read overall
       const { data: fallbackData, error: fallbackError } = await supabase
         .from("articles")
-        .select("id, title, description, image_url, category, published_at, read_time, view_count")
+        .select("id, slug, title, description, image_url, category, published_at, read_time, view_count")
         .eq("is_published", true)
         .neq("id", currentArticleId)
         .order("view_count", { ascending: false, nullsFirst: false })
@@ -81,7 +82,7 @@ export const RelatedArticles = ({ currentArticleId, category }: RelatedArticlesP
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {articles.map((article) => (
           <Card key={article.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-            <Link to={`/news/${article.id}`}>
+            <Link to={`/news/${article.slug || article.id}`}>
               {article.image_url && (
                 <div className="relative h-48 overflow-hidden">
                   <img

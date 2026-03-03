@@ -15,7 +15,7 @@ interface SEOHeadProps {
   jsonLd?: object;
 }
 
-const BASE_URL = 'https://halamadridtv.com';
+const BASE_URL = 'https://www.hala-madrid-tv.com';
 const DEFAULT_IMAGE = 'https://storage.googleapis.com/gpt-engineer-file-uploads/XQxJnbbi65bFpQPLSgRozceUApi1/social-images/social-1759705280620-logo hala madrid tv.png';
 const SITE_NAME = 'HALA MADRID TV';
 const DEFAULT_DESCRIPTION = 'Toute l\'actualité du Real Madrid : matchs, joueurs, statistiques et transferts. Suivez les Merengues en temps réel.';

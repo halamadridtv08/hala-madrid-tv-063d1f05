@@ -11,6 +11,7 @@ import { TranslatedText } from "@/components/common/TranslatedText";
 import { useLanguage } from "@/contexts/LanguageContext";
 interface Article {
   id: string;
+  slug: string;
   title: string;
   description: string;
   image_url: string | null;
@@ -125,7 +126,7 @@ export function LatestNews() {
                 <CardFooter className="flex justify-between items-center">
                   
                   <Button asChild variant="link" className="p-0 text-madrid-blue dark:text-blue-400">
-                    <Link to={`/news/${article.id}`} className="mx-[200px] my-0 py-0 px-0">{t('common.seeMore')}</Link>
+                    <Link to={`/news/${article.slug || article.id}`} className="mx-[200px] my-0 py-0 px-0">{t('common.seeMore')}</Link>
                   </Button>
                 </CardFooter>
               </Card>)}

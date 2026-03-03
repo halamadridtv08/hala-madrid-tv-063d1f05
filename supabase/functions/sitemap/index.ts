@@ -6,7 +6,7 @@ const corsHeaders = {
   'Content-Type': 'application/xml',
 };
 
-const BASE_URL = 'https://halamadridtv.com';
+const BASE_URL = 'https://www.hala-madrid-tv.com';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -20,9 +20,8 @@ Deno.serve(async (req) => {
 
     console.log('Generating sitemap...');
 
-    // Fetch all published content
     const [articlesRes, playersRes, matchesRes, kitsRes] = await Promise.all([
-      supabase.from('articles').select('id, updated_at').eq('is_published', true),
+      supabase.from('articles').select('id, slug, updated_at, published_at').eq('is_published', true),
       supabase.from('players').select('id, updated_at').eq('is_active', true),
       supabase.from('matches').select('id, updated_at'),
       supabase.from('kits').select('id, updated_at').eq('is_published', true),
@@ -35,7 +34,6 @@ Deno.serve(async (req) => {
 
     console.log(`Found: ${articles.length} articles, ${players.length} players, ${matches.length} matches, ${kits.length} kits`);
 
-    // Static pages
     const staticPages = [
       { url: '/', priority: '1.0', changefreq: 'daily' },
       { url: '/news', priority: '0.9', changefreq: 'daily' },
@@ -47,13 +45,13 @@ Deno.serve(async (req) => {
       { url: '/press', priority: '0.6', changefreq: 'weekly' },
       { url: '/kits', priority: '0.6', changefreq: 'monthly' },
       { url: '/videos', priority: '0.7', changefreq: 'daily' },
+      { url: '/transfers', priority: '0.7', changefreq: 'daily' },
+      { url: '/predictions', priority: '0.6', changefreq: 'weekly' },
     ];
 
-    // Build sitemap XML
     let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
 
-    // Add static pages
     for (const page of staticPages) {
       sitemap += `
   <url>
@@ -63,19 +61,22 @@ Deno.serve(async (req) => {
   </url>`;
     }
 
-    // Add articles
+    // Articles - use slug for SEO-friendly URLs
     for (const article of articles) {
-      const lastmod = article.updated_at ? new Date(article.updated_at).toISOString().split('T')[0] : '';
+      const articlePath = article.slug ? `/news/${article.slug}` : `/news/${article.id}`;
+      const lastmod = (article.updated_at || article.published_at)
+        ? new Date(article.updated_at || article.published_at).toISOString().split('T')[0]
+        : '';
       sitemap += `
   <url>
-    <loc>${BASE_URL}/news/${article.id}</loc>
+    <loc>${BASE_URL}${articlePath}</loc>
     ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>`;
     }
 
-    // Add players
+    // Players
     for (const player of players) {
       const lastmod = player.updated_at ? new Date(player.updated_at).toISOString().split('T')[0] : '';
       sitemap += `
@@ -84,6 +85,30 @@ Deno.serve(async (req) => {
     ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>`;
+    }
+
+    // Matches
+    for (const match of matches) {
+      const lastmod = match.updated_at ? new Date(match.updated_at).toISOString().split('T')[0] : '';
+      sitemap += `
+  <url>
+    <loc>${BASE_URL}/matches</loc>
+    ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>`;
+    }
+
+    // Kits
+    for (const kit of kits) {
+      const lastmod = kit.updated_at ? new Date(kit.updated_at).toISOString().split('T')[0] : '';
+      sitemap += `
+  <url>
+    <loc>${BASE_URL}/kits</loc>
+    ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>`;
     }
 

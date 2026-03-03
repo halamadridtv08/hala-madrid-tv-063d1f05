@@ -118,7 +118,7 @@ export const TrophiesShowcase = () => {
           }} className="w-full">
               <CarouselContent className="-ml-2 md:-ml-4">
                 {articles.map((article, index) => <CarouselItem key={article.id} className="pl-2 md:pl-4 basis-4/5 md:basis-1/2 lg:basis-1/3 animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                    <Link to={`/news/${article.id}`}>
+                    <Link to={`/news/${(article as any).slug || article.id}`}>
                       <Card className="group relative h-[300px] md:h-[400px] overflow-hidden bg-black/40 backdrop-blur-sm border-white/10 rounded-2xl hover:shadow-2xl hover:shadow-[#FFD700]/20 transition-all duration-500 hover:-translate-y-2 hover:border-[#FFD700]/30">
                         <div className="absolute inset-0">
                           <img src={article.image_url || "/placeholder.svg"} alt={article.title} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" />
