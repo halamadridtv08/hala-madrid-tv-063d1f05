@@ -1,98 +1,70 @@
 
 
-# Plan : Application Native avec Capacitor
+## Audit des fonctionnalités et de la responsivité mobile de l'admin
 
-## Objectif
-
-Transformer votre application web HALA MADRID TV en application native Android et iOS en utilisant Capacitor, sans reecrire le code existant.
-
-## Ce que Capacitor fait
-
-Capacitor emballe votre application React existante dans une coquille native. Votre code reste identique, mais l'application peut etre publiee sur le Google Play Store et l'Apple App Store.
-
-## Etapes a realiser dans Lovable
-
-### Etape 1 : Installer les dependances Capacitor
-
-Ajouter les packages suivants au projet :
-- `@capacitor/core`
-- `@capacitor/cli` (dev)
-- `@capacitor/ios`
-- `@capacitor/android`
-
-### Etape 2 : Creer le fichier de configuration Capacitor
-
-Creer `capacitor.config.ts` a la racine du projet avec :
-- **appId** : `app.lovable.73064fd28b5240c2b76d341c01c8ff9d`
-- **appName** : `hala-madrid-tv`
-- **webDir** : `dist`
-- **server.url** : URL du sandbox pour le hot-reload en developpement
-
-### Etape 3 : Mettre a jour le service worker PWA
-
-Ajouter `/~oauth` a la liste `navigateFallbackDenylist` dans `vite.config.ts` pour eviter les conflits avec l'authentification OAuth.
+Après analyse approfondie du code, voici les problèmes identifiés et les améliorations proposées, organisés par priorité.
 
 ---
 
-## Etapes a realiser sur votre ordinateur (apres approbation)
+### 1. Sections admin non responsives sur mobile
 
-Une fois les modifications faites dans Lovable, vous devrez executer ces commandes sur votre machine :
+**MatchControlCenter** (1078 lignes) - Le composant le plus problématique :
+- Utilise `grid grid-cols-1 lg:grid-cols-3` mais le panneau du minuteur et le formulaire d'entrée live blog sont très denses et débordent sur petit écran
+- Les boutons "Coup d'envoi", "Mi-temps" etc. dans la grille `grid-cols-2` sont trop serrés sur mobile
+- Le formulaire d'entrée utilise `grid grid-cols-2 md:grid-cols-4` qui compresse les selects sur mobile
 
-1. **Exporter vers GitHub** via le bouton dans les parametres du projet
-2. **Cloner et installer** :
-   ```
-   git clone <votre-repo>
-   cd <votre-repo>
-   npm install
-   ```
-3. **Ajouter les plateformes** :
-   ```
-   npx cap add android
-   npx cap add ios
-   ```
-4. **Builder et synchroniser** :
-   ```
-   npm run build
-   npx cap sync
-   ```
-5. **Lancer l'application** :
-   - Android : `npx cap run android` (necessite Android Studio)
-   - iOS : `npx cap run ios` (necessite un Mac avec Xcode)
+**PlayerStatsManager** (708 lignes) :
+- La grille des stats existantes utilise `grid grid-cols-4` sans breakpoint mobile → texte tronqué/illisible sur téléphone
+- Le dialog d'édition utilise `grid grid-cols-2 md:grid-cols-3` mais avec 12 champs c'est très dense
 
----
+**RichTextEditor** (407 lignes) :
+- La barre d'outils avec ~15 boutons en `flex-wrap` fonctionne mais est confuse sur mobile, pas de regroupement logique
+- Le code toolbar est dupliqué deux fois (lignes 251-295 et 321-365)
 
-## Pre-requis sur votre machine
+**MatchForm** :
+- Le `<select>` natif (ligne 245-255) n'utilise pas le composant Radix `Select`, ce qui casse la cohérence visuelle et le thème dark mode
+- Les boutons d'action `flex space-x-2` ne s'empilent pas sur mobile
 
-| Plateforme | Outil requis |
-|------------|-------------|
-| Android | Android Studio installe |
-| iOS | Mac avec Xcode installe |
+**ArticleForm** :
+- Les boutons "Upload" + input URL en `flex gap-3` débordent sur petit écran
 
----
+### 2. Fonctionnalités qui ne marchent pas bien
 
-## Details techniques
+**RichTextEditor** - Problème majeur :
+- Utilise `document.execCommand()` qui est **déprécié** dans tous les navigateurs modernes
+- Les prompts JavaScript natifs (`prompt()`, `alert()`) pour les liens/embeds sont une mauvaise UX, surtout sur mobile
+- Le code de la toolbar est entièrement dupliqué (2x ~45 lignes identiques)
 
-### Fichiers a creer/modifier
+**MatchForm - Select natif** :
+- Le champ "Statut" utilise un `<select>` HTML natif au lieu du composant Radix `Select`, ce qui ne respecte pas le dark mode
 
-| Fichier | Action |
-|---------|--------|
-| `capacitor.config.ts` | Creer - Configuration Capacitor |
-| `vite.config.ts` | Modifier - Ajouter `navigateFallbackDenylist` pour `/~oauth` |
-| `package.json` | Modifier - Ajouter les dependances Capacitor |
+### 3. Plan d'amélioration recommandé
 
-### Configuration Capacitor
+Je recommande de procéder par étapes, en commençant par les corrections les plus impactantes :
 
-```text
-capacitor.config.ts
-├── appId: app.lovable.73064fd28b5240c2b76d341c01c8ff9d
-├── appName: hala-madrid-tv
-├── webDir: dist
-└── server
-    ├── url: https://73064fd2-8b52-40c2-b76d-341c01c8ff9d.lovableproject.com?forceHideBadge=true
-    └── cleartext: true
-```
+**Étape 1 - Responsivité des composants critiques :**
+- `PlayerStatsManager` : passer la grille des stats de `grid-cols-4` à `grid-cols-2 sm:grid-cols-4`, et les labels existants en mode carte sur mobile
+- `MatchControlCenter` : adapter le layout en colonnes empilées sur mobile, agrandir les zones tactiles des boutons
+- `ArticleForm` : empiler les boutons Upload/Input sur mobile avec `flex-col sm:flex-row`
+- `MatchForm` : remplacer le `<select>` natif par le composant Radix `Select`, empiler les boutons d'action sur mobile
 
-### Ressource utile
+**Étape 2 - Nettoyage du RichTextEditor :**
+- Supprimer la duplication du code toolbar (factoriser en un sous-composant)
+- Remplacer les `prompt()`/`alert()` par des modales Radix pour une meilleure UX mobile
+- Note : `document.execCommand` est difficile à remplacer sans une réécriture majeure, mais il fonctionne encore
 
-Pour plus de details, consultez le guide officiel : https://docs.lovable.dev/tips-tricks/self-hosting
+**Étape 3 - Améliorations générales :**
+- Vérifier que tous les `DialogContent` admin ont `max-h-[90vh] overflow-y-auto` pour éviter le scroll impossible sur mobile
+- S'assurer que les `TabsList` avec beaucoup d'onglets utilisent `overflow-x-auto` sur mobile
+
+### Détails techniques
+
+Les corrections cibleront principalement des changements CSS/Tailwind (breakpoints responsifs) et quelques refactorisations mineures de composants. Aucune modification de logique métier ou de base de données n'est nécessaire.
+
+Fichiers à modifier :
+- `src/components/admin/PlayerStatsManager.tsx` - grilles responsives
+- `src/components/admin/MatchControlCenter.tsx` - layout mobile
+- `src/components/admin/MatchForm.tsx` - remplacer select natif + responsivité
+- `src/components/admin/ArticleForm.tsx` - empiler upload sur mobile
+- `src/components/admin/RichTextEditor.tsx` - factoriser toolbar, modales
 
