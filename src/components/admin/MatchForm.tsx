@@ -103,29 +103,30 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
+    <Card className="max-w-full overflow-hidden">
+      <CardHeader className="p-4 sm:p-6">
+        <CardTitle className="text-base sm:text-2xl">
           {match ? "Modifier le match" : "Nouveau match"}
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <CardContent className="p-4 sm:p-6 pt-0">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Équipe à domicile */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <Label htmlFor="home_team">Équipe à domicile</Label>
+                <Label htmlFor="home_team" className="text-sm">Équipe à domicile</Label>
                 <Input
                   id="home_team"
                   value={formData.home_team}
                   onChange={(e) => setFormData({ ...formData, home_team: e.target.value })}
                   required
+                  className="h-9 text-sm"
                 />
               </div>
               
-              <div>
-                <Label>Logo équipe à domicile</Label>
+              <div className="max-w-full overflow-hidden">
+                <Label className="text-sm">Logo équipe à domicile</Label>
                 <MediaUploader
                   onSuccess={(url) => setFormData({ ...formData, home_team_logo: url })}
                   acceptTypes="image/*"
@@ -134,20 +135,20 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
                   buttonText="Ajouter logo domicile"
                   showPreview={true}
                   currentValue={formData.home_team_logo}
-                  className="mt-2"
+                  className="mt-1 [&_img]:max-h-20 sm:[&_img]:max-h-32"
                 />
               </div>
             </div>
 
             {/* Équipe à l'extérieur */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <Label htmlFor="opposing_team">Équipe adverse</Label>
+                <Label htmlFor="opposing_team" className="text-sm">Équipe adverse</Label>
                 <Select
                   value={formData.opposing_team_id}
                   onValueChange={handleOpposingTeamChange}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Sélectionner une équipe adverse" />
                   </SelectTrigger>
                   <SelectContent>
@@ -161,18 +162,19 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
               </div>
               
               <div>
-                <Label htmlFor="away_team">Nom de l'équipe (auto-rempli)</Label>
+                <Label htmlFor="away_team" className="text-sm">Nom de l'équipe (auto-rempli)</Label>
                 <Input
                   id="away_team"
                   value={formData.away_team}
                   onChange={(e) => setFormData({ ...formData, away_team: e.target.value })}
                   required
                   disabled={!!formData.opposing_team_id}
+                  className="h-9 text-sm"
                 />
               </div>
               
-              <div>
-                <Label>Logo équipe à l'extérieur</Label>
+              <div className="max-w-full overflow-hidden">
+                <Label className="text-sm">Logo équipe à l'extérieur</Label>
                 <MediaUploader
                   onSuccess={(url) => setFormData({ ...formData, away_team_logo: url })}
                   acceptTypes="image/*"
@@ -181,72 +183,77 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
                   buttonText="Ajouter logo extérieur"
                   showPreview={true}
                   currentValue={formData.away_team_logo}
-                  className="mt-2"
+                  className="mt-1 [&_img]:max-h-20 sm:[&_img]:max-h-32"
                 />
               </div>
             </div>
           </div>
           
           <div>
-            <Label htmlFor="match_date">Date et heure du match</Label>
+            <Label htmlFor="match_date" className="text-sm">Date et heure du match</Label>
             <Input
               id="match_date"
               type="datetime-local"
               value={formData.match_date}
               onChange={(e) => setFormData({ ...formData, match_date: e.target.value })}
               required
+              className="h-9 text-sm"
             />
           </div>
           
           <div>
-            <Label htmlFor="venue">Lieu</Label>
+            <Label htmlFor="venue" className="text-sm">Lieu</Label>
             <Input
               id="venue"
               value={formData.venue}
               onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+              className="h-9 text-sm"
             />
           </div>
           
           <div>
-            <Label htmlFor="competition">Compétition</Label>
+            <Label htmlFor="competition" className="text-sm">Compétition</Label>
             <Input
               id="competition"
               value={formData.competition}
               onChange={(e) => setFormData({ ...formData, competition: e.target.value })}
+              className="h-9 text-sm"
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <Label htmlFor="home_score">Score domicile</Label>
+              <Label htmlFor="home_score" className="text-sm">Score domicile</Label>
               <Input
                 id="home_score"
                 type="number"
                 min="0"
                 value={formData.home_score}
                 onChange={(e) => setFormData({ ...formData, home_score: parseInt(e.target.value) || 0 })}
+                className="h-9 text-sm"
               />
             </div>
             
             <div>
-              <Label htmlFor="away_score">Score extérieur</Label>
+              <Label htmlFor="away_score" className="text-sm">Score extérieur</Label>
               <Input
                 id="away_score"
                 type="number"
                 min="0"
                 value={formData.away_score}
                 onChange={(e) => setFormData({ ...formData, away_score: parseInt(e.target.value) || 0 })}
+                className="h-9 text-sm"
               />
             </div>
           </div>
           
           <div>
-            <Label htmlFor="status">Statut</Label>
+            <Label htmlFor="status" className="text-sm">Statut</Label>
             <Select
               value={formData.status}
               onValueChange={(value) => setFormData({ ...formData, status: value })}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-9 text-sm">
                 <SelectValue placeholder="Sélectionner un statut" />
               </SelectTrigger>
               <SelectContent>
@@ -259,10 +266,10 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
           </div>
           
           <div className="flex flex-col sm:flex-row gap-2">
-            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto h-9 text-sm">
               {loading ? "Enregistrement..." : "Enregistrer"}
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
+            <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto h-9 text-sm">
               Annuler
             </Button>
           </div>
