@@ -40,13 +40,13 @@ export const MatchImportPreview = ({ matchData, playerStats }: MatchImportPrevie
   return (
     <Card className="w-full border-primary/50">
       <CardHeader>
-        <CardTitle className="text-xl">📋 Aperçu de l'import</CardTitle>
+        <CardTitle className="text-base sm:text-xl">📋 Aperçu de l'import</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Info du match */}
         <div className="space-y-2">
           <h3 className="font-semibold text-lg">Informations du match</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
             <div>
               <span className="text-muted-foreground">Équipes:</span>
               <p className="font-medium">{matchData.home_team} vs {matchData.away_team}</p>
