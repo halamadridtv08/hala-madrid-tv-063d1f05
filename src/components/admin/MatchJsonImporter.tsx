@@ -965,11 +965,11 @@ export const MatchJsonImporter = () => {
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <FileJson className="h-6 w-6 text-primary" />
-          <div>
-            <CardTitle>Importateur JSON de Match</CardTitle>
-            <CardDescription>
+        <div className="flex items-center gap-2 min-w-0">
+          <FileJson className="h-5 w-5 sm:h-6 sm:w-6 text-primary shrink-0" />
+          <div className="min-w-0">
+            <CardTitle className="text-base sm:text-lg break-words">Importateur JSON de Match</CardTitle>
+            <CardDescription className="text-xs sm:text-sm break-words">
               Collez un fichier JSON pour créer ou mettre à jour un match
             </CardDescription>
           </div>
@@ -1022,7 +1022,7 @@ export const MatchJsonImporter = () => {
             placeholder="Collez votre JSON ici..."
             value={jsonInput}
             onChange={(e) => handleJsonChange(e.target.value)}
-            rows={15}
+            rows={8}
             className="font-mono text-sm"
             disabled={showPlayerValidation || showPreview}
           />
@@ -1035,12 +1035,13 @@ export const MatchJsonImporter = () => {
           />
         )}
 
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button 
             type="button"
             onClick={handleValidate}
             variant="outline"
             disabled={!jsonInput.trim() || !selectedMatchId || showPreview || showPlayerValidation}
+            className="text-xs sm:text-sm"
           >
             <Eye className="h-4 w-4 mr-2" />
             Valider et Prévisualiser
@@ -1050,9 +1051,10 @@ export const MatchJsonImporter = () => {
             type="button"
             onClick={handleImport}
             disabled={!selectedMatchId || !showPreview || isProcessing}
+            className="text-xs sm:text-sm"
           >
             <Upload className="h-4 w-4 mr-2" />
-            {isProcessing ? "Mise à jour en cours..." : "Confirmer l'import"}
+            {isProcessing ? "Mise à jour..." : "Confirmer l'import"}
           </Button>
 
           {(showPreview || showPlayerValidation) && (
@@ -1066,6 +1068,7 @@ export const MatchJsonImporter = () => {
                 setPlayerNameMapping({});
               }}
               variant="ghost"
+              className="text-xs sm:text-sm"
             >
               Annuler
             </Button>
@@ -1083,7 +1086,7 @@ export const MatchJsonImporter = () => {
           <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
             Voir un exemple de JSON
           </summary>
-          <pre className="mt-2 p-4 bg-muted rounded-lg text-xs overflow-auto">
+          <pre className="mt-2 p-2 sm:p-4 bg-muted rounded-lg text-[10px] sm:text-xs overflow-x-auto max-w-full">
             {JSON.stringify(exampleJson, null, 2)}
           </pre>
         </details>

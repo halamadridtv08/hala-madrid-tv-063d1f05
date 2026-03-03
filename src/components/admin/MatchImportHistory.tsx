@@ -170,31 +170,33 @@ export const MatchImportHistory = () => {
                     key={entry.id}
                     className="border rounded-lg p-4 space-y-3 hover:bg-accent/50 transition-colors"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <h4 className="font-medium">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                      <div className="space-y-1 min-w-0">
+                        <h4 className="font-medium text-sm sm:text-base break-words">
                           {entry.matches?.home_team} vs {entry.matches?.away_team}
                         </h4>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {new Date(entry.imported_at).toLocaleString('fr-FR')}
                         </p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5 sm:gap-2 shrink-0">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => setRollbackId(entry.id)}
                           disabled={isRollingBack}
+                          className="h-8 text-xs sm:text-sm"
                         >
-                          <Undo2 className="h-4 w-4 mr-1" />
+                          <Undo2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" />
                           Annuler
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDeleteHistory(entry.id)}
+                          className="h-8 w-8 p-0"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </Button>
                       </div>
                     </div>
