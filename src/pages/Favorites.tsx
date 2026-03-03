@@ -46,7 +46,7 @@ export default function Favorites() {
       // Fetch all data in parallel
       const [playersRes, articlesRes, matchesRes, kitsRes, videosRes] = await Promise.all([
         playerIds.length > 0 ? supabase.from('players').select('id, name, image_url, position').in('id', playerIds) : null,
-        articleIds.length > 0 ? supabase.from('articles').select('id, title, thumbnail_url, category').in('id', articleIds) : null,
+        articleIds.length > 0 ? supabase.from('articles').select('id, slug, title, thumbnail_url, category').in('id', articleIds) : null,
         matchIds.length > 0 ? supabase.from('matches').select('id, home_team, away_team, match_date, competition').in('id', matchIds) : null,
         kitIds.length > 0 ? supabase.from('kits').select('id, title, image_url, type').in('id', kitIds) : null,
         videoIds.length > 0 ? supabase.from('youtube_videos').select('id, title, thumbnail_url').in('id', videoIds) : null,
@@ -64,7 +64,7 @@ export default function Favorites() {
         id: a.id,
         name: a.title,
         image: a.thumbnail_url,
-        link: `/news/${a.id}`,
+        link: `/news/${a.slug || a.id}`,
         subtitle: a.category
       })));
 

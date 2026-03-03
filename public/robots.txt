@@ -15,3 +15,4 @@ Allow: /
 
 # Sitemap
 Sitemap: https://qjnppcfbywfazwolfppo.supabase.co/functions/v1/sitemap
+Sitemap: https://www.hala-madrid-tv.com/sitemap.xml

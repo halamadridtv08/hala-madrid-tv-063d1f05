@@ -505,6 +505,7 @@ export type Database = {
           published_at: string | null
           read_time: string | null
           scheduled_at: string | null
+          slug: string
           thumbnail_url: string | null
           title: string
           updated_at: string | null
@@ -524,6 +525,7 @@ export type Database = {
           published_at?: string | null
           read_time?: string | null
           scheduled_at?: string | null
+          slug: string
           thumbnail_url?: string | null
           title: string
           updated_at?: string | null
@@ -543,6 +545,7 @@ export type Database = {
           published_at?: string | null
           read_time?: string | null
           scheduled_at?: string | null
+          slug?: string
           thumbnail_url?: string | null
           title?: string
           updated_at?: string | null
@@ -3712,6 +3715,7 @@ export type Database = {
         Returns: boolean
       }
       delete_totp_secret: { Args: { p_user_id: string }; Returns: undefined }
+      generate_slug: { Args: { title: string }; Returns: string }
       get_admin_emails: { Args: never; Returns: string[] }
       get_article_comments_with_emails: {
         Args: { p_article_id: string }

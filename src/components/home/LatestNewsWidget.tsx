@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface Article {
   id: string;
+  slug: string;
   title: string;
   category: string;
   published_at: string;
@@ -24,7 +25,7 @@ export const LatestNewsWidget = () => {
       try {
         const { data, error } = await supabase
           .from("articles")
-          .select("id, title, category, published_at")
+          .select("id, slug, title, category, published_at")
           .eq("is_published", true)
           .order("published_at", { ascending: false })
           .limit(10);
@@ -137,7 +138,7 @@ export const LatestNewsWidget = () => {
                 layout
               >
                 <Link
-                  to={`/news/${article.id}`}
+                  to={`/news/${article.slug || article.id}`}
                   className={`block border-b border-blue-400/30 pb-4 last:border-b-0 hover:bg-white/5 transition-all rounded-lg px-3 py-2 -mx-3 ${
                     isNew ? 'bg-white/10 ring-2 ring-madrid-gold' : ''
                   }`}

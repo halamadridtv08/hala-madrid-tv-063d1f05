@@ -161,7 +161,7 @@ export default function Search() {
                   <h2 className="text-xl font-bold mb-4">Actualités</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {articles.map((article) => (
-                      <Link key={article.id} to={`/news/${article.id}`}>
+                      <Link key={article.id} to={`/news/${article.slug || article.id}`}>
                         <Card className="card-hover">
                           <CardContent className="p-4">
                             {article.image_url && (
@@ -257,7 +257,7 @@ export default function Search() {
               {articles.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {articles.map((article) => (
-                    <Link key={article.id} to={`/news/${article.id}`}>
+                    <Link key={article.id} to={`/news/${article.slug || article.id}`}>
                       <Card className="card-hover">
                         <CardContent className="p-4">
                           {article.image_url && (

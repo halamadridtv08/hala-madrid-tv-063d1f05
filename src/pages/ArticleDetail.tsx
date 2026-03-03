@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SEOHead } from "@/components/SEOHead";
@@ -25,6 +25,7 @@ import { stripHtml } from "@/utils/stripHtml";
 
 interface Article {
   id: string;
+  slug: string;
   title: string;
   description: string;
   content: string;
@@ -34,6 +35,7 @@ interface Article {
   published_at: string;
   read_time: string | null;
   author_name: string | null;
+  view_count: number | null;
 }
 
 interface ArticleImage {
@@ -41,35 +43,55 @@ interface ArticleImage {
   image_url: string;
   display_order: number;
 }
+
+// Helper to detect if param is a UUID
+const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
 const ArticleDetail = () => {
-  const {
-    id
-  } = useParams<{
-    id: string;
-  }>();
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [article, setArticle] = useState<Article | null>(null);
   const [articleImages, setArticleImages] = useState<ArticleImage[]>([]);
   const [loading, setLoading] = useState(true);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   useEffect(() => {
     const fetchArticle = async () => {
       try {
         if (!id) return;
-        const {
-          data,
-          error
-        } = await supabase.from('articles').select('*').eq('id', id).single();
+
+        let data: any = null;
+        let error: any = null;
+
+        if (isUUID(id)) {
+          // Fetch by UUID - then redirect to slug URL
+          const res = await supabase.from('articles').select('*').eq('id', id).single();
+          data = res.data;
+          error = res.error;
+
+          // If found and has slug, redirect to slug URL (301-like behavior)
+          if (data?.slug) {
+            navigate(`/news/${data.slug}`, { replace: true });
+            return;
+          }
+        } else {
+          // Fetch by slug
+          const res = await supabase.from('articles').select('*').eq('slug', id).single();
+          data = res.data;
+          error = res.error;
+        }
+
         if (error) throw error;
         setArticle(data);
-        
-        // Increment view count (fire and forget)
-        supabase
-          .from('articles')
-          .update({ view_count: (data.view_count || 0) + 1 })
-          .eq('id', id)
-          .then(() => {});
+
+        // Increment view count
+        if (data?.id) {
+          supabase
+            .from('articles')
+            .update({ view_count: (data.view_count || 0) + 1 })
+            .eq('id', data.id)
+            .then(() => {});
+        }
       } catch (error: any) {
         console.error('Error fetching article:', error);
         toast({
@@ -85,22 +107,31 @@ const ArticleDetail = () => {
     const fetchArticleImages = async () => {
       try {
         if (!id) return;
-        const { data, error } = await supabase
-          .from('article_images')
-          .select('*')
-          .eq('article_id', id)
-          .order('display_order', { ascending: true });
-        
-        if (error) throw error;
-        setArticleImages(data || []);
+
+        // We need the article ID for images - if slug, we need to get it first
+        // Images will be fetched after article loads
       } catch (error: any) {
         console.error('Error fetching article images:', error);
       }
     };
 
     fetchArticle();
-    fetchArticleImages();
-  }, [id, toast]);
+  }, [id, toast, navigate]);
+
+  // Fetch images once article is loaded
+  useEffect(() => {
+    const fetchImages = async () => {
+      if (!article?.id) return;
+      const { data, error } = await supabase
+        .from('article_images')
+        .select('*')
+        .eq('article_id', article.id)
+        .order('display_order', { ascending: true });
+      if (!error) setArticleImages(data || []);
+    };
+    fetchImages();
+  }, [article?.id]);
+
   const getCategoryColor = (category: string) => {
     switch (category) {
       case "match":
@@ -121,6 +152,7 @@ const ArticleDetail = () => {
         return "bg-gray-600";
     }
   };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('fr-FR', {
@@ -129,6 +161,7 @@ const ArticleDetail = () => {
       year: 'numeric'
     }).format(date);
   };
+
   if (loading) {
     return <>
         <Navbar />
@@ -145,6 +178,7 @@ const ArticleDetail = () => {
         <Footer />
       </>;
   }
+
   if (!article) {
     return <>
         <Navbar />
@@ -158,70 +192,48 @@ const ArticleDetail = () => {
       </>;
   }
 
-  // Fonction pour nettoyer et réduire les espaces vides excessifs dans le contenu
   const cleanContent = (content: string): string => {
     let cleaned = content;
-    
-    // Supprimer les multiples <br> consécutifs (garder max 1)
     cleaned = cleaned.replace(/(<br\s*\/?>\s*){2,}/gi, '<br>');
-    
-    // Supprimer les paragraphes vides ou avec seulement des espaces/&nbsp;
     cleaned = cleaned.replace(/<p[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '');
-    
-    // Supprimer les div vides
     cleaned = cleaned.replace(/<div[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/div>/gi, '');
-    
-    // Supprimer les <br> au début ou à la fin des paragraphes
     cleaned = cleaned.replace(/<p[^>]*>\s*<br\s*\/?>/gi, '<p>');
     cleaned = cleaned.replace(/<br\s*\/?>\s*<\/p>/gi, '</p>');
-    
-    // Supprimer les multiples sauts de ligne entre les balises
     cleaned = cleaned.replace(/>\s{2,}</g, '> <');
-    
-    // Supprimer les espaces multiples
     cleaned = cleaned.replace(/\s{3,}/g, ' ');
-    
     return cleaned.trim();
   };
 
-  // Fonction pour rendre en toute sécurité le contenu HTML
   const renderContent = () => {
-    // Fonction pour convertir les sauts de ligne en paragraphes, tout en conservant les balises HTML
     const formatContent = (content: string) => {
       let formattedContent: string;
-      
-      // Si le contenu contient déjà des balises HTML (comme des vidéos ou des images), ne pas les modifier
       if (content.includes('<video') || content.includes('<img') || content.includes('<iframe')) {
         formattedContent = content;
       } else {
-        // Sinon, convertir les sauts de ligne en paragraphes
         formattedContent = content.split('\n\n')
           .filter(paragraph => paragraph.trim() !== '')
           .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
           .join('');
       }
-
-      // Nettoyer les espaces vides excessifs
       formattedContent = cleanContent(formattedContent);
-
-      // Sanitize the HTML to prevent XSS attacks
       const sanitized = DOMPurify.sanitize(formattedContent, {
         ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img', 'video', 'iframe', 'blockquote', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'section'],
         ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'width', 'height', 'controls', 'class', 'target', 'rel', 'style', 'frameborder', 'allow', 'allowfullscreen', 'scrolling', 'allowtransparency', 'data-theme', 'cite', 'data-video-id']
       });
-      
-      return {
-        __html: sanitized
-      };
+      return { __html: sanitized };
     };
     return <div className="prose prose-compact dark:prose-invert max-w-none" dangerouslySetInnerHTML={formatContent(article.content)} />;
   };
+
+  // Use slug for canonical URL
+  const articleUrl = `/news/${article.slug || article.id}`;
+
   return <>
       <SEOHead 
         title={article.title}
         description={stripHtml(article.description).slice(0, 160)}
         image={article.image_url || undefined}
-        url={`/news/${id}`}
+        url={articleUrl}
         type="article"
         publishedTime={article.published_at}
         section={article.category}
@@ -230,14 +242,12 @@ const ArticleDetail = () => {
       <Navbar />
       <main>
         <div className="madrid-container py-8">
-          {/* Breadcrumb */}
           <DynamicBreadcrumb 
             customTitle={article.title} 
             className="mb-6"
           />
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Contenu de l'article */}
             <div className="lg:col-span-2">
               <div className="mb-8">
                 <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
@@ -284,11 +294,8 @@ const ArticleDetail = () => {
                 {renderContent()}
               </div>
 
-              {/* Inline Ads - Dans l'article */}
               <ArticleAds position="inline" />
-
-              {/* Article Reactions */}
-              <ArticleReactions articleId={id!} className="border-t border-b border-border my-8" />
+              <ArticleReactions articleId={article.id} className="border-t border-b border-border my-8" />
 
               {article.video_url && (
                 <ArticleVideoPlayer videoUrl={article.video_url} />
@@ -298,34 +305,23 @@ const ArticleDetail = () => {
                 <ArticleImageGallery images={articleImages} />
               )}
 
-              {/* Interactive Sections */}
               <div className="mt-12 space-y-8">
-                {/* Poll */}
-                <ArticlePoll articleId={id!} />
-
-                {/* Quiz */}
-                <ArticleQuiz articleId={id!} />
-
-                {/* Tweets */}
-                <ArticleTweets articleId={id!} />
-
-                {/* Comments */}
-                <ArticleComments articleId={id!} />
+                <ArticlePoll articleId={article.id} />
+                <ArticleQuiz articleId={article.id} />
+                <ArticleTweets articleId={article.id} />
+                <ArticleComments articleId={article.id} />
               </div>
 
-              {/* Bottom Ads - Bas de l'article */}
               <ArticleAds position="bottom" />
             </div>
 
-            {/* Widget des dernières infos */}
             <div className="lg:col-span-1">
               <LatestNewsWidget />
               <ArticleAds position="sidebar" />
             </div>
           </div>
 
-          {/* Related Articles Section */}
-          <RelatedArticles currentArticleId={id!} category={article.category} />
+          <RelatedArticles currentArticleId={article.id} category={article.category} />
         </div>
       </main>
       <Footer />
