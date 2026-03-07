@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ShopHero } from "@/components/shop/ShopHero";
@@ -6,15 +6,18 @@ import { ShopFilters } from "@/components/shop/ShopFilters";
 import { ShopGrid } from "@/components/shop/ShopGrid";
 import { useShopProducts } from "@/hooks/useShopProducts";
 import { useShopCart } from "@/hooks/useShopCart";
+import { useShopWishlist } from "@/hooks/useShopWishlist";
 import { Helmet } from "react-helmet-async";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Heart, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const { user } = useAuth();
 
   const { data: products = [], isLoading } = useShopProducts(
     selectedCategory === "all" ? undefined : selectedCategory,
@@ -22,9 +25,14 @@ const Shop = () => {
   );
 
   const { addToCart, cartCount } = useShopCart();
+  const { toggleWishlist, isInWishlist } = useShopWishlist();
 
   const handleAddToCart = (productId: string) => {
     addToCart.mutate({ productId });
+  };
+
+  const handleToggleWishlist = (productId: string) => {
+    toggleWishlist.mutate(productId);
   };
 
   return (
@@ -54,6 +62,17 @@ const Shop = () => {
 
         <ShopHero />
 
+        {/* Quick links */}
+        {user && (
+          <div className="container mx-auto px-4 flex gap-3 justify-end -mt-4 mb-2">
+            <Link to="/shop/orders">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                <Package className="h-3.5 w-3.5" /> Mes commandes
+              </Button>
+            </Link>
+          </div>
+        )}
+
         <section className="container mx-auto px-4 py-10 space-y-8">
           <ShopFilters
             selectedCategory={selectedCategory}
@@ -66,6 +85,8 @@ const Shop = () => {
             products={products}
             isLoading={isLoading}
             onAddToCart={handleAddToCart}
+            isInWishlist={isInWishlist}
+            onToggleWishlist={handleToggleWishlist}
           />
         </section>
 
