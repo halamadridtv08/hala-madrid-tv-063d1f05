@@ -6,9 +6,11 @@ interface ShopGridProps {
   products: ShopProduct[];
   isLoading: boolean;
   onAddToCart?: (productId: string) => void;
+  isInWishlist?: (productId: string) => boolean;
+  onToggleWishlist?: (productId: string) => void;
 }
 
-export const ShopGrid = ({ products, isLoading, onAddToCart }: ShopGridProps) => {
+export const ShopGrid = ({ products, isLoading, onAddToCart, isInWishlist, onToggleWishlist }: ShopGridProps) => {
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -47,6 +49,8 @@ export const ShopGrid = ({ products, isLoading, onAddToCart }: ShopGridProps) =>
           key={product.id}
           product={product}
           onAddToCart={onAddToCart}
+          isWishlisted={isInWishlist?.(product.id)}
+          onToggleWishlist={onToggleWishlist}
         />
       ))}
     </div>

@@ -4,6 +4,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useShopProduct, useShopProducts } from "@/hooks/useShopProducts";
 import { useShopCart } from "@/hooks/useShopCart";
+import { useShopWishlist } from "@/hooks/useShopWishlist";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ const ShopProduct = () => {
   const { data: product, isLoading } = useShopProduct(slug || "");
   const { data: relatedProducts = [] } = useShopProducts(product?.category);
   const { addToCart } = useShopCart();
+  const { toggleWishlist, isInWishlist } = useShopWishlist();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -219,9 +221,16 @@ const ShopProduct = () => {
                   {product.stock <= 0 ? "Rupture de stock" : "Ajouter au panier"}
                 </Button>
 
-                <Button size="icon" variant="outline" className="h-11 w-11">
-                  <Heart className="h-5 w-5" />
-                </Button>
+                <motion.div whileTap={{ scale: 0.85 }}>
+                  <Button
+                    size="icon"
+                    variant={isInWishlist(product.id) ? "destructive" : "outline"}
+                    className="h-11 w-11"
+                    onClick={() => toggleWishlist.mutate(product.id)}
+                  >
+                    <Heart className={`h-5 w-5 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
+                  </Button>
+                </motion.div>
               </div>
 
               {/* Trust badges */}

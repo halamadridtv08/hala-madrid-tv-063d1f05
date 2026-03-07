@@ -8,9 +8,11 @@ import type { ShopProduct } from "@/types/Shop";
 interface ShopProductCardProps {
   product: ShopProduct;
   onAddToCart?: (productId: string) => void;
+  isWishlisted?: boolean;
+  onToggleWishlist?: (productId: string) => void;
 }
 
-export const ShopProductCard = ({ product, onAddToCart }: ShopProductCardProps) => {
+export const ShopProductCard = ({ product, onAddToCart, isWishlisted, onToggleWishlist }: ShopProductCardProps) => {
   const discount = product.compare_price
     ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
     : 0;
@@ -54,9 +56,21 @@ export const ShopProductCard = ({ product, onAddToCart }: ShopProductCardProps) 
         </div>
 
         {/* Wishlist button */}
-        <button className="absolute top-3 right-3 p-2 rounded-full bg-background/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80">
-          <Heart className="h-4 w-4 text-foreground" />
-        </button>
+        <motion.button
+          whileTap={{ scale: 0.8 }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleWishlist?.(product.id);
+          }}
+          className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm transition-all ${
+            isWishlisted
+              ? "bg-destructive/90 text-destructive-foreground"
+              : "bg-background/60 opacity-0 group-hover:opacity-100 hover:bg-background/80"
+          }`}
+        >
+          <Heart className={`h-4 w-4 ${isWishlisted ? "fill-current" : ""}`} />
+        </motion.button>
       </Link>
 
       {/* Info */}
