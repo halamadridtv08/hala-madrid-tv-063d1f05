@@ -19,6 +19,7 @@ import { RelatedArticles } from "@/components/articles/RelatedArticles";
 import { ArticleAds } from "@/components/articles/ArticleAds";
 import { ArticleReactions } from "@/components/articles/ArticleReactions";
 import { DynamicBreadcrumb } from "@/components/common/DynamicBreadcrumb";
+import { ShopCrossSell } from "@/components/shop/ShopCrossSell";
 import { ShareModal } from "@/components/common/ShareModal";
 import DOMPurify from "dompurify";
 import { stripHtml } from "@/utils/stripHtml";
@@ -313,6 +314,7 @@ const ArticleDetail = () => {
               </div>
 
               <ArticleAds position="bottom" />
+              <ShopCrossSell />
             </div>
 
             <div className="lg:col-span-1">
