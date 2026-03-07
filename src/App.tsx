@@ -41,6 +41,9 @@ const LiveBlog = lazy(() => import("./pages/LiveBlog"));
 const Transfers = lazy(() => import("./pages/Transfers"));
 const PlayerComparator = lazy(() => import("./pages/PlayerComparator"));
 const Shop = lazy(() => import("./pages/Shop"));
+const ShopProduct = lazy(() => import("./pages/ShopProduct"));
+const ShopCart = lazy(() => import("./pages/ShopCart"));
+const ShopCheckout = lazy(() => import("./pages/ShopCheckout"));
 const Profile = lazy(() => import("./pages/Profile"));
 const AdminSecurity = lazy(() => import("./pages/AdminSecurity"));
 const AdminSEO = lazy(() => import("./pages/AdminSEO"));
@@ -115,6 +118,9 @@ const App = () => (
                   <Route path="/comparator" element={<PlayerComparator />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/shop" element={<Shop />} />
+                  <Route path="/shop/:slug" element={<ShopProduct />} />
+                  <Route path="/shop/cart" element={<ShopCart />} />
+                  <Route path="/shop/checkout" element={<ShopCheckout />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/live-blog/:matchId" element={<LiveBlog />} />
                   <Route 

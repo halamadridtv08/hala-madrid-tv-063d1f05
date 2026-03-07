@@ -61,3 +61,7 @@ verify_jwt = false
 # Live match sync - validates CRON_SECRET or admin JWT internally
 [functions.sync-live-match]
 verify_jwt = false
+
+# Shop checkout - requires authentication (validated in code)
+[functions.create-shop-checkout]
+verify_jwt = false

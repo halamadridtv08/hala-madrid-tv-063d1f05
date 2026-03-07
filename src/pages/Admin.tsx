@@ -86,6 +86,7 @@ import { ExploreCardsManager } from "@/components/admin/ExploreCardsManager";
 import { SeasonResetManager } from "@/components/admin/SeasonResetManager";
 import { SeasonArchiveViewer } from "@/components/admin/SeasonArchiveViewer";
 import { SoundSettingsManager } from "@/components/admin/SoundSettingsManager";
+import { ShopProductsManager } from "@/components/admin/ShopProductsManager";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 interface StatsData {
@@ -127,6 +128,7 @@ const VALID_ADMIN_TABS = [
   "dream-teams",
   "notifications",
   "integrations",
+  "shop",
   "site-content",
   "branding",
   "welcome-popup",
@@ -817,6 +819,9 @@ const Admin = () => {
           <TabsContent value="notifications">{renderNotifications()}</TabsContent>
           <TabsContent value="integrations">
             <IntegrationsManager />
+          </TabsContent>
+          <TabsContent value="shop">
+            <ShopProductsManager />
           </TabsContent>
           <TabsContent value="site-content">
             <SiteContentManager />

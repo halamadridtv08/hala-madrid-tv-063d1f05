@@ -76,6 +76,7 @@ const navigationItems = [
   { value: "dream-teams", label: "Dream Teams", icon: Star, adminOnly: false },
   { value: "notifications", label: "Notifications", icon: Bell, adminOnly: false },
   { value: "integrations", label: "Intégrations", icon: Puzzle, adminOnly: true },
+  { value: "shop", label: "Boutique", icon: Star, adminOnly: false },
 ];
 
 // Settings sub-items (apparence + paramètres)
