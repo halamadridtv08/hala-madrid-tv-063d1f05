@@ -40,6 +40,7 @@ const DreamTeam = lazy(() => import("./pages/DreamTeam"));
 const LiveBlog = lazy(() => import("./pages/LiveBlog"));
 const Transfers = lazy(() => import("./pages/Transfers"));
 const PlayerComparator = lazy(() => import("./pages/PlayerComparator"));
+const Shop = lazy(() => import("./pages/Shop"));
 const Profile = lazy(() => import("./pages/Profile"));
 const AdminSecurity = lazy(() => import("./pages/AdminSecurity"));
 const AdminSEO = lazy(() => import("./pages/AdminSEO"));
@@ -113,6 +114,7 @@ const App = () => (
                   <Route path="/transfers" element={<Transfers />} />
                   <Route path="/comparator" element={<PlayerComparator />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/shop" element={<Shop />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/live-blog/:matchId" element={<LiveBlog />} />
                   <Route 
