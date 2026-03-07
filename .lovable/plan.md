@@ -1,41 +1,114 @@
 
 
-## Corrections de responsivité — Gestion des Matchs (Admin)
+## Plan : Boutique E-commerce Premium + Fix Build Error
 
-D'après les captures d'écran et le code, voici les problèmes de dépassement sur mobile et les corrections à appliquer :
-
----
-
-### Problèmes identifiés
-
-1. **MatchJsonImporter** — Le titre "Importateur JSON de Match" et sa description débordent (visible sur la capture). Les boutons "Valider et Prévisualiser" + "Confirmer l'import" sont en ligne et dépassent l'écran.
-
-2. **MatchTable** — Les boutons d'action (Sync API, Nouveau match) dans le header et les boutons par match (calendrier, éditer, supprimer) sont trop serrés. Le titre du match peut déborder.
-
-3. **MatchImportHistory** — Les boutons "Annuler" + corbeille sont en ligne avec le titre du match, ce qui fonctionne mais pourrait être plus compact.
-
-4. **MatchImportPreview** — La grille `grid-cols-2` pour les infos du match peut être trop serrée sur très petit écran.
+Ce projet est massif. Je propose de le découper en **phases** pour avancer efficacement sans casser le site existant.
 
 ---
 
-### Corrections prévues
+### Phase 0 — Fix build error (immédiat)
 
-**Fichier 1 — `MatchJsonImporter.tsx`** :
-- Titre et description : ajouter `break-words` et réduire la taille du titre sur mobile (`text-base sm:text-lg`)
-- Boutons d'action (ligne 1038) : passer de `flex gap-2` à `flex flex-col sm:flex-row gap-2` pour empiler sur mobile
-- Textarea : réduire `rows={15}` à `rows={8}` sur mobile ou utiliser une classe responsive
-- Exemple JSON `<pre>` : ajouter `max-w-full overflow-x-auto text-[10px] sm:text-xs`
+Le fichier `supabase/functions/notify-moderator-action/index.ts` importe `npm:resend@4.0.0` qui n'existe pas. Il faut le changer en `npm:resend@2.0.0` (comme dans `weekly-moderator-report`).
 
-**Fichier 2 — `MatchTable.tsx`** :
-- Déjà partiellement responsive (classes `sm:` présentes). Vérifier que le conteneur du score et des badges ne déborde pas avec `min-w-0` et `truncate` sur les noms d'équipe longs.
+---
 
-**Fichier 3 — `MatchImportPreview.tsx`** :
-- Grille infos match : passer de `grid-cols-2` à `grid-cols-1 sm:grid-cols-2`
-- Titre : réduire la taille sur mobile
+### Phase 1 — Base de données + Stripe (cette session)
 
-**Fichier 4 — `MatchImportHistory.tsx`** :
-- Layout de chaque entrée : empiler titre et boutons sur mobile avec `flex flex-col sm:flex-row`
-- Boutons : réduire la taille sur mobile (`h-8 text-xs`)
+**Tables Supabase à créer via migration :**
 
-Ces corrections sont purement CSS/Tailwind, sans changement de logique.
+```text
+shop_products
+├── id, name, slug, description, price, compare_price
+├── category, images (jsonb), variants (jsonb)
+├── stock, supplier, is_published, is_featured
+├── created_at, updated_at
+
+shop_orders
+├── id, user_id, status, total_price
+├── payment_status, payment_intent_id
+├── shipping_address (jsonb), tracking_number
+├── created_at, updated_at
+
+shop_order_items
+├── id, order_id, product_id
+├── variant (jsonb), quantity, unit_price
+
+shop_reviews
+├── id, product_id, user_id, rating, comment
+├── is_approved, created_at
+
+shop_cart_items
+├── id, user_id, product_id, variant (jsonb), quantity
+
+shop_wishlists
+├── id, user_id, product_id
+
+shop_discount_codes
+├── id, code, type (percentage/fixed), value
+├── min_order, max_uses, current_uses
+├── is_active, expires_at
+```
+
+RLS : lecture publique pour `shop_products` (publiés), user-scoped pour cart/wishlist/orders, admin-only pour gestion.
+
+**Stripe** : Activer l'intégration Stripe pour le checkout (payment intents).
+
+---
+
+### Phase 2 — Pages frontend (après Phase 1)
+
+**Nouvelles pages :**
+- `/shop` — Catalogue avec filtres, recherche, catégories
+- `/shop/:slug` — Page produit (galerie, variantes, avis, produits similaires)
+- `/shop/cart` — Panier avec drawer animé
+- `/shop/checkout` — Checkout multi-étapes + Stripe
+- `/shop/orders` — Historique commandes (connecté au profil)
+
+**Nouvelles routes dans App.tsx :**
+```text
+/shop
+/shop/:slug
+/shop/cart
+/shop/checkout
+/shop/orders
+```
+
+---
+
+### Phase 3 — Admin boutique
+
+**Nouvel onglet admin "Boutique" :**
+- CRUD produits (nom, prix, images, variantes, stock)
+- Gestion commandes (statut, tracking)
+- Codes promo
+- Avis clients (modération)
+
+---
+
+### Phase 4 — UX premium et marketing
+
+- Animations Framer Motion (déjà installé) sur les cartes produits
+- Cart drawer animé (slide-in)
+- Wishlist avec cœur animé
+- Section produits dans les articles de match (cross-selling)
+- Newsletter boutique
+
+---
+
+### Ce que je fais maintenant (Phase 0 + début Phase 1)
+
+1. **Fix du build error** (resend@4.0.0 -> resend@2.0.0)
+2. **Création des tables Supabase** avec RLS
+3. **Activation de Stripe**
+4. **Page `/shop`** avec catalogue produits et design dark luxury
+
+Les phases suivantes seront itérées dans les prochains messages.
+
+### Section technique
+
+- Préfixe `shop_` sur toutes les tables pour éviter les conflits avec les tables existantes
+- La page Kits existante reste intacte ; la boutique est un module séparé
+- Framer Motion (déjà installé) sera utilisé pour les animations au lieu de GSAP (non installé)
+- Les variantes produit sont stockées en JSONB pour la flexibilité (taille, couleur, etc.)
+- Le panier est persisté en base (pas localStorage) pour les utilisateurs connectés
 
