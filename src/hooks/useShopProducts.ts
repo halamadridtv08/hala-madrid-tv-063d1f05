@@ -23,11 +23,11 @@ export const useShopProducts = (category?: string, search?: string) => {
       const { data, error } = await query;
       if (error) throw error;
 
-      return (data || []).map((p: any) => ({
+      return (data || []).map((p) => ({
         ...p,
-        images: Array.isArray(p.images) ? p.images : [],
-        variants: Array.isArray(p.variants) ? p.variants : [],
-      }));
+        images: Array.isArray(p.images) ? p.images as unknown as string[] : [],
+        variants: Array.isArray(p.variants) ? p.variants as unknown as ShopProduct['variants'] : [],
+      })) as ShopProduct[];
     },
   });
 };
@@ -48,8 +48,8 @@ export const useShopProduct = (slug: string) => {
 
       return {
         ...data,
-        images: Array.isArray(data.images) ? data.images : [],
-        variants: Array.isArray(data.variants) ? data.variants : [],
+        images: Array.isArray(data.images) ? data.images as unknown as string[] : [],
+        variants: Array.isArray(data.variants) ? data.variants as unknown as ShopProduct['variants'] : [],
       } as ShopProduct;
     },
     enabled: !!slug,
@@ -70,11 +70,11 @@ export const useFeaturedProducts = () => {
 
       if (error) throw error;
 
-      return (data || []).map((p: any) => ({
+      return (data || []).map((p) => ({
         ...p,
-        images: Array.isArray(p.images) ? p.images : [],
-        variants: Array.isArray(p.variants) ? p.variants : [],
-      }));
+        images: Array.isArray(p.images) ? p.images as unknown as string[] : [],
+        variants: Array.isArray(p.variants) ? p.variants as unknown as ShopProduct['variants'] : [],
+      })) as ShopProduct[];
     },
   });
 };
