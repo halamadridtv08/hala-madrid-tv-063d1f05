@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Navigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ShopHero } from "@/components/shop/ShopHero";
@@ -8,6 +8,7 @@ import { ShopGrid } from "@/components/shop/ShopGrid";
 import { useShopProducts } from "@/hooks/useShopProducts";
 import { useShopCart } from "@/hooks/useShopCart";
 import { useShopWishlist } from "@/hooks/useShopWishlist";
+import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 import { Helmet } from "react-helmet-async";
 import { ShoppingCart, Heart, Package, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const Shop = () => {
+  const { isVisible, loading: visibilityLoading } = useSiteVisibility();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCategory = searchParams.get("category") || "all";
   const paymentStatus = searchParams.get("payment");
@@ -30,12 +32,10 @@ const Shop = () => {
   useEffect(() => {
     if (paymentStatus === "success" && orderId) {
       toast.success("Paiement réussi ! Votre commande a été confirmée. 🎉", { duration: 6000 });
-      // Clean URL params
       setSearchParams({});
     }
   }, [paymentStatus, orderId, setSearchParams]);
 
-  // Sync category to URL
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     if (category !== "all") {
@@ -56,6 +56,11 @@ const Shop = () => {
   const handleAddToCart = (productId: string) => {
     addToCart.mutate({ productId });
   };
+
+  // Redirect if shop is hidden from public (after all hooks)
+  if (!visibilityLoading && !isVisible('shop')) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleToggleWishlist = (productId: string) => {
     toggleWishlist.mutate(productId);

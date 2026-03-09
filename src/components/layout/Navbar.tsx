@@ -176,12 +176,12 @@ export function Navbar() {
                   </Link>
                 </NavigationMenuItem>}
               
-              <NavigationMenuItem>
+              {isVisible('shop_nav') && <NavigationMenuItem>
                 <Link to="/shop" className="text-foreground hover:text-primary font-medium transition-colors flex items-center gap-1 text-sm lg:text-base px-2 py-1">
                   <ShoppingBag className="h-3 w-3 lg:h-4 lg:w-4" />
                   <span className="hidden lg:inline">Shop</span>
                 </Link>
-              </NavigationMenuItem>
+              </NavigationMenuItem>}
             </NavigationMenuList>
           </NavigationMenu>
           
@@ -236,9 +236,9 @@ export function Navbar() {
                 {isVisible('dream_team_nav') && <Link to="/dream-team" className="text-foreground hover:text-madrid-gold font-medium transition-colors py-2 flex items-center gap-2 text-sm" onClick={closeMenu}>
                     <Star className="h-4 w-4 text-madrid-gold" /> Dream Team
                   </Link>}
-                <Link to="/shop" className="text-foreground hover:text-primary font-medium transition-colors py-2 flex items-center gap-2 text-sm" onClick={closeMenu}>
+                {isVisible('shop_nav') && <Link to="/shop" className="text-foreground hover:text-primary font-medium transition-colors py-2 flex items-center gap-2 text-sm" onClick={closeMenu}>
                   <ShoppingBag className="h-4 w-4" /> Shop
-                </Link>
+                </Link>}
                 
                 {/* Admin link in mobile/tablet menu */}
                 {isAdmin && <Link to="/admin" className="text-madrid-blue hover:text-madrid-blue/80 font-medium transition-colors py-2 text-sm border-t border-gray-200 dark:border-gray-700 mt-2 pt-2" onClick={closeMenu}>
