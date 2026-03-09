@@ -89,13 +89,18 @@ export default {
         "slide-in-left": {
           "0%": { transform: "translateX(-100%)" },
           "100%": { transform: "translateX(0)" }
+        },
+        "shimmer": {
+          "0%": { backgroundPosition: "200% center" },
+          "100%": { backgroundPosition: "-200% center" }
         }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-out forwards",
-        "slide-in-left": "slide-in-left 0.3s ease-out"
+        "slide-in-left": "slide-in-left 0.3s ease-out",
+        "shimmer": "shimmer 3s linear infinite"
       },
       fontFamily: {
         montserrat: ["Montserrat", "sans-serif"],
