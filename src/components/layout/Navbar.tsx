@@ -176,12 +176,12 @@ export function Navbar() {
                   </Link>
                 </NavigationMenuItem>}
               
-              <NavigationMenuItem>
+              {isVisible('shop_nav') && <NavigationMenuItem>
                 <Link to="/shop" className="text-foreground hover:text-primary font-medium transition-colors flex items-center gap-1 text-sm lg:text-base px-2 py-1">
                   <ShoppingBag className="h-3 w-3 lg:h-4 lg:w-4" />
                   <span className="hidden lg:inline">Shop</span>
                 </Link>
-              </NavigationMenuItem>
+              </NavigationMenuItem>}
             </NavigationMenuList>
           </NavigationMenu>
           
