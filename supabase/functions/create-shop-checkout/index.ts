@@ -29,7 +29,7 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
-    const { orderId, items } = await req.json();
+    const { orderId, items, discountAmount = 0 } = await req.json();
 
     if (!orderId || !items || items.length === 0) {
       throw new Error("Données de commande invalides");
@@ -54,6 +54,20 @@ serve(async (req) => {
       quantity: item.quantity,
     }));
 
+    // Add discount as negative line item if applicable
+    if (discountAmount > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "eur",
+          product_data: {
+            name: "Réduction",
+          },
+          unit_amount: -Math.round(discountAmount * 100),
+        },
+        quantity: 1,
+      });
+    }
+
     const origin = req.headers.get("origin") || "https://hala-madrid-tv.lovable.app";
 
     const session = await stripe.checkout.sessions.create({
@@ -66,6 +80,7 @@ serve(async (req) => {
       metadata: {
         order_id: orderId,
         user_id: user.id,
+        discount_amount: discountAmount.toString(),
       },
     });
 
