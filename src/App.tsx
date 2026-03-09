@@ -124,6 +124,7 @@ const App = () => (
                   <Route path="/shop/cart" element={<ShopCart />} />
                   <Route path="/shop/checkout" element={<ShopCheckout />} />
                   <Route path="/shop/orders" element={<ShopOrders />} />
+                  <Route path="/shop/wishlist" element={<ShopWishlist />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/live-blog/:matchId" element={<LiveBlog />} />
                   <Route 
