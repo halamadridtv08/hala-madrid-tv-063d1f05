@@ -9,8 +9,10 @@ import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import { ShoppingCart, Heart, Star, ChevronLeft, Minus, Plus, Truck, Shield, RotateCcw } from "lucide-react";
+import { ShoppingCart, Heart, ChevronLeft, Minus, Plus, Truck, Shield, RotateCcw, Check } from "lucide-react";
 import { ShopProductCard } from "@/components/shop/ShopProductCard";
+import { ShopReviews } from "@/components/shop/ShopReviews";
+import { toast } from "sonner";
 
 const ShopProduct = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -65,6 +67,14 @@ const ShopProduct = () => {
   const related = relatedProducts.filter((p) => p.id !== product.id).slice(0, 4);
 
   const handleAddToCart = () => {
+    // Validate variants selection
+    const requiredVariants = product.variants.filter((v) => v.options.length > 0);
+    const missingVariants = requiredVariants.filter((v) => !selectedVariants[v.name]);
+    if (missingVariants.length > 0) {
+      toast.error(`Sélectionnez : ${missingVariants.map((v) => v.name).join(", ")}`);
+      return;
+    }
+
     addToCart.mutate({
       productId: product.id,
       variant: Object.keys(selectedVariants).length > 0 ? selectedVariants : undefined,
@@ -137,13 +147,20 @@ const ShopProduct = () => {
                   {product.name}
                 </h1>
 
+                {/* Stock status */}
                 <div className="flex items-center gap-2 mt-2">
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} className="h-4 w-4 fill-secondary text-secondary" />
-                    ))}
-                  </div>
-                  <span className="text-sm text-muted-foreground">(0 avis)</span>
+                  {product.stock > 0 ? (
+                    <span className="flex items-center gap-1 text-xs text-primary">
+                      <Check className="h-3 w-3" /> En stock
+                      {product.stock <= 5 && (
+                        <span className="text-destructive ml-1">
+                          (Plus que {product.stock} !)
+                        </span>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-destructive font-semibold">Rupture de stock</span>
+                  )}
                 </div>
               </div>
 
@@ -172,8 +189,13 @@ const ShopProduct = () => {
               {/* Variants */}
               {product.variants.map((variant) => (
                 <div key={variant.id} className="space-y-2">
-                  <label className="text-sm font-semibold text-foreground">
+                  <label className="text-sm font-semibold text-foreground flex items-center gap-2">
                     {variant.name}
+                    {selectedVariants[variant.name] && (
+                      <span className="text-xs font-normal text-muted-foreground">
+                        : {selectedVariants[variant.name]}
+                      </span>
+                    )}
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {variant.options.map((opt) => (
@@ -204,7 +226,7 @@ const ShopProduct = () => {
                   </button>
                   <span className="px-4 font-semibold text-foreground">{quantity}</span>
                   <button
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
                     className="p-2 hover:bg-muted transition-colors"
                   >
                     <Plus className="h-4 w-4" />
@@ -251,6 +273,11 @@ const ShopProduct = () => {
             </motion.div>
           </div>
 
+          {/* Reviews section */}
+          <div className="mt-16">
+            <ShopReviews productId={product.id} />
+          </div>
+
           {/* Related products */}
           {related.length > 0 && (
             <section className="mt-16 space-y-6">
@@ -259,7 +286,13 @@ const ShopProduct = () => {
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {related.map((p) => (
-                  <ShopProductCard key={p.id} product={p} />
+                  <ShopProductCard
+                    key={p.id}
+                    product={p}
+                    onAddToCart={(id) => addToCart.mutate({ productId: id })}
+                    isWishlisted={isInWishlist(p.id)}
+                    onToggleWishlist={(id) => toggleWishlist.mutate(id)}
+                  />
                 ))}
               </div>
             </section>
