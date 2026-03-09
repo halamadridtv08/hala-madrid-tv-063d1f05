@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Eye, EyeOff, Edit2, Check, X, Layout, Navigation, Footprints } from "lucide-react";
+import { Eye, EyeOff, Edit2, Check, X, Layout, Navigation, Footprints, ShoppingBag } from "lucide-react";
 import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -57,6 +57,7 @@ export const SiteVisibilityManager = () => {
   const getIcon = (sectionKey: string) => {
     if (sectionKey.startsWith('navbar')) return <Navigation className="h-4 w-4" />;
     if (sectionKey.startsWith('footer')) return <Footprints className="h-4 w-4" />;
+    if (sectionKey.startsWith('shop')) return <ShoppingBag className="h-4 w-4" />;
     return <Layout className="h-4 w-4" />;
   };
 
@@ -153,7 +154,22 @@ export const SiteVisibilityManager = () => {
         </p>
       </CardHeader>
       <CardContent>
-        <Accordion type="multiple" defaultValue={['navbar', 'sections', 'footer']} className="space-y-4">
+        <Accordion type="multiple" defaultValue={['navbar', 'sections', 'shop', 'footer']} className="space-y-4">
+          {/* Shop Section */}
+          <AccordionItem value="shop" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="h-5 w-5 text-primary" />
+                <span className="font-semibold">Boutique</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-2 pt-2">
+              {sections
+                .filter(s => s.section_key === 'shop' || s.parent_key === 'shop')
+                .map(section => renderSection(section, section.parent_key === 'shop'))}
+            </AccordionContent>
+          </AccordionItem>
+
           {/* Navbar Section */}
           <AccordionItem value="navbar" className="border rounded-lg px-4">
             <AccordionTrigger className="hover:no-underline">
@@ -179,7 +195,7 @@ export const SiteVisibilityManager = () => {
             </AccordionTrigger>
             <AccordionContent className="space-y-2 pt-2">
               {sections
-                .filter(s => !s.parent_key && !s.section_key.startsWith('navbar') && !s.section_key.startsWith('footer'))
+                .filter(s => !s.parent_key && !s.section_key.startsWith('navbar') && !s.section_key.startsWith('footer') && s.section_key !== 'shop')
                 .map(section => renderSection(section))}
             </AccordionContent>
           </AccordionItem>
