@@ -10,9 +10,10 @@ interface ShopProductCardProps {
   onAddToCart?: (productId: string) => void;
   isWishlisted?: boolean;
   onToggleWishlist?: (productId: string) => void;
+  onQuickView?: () => void;
 }
 
-export const ShopProductCard = ({ product, onAddToCart, isWishlisted, onToggleWishlist }: ShopProductCardProps) => {
+export const ShopProductCard = ({ product, onAddToCart, isWishlisted, onToggleWishlist, onQuickView }: ShopProductCardProps) => {
   const discount = product.compare_price
     ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
     : 0;
@@ -98,20 +99,24 @@ export const ShopProductCard = ({ product, onAddToCart, isWishlisted, onToggleWi
               <ShoppingCart className="h-3.5 w-3.5" />
               Ajouter
             </Button>
-            <Button
-              variant="secondary"
-              className="rounded-none h-11 w-11 p-0"
-              asChild
-            >
-              <Link to={`/shop/${product.slug}`} onClick={(e) => e.stopPropagation()}>
+            {onQuickView && (
+              <Button
+                variant="secondary"
+                className="rounded-none h-11 w-11 p-0"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onQuickView();
+                }}
+              >
                 <Eye className="h-4 w-4" />
-              </Link>
-            </Button>
+              </Button>
+            )}
           </div>
         </div>
       </Link>
 
-      {/* Product info — clean, minimal */}
+      {/* Product info */}
       <div className="pt-4 pb-2 space-y-1.5">
         <Link to={`/shop/${product.slug}`}>
           <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">

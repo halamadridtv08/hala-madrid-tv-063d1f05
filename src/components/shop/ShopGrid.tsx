@@ -9,9 +9,10 @@ interface ShopGridProps {
   onAddToCart?: (productId: string) => void;
   isInWishlist?: (productId: string) => boolean;
   onToggleWishlist?: (productId: string) => void;
+  onQuickView?: (product: ShopProduct) => void;
 }
 
-export const ShopGrid = ({ products, isLoading, onAddToCart, isInWishlist, onToggleWishlist }: ShopGridProps) => {
+export const ShopGrid = ({ products, isLoading, onAddToCart, isInWishlist, onToggleWishlist, onQuickView }: ShopGridProps) => {
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
@@ -42,7 +43,7 @@ export const ShopGrid = ({ products, isLoading, onAddToCart, isInWishlist, onTog
             Aucun produit trouvé
           </h3>
           <p className="text-muted-foreground text-sm mt-2">
-            Revenez bientôt pour découvrir nos nouvelles collections
+            Essayez de modifier vos filtres ou revenez bientôt
           </p>
         </div>
       </motion.div>
@@ -50,29 +51,23 @@ export const ShopGrid = ({ products, isLoading, onAddToCart, isInWishlist, onTog
   }
 
   return (
-    <div>
-      {/* Results count */}
-      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-6 font-medium">
-        {products.length} produit{products.length > 1 ? "s" : ""}
-      </p>
-      
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10">
-        {products.map((product, index) => (
-          <motion.div
-            key={product.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05, duration: 0.4 }}
-          >
-            <ShopProductCard
-              product={product}
-              onAddToCart={onAddToCart}
-              isWishlisted={isInWishlist?.(product.id)}
-              onToggleWishlist={onToggleWishlist}
-            />
-          </motion.div>
-        ))}
-      </div>
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10">
+      {products.map((product, index) => (
+        <motion.div
+          key={product.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.04, duration: 0.4 }}
+        >
+          <ShopProductCard
+            product={product}
+            onAddToCart={onAddToCart}
+            isWishlisted={isInWishlist?.(product.id)}
+            onToggleWishlist={onToggleWishlist}
+            onQuickView={onQuickView ? () => onQuickView(product) : undefined}
+          />
+        </motion.div>
+      ))}
     </div>
   );
 };
