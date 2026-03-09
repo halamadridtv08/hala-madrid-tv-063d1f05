@@ -45,6 +45,7 @@ const ShopProduct = lazy(() => import("./pages/ShopProduct"));
 const ShopCart = lazy(() => import("./pages/ShopCart"));
 const ShopCheckout = lazy(() => import("./pages/ShopCheckout"));
 const ShopOrders = lazy(() => import("./pages/ShopOrders"));
+const ShopWishlist = lazy(() => import("./pages/ShopWishlist"));
 const Profile = lazy(() => import("./pages/Profile"));
 const AdminSecurity = lazy(() => import("./pages/AdminSecurity"));
 const AdminSEO = lazy(() => import("./pages/AdminSEO"));
