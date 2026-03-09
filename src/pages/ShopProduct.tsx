@@ -274,8 +274,49 @@ const ShopProduct = () => {
             </motion.div>
           </div>
 
+          {/* Description & Features tabs */}
+          {(product.description || (product.features && product.features.length > 0)) && (
+            <div className="mt-12">
+              <Tabs defaultValue="description" className="w-full">
+                <TabsList className="w-full max-w-md">
+                  {product.description && <TabsTrigger value="description">Description</TabsTrigger>}
+                  {product.features && product.features.length > 0 && (
+                    <TabsTrigger value="features">Caractéristiques</TabsTrigger>
+                  )}
+                </TabsList>
+                {product.description && (
+                  <TabsContent value="description" className="mt-4">
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <p className="text-foreground leading-relaxed whitespace-pre-wrap">
+                        {product.description}
+                      </p>
+                    </div>
+                  </TabsContent>
+                )}
+                {product.features && product.features.length > 0 && (
+                  <TabsContent value="features" className="mt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {product.features.map((feature, index) => (
+                        <div
+                          key={index}
+                          className="flex items-start gap-3 p-3 rounded-lg bg-muted/50"
+                        >
+                          <Info className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                          <div>
+                            <span className="text-sm font-medium text-foreground">{feature.label}</span>
+                            <p className="text-sm text-muted-foreground">{feature.value}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                )}
+              </Tabs>
+            </div>
+          )}
+
           {/* Reviews section */}
-          <div className="mt-16">
+          <div className="mt-12">
             <ShopReviews productId={product.id} />
           </div>
 
