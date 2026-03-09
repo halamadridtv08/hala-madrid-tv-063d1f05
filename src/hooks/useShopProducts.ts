@@ -1,6 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { ShopProduct } from "@/types/Shop";
+import type { ShopProduct, ShopFeature } from "@/types/Shop";
+
+const mapProduct = (p: any): ShopProduct => ({
+  ...p,
+  images: Array.isArray(p.images) ? p.images as unknown as string[] : [],
+  variants: Array.isArray(p.variants) ? p.variants as unknown as ShopProduct['variants'] : [],
+  features: Array.isArray(p.features) ? p.features as unknown as ShopFeature[] : [],
+});
 
 export const useShopProducts = (category?: string, search?: string) => {
   return useQuery({
@@ -23,11 +30,7 @@ export const useShopProducts = (category?: string, search?: string) => {
       const { data, error } = await query;
       if (error) throw error;
 
-      return (data || []).map((p) => ({
-        ...p,
-        images: Array.isArray(p.images) ? p.images as unknown as string[] : [],
-        variants: Array.isArray(p.variants) ? p.variants as unknown as ShopProduct['variants'] : [],
-      })) as ShopProduct[];
+      return (data || []).map(mapProduct);
     },
   });
 };
@@ -46,11 +49,7 @@ export const useShopProduct = (slug: string) => {
       if (error) throw error;
       if (!data) return null;
 
-      return {
-        ...data,
-        images: Array.isArray(data.images) ? data.images as unknown as string[] : [],
-        variants: Array.isArray(data.variants) ? data.variants as unknown as ShopProduct['variants'] : [],
-      } as ShopProduct;
+      return mapProduct(data);
     },
     enabled: !!slug,
   });
@@ -70,11 +69,7 @@ export const useFeaturedProducts = () => {
 
       if (error) throw error;
 
-      return (data || []).map((p) => ({
-        ...p,
-        images: Array.isArray(p.images) ? p.images as unknown as string[] : [],
-        variants: Array.isArray(p.variants) ? p.variants as unknown as ShopProduct['variants'] : [],
-      })) as ShopProduct[];
+      return (data || []).map(mapProduct);
     },
   });
 };

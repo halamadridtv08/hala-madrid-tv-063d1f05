@@ -8,12 +8,18 @@ export interface ShopProduct {
   category: string;
   images: string[];
   variants: ShopVariant[];
+  features: ShopFeature[];
   stock: number;
   supplier: string | null;
   is_published: boolean;
   is_featured: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface ShopFeature {
+  label: string;
+  value: string;
 }
 
 export interface ShopVariant {

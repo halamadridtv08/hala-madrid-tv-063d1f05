@@ -3243,6 +3243,7 @@ export type Database = {
           compare_price: number | null
           created_at: string
           description: string | null
+          features: Json | null
           id: string
           images: Json | null
           is_featured: boolean | null
@@ -3260,6 +3261,7 @@ export type Database = {
           compare_price?: number | null
           created_at?: string
           description?: string | null
+          features?: Json | null
           id?: string
           images?: Json | null
           is_featured?: boolean | null
@@ -3277,6 +3279,7 @@ export type Database = {
           compare_price?: number | null
           created_at?: string
           description?: string | null
+          features?: Json | null
           id?: string
           images?: Json | null
           is_featured?: boolean | null
