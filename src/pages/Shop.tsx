@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ShopHero } from "@/components/shop/ShopHero";
@@ -8,16 +9,41 @@ import { useShopProducts } from "@/hooks/useShopProducts";
 import { useShopCart } from "@/hooks/useShopCart";
 import { useShopWishlist } from "@/hooks/useShopWishlist";
 import { Helmet } from "react-helmet-async";
-import { ShoppingCart, Heart, Package } from "lucide-react";
+import { ShoppingCart, Heart, Package, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const Shop = () => {
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialCategory = searchParams.get("category") || "all";
+  const paymentStatus = searchParams.get("payment");
+  const orderId = searchParams.get("order");
+
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState("");
   const { user } = useAuth();
+
+  // Handle payment success
+  useEffect(() => {
+    if (paymentStatus === "success" && orderId) {
+      toast.success("Paiement réussi ! Votre commande a été confirmée. 🎉", { duration: 6000 });
+      // Clean URL params
+      setSearchParams({});
+    }
+  }, [paymentStatus, orderId, setSearchParams]);
+
+  // Sync category to URL
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    if (category !== "all") {
+      setSearchParams({ category });
+    } else {
+      setSearchParams({});
+    }
+  };
 
   const { data: products = [], isLoading } = useShopProducts(
     selectedCategory === "all" ? undefined : selectedCategory,
@@ -25,7 +51,7 @@ const Shop = () => {
   );
 
   const { addToCart, cartCount } = useShopCart();
-  const { toggleWishlist, isInWishlist } = useShopWishlist();
+  const { toggleWishlist, isInWishlist, wishlistIds } = useShopWishlist();
 
   const handleAddToCart = (productId: string) => {
     addToCart.mutate({ productId });
@@ -48,6 +74,23 @@ const Shop = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
 
+        {/* Payment success banner */}
+        {paymentStatus === "success" && (
+          <div className="bg-primary/10 border-b border-primary/20 px-4 py-3">
+            <div className="container mx-auto flex items-center gap-3 justify-center">
+              <CheckCircle className="h-5 w-5 text-primary" />
+              <span className="text-sm font-semibold text-primary">
+                Commande confirmée ! Vous recevrez un email de confirmation.
+              </span>
+              <Link to="/shop/orders">
+                <Button variant="outline" size="sm" className="text-xs">
+                  Voir mes commandes
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Floating cart button */}
         {cartCount > 0 && (
           <Link to="/shop/cart" className="fixed bottom-6 right-6 z-50">
@@ -65,6 +108,17 @@ const Shop = () => {
         {/* Quick links */}
         {user && (
           <div className="container mx-auto px-4 flex gap-3 justify-end -mt-4 mb-2">
+            <Link to="/shop/wishlist">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                <Heart className="h-3.5 w-3.5" />
+                Favoris
+                {wishlistIds.length > 0 && (
+                  <Badge variant="secondary" className="rounded-full px-1.5 py-0 text-[10px] ml-0.5">
+                    {wishlistIds.length}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
             <Link to="/shop/orders">
               <Button variant="outline" size="sm" className="gap-1.5 text-xs">
                 <Package className="h-3.5 w-3.5" /> Mes commandes
@@ -73,10 +127,10 @@ const Shop = () => {
           </div>
         )}
 
-        <section className="container mx-auto px-4 py-10 space-y-8">
+        <section id="shop-products" className="container mx-auto px-4 py-10 space-y-8">
           <ShopFilters
             selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
+            onCategoryChange={handleCategoryChange}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
           />

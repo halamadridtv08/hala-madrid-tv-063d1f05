@@ -45,6 +45,7 @@ const ShopProduct = lazy(() => import("./pages/ShopProduct"));
 const ShopCart = lazy(() => import("./pages/ShopCart"));
 const ShopCheckout = lazy(() => import("./pages/ShopCheckout"));
 const ShopOrders = lazy(() => import("./pages/ShopOrders"));
+const ShopWishlist = lazy(() => import("./pages/ShopWishlist"));
 const Profile = lazy(() => import("./pages/Profile"));
 const AdminSecurity = lazy(() => import("./pages/AdminSecurity"));
 const AdminSEO = lazy(() => import("./pages/AdminSEO"));
@@ -123,6 +124,7 @@ const App = () => (
                   <Route path="/shop/cart" element={<ShopCart />} />
                   <Route path="/shop/checkout" element={<ShopCheckout />} />
                   <Route path="/shop/orders" element={<ShopOrders />} />
+                  <Route path="/shop/wishlist" element={<ShopWishlist />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/live-blog/:matchId" element={<LiveBlog />} />
                   <Route 

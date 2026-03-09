@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { CreditCard, Lock, ArrowLeft, Loader2, CheckCircle } from "lucide-react";
-import type { ShopProduct, ShippingAddress } from "@/types/Shop";
+import { ShopDiscountInput } from "@/components/shop/ShopDiscountInput";
+import type { ShopProduct, ShippingAddress, ShopDiscountCode } from "@/types/Shop";
 
 const ShopCheckout = () => {
   const { user } = useAuth();
@@ -19,6 +20,7 @@ const ShopCheckout = () => {
   const [products, setProducts] = useState<Record<string, ShopProduct>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<'shipping' | 'payment'>('shipping');
+  const [appliedDiscount, setAppliedDiscount] = useState<ShopDiscountCode | null>(null);
   const [address, setAddress] = useState<ShippingAddress>({
     name: '',
     line1: '',
@@ -57,6 +59,14 @@ const ShopCheckout = () => {
     return sum + (product?.price || 0) * item.quantity;
   }, 0);
 
+  const discountAmount = appliedDiscount
+    ? appliedDiscount.type === "percentage"
+      ? subtotal * (appliedDiscount.value / 100)
+      : Math.min(appliedDiscount.value, subtotal)
+    : 0;
+
+  const total = Math.max(0, subtotal - discountAmount);
+
   const handleCheckout = async () => {
     if (!user) return;
     setIsProcessing(true);
@@ -68,9 +78,11 @@ const ShopCheckout = () => {
         .insert({
           user_id: user.id,
           status: "pending",
-          total_price: subtotal,
+          total_price: total,
           payment_status: "unpaid",
           shipping_address: address as any,
+          discount_code: appliedDiscount?.code || null,
+          discount_amount: discountAmount,
         })
         .select()
         .single();
@@ -92,6 +104,14 @@ const ShopCheckout = () => {
 
       if (itemsError) throw itemsError;
 
+      // Increment discount usage if applicable
+      if (appliedDiscount) {
+        await supabase
+          .from("shop_discount_codes")
+          .update({ current_uses: appliedDiscount.current_uses + 1 })
+          .eq("id", appliedDiscount.id);
+      }
+
       // Call Stripe checkout edge function
       const { data: stripeData, error: stripeError } = await supabase.functions.invoke(
         "create-shop-checkout",
@@ -103,6 +123,7 @@ const ShopCheckout = () => {
               price: products[item.product_id]?.price || 0,
               quantity: item.quantity,
             })),
+            discountAmount,
           },
         }
       );
@@ -177,23 +198,27 @@ const ShopCheckout = () => {
               <h2 className="font-montserrat font-bold text-lg text-foreground">Adresse de livraison</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-foreground">Nom complet</label>
+                  <label className="text-sm font-medium text-foreground">Nom complet *</label>
                   <Input value={address.name} onChange={(e) => setAddress(prev => ({ ...prev, name: e.target.value }))} placeholder="Jean Dupont" />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-foreground">Adresse</label>
+                  <label className="text-sm font-medium text-foreground">Adresse *</label>
                   <Input value={address.line1} onChange={(e) => setAddress(prev => ({ ...prev, line1: e.target.value }))} placeholder="123 rue de Madrid" />
                 </div>
+                <div className="sm:col-span-2">
+                  <label className="text-sm font-medium text-foreground">Complément d'adresse</label>
+                  <Input value={address.line2 || ''} onChange={(e) => setAddress(prev => ({ ...prev, line2: e.target.value }))} placeholder="Apt 4B, Bâtiment C..." />
+                </div>
                 <div>
-                  <label className="text-sm font-medium text-foreground">Ville</label>
+                  <label className="text-sm font-medium text-foreground">Ville *</label>
                   <Input value={address.city} onChange={(e) => setAddress(prev => ({ ...prev, city: e.target.value }))} placeholder="Paris" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-foreground">Code postal</label>
+                  <label className="text-sm font-medium text-foreground">Code postal *</label>
                   <Input value={address.postal_code} onChange={(e) => setAddress(prev => ({ ...prev, postal_code: e.target.value }))} placeholder="75001" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-foreground">Pays</label>
+                  <label className="text-sm font-medium text-foreground">Pays *</label>
                   <Input value={address.country} onChange={(e) => setAddress(prev => ({ ...prev, country: e.target.value }))} placeholder="FR" />
                 </div>
               </div>
@@ -226,10 +251,47 @@ const ShopCheckout = () => {
                   );
                 })}
                 <div className="h-px bg-border" />
+
+                {/* Discount code */}
+                <ShopDiscountInput
+                  subtotal={subtotal}
+                  onApply={setAppliedDiscount}
+                  onRemove={() => setAppliedDiscount(null)}
+                  appliedDiscount={appliedDiscount}
+                />
+
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-sm text-primary">
+                    <span>Réduction</span>
+                    <span>-{discountAmount.toFixed(2)}€</span>
+                  </div>
+                )}
+
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Livraison</span>
+                  <span className="text-primary font-semibold">Gratuite</span>
+                </div>
+
+                <div className="h-px bg-border" />
                 <div className="flex justify-between font-montserrat font-bold text-foreground">
                   <span>Total</span>
-                  <span>{subtotal.toFixed(2)}€</span>
+                  <span>{total.toFixed(2)}€</span>
                 </div>
+              </div>
+
+              {/* Shipping summary */}
+              <div className="bg-card p-4 rounded-xl border border-border text-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-foreground">Livraison à :</span>
+                  <button onClick={() => setStep('shipping')} className="text-xs text-primary hover:underline">
+                    Modifier
+                  </button>
+                </div>
+                <p className="text-muted-foreground">
+                  {address.name}<br />
+                  {address.line1}{address.line2 ? `, ${address.line2}` : ''}<br />
+                  {address.postal_code} {address.city}, {address.country}
+                </p>
               </div>
 
               <Button
@@ -241,7 +303,7 @@ const ShopCheckout = () => {
                 {isProcessing ? (
                   <><Loader2 className="h-5 w-5 animate-spin" /> Traitement...</>
                 ) : (
-                  <><Lock className="h-4 w-4" /> Payer {subtotal.toFixed(2)}€ <CreditCard className="h-4 w-4" /></>
+                  <><Lock className="h-4 w-4" /> Payer {total.toFixed(2)}€ <CreditCard className="h-4 w-4" /></>
                 )}
               </Button>
 
