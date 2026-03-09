@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Eye, EyeOff, Edit2, Check, X, Layout, Navigation, Footprints } from "lucide-react";
+import { Eye, EyeOff, Edit2, Check, X, Layout, Navigation, Footprints, ShoppingBag } from "lucide-react";
 import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
