@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ShoppingBag, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export const ShopHero = () => {
   return (
@@ -54,12 +55,16 @@ export const ShopHero = () => {
             transition={{ delay: 0.4 }}
             className="flex flex-col sm:flex-row gap-3 justify-center pt-2"
           >
-            <Button size="lg" className="gap-2 font-montserrat font-semibold">
-              <ShoppingBag className="h-5 w-5" />
-              Voir la boutique
+            <Button size="lg" className="gap-2 font-montserrat font-semibold" asChild>
+              <a href="#shop-products">
+                <ShoppingBag className="h-5 w-5" />
+                Voir la boutique
+              </a>
             </Button>
-            <Button size="lg" variant="outline" className="font-montserrat font-semibold border-secondary/30 hover:bg-secondary/10 text-foreground">
-              Collection Spéciale ⭐
+            <Button size="lg" variant="outline" className="font-montserrat font-semibold border-secondary/30 hover:bg-secondary/10 text-foreground" asChild>
+              <Link to="/shop?category=special">
+                Collection Spéciale ⭐
+              </Link>
             </Button>
           </motion.div>
         </div>
