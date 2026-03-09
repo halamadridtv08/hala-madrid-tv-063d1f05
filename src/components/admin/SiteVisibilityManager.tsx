@@ -57,6 +57,7 @@ export const SiteVisibilityManager = () => {
   const getIcon = (sectionKey: string) => {
     if (sectionKey.startsWith('navbar')) return <Navigation className="h-4 w-4" />;
     if (sectionKey.startsWith('footer')) return <Footprints className="h-4 w-4" />;
+    if (sectionKey.startsWith('shop')) return <ShoppingBag className="h-4 w-4" />;
     return <Layout className="h-4 w-4" />;
   };
 
