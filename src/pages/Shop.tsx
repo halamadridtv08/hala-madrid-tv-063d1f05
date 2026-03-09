@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const Shop = () => {
+  const { isVisible, loading: visibilityLoading } = useSiteVisibility();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialCategory = searchParams.get("category") || "all";
   const paymentStatus = searchParams.get("payment");
@@ -26,6 +27,11 @@ const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [searchQuery, setSearchQuery] = useState("");
   const { user } = useAuth();
+
+  // Redirect if shop is hidden from public
+  if (!visibilityLoading && !isVisible('shop')) {
+    return <Navigate to="/" replace />;
+  }
 
   // Handle payment success
   useEffect(() => {
