@@ -169,12 +169,19 @@ export function Navbar() {
                 </Link>
               </NavigationMenuItem>
               
-              {isVisible('dream_team_nav') && <NavigationMenuItem>
+               {isVisible('dream_team_nav') && <NavigationMenuItem>
                   <Link to="/dream-team" className="text-foreground hover:text-madrid-gold font-medium transition-colors flex items-center gap-1 text-sm lg:text-base px-2 py-1">
                     <Star className="h-3 w-3 lg:h-4 lg:w-4 text-madrid-gold" />
                     <span className="hidden lg:inline">Dream Team</span>
                   </Link>
                 </NavigationMenuItem>}
+              
+              <NavigationMenuItem>
+                <Link to="/shop" className="text-foreground hover:text-primary font-medium transition-colors flex items-center gap-1 text-sm lg:text-base px-2 py-1">
+                  <ShoppingBag className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden lg:inline">Shop</span>
+                </Link>
+              </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
           
