@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "./LanguageSelector";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, X, Calendar, Users, Video, FileText, Image, Search, Plus, Star } from "lucide-react";
+import { Menu, X, Calendar, Users, Video, FileText, Image, Search, Plus, Star, ShoppingBag } from "lucide-react";
 import { AuthButtons } from "./AuthButtons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
