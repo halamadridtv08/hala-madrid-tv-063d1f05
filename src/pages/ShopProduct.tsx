@@ -9,9 +9,10 @@ import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import { ShoppingCart, Heart, ChevronLeft, Minus, Plus, Truck, Shield, RotateCcw, Check } from "lucide-react";
+import { ShoppingCart, Heart, ChevronLeft, Minus, Plus, Truck, Shield, RotateCcw, Check, Info } from "lucide-react";
 import { ShopProductCard } from "@/components/shop/ShopProductCard";
 import { ShopReviews } from "@/components/shop/ShopReviews";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 const ShopProduct = () => {
