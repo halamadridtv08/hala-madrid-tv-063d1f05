@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, Navigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ShopHero } from "@/components/shop/ShopHero";
@@ -8,6 +8,7 @@ import { ShopGrid } from "@/components/shop/ShopGrid";
 import { useShopProducts } from "@/hooks/useShopProducts";
 import { useShopCart } from "@/hooks/useShopCart";
 import { useShopWishlist } from "@/hooks/useShopWishlist";
+import { useSiteVisibility } from "@/hooks/useSiteVisibility";
 import { Helmet } from "react-helmet-async";
 import { ShoppingCart, Heart, Package, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
