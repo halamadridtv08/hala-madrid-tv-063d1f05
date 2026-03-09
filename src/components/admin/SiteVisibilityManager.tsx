@@ -153,7 +153,22 @@ export const SiteVisibilityManager = () => {
         </p>
       </CardHeader>
       <CardContent>
-        <Accordion type="multiple" defaultValue={['navbar', 'sections', 'footer']} className="space-y-4">
+        <Accordion type="multiple" defaultValue={['navbar', 'sections', 'shop', 'footer']} className="space-y-4">
+          {/* Shop Section */}
+          <AccordionItem value="shop" className="border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="h-5 w-5 text-primary" />
+                <span className="font-semibold">Boutique</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="space-y-2 pt-2">
+              {sections
+                .filter(s => s.section_key === 'shop' || s.parent_key === 'shop')
+                .map(section => renderSection(section, section.parent_key === 'shop'))}
+            </AccordionContent>
+          </AccordionItem>
+
           {/* Navbar Section */}
           <AccordionItem value="navbar" className="border rounded-lg px-4">
             <AccordionTrigger className="hover:no-underline">
@@ -179,7 +194,7 @@ export const SiteVisibilityManager = () => {
             </AccordionTrigger>
             <AccordionContent className="space-y-2 pt-2">
               {sections
-                .filter(s => !s.parent_key && !s.section_key.startsWith('navbar') && !s.section_key.startsWith('footer'))
+                .filter(s => !s.parent_key && !s.section_key.startsWith('navbar') && !s.section_key.startsWith('footer') && s.section_key !== 'shop')
                 .map(section => renderSection(section))}
             </AccordionContent>
           </AccordionItem>
