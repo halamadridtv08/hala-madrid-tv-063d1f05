@@ -28,21 +28,14 @@ const Shop = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { user } = useAuth();
 
-  // Redirect if shop is hidden from public
-  if (!visibilityLoading && !isVisible('shop')) {
-    return <Navigate to="/" replace />;
-  }
-
   // Handle payment success
   useEffect(() => {
     if (paymentStatus === "success" && orderId) {
       toast.success("Paiement réussi ! Votre commande a été confirmée. 🎉", { duration: 6000 });
-      // Clean URL params
       setSearchParams({});
     }
   }, [paymentStatus, orderId, setSearchParams]);
 
-  // Sync category to URL
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     if (category !== "all") {
@@ -63,6 +56,11 @@ const Shop = () => {
   const handleAddToCart = (productId: string) => {
     addToCart.mutate({ productId });
   };
+
+  // Redirect if shop is hidden from public (after all hooks)
+  if (!visibilityLoading && !isVisible('shop')) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleToggleWishlist = (productId: string) => {
     toggleWishlist.mutate(productId);
