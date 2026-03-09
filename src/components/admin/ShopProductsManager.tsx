@@ -2,14 +2,17 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, Package, ShoppingCart, Eye, DollarSign } from "lucide-react";
+import { Plus, Edit, Trash2, Package, ShoppingCart, Eye, DollarSign, X } from "lucide-react";
 import { SHOP_CATEGORIES } from "@/types/Shop";
+import type { ShopVariant, ShopFeature } from "@/types/Shop";
 
 interface ProductForm {
   name: string;
@@ -19,9 +22,12 @@ interface ProductForm {
   compare_price: number | null;
   category: string;
   stock: number;
+  supplier: string;
   is_published: boolean;
   is_featured: boolean;
   images: string[];
+  variants: ShopVariant[];
+  features: ShopFeature[];
 }
 
 const defaultForm: ProductForm = {
@@ -32,9 +38,12 @@ const defaultForm: ProductForm = {
   compare_price: null,
   category: "accessories",
   stock: 0,
+  supplier: "",
   is_published: false,
   is_featured: false,
   images: [],
+  variants: [],
+  features: [],
 };
 
 export const ShopProductsManager = () => {
@@ -46,6 +55,15 @@ export const ShopProductsManager = () => {
   const [form, setForm] = useState<ProductForm>(defaultForm);
   const [imageUrl, setImageUrl] = useState("");
   const [activeView, setActiveView] = useState<"products" | "orders">("products");
+
+  // Variant form state
+  const [variantName, setVariantName] = useState("");
+  const [variantType, setVariantType] = useState<"size" | "color" | "style">("size");
+  const [variantOptions, setVariantOptions] = useState("");
+
+  // Feature form state
+  const [featureLabel, setFeatureLabel] = useState("");
+  const [featureValue, setFeatureValue] = useState("");
 
   const fetchData = async () => {
     setLoading(true);
@@ -79,14 +97,17 @@ export const ShopProductsManager = () => {
     const payload = {
       name: form.name,
       slug: form.slug || generateSlug(form.name),
-      description: form.description,
+      description: form.description || null,
       price: form.price,
       compare_price: form.compare_price,
       category: form.category,
       stock: form.stock,
+      supplier: form.supplier || null,
       is_published: form.is_published,
       is_featured: form.is_featured,
       images: form.images,
+      variants: form.variants as any,
+      features: form.features as any,
     };
 
     let error;
@@ -117,9 +138,12 @@ export const ShopProductsManager = () => {
       compare_price: product.compare_price,
       category: product.category,
       stock: product.stock,
+      supplier: product.supplier || "",
       is_published: product.is_published,
       is_featured: product.is_featured,
       images: Array.isArray(product.images) ? product.images : [],
+      variants: Array.isArray(product.variants) ? product.variants : [],
+      features: Array.isArray(product.features) ? product.features : [],
     });
     setDialogOpen(true);
   };
@@ -140,6 +164,37 @@ export const ShopProductsManager = () => {
 
   const removeImage = (index: number) => {
     setForm(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
+  };
+
+  const addVariant = () => {
+    if (!variantName.trim() || !variantOptions.trim()) return;
+    const newVariant: ShopVariant = {
+      id: crypto.randomUUID(),
+      name: variantName.trim(),
+      type: variantType,
+      options: variantOptions.split(",").map(o => o.trim()).filter(Boolean),
+    };
+    setForm(prev => ({ ...prev, variants: [...prev.variants, newVariant] }));
+    setVariantName("");
+    setVariantOptions("");
+  };
+
+  const removeVariant = (index: number) => {
+    setForm(prev => ({ ...prev, variants: prev.variants.filter((_, i) => i !== index) }));
+  };
+
+  const addFeature = () => {
+    if (!featureLabel.trim() || !featureValue.trim()) return;
+    setForm(prev => ({
+      ...prev,
+      features: [...prev.features, { label: featureLabel.trim(), value: featureValue.trim() }],
+    }));
+    setFeatureLabel("");
+    setFeatureValue("");
+  };
+
+  const removeFeature = (index: number) => {
+    setForm(prev => ({ ...prev, features: prev.features.filter((_, i) => i !== index) }));
   };
 
   const updateOrderStatus = async (orderId: string, status: string) => {
@@ -196,83 +251,203 @@ export const ShopProductsManager = () => {
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Nouveau produit</Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>{editId ? "Modifier" : "Nouveau"} produit</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Nom *</label>
-                    <Input value={form.name} onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value, slug: generateSlug(e.target.value) }))} />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Slug</label>
-                    <Input value={form.slug} onChange={(e) => setForm(prev => ({ ...prev, slug: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Description</label>
-                    <textarea
-                      className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      rows={3}
-                      value={form.description}
-                      onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+                
+                <Tabs defaultValue="general" className="mt-2">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="general" className="text-xs">Général</TabsTrigger>
+                    <TabsTrigger value="media" className="text-xs">Médias</TabsTrigger>
+                    <TabsTrigger value="variants" className="text-xs">Variantes</TabsTrigger>
+                    <TabsTrigger value="features" className="text-xs">Caractéristiques</TabsTrigger>
+                  </TabsList>
+
+                  {/* General tab */}
+                  <TabsContent value="general" className="space-y-4 mt-4">
                     <div>
-                      <label className="text-sm font-medium text-foreground">Prix (€) *</label>
-                      <Input type="number" step="0.01" value={form.price} onChange={(e) => setForm(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))} />
+                      <label className="text-sm font-medium text-foreground">Nom *</label>
+                      <Input value={form.name} onChange={(e) => setForm(prev => ({ ...prev, name: e.target.value, slug: prev.slug || generateSlug(e.target.value) }))} />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-foreground">Prix barré (€)</label>
-                      <Input type="number" step="0.01" value={form.compare_price || ""} onChange={(e) => setForm(prev => ({ ...prev, compare_price: parseFloat(e.target.value) || null }))} />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-foreground">Catégorie</label>
-                      <Select value={form.category} onValueChange={(val) => setForm(prev => ({ ...prev, category: val }))}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {SHOP_CATEGORIES.map(c => (
-                            <SelectItem key={c.value} value={c.value}>{c.icon} {c.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <label className="text-sm font-medium text-foreground">Slug</label>
+                      <Input value={form.slug} onChange={(e) => setForm(prev => ({ ...prev, slug: e.target.value }))} />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-foreground">Stock</label>
-                      <Input type="number" value={form.stock} onChange={(e) => setForm(prev => ({ ...prev, stock: parseInt(e.target.value) || 0 }))} />
+                      <label className="text-sm font-medium text-foreground">Description</label>
+                      <Textarea
+                        rows={5}
+                        value={form.description}
+                        onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Décrivez le produit en détail..."
+                      />
                     </div>
-                  </div>
-                  {/* Images */}
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Images</label>
-                    <div className="flex gap-2">
-                      <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="URL de l'image" />
-                      <Button type="button" size="sm" onClick={addImage}>+</Button>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-foreground">Prix (€) *</label>
+                        <Input type="number" step="0.01" value={form.price} onChange={(e) => setForm(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))} />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground">Prix barré (€)</label>
+                        <Input type="number" step="0.01" value={form.compare_price || ""} onChange={(e) => setForm(prev => ({ ...prev, compare_price: parseFloat(e.target.value) || null }))} />
+                      </div>
                     </div>
-                    <div className="flex gap-2 mt-2 flex-wrap">
-                      {form.images.map((img, i) => (
-                        <div key={i} className="relative w-16 h-16">
-                          <img src={img} alt="" className="w-full h-full object-cover rounded" />
-                          <button onClick={() => removeImage(i)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-4 h-4 text-[10px] flex items-center justify-center">×</button>
-                        </div>
-                      ))}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-foreground">Catégorie</label>
+                        <Select value={form.category} onValueChange={(val) => setForm(prev => ({ ...prev, category: val }))}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {SHOP_CATEGORIES.map(c => (
+                              <SelectItem key={c.value} value={c.value}>{c.icon} {c.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground">Stock</label>
+                        <Input type="number" value={form.stock} onChange={(e) => setForm(prev => ({ ...prev, stock: parseInt(e.target.value) || 0 }))} />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <Switch checked={form.is_published} onCheckedChange={(val) => setForm(prev => ({ ...prev, is_published: val }))} />
-                      <span className="text-sm text-foreground">Publié</span>
+                    <div>
+                      <label className="text-sm font-medium text-foreground">Fournisseur</label>
+                      <Input value={form.supplier} onChange={(e) => setForm(prev => ({ ...prev, supplier: e.target.value }))} placeholder="Nike, Adidas..." />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Switch checked={form.is_featured} onCheckedChange={(val) => setForm(prev => ({ ...prev, is_featured: val }))} />
-                      <span className="text-sm text-foreground">Vedette</span>
+                    <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-2">
+                        <Switch checked={form.is_published} onCheckedChange={(val) => setForm(prev => ({ ...prev, is_published: val }))} />
+                        <span className="text-sm text-foreground">Publié</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch checked={form.is_featured} onCheckedChange={(val) => setForm(prev => ({ ...prev, is_featured: val }))} />
+                        <span className="text-sm text-foreground">Vedette ⭐</span>
+                      </div>
                     </div>
-                  </div>
-                  <Button onClick={handleSave} className="w-full">{editId ? "Mettre à jour" : "Créer"}</Button>
-                </div>
+                  </TabsContent>
+
+                  {/* Media tab */}
+                  <TabsContent value="media" className="space-y-4 mt-4">
+                    <div>
+                      <label className="text-sm font-medium text-foreground">Ajouter une image</label>
+                      <div className="flex gap-2">
+                        <Input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="URL de l'image" />
+                        <Button type="button" size="sm" onClick={addImage}>+</Button>
+                      </div>
+                    </div>
+                    {form.images.length > 0 && (
+                      <div className="grid grid-cols-4 gap-3">
+                        {form.images.map((img, i) => (
+                          <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-border">
+                            <img src={img} alt="" className="w-full h-full object-cover" />
+                            <button
+                              onClick={() => removeImage(i)}
+                              className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                            >
+                              ×
+                            </button>
+                            {i === 0 && (
+                              <Badge className="absolute bottom-1 left-1 text-[8px]">Principale</Badge>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {form.images.length === 0 && (
+                      <p className="text-sm text-muted-foreground text-center py-8">Aucune image ajoutée</p>
+                    )}
+                  </TabsContent>
+
+                  {/* Variants tab */}
+                  <TabsContent value="variants" className="space-y-4 mt-4">
+                    <p className="text-xs text-muted-foreground">
+                      Ajoutez des variantes (taille, couleur, style) pour que les clients puissent choisir.
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="text-xs font-medium text-foreground">Nom</label>
+                        <Input value={variantName} onChange={(e) => setVariantName(e.target.value)} placeholder="ex: Taille" className="text-sm" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-foreground">Type</label>
+                        <Select value={variantType} onValueChange={(v) => setVariantType(v as any)}>
+                          <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="size">Taille</SelectItem>
+                            <SelectItem value="color">Couleur</SelectItem>
+                            <SelectItem value="style">Style</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-foreground">Options (virgule)</label>
+                        <Input value={variantOptions} onChange={(e) => setVariantOptions(e.target.value)} placeholder="S, M, L, XL" className="text-sm" />
+                      </div>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={addVariant} disabled={!variantName || !variantOptions}>
+                      <Plus className="h-3 w-3 mr-1" /> Ajouter variante
+                    </Button>
+
+                    {form.variants.length > 0 && (
+                      <div className="space-y-2">
+                        {form.variants.map((v, i) => (
+                          <div key={i} className="flex items-center gap-2 p-2 bg-muted rounded-lg text-sm">
+                            <div className="flex-1">
+                              <span className="font-medium text-foreground">{v.name}</span>
+                              <span className="text-muted-foreground ml-2">({v.type})</span>
+                              <div className="flex gap-1 mt-1 flex-wrap">
+                                {v.options.map((opt, j) => (
+                                  <Badge key={j} variant="outline" className="text-[10px]">{opt}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeVariant(i)}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  {/* Features tab */}
+                  <TabsContent value="features" className="space-y-4 mt-4">
+                    <p className="text-xs text-muted-foreground">
+                      Ajoutez les caractéristiques techniques du produit (matière, dimensions, poids...).
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs font-medium text-foreground">Nom</label>
+                        <Input value={featureLabel} onChange={(e) => setFeatureLabel(e.target.value)} placeholder="ex: Matière" className="text-sm" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-foreground">Valeur</label>
+                        <Input value={featureValue} onChange={(e) => setFeatureValue(e.target.value)} placeholder="ex: 100% polyester" className="text-sm" />
+                      </div>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={addFeature} disabled={!featureLabel || !featureValue}>
+                      <Plus className="h-3 w-3 mr-1" /> Ajouter caractéristique
+                    </Button>
+
+                    {form.features.length > 0 && (
+                      <div className="space-y-1">
+                        {form.features.map((f, i) => (
+                          <div key={i} className="flex items-center justify-between p-2 bg-muted rounded-lg text-sm">
+                            <div>
+                              <span className="font-medium text-foreground">{f.label}</span>
+                              <span className="text-muted-foreground ml-2">: {f.value}</span>
+                            </div>
+                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => removeFeature(i)}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+
+                <Button onClick={handleSave} className="w-full mt-4">{editId ? "Mettre à jour" : "Créer le produit"}</Button>
               </DialogContent>
             </Dialog>
           </div>
@@ -287,10 +462,11 @@ export const ShopProductsManager = () => {
                 />
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-semibold text-foreground truncate">{product.name}</h4>
-                  <div className="flex gap-2 items-center text-xs text-muted-foreground">
+                  <div className="flex gap-2 items-center text-xs text-muted-foreground flex-wrap">
                     <span>{product.price}€</span>
                     <span>·</span>
                     <span>Stock: {product.stock}</span>
+                    {product.supplier && <><span>·</span><span>{product.supplier}</span></>}
                     {product.is_published ? (
                       <Badge variant="default" className="text-[10px]">Publié</Badge>
                     ) : (
@@ -323,6 +499,9 @@ export const ShopProductsManager = () => {
                   <p className="text-sm font-semibold text-foreground">#{order.id.slice(0, 8)}</p>
                   <p className="text-xs text-muted-foreground">
                     {new Date(order.created_at).toLocaleDateString('fr-FR')} · {order.total_price}€
+                    {order.discount_code && (
+                      <span className="ml-1 text-primary">({order.discount_code})</span>
+                    )}
                   </p>
                 </div>
                 <Badge variant={order.payment_status === "paid" ? "default" : "outline"} className="text-[10px]">
