@@ -188,6 +188,9 @@ export function SEOHead({
       <script type="application/ld+json">
         {JSON.stringify(breadcrumbJsonLd)}
       </script>
+      <script type="application/ld+json">
+        {JSON.stringify(webSiteJsonLd)}
+      </script>
     </Helmet>
   );
 }

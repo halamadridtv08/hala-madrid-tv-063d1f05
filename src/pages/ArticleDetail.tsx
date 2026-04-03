@@ -238,8 +238,10 @@ const ArticleDetail = () => {
         url={articleUrl}
         type="article"
         publishedTime={article.published_at}
+        modifiedTime={article.updated_at || undefined}
+        author={article.author_name || 'HALA MADRID TV'}
         section={article.category}
-        tags={[article.category, 'Real Madrid', 'Football']}
+        tags={[article.category, 'Real Madrid', 'Football', 'Liga', 'Champions League']}
       />
       <Navbar />
       <main>
