@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
         <news:language>fr</news:language>
       </news:publication>
       <news:publication_date>${pubDate}</news:publication_date>
-      <news:title>${article.slug || 'Article'}</news:title>
+      <news:title>${(article.title || article.slug || 'Article').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</news:title>
     </news:news>` : ''}
   </url>`;
     }
