@@ -21,43 +21,56 @@ import { SoundProvider } from "./components/sound/SoundProvider";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 // Lazy load non-critical pages for better Core Web Vitals
-const News = lazy(() => import("./pages/News"));
-const Players = lazy(() => import("./pages/Players"));
-const Matches = lazy(() => import("./pages/Matches"));
-const Training = lazy(() => import("./pages/Training"));
-const Press = lazy(() => import("./pages/Press"));
-const Kits = lazy(() => import("./pages/Kits"));
-const Calendar = lazy(() => import("./pages/Calendar"));
-const Stats = lazy(() => import("./pages/Stats"));
-const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
-const Admin = lazy(() => import("./pages/Admin"));
-const ArticleDetail = lazy(() => import("./pages/ArticleDetail"));
-const Videos = lazy(() => import("./pages/Videos"));
-const Search = lazy(() => import("./pages/Search"));
-const Favorites = lazy(() => import("./pages/Favorites"));
-const Predictions = lazy(() => import("./pages/Predictions"));
-const DreamTeam = lazy(() => import("./pages/DreamTeam"));
-const LiveBlog = lazy(() => import("./pages/LiveBlog"));
-const Transfers = lazy(() => import("./pages/Transfers"));
-const PlayerComparator = lazy(() => import("./pages/PlayerComparator"));
-const Shop = lazy(() => import("./pages/Shop"));
-const ShopProduct = lazy(() => import("./pages/ShopProduct"));
-const ShopCart = lazy(() => import("./pages/ShopCart"));
-const ShopCheckout = lazy(() => import("./pages/ShopCheckout"));
-const ShopOrders = lazy(() => import("./pages/ShopOrders"));
-const ShopWishlist = lazy(() => import("./pages/ShopWishlist"));
-const Profile = lazy(() => import("./pages/Profile"));
-const AdminSecurity = lazy(() => import("./pages/AdminSecurity"));
-const AdminSEO = lazy(() => import("./pages/AdminSEO"));
-const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const lazyRetry = (importFn: () => Promise<any>) =>
+  lazy(() =>
+    importFn().catch(() => {
+      // Force reload on stale chunk error (only once per session)
+      const key = 'chunk-retry';
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        window.location.reload();
+      }
+      return importFn();
+    })
+  );
+
+const News = lazyRetry(() => import("./pages/News"));
+const Players = lazyRetry(() => import("./pages/Players"));
+const Matches = lazyRetry(() => import("./pages/Matches"));
+const Training = lazyRetry(() => import("./pages/Training"));
+const Press = lazyRetry(() => import("./pages/Press"));
+const Kits = lazyRetry(() => import("./pages/Kits"));
+const Calendar = lazyRetry(() => import("./pages/Calendar"));
+const Stats = lazyRetry(() => import("./pages/Stats"));
+const PlayerProfile = lazyRetry(() => import("./pages/PlayerProfile"));
+const Admin = lazyRetry(() => import("./pages/Admin"));
+const ArticleDetail = lazyRetry(() => import("./pages/ArticleDetail"));
+const Videos = lazyRetry(() => import("./pages/Videos"));
+const Search = lazyRetry(() => import("./pages/Search"));
+const Favorites = lazyRetry(() => import("./pages/Favorites"));
+const Predictions = lazyRetry(() => import("./pages/Predictions"));
+const DreamTeam = lazyRetry(() => import("./pages/DreamTeam"));
+const LiveBlog = lazyRetry(() => import("./pages/LiveBlog"));
+const Transfers = lazyRetry(() => import("./pages/Transfers"));
+const PlayerComparator = lazyRetry(() => import("./pages/PlayerComparator"));
+const Shop = lazyRetry(() => import("./pages/Shop"));
+const ShopProduct = lazyRetry(() => import("./pages/ShopProduct"));
+const ShopCart = lazyRetry(() => import("./pages/ShopCart"));
+const ShopCheckout = lazyRetry(() => import("./pages/ShopCheckout"));
+const ShopOrders = lazyRetry(() => import("./pages/ShopOrders"));
+const ShopWishlist = lazyRetry(() => import("./pages/ShopWishlist"));
+const Profile = lazyRetry(() => import("./pages/Profile"));
+const AdminSecurity = lazyRetry(() => import("./pages/AdminSecurity"));
+const AdminSEO = lazyRetry(() => import("./pages/AdminSEO"));
+const AuthCallback = lazyRetry(() => import("./pages/AuthCallback"));
 
 // Legal pages
-const MentionsLegales = lazy(() => import("./pages/legal/MentionsLegales"));
-const PolitiqueConfidentialite = lazy(() => import("./pages/legal/PolitiqueConfidentialite"));
-const PreferencesCookies = lazy(() => import("./pages/legal/PreferencesCookies"));
-const Contact = lazy(() => import("./pages/legal/Contact"));
-const CGU = lazy(() => import("./pages/legal/CGU"));
-const DynamicLegalPage = lazy(() => import("./pages/legal/DynamicLegalPage"));
+const MentionsLegales = lazyRetry(() => import("./pages/legal/MentionsLegales"));
+const PolitiqueConfidentialite = lazyRetry(() => import("./pages/legal/PolitiqueConfidentialite"));
+const PreferencesCookies = lazyRetry(() => import("./pages/legal/PreferencesCookies"));
+const Contact = lazyRetry(() => import("./pages/legal/Contact"));
+const CGU = lazyRetry(() => import("./pages/legal/CGU"));
+const DynamicLegalPage = lazyRetry(() => import("./pages/legal/DynamicLegalPage"));
 
 // Loading fallback component
 const PageLoader = () => (
