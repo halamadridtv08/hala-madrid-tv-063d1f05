@@ -64,11 +64,14 @@ Deno.serve(async (req) => {
   </url>`;
     }
 
-    // Articles - use slug for SEO-friendly URLs
+    // Articles - use slug for SEO-friendly URLs with News sitemap extension
     for (const article of articles) {
       const articlePath = article.slug ? `/news/${article.slug}` : `/news/${article.id}`;
       const lastmod = (article.updated_at || article.published_at)
         ? new Date(article.updated_at || article.published_at).toISOString().split('T')[0]
+        : '';
+      const pubDate = article.published_at
+        ? new Date(article.published_at).toISOString()
         : '';
       sitemap += `
   <url>
@@ -76,6 +79,14 @@ Deno.serve(async (req) => {
     ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    ${pubDate ? `<news:news>
+      <news:publication>
+        <news:name>HALA MADRID TV</news:name>
+        <news:language>fr</news:language>
+      </news:publication>
+      <news:publication_date>${pubDate}</news:publication_date>
+      <news:title>${article.slug || 'Article'}</news:title>
+    </news:news>` : ''}
   </url>`;
     }
 

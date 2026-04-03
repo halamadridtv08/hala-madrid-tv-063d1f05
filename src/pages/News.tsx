@@ -93,12 +93,28 @@ const News = () => {
     { name: "Info", value: "info" }
   ];
 
+  // Generate ItemList JSON-LD for article listing
+  const itemListJsonLd = articles.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Actualités Real Madrid',
+    description: 'Toutes les actualités du Real Madrid',
+    numberOfItems: articles.length,
+    itemListElement: articles.slice(0, 20).map((article, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: `https://www.hala-madrid-tv.com/news/${article.slug || article.id}`,
+      name: article.title
+    }))
+  } : undefined;
+
   return (
     <>
       <SEOHead 
-        title="Actualités"
-        description="Toutes les actualités du Real Madrid : matchs, transferts, conférences de presse et plus encore."
+        title="Actualités Real Madrid - Toute l'actu des Merengues"
+        description="Toutes les actualités du Real Madrid en direct : résultats des matchs, transferts, conférences de presse, analyses et infos mercato."
         url="/news"
+        jsonLd={itemListJsonLd}
       />
       <Navbar />
       <main className="min-h-screen">
