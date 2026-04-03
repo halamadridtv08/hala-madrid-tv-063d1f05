@@ -36,10 +36,10 @@ Deno.serve(async (req) => {
 
     const staticPages = [
       { url: '/', priority: '1.0', changefreq: 'daily' },
-      { url: '/news', priority: '0.9', changefreq: 'daily' },
+      { url: '/news', priority: '0.9', changefreq: 'hourly' },
       { url: '/players', priority: '0.8', changefreq: 'weekly' },
       { url: '/matches', priority: '0.8', changefreq: 'daily' },
-      { url: '/stats', priority: '0.7', changefreq: 'weekly' },
+      { url: '/stats', priority: '0.7', changefreq: 'daily' },
       { url: '/calendar', priority: '0.7', changefreq: 'weekly' },
       { url: '/training', priority: '0.6', changefreq: 'weekly' },
       { url: '/press', priority: '0.6', changefreq: 'weekly' },
@@ -47,6 +47,7 @@ Deno.serve(async (req) => {
       { url: '/videos', priority: '0.7', changefreq: 'daily' },
       { url: '/transfers', priority: '0.7', changefreq: 'daily' },
       { url: '/predictions', priority: '0.6', changefreq: 'weekly' },
+      { url: '/search', priority: '0.5', changefreq: 'weekly' },
     ];
 
     let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
