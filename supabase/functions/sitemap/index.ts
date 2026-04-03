@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
     console.log('Generating sitemap...');
 
     const [articlesRes, playersRes, matchesRes, kitsRes] = await Promise.all([
-      supabase.from('articles').select('id, slug, updated_at, published_at').eq('is_published', true),
+      supabase.from('articles').select('id, slug, title, updated_at, published_at').eq('is_published', true),
       supabase.from('players').select('id, updated_at').eq('is_active', true),
       supabase.from('matches').select('id, updated_at'),
       supabase.from('kits').select('id, updated_at').eq('is_published', true),
@@ -36,10 +36,10 @@ Deno.serve(async (req) => {
 
     const staticPages = [
       { url: '/', priority: '1.0', changefreq: 'daily' },
-      { url: '/news', priority: '0.9', changefreq: 'daily' },
+      { url: '/news', priority: '0.9', changefreq: 'hourly' },
       { url: '/players', priority: '0.8', changefreq: 'weekly' },
       { url: '/matches', priority: '0.8', changefreq: 'daily' },
-      { url: '/stats', priority: '0.7', changefreq: 'weekly' },
+      { url: '/stats', priority: '0.7', changefreq: 'daily' },
       { url: '/calendar', priority: '0.7', changefreq: 'weekly' },
       { url: '/training', priority: '0.6', changefreq: 'weekly' },
       { url: '/press', priority: '0.6', changefreq: 'weekly' },
@@ -47,10 +47,13 @@ Deno.serve(async (req) => {
       { url: '/videos', priority: '0.7', changefreq: 'daily' },
       { url: '/transfers', priority: '0.7', changefreq: 'daily' },
       { url: '/predictions', priority: '0.6', changefreq: 'weekly' },
+      { url: '/search', priority: '0.5', changefreq: 'weekly' },
     ];
 
     let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">`;
 
     for (const page of staticPages) {
       sitemap += `
@@ -61,11 +64,14 @@ Deno.serve(async (req) => {
   </url>`;
     }
 
-    // Articles - use slug for SEO-friendly URLs
+    // Articles - use slug for SEO-friendly URLs with News sitemap extension
     for (const article of articles) {
       const articlePath = article.slug ? `/news/${article.slug}` : `/news/${article.id}`;
       const lastmod = (article.updated_at || article.published_at)
         ? new Date(article.updated_at || article.published_at).toISOString().split('T')[0]
+        : '';
+      const pubDate = article.published_at
+        ? new Date(article.published_at).toISOString()
         : '';
       sitemap += `
   <url>
@@ -73,6 +79,14 @@ Deno.serve(async (req) => {
     ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    ${pubDate ? `<news:news>
+      <news:publication>
+        <news:name>HALA MADRID TV</news:name>
+        <news:language>fr</news:language>
+      </news:publication>
+      <news:publication_date>${pubDate}</news:publication_date>
+      <news:title>${(article.title || article.slug || 'Article').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</news:title>
+    </news:news>` : ''}
   </url>`;
     }
 

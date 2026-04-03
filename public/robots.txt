@@ -1,8 +1,16 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /profile
+Disallow: /auth-callback
 
 User-agent: Bingbot
 Allow: /
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /profile
+Disallow: /auth-callback
 
 User-agent: Twitterbot
 Allow: /
@@ -12,7 +20,15 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /profile
+Disallow: /auth-callback
 
 # Sitemap
 Sitemap: https://qjnppcfbywfazwolfppo.supabase.co/functions/v1/sitemap
 Sitemap: https://www.hala-madrid-tv.com/sitemap.xml
+
+# Crawl-delay for generic bots
+User-agent: *
+Crawl-delay: 1

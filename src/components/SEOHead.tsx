@@ -37,6 +37,37 @@ export function SEOHead({
   const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} - Actualités du Real Madrid`;
   const canonicalUrl = url ? `${BASE_URL}${url}` : BASE_URL;
 
+  // WebSite JSON-LD with SearchAction for Google sitelinks search box
+  const webSiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    url: BASE_URL,
+    description: DEFAULT_DESCRIPTION,
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      logo: {
+        '@type': 'ImageObject',
+        url: DEFAULT_IMAGE
+      },
+      sameAs: [
+        'https://twitter.com/HalaMadrid360',
+        'https://www.instagram.com/halamadrid360',
+        'https://www.youtube.com/@HalaMadrid360'
+      ]
+    },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${BASE_URL}/search?q={search_term_string}`
+      },
+      'query-input': 'required name=search_term_string'
+    },
+    inLanguage: 'fr-FR'
+  };
+
   // Default JSON-LD for the website
   const defaultJsonLd = {
     '@context': 'https://schema.org',
@@ -156,6 +187,9 @@ export function SEOHead({
       </script>
       <script type="application/ld+json">
         {JSON.stringify(breadcrumbJsonLd)}
+      </script>
+      <script type="application/ld+json">
+        {JSON.stringify(webSiteJsonLd)}
       </script>
     </Helmet>
   );
