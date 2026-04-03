@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
     console.log('Generating sitemap...');
 
     const [articlesRes, playersRes, matchesRes, kitsRes] = await Promise.all([
-      supabase.from('articles').select('id, slug, updated_at, published_at').eq('is_published', true),
+      supabase.from('articles').select('id, slug, title, updated_at, published_at').eq('is_published', true),
       supabase.from('players').select('id, updated_at').eq('is_active', true),
       supabase.from('matches').select('id, updated_at'),
       supabase.from('kits').select('id, updated_at').eq('is_published', true),
