@@ -34,6 +34,7 @@ interface Article {
   video_url: string | null;
   category: string;
   published_at: string;
+  updated_at: string | null;
   read_time: string | null;
   author_name: string | null;
   view_count: number | null;
