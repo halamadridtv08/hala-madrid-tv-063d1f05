@@ -38,8 +38,8 @@ export const PlayerSearchDialog = ({
     player.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSelect = (player: Player) => {
-    onSelectPlayer(player);
+  const handleSelect = async (player: Player) => {
+    await onSelectPlayer(player);
     setSearchQuery('');
     onOpenChange(false);
   };
