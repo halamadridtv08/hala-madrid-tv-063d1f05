@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Match } from "@/types/Match";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { MediaUploader } from "@/components/admin/MediaUploader";
 
 interface MatchFormProps {
   match?: Match;
@@ -20,6 +19,7 @@ interface MatchFormProps {
 export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
   const [loading, setLoading] = useState(false);
   const [opposingTeams, setOpposingTeams] = useState<Array<{id: string, name: string, logo_url?: string}>>([]);
+  const [realMadridLogo, setRealMadridLogo] = useState<string>("");
   const [formData, setFormData] = useState({
     home_team: match?.home_team || "Real Madrid",
     away_team: match?.away_team || "",
@@ -36,7 +36,31 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
 
   useEffect(() => {
     fetchOpposingTeams();
+    fetchRealMadridLogo();
   }, []);
+
+  // Auto-set Real Madrid logo when it's loaded
+  useEffect(() => {
+    if (realMadridLogo && !match) {
+      setFormData(prev => ({ ...prev, home_team_logo: realMadridLogo }));
+    }
+  }, [realMadridLogo, match]);
+
+  const fetchRealMadridLogo = async () => {
+    const { data } = await supabase
+      .from('branding_settings')
+      .select('logo_url')
+      .limit(1)
+      .single();
+
+    if (data?.logo_url) {
+      setRealMadridLogo(data.logo_url);
+      // If editing and home is Real Madrid, update logo
+      if (formData.home_team === "Real Madrid" && !formData.home_team_logo) {
+        setFormData(prev => ({ ...prev, home_team_logo: data.logo_url }));
+      }
+    }
+  };
 
   const fetchOpposingTeams = async () => {
     const { data, error } = await supabase
@@ -52,6 +76,12 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
     setOpposingTeams(data || []);
   };
 
+  const getLogoForTeam = (teamName: string): string => {
+    if (teamName === "Real Madrid") return realMadridLogo;
+    const team = opposingTeams.find(t => t.name === teamName);
+    return team?.logo_url || "";
+  };
+
   const handleOpposingTeamChange = (teamId: string) => {
     const selectedTeam = opposingTeams.find(team => team.id === teamId);
     if (selectedTeam) {
@@ -62,6 +92,18 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
         away_team_logo: selectedTeam.logo_url || ""
       });
     }
+  };
+
+  const handleSwapTeams = () => {
+    setFormData(prev => ({
+      ...prev,
+      home_team: prev.away_team,
+      away_team: prev.home_team,
+      home_team_logo: prev.away_team_logo,
+      away_team_logo: prev.home_team_logo,
+      home_score: prev.away_score,
+      away_score: prev.home_score,
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,20 +118,16 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
       };
 
       if (match?.id) {
-        // Update existing match
         const { error } = await supabase
           .from('matches')
           .update(matchData)
           .eq('id', match.id);
-
         if (error) throw error;
         toast.success("Match mis à jour avec succès");
       } else {
-        // Create new match
         const { error } = await supabase
           .from('matches')
           .insert([matchData]);
-
         if (error) throw error;
         toast.success("Match créé avec succès");
       }
@@ -103,6 +141,22 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
     }
   };
 
+  const LogoPreview = ({ url, label }: { url: string; label: string }) => (
+    <div>
+      <Label className="text-sm">{label}</Label>
+      <div className="mt-1 flex items-center gap-2 rounded-md border border-border/50 bg-muted/30 p-2 h-16">
+        {url ? (
+          <>
+            <img src={url} alt={label} className="h-12 w-12 object-contain rounded" />
+            <span className="text-xs text-muted-foreground truncate">Depuis la base de données</span>
+          </>
+        ) : (
+          <span className="text-xs text-muted-foreground">Aucun logo disponible</span>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <Card className="max-w-full overflow-hidden">
       <CardHeader className="p-4 sm:p-6">
@@ -113,29 +167,19 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
       <CardContent className="p-4 sm:p-6 pt-0">
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div className="flex justify-center mb-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setFormData(prev => ({
-                    ...prev,
-                    home_team: prev.away_team,
-                    away_team: prev.home_team,
-                    home_team_logo: prev.away_team_logo,
-                    away_team_logo: prev.home_team_logo,
-                    home_score: prev.away_score,
-                    away_score: prev.home_score,
-                  }));
-                }}
-                className="gap-2"
-              >
-                <ArrowLeftRight className="h-4 w-4" />
-                Inverser domicile / extérieur
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleSwapTeams}
+              className="gap-2"
+            >
+              <ArrowLeftRight className="h-4 w-4" />
+              Inverser domicile / extérieur
+            </Button>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Équipe à domicile */}
             <div className="space-y-3">
               <div>
@@ -143,25 +187,15 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
                 <Input
                   id="home_team"
                   value={formData.home_team}
-                  onChange={(e) => setFormData({ ...formData, home_team: e.target.value })}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    setFormData({ ...formData, home_team: name, home_team_logo: getLogoForTeam(name) });
+                  }}
                   required
                   className="h-9 text-sm"
                 />
               </div>
-              
-              <div className="max-w-full overflow-hidden">
-                <Label className="text-sm">Logo équipe à domicile</Label>
-                <MediaUploader
-                  onSuccess={(url) => setFormData({ ...formData, home_team_logo: url })}
-                  acceptTypes="image/*"
-                  maxSizeMB={5}
-                  folderPath="team-logos"
-                  buttonText="Ajouter logo domicile"
-                  showPreview={true}
-                  currentValue={formData.home_team_logo}
-                  className="mt-1 [&_img]:max-h-20 sm:[&_img]:max-h-32"
-                />
-              </div>
+              <LogoPreview url={formData.home_team_logo} label="Logo équipe à domicile" />
             </div>
 
             {/* Équipe à l'extérieur */}
@@ -178,7 +212,12 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
                   <SelectContent>
                     {opposingTeams.map((team) => (
                       <SelectItem key={team.id} value={team.id}>
-                        {team.name}
+                        <div className="flex items-center gap-2">
+                          {team.logo_url && (
+                            <img src={team.logo_url} alt="" className="h-5 w-5 object-contain" />
+                          )}
+                          {team.name}
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -197,19 +236,7 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
                 />
               </div>
               
-              <div className="max-w-full overflow-hidden">
-                <Label className="text-sm">Logo équipe à l'extérieur</Label>
-                <MediaUploader
-                  onSuccess={(url) => setFormData({ ...formData, away_team_logo: url })}
-                  acceptTypes="image/*"
-                  maxSizeMB={5}
-                  folderPath="team-logos"
-                  buttonText="Ajouter logo extérieur"
-                  showPreview={true}
-                  currentValue={formData.away_team_logo}
-                  className="mt-1 [&_img]:max-h-20 sm:[&_img]:max-h-32"
-                />
-              </div>
+              <LogoPreview url={formData.away_team_logo} label="Logo équipe à l'extérieur" />
             </div>
           </div>
           
