@@ -21,9 +21,13 @@ export function UpcomingMatch() {
   const [upcomingMatch, setUpcomingMatch] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [brandLogo, setBrandLogo] = useState<string>("");
 
   useEffect(() => {
     fetchUpcomingMatch();
+    supabase.from('branding_settings').select('logo_url').limit(1).single().then(({ data }) => {
+      if (data?.logo_url) setBrandLogo(data.logo_url);
+    });
   }, []);
 
   useEffect(() => {
