@@ -312,9 +312,9 @@ export function UpcomingMatch() {
                     >
                       <h3 className="text-sm sm:text-lg lg:text-xl font-bold truncate">{upcomingMatch.away_team}</h3>
                       <div className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center overflow-hidden bg-white flex-shrink-0">
-                        {upcomingMatch.away_team_logo ? (
+                        {(upcomingMatch.away_team_logo || (upcomingMatch.away_team === "Real Madrid" && brandLogo)) ? (
                           <img 
-                            src={upcomingMatch.away_team_logo} 
+                            src={upcomingMatch.away_team_logo || brandLogo} 
                             alt={`Logo ${upcomingMatch.away_team}`}
                             className="w-full h-full object-contain"
                             onError={(e) => {
