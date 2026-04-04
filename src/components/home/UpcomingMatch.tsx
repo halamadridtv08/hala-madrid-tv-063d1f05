@@ -270,9 +270,9 @@ export function UpcomingMatch() {
                       whileHover={{ scale: 1.05 }}
                     >
                       <div className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center overflow-hidden bg-white flex-shrink-0">
-                        {upcomingMatch.home_team_logo ? (
+                        {(upcomingMatch.home_team_logo || (upcomingMatch.home_team === "Real Madrid" && brandLogo)) ? (
                           <img 
-                            src={upcomingMatch.home_team_logo} 
+                            src={upcomingMatch.home_team_logo || brandLogo} 
                             alt={`Logo ${upcomingMatch.home_team}`}
                             className="w-full h-full object-contain"
                             onError={(e) => {
