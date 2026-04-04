@@ -782,7 +782,7 @@ export const FormationManagerV2: React.FC = () => {
         player_id: activeTeam === "real_madrid" ? player.id : null,
         opposing_player_id: activeTeam === "opposing" ? player.id : null,
         player_name: player.name,
-        player_position: player.position,
+        player_position: selectedPositionSlot.position,
         jersey_number: player.jersey_number,
         player_image_url: activeTeam === "real_madrid" ? (player.profile_image_url || player.image_url) : null,
         position_x: selectedPositionSlot.x,
@@ -792,9 +792,10 @@ export const FormationManagerV2: React.FC = () => {
       });
 
     if (!error) {
-      await fetchFormation();
+      await Promise.all([fetchFormation(), fetchAvailablePlayers()]);
       toast.success(`${player.name} ajouté au poste ${selectedPositionSlot.position}`);
     } else {
+      console.error('Erreur ajout joueur:', error);
       toast.error("Erreur lors de l'ajout du joueur");
     }
   };

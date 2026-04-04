@@ -19,7 +19,7 @@ interface PlayerSearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   players: Player[];
-  onSelectPlayer: (player: Player) => void;
+  onSelectPlayer: (player: Player) => void | Promise<void>;
   selectedPosition: string;
   teamName?: string;
 }
@@ -38,8 +38,8 @@ export const PlayerSearchDialog = ({
     player.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSelect = (player: Player) => {
-    onSelectPlayer(player);
+  const handleSelect = async (player: Player) => {
+    await onSelectPlayer(player);
     setSearchQuery('');
     onOpenChange(false);
   };
