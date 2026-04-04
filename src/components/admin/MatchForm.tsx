@@ -112,7 +112,30 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
       </CardHeader>
       <CardContent className="p-4 sm:p-6 pt-0">
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <div className="flex justify-center mb-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFormData(prev => ({
+                    ...prev,
+                    home_team: prev.away_team,
+                    away_team: prev.home_team,
+                    home_team_logo: prev.away_team_logo,
+                    away_team_logo: prev.home_team_logo,
+                    home_score: prev.away_score,
+                    away_score: prev.home_score,
+                  }));
+                }}
+                className="gap-2"
+              >
+                <ArrowLeftRight className="h-4 w-4" />
+                Inverser domicile / extérieur
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Équipe à domicile */}
             <div className="space-y-3">
               <div>
