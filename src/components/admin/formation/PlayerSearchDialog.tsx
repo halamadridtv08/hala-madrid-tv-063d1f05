@@ -19,7 +19,7 @@ interface PlayerSearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   players: Player[];
-  onSelectPlayer: (player: Player) => void;
+  onSelectPlayer: (player: Player) => void | Promise<void>;
   selectedPosition: string;
   teamName?: string;
 }
