@@ -189,41 +189,81 @@ export const FormationManagerV2: React.FC = () => {
   };
 
   const fetchAvailablePlayers = async () => {
+    if (!selectedMatch) {
+      setAvailablePlayers([]);
+      return;
+    }
+
     if (activeTeam === "real_madrid") {
       const { data } = await supabase
         .from('players')
         .select('id, name, position, jersey_number, image_url, profile_image_url')
         .eq('is_active', true)
         .order('jersey_number');
-      setAvailablePlayers(data || []);
-    } else {
-      const match = matches.find(m => m.id === selectedMatch);
-      if (match) {
-        const opposingTeamName = match.home_team === 'Real Madrid' ? match.away_team : match.home_team;
-        const { data: teamData } = await supabase
-          .from('opposing_teams')
-          .select('id')
-          .eq('name', opposingTeamName)
-          .maybeSingle();
 
-        if (teamData) {
-          const { data } = await supabase
-            .from('opposing_players')
-            .select('id, name, position, jersey_number')
-            .eq('team_id', teamData.id)
-            .order('jersey_number');
-          setAvailablePlayers(data || []);
-        }
-      }
+      setAvailablePlayers(data || []);
+      return;
     }
+
+    const match = matches.find(m => m.id === selectedMatch);
+    if (!match) {
+      setAvailablePlayers([]);
+      return;
+    }
+
+    const opposingTeamName = match.home_team === 'Real Madrid' ? match.away_team : match.home_team;
+    const { data: teamData } = await supabase
+      .from('opposing_teams')
+      .select('id')
+      .eq('name', opposingTeamName)
+      .maybeSingle();
+
+    if (!teamData) {
+      setAvailablePlayers([]);
+      return;
+    }
+
+    const { data } = await supabase
+      .from('opposing_players')
+      .select('id, name, position, jersey_number')
+      .eq('team_id', teamData.id)
+      .order('jersey_number');
+
+    setAvailablePlayers(data || []);
   };
 
-  const fetchFormation = async () => {
-    const { data } = await supabase
+  const applyFormationState = (formation: any | null) => {
+    if (!formation) {
+      setFormationId(null);
+      setFieldPlayers([]);
+      setSubstitutes([]);
+      return;
+    }
+
+    setFormationId(formation.id);
+    setSelectedFormation(formation.formation);
+
+    const players = (formation.match_formation_players as any[]) || [];
+    const starters = players.filter((player) => player.is_starter);
+    const subs = players.filter((player) => !player.is_starter);
+    const starterIds = new Set(starters.map((player) => player.id));
+
+    setFieldPlayers(starters);
+    setSubstitutes(subs.filter((player) => !starterIds.has(player.id)));
+  };
+
+  const getLatestFormation = async () => {
+    if (!selectedMatch) {
+      return { formation: null, hasError: false };
+    }
+
+    const { data, error } = await supabase
       .from('match_formations')
       .select(`
         id,
         formation,
+        created_at,
+        updated_at,
         match_formation_players (
           id,
           player_id,
@@ -240,49 +280,61 @@ export const FormationManagerV2: React.FC = () => {
       `)
       .eq('match_id', selectedMatch)
       .eq('team_type', activeTeam)
-      .maybeSingle();
+      .order('updated_at', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(1);
 
-    if (data) {
-      setFormationId(data.id);
-      setSelectedFormation(data.formation);
-      const players = data.match_formation_players as any[] || [];
-      
-      // Filtrer et nettoyer les doublons
-      const starters = players.filter(p => p.is_starter);
-      const subs = players.filter(p => !p.is_starter);
-      
-      // Vérifier qu'il n'y a pas de doublons entre starters et remplaçants
-      const starterIds = new Set(starters.map(p => p.id));
-      const cleanSubs = subs.filter(p => !starterIds.has(p.id));
-      
-      setFieldPlayers(starters);
-      setSubstitutes(cleanSubs);
-    } else {
-      setFormationId(null);
-      setFieldPlayers([]);
-      setSubstitutes([]);
+    if (error) {
+      console.error('Erreur chargement formation:', error);
+      return { formation: null, hasError: true };
     }
+
+    return {
+      formation: data?.[0] ?? null,
+      hasError: false,
+    };
+  };
+
+  const fetchFormation = async () => {
+    const { formation, hasError } = await getLatestFormation();
+
+    if (hasError) {
+      return;
+    }
+
+    applyFormationState(formation);
   };
 
   const createFormation = async () => {
     if (!selectedMatch) return;
 
-    const { data, error } = await supabase
+    const { formation: existingFormation, hasError } = await getLatestFormation();
+
+    if (hasError) {
+      toast.error("Erreur lors du chargement de la formation");
+      return;
+    }
+
+    if (existingFormation) {
+      applyFormationState(existingFormation);
+      toast.info("Formation existante chargée");
+      return;
+    }
+
+    const { error } = await supabase
       .from('match_formations')
       .insert({
         match_id: selectedMatch,
         team_type: activeTeam,
         formation: selectedFormation
-      })
-      .select()
-      .single();
+      });
 
     if (error) {
       toast.error("Erreur lors de la création de la formation");
       return;
     }
 
-    setFormationId(data.id);
+    await fetchFormation();
     toast.success("Formation créée");
   };
 
