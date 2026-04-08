@@ -78,8 +78,7 @@ const shareOptions: ShareOption[] = [
     name: "Instagram",
     icon: <Instagram className="h-5 w-5" />,
     color: "bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] hover:opacity-90",
-    getUrl: (url) =>
-      `https://www.instagram.com/stories/create/?url=${encodeURIComponent(url)}`,
+    getUrl: () => "__instagram_copy__",
   },
 ];
 
@@ -115,7 +114,23 @@ export const ShareModal = ({
     }
   };
 
-  const handleShare = (option: ShareOption) => {
+  const handleShare = async (option: ShareOption) => {
+    if (option.getUrl("", "") === "__instagram_copy__") {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "Lien copié !",
+          description: "Collez ce lien dans votre Story Instagram 📸",
+        });
+      } catch {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Impossible de copier le lien",
+        });
+      }
+      return;
+    }
     const shareLink = option.getUrl(shareUrl, shareTitle);
     window.open(shareLink, "_blank", "noopener,noreferrer,width=600,height=400");
   };
