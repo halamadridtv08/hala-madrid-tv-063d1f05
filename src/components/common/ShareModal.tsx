@@ -78,8 +78,7 @@ const shareOptions: ShareOption[] = [
     name: "Instagram",
     icon: <Instagram className="h-5 w-5" />,
     color: "bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] hover:opacity-90",
-    getUrl: (url) =>
-      `https://www.instagram.com/stories/create/?url=${encodeURIComponent(url)}`,
+    getUrl: () => "__instagram_copy__",
   },
 ];
 
