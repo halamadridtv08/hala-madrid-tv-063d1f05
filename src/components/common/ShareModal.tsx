@@ -114,7 +114,23 @@ export const ShareModal = ({
     }
   };
 
-  const handleShare = (option: ShareOption) => {
+  const handleShare = async (option: ShareOption) => {
+    if (option.getUrl("", "") === "__instagram_copy__") {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "Lien copié !",
+          description: "Collez ce lien dans votre Story Instagram 📸",
+        });
+      } catch {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Impossible de copier le lien",
+        });
+      }
+      return;
+    }
     const shareLink = option.getUrl(shareUrl, shareTitle);
     window.open(shareLink, "_blank", "noopener,noreferrer,width=600,height=400");
   };
