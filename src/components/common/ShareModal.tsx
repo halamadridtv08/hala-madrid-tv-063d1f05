@@ -17,7 +17,7 @@ import {
   Twitter,
   Facebook,
   Linkedin,
-  Mail,
+  Instagram,
   MessageCircle,
   Send,
 } from "lucide-react";
@@ -75,11 +75,11 @@ const shareOptions: ShareOption[] = [
       `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
   },
   {
-    name: "Email",
-    icon: <Mail className="h-5 w-5" />,
-    color: "bg-muted-foreground hover:bg-muted-foreground/80",
-    getUrl: (url, title) =>
-      `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(url)}`,
+    name: "Instagram",
+    icon: <Instagram className="h-5 w-5" />,
+    color: "bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] hover:opacity-90",
+    getUrl: (url) =>
+      `https://www.instagram.com/stories/create/?url=${encodeURIComponent(url)}`,
   },
 ];
 
