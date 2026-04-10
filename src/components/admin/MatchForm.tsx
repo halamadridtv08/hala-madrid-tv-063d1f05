@@ -170,7 +170,21 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
                   className="h-9 text-sm"
                 />
               </div>
-              <LogoPreview url={formData.home_team_logo} label="Logo équipe à domicile" />
+              <div>
+                <Label htmlFor="home_team_logo" className="text-sm">Logo équipe à domicile (URL)</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  {formData.home_team_logo && (
+                    <img src={formData.home_team_logo} alt="Logo domicile" className="h-10 w-10 object-contain rounded" />
+                  )}
+                  <Input
+                    id="home_team_logo"
+                    value={formData.home_team_logo}
+                    onChange={(e) => setFormData({ ...formData, home_team_logo: e.target.value })}
+                    placeholder="https://..."
+                    className="h-9 text-sm"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Équipe à l'extérieur */}
