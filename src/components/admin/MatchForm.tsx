@@ -53,7 +53,6 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
   };
 
   const getLogoForTeam = (teamName: string): string => {
-    if (teamName === "Real Madrid") return realMadridLogo;
     const team = opposingTeams.find(t => t.name === teamName);
     return team?.logo_url || "";
   };
