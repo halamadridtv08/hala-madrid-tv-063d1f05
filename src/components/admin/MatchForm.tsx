@@ -36,31 +36,7 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
 
   useEffect(() => {
     fetchOpposingTeams();
-    fetchRealMadridLogo();
   }, []);
-
-  // Auto-set Real Madrid logo when it's loaded
-  useEffect(() => {
-    if (realMadridLogo && !match) {
-      setFormData(prev => ({ ...prev, home_team_logo: realMadridLogo }));
-    }
-  }, [realMadridLogo, match]);
-
-  const fetchRealMadridLogo = async () => {
-    const { data } = await supabase
-      .from('branding_settings')
-      .select('logo_url')
-      .limit(1)
-      .single();
-
-    if (data?.logo_url) {
-      setRealMadridLogo(data.logo_url);
-      // If editing and home is Real Madrid, update logo
-      if (formData.home_team === "Real Madrid" && !formData.home_team_logo) {
-        setFormData(prev => ({ ...prev, home_team_logo: data.logo_url }));
-      }
-    }
-  };
 
   const fetchOpposingTeams = async () => {
     const { data, error } = await supabase
