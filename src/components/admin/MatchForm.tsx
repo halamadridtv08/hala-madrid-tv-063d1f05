@@ -19,7 +19,7 @@ interface MatchFormProps {
 export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
   const [loading, setLoading] = useState(false);
   const [opposingTeams, setOpposingTeams] = useState<Array<{id: string, name: string, logo_url?: string}>>([]);
-  const [realMadridLogo, setRealMadridLogo] = useState<string>("");
+  
   const [formData, setFormData] = useState({
     home_team: match?.home_team || "Real Madrid",
     away_team: match?.away_team || "",
@@ -36,31 +36,7 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
 
   useEffect(() => {
     fetchOpposingTeams();
-    fetchRealMadridLogo();
   }, []);
-
-  // Auto-set Real Madrid logo when it's loaded
-  useEffect(() => {
-    if (realMadridLogo && !match) {
-      setFormData(prev => ({ ...prev, home_team_logo: realMadridLogo }));
-    }
-  }, [realMadridLogo, match]);
-
-  const fetchRealMadridLogo = async () => {
-    const { data } = await supabase
-      .from('branding_settings')
-      .select('logo_url')
-      .limit(1)
-      .single();
-
-    if (data?.logo_url) {
-      setRealMadridLogo(data.logo_url);
-      // If editing and home is Real Madrid, update logo
-      if (formData.home_team === "Real Madrid" && !formData.home_team_logo) {
-        setFormData(prev => ({ ...prev, home_team_logo: data.logo_url }));
-      }
-    }
-  };
 
   const fetchOpposingTeams = async () => {
     const { data, error } = await supabase
@@ -77,7 +53,6 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
   };
 
   const getLogoForTeam = (teamName: string): string => {
-    if (teamName === "Real Madrid") return realMadridLogo;
     const team = opposingTeams.find(t => t.name === teamName);
     return team?.logo_url || "";
   };
@@ -195,7 +170,21 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
                   className="h-9 text-sm"
                 />
               </div>
-              <LogoPreview url={formData.home_team_logo} label="Logo équipe à domicile" />
+              <div>
+                <Label htmlFor="home_team_logo" className="text-sm">Logo équipe à domicile (URL)</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  {formData.home_team_logo && (
+                    <img src={formData.home_team_logo} alt="Logo domicile" className="h-10 w-10 object-contain rounded" />
+                  )}
+                  <Input
+                    id="home_team_logo"
+                    value={formData.home_team_logo}
+                    onChange={(e) => setFormData({ ...formData, home_team_logo: e.target.value })}
+                    placeholder="https://..."
+                    className="h-9 text-sm"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Équipe à l'extérieur */}
