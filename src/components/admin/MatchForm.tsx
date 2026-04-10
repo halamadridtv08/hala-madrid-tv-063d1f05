@@ -19,7 +19,7 @@ interface MatchFormProps {
 export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
   const [loading, setLoading] = useState(false);
   const [opposingTeams, setOpposingTeams] = useState<Array<{id: string, name: string, logo_url?: string}>>([]);
-  const [realMadridLogo, setRealMadridLogo] = useState<string>("");
+  
   const [formData, setFormData] = useState({
     home_team: match?.home_team || "Real Madrid",
     away_team: match?.away_team || "",
