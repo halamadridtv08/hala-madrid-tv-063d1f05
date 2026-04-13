@@ -1951,6 +1951,69 @@ export type Database = {
         }
         Relationships: []
       }
+      n8n_config: {
+        Row: {
+          created_at: string
+          id: string
+          is_enabled: boolean
+          last_sync: string | null
+          updated_at: string
+          webhook_secret: string
+          webhook_url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          last_sync?: string | null
+          updated_at?: string
+          webhook_secret?: string
+          webhook_url?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          last_sync?: string | null
+          updated_at?: string
+          webhook_secret?: string
+          webhook_url?: string
+        }
+        Relationships: []
+      }
+      n8n_webhook_logs: {
+        Row: {
+          action: string
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          id: string
+          request_payload: Json | null
+          response_payload: Json | null
+          status: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          id?: string
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status?: string
+        }
+        Relationships: []
+      }
       navigation_links: {
         Row: {
           created_at: string
