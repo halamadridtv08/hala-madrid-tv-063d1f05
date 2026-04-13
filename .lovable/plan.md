@@ -1,41 +1,57 @@
 
 
-## Corrections de responsivité — Gestion des Matchs (Admin)
+# Plan : Intégration n8n Local via Webhooks
 
-D'après les captures d'écran et le code, voici les problèmes de dépassement sur mobile et les corrections à appliquer :
+## Contexte
+Tu veux utiliser n8n installé localement sur ton PC pour automatiser la génération de contenu, la synchronisation de données et les notifications. La connexion se fera via des webhooks (n8n expose un webhook, ton site l'appelle).
 
----
+## Prérequis important
+Comme n8n tourne sur ton PC (localhost), ton site Lovable (hébergé en ligne) ne peut pas appeler `localhost` directement. Tu devras utiliser un **tunnel** comme :
+- **ngrok** (gratuit) : `ngrok http 5678` → te donne une URL publique
+- **Cloudflare Tunnel** (gratuit) : alternative plus stable
 
-### Problèmes identifiés
+## Ce qui sera créé
 
-1. **MatchJsonImporter** — Le titre "Importateur JSON de Match" et sa description débordent (visible sur la capture). Les boutons "Valider et Prévisualiser" + "Confirmer l'import" sont en ligne et dépassent l'écran.
+### 1. Edge Function `n8n-webhook-proxy`
+Une edge function qui sert de pont entre ton admin et n8n :
+- Reçoit les requêtes depuis l'admin (type de contenu, contexte, action)
+- Transmet à l'URL webhook n8n configurée
+- Retourne la réponse de n8n (texte généré, confirmation de sync, etc.)
+- Authentification via un secret partagé `N8N_WEBHOOK_SECRET`
 
-2. **MatchTable** — Les boutons d'action (Sync API, Nouveau match) dans le header et les boutons par match (calendrier, éditer, supprimer) sont trop serrés. Le titre du match peut déborder.
+### 2. Table `n8n_config` (Supabase)
+Stocke l'URL du webhook n8n et les paramètres :
+- `webhook_url` : l'URL publique de ton n8n (ngrok/cloudflare)
+- `webhook_secret` : secret partagé pour sécuriser les appels
+- `is_enabled` : activer/désactiver
+- `last_sync` : dernière synchronisation réussie
 
-3. **MatchImportHistory** — Les boutons "Annuler" + corbeille sont en ligne avec le titre du match, ce qui fonctionne mais pourrait être plus compact.
+### 3. Composant Admin `N8NAutomationPanel.tsx`
+Un nouvel onglet "Automatisation n8n" dans l'admin avec :
+- **Configuration** : champ pour l'URL webhook n8n, test de connexion
+- **Générateur de contenu** : sélecteur de type (article, flash news, résumé match), champ contexte, bouton "Générer via n8n", aperçu du résultat avec bouton copier
+- **Actions rapides** : boutons pour déclencher manuellement les workflows n8n (sync données, envoyer notification, etc.)
+- **Historique** : log des derniers appels webhook avec statut
 
-4. **MatchImportPreview** — La grille `grid-cols-2` pour les infos du match peut être trop serrée sur très petit écran.
+### 4. Intégration Sidebar Admin
+Ajout d'un onglet "n8n" avec icône dans la sidebar, accessible aux admins/modérateurs.
 
----
+## Workflow côté n8n (ce que tu configureras toi-même)
+```text
+[Webhook Trigger] → [OpenAI/Gemini Node] → [Respond to Webhook]
+[Webhook Trigger] → [Supabase Node] → [Respond to Webhook]  
+[Webhook Trigger] → [Telegram/Discord Node] → [Respond to Webhook]
+```
 
-### Corrections prévues
+Tu créeras tes workflows dans n8n avec un noeud "Webhook" en entrée. Ton site appellera ces webhooks via l'edge function.
 
-**Fichier 1 — `MatchJsonImporter.tsx`** :
-- Titre et description : ajouter `break-words` et réduire la taille du titre sur mobile (`text-base sm:text-lg`)
-- Boutons d'action (ligne 1038) : passer de `flex gap-2` à `flex flex-col sm:flex-row gap-2` pour empiler sur mobile
-- Textarea : réduire `rows={15}` à `rows={8}` sur mobile ou utiliser une classe responsive
-- Exemple JSON `<pre>` : ajouter `max-w-full overflow-x-auto text-[10px] sm:text-xs`
+## Secrets nécessaires
+- `N8N_WEBHOOK_SECRET` : un secret que tu définis dans n8n et dans Supabase pour authentifier les appels
 
-**Fichier 2 — `MatchTable.tsx`** :
-- Déjà partiellement responsive (classes `sm:` présentes). Vérifier que le conteneur du score et des badges ne déborde pas avec `min-w-0` et `truncate` sur les noms d'équipe longs.
-
-**Fichier 3 — `MatchImportPreview.tsx`** :
-- Grille infos match : passer de `grid-cols-2` à `grid-cols-1 sm:grid-cols-2`
-- Titre : réduire la taille sur mobile
-
-**Fichier 4 — `MatchImportHistory.tsx`** :
-- Layout de chaque entrée : empiler titre et boutons sur mobile avec `flex flex-col sm:flex-row`
-- Boutons : réduire la taille sur mobile (`h-8 text-xs`)
-
-Ces corrections sont purement CSS/Tailwind, sans changement de logique.
+## Fichiers à créer/modifier
+- `supabase/functions/n8n-webhook-proxy/index.ts` (nouveau)
+- `src/components/admin/N8NAutomationPanel.tsx` (nouveau)
+- `src/components/layout/AdminSidebar.tsx` (ajout onglet)
+- `src/pages/Admin.tsx` (ajout routing)
+- Migration SQL pour table `n8n_config`
 
