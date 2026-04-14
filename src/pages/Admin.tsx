@@ -825,6 +825,9 @@ const Admin = () => {
           <TabsContent value="shop">
             <ShopProductsManager />
           </TabsContent>
+          <TabsContent value="n8n">
+            <N8NAutomationPanel />
+          </TabsContent>
           <TabsContent value="site-content">
             <SiteContentManager />
           </TabsContent>
