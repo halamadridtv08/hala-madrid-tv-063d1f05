@@ -32,7 +32,8 @@ import {
   LayoutGrid,
   Sparkles,
   Link,
-  RotateCcw
+  RotateCcw,
+  Zap
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -77,6 +78,7 @@ const navigationItems = [
   { value: "notifications", label: "Notifications", icon: Bell, adminOnly: false },
   { value: "integrations", label: "Intégrations", icon: Puzzle, adminOnly: true },
   { value: "shop", label: "Boutique", icon: Star, adminOnly: false },
+  { value: "n8n", label: "Automatisation n8n", icon: Zap, adminOnly: true },
 ];
 
 // Settings sub-items (apparence + paramètres)
