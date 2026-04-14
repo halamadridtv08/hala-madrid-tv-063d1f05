@@ -87,6 +87,7 @@ import { SeasonResetManager } from "@/components/admin/SeasonResetManager";
 import { SeasonArchiveViewer } from "@/components/admin/SeasonArchiveViewer";
 import { SoundSettingsManager } from "@/components/admin/SoundSettingsManager";
 import { ShopProductsManager } from "@/components/admin/ShopProductsManager";
+import { N8NAutomationPanel } from "@/components/admin/N8NAutomationPanel";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 interface StatsData {
@@ -129,6 +130,7 @@ const VALID_ADMIN_TABS = [
   "notifications",
   "integrations",
   "shop",
+  "n8n",
   "site-content",
   "branding",
   "welcome-popup",
