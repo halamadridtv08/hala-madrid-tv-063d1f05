@@ -19,6 +19,26 @@ import {
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
+const invokeN8nProxy = async (body: Record<string, unknown>) => {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData?.session?.access_token;
+  if (!accessToken) throw new Error("Session expirée. Veuillez vous reconnecter.");
+
+  const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/n8n-webhook-proxy`;
+  const res = await fetch(functionUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+  return data;
+};
+
 interface N8NConfig {
   id: string;
   webhook_url: string;
@@ -126,11 +146,7 @@ export function N8NAutomationPanel() {
   const testConnection = async () => {
     setTesting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("n8n-webhook-proxy", {
-        body: { action: "ping", payload: { test: true } },
-      });
-
-      if (error) throw error;
+      const data = await invokeN8nProxy({ action: "ping", payload: { test: true } });
       if (data?.success) {
         toast.success("Connexion n8n réussie !");
       } else {
@@ -152,19 +168,15 @@ export function N8NAutomationPanel() {
     setGeneratedContent("");
 
     try {
-      const { data, error } = await supabase.functions.invoke("n8n-webhook-proxy", {
-        body: {
-          action: "generate_content",
-          payload: {
-            type: contentType,
-            context: contentContext,
-            tone: contentTone,
-            language: contentLang,
-          },
+      const data = await invokeN8nProxy({
+        action: "generate_content",
+        payload: {
+          type: contentType,
+          context: contentContext,
+          tone: contentTone,
+          language: contentLang,
         },
       });
-
-      if (error) throw error;
       if (data?.success && data?.data) {
         const text = typeof data.data === "string" ? data.data : data.data.text || data.data.content || JSON.stringify(data.data);
         setGeneratedContent(text);
@@ -181,11 +193,7 @@ export function N8NAutomationPanel() {
 
   const triggerAction = async (action: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke("n8n-webhook-proxy", {
-        body: { action, payload: {} },
-      });
-
-      if (error) throw error;
+      const data = await invokeN8nProxy({ action, payload: {} });
       if (data?.success) {
         toast.success(`Action "${action}" exécutée`);
       } else {
