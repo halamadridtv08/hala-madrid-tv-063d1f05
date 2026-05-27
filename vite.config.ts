@@ -59,7 +59,7 @@ function articleSEOPrerender() {
           console.warn(`[article-seo-prerender] HTTP ${res.status}, skip`);
           return;
         }
-        const articles: any[] = await res.json();
+        const articles = (await res.json()) as any[];
         console.log(`[article-seo-prerender] ${articles.length} articles à prérendre`);
 
         let count = 0;
