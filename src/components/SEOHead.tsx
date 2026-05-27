@@ -13,6 +13,8 @@ interface SEOHeadProps {
   tags?: string[];
   noIndex?: boolean;
   jsonLd?: object;
+  articleBody?: string;
+  keywords?: string[];
 }
 
 const BASE_URL = 'https://www.hala-madrid-tv.com';
@@ -32,10 +34,15 @@ export function SEOHead({
   section,
   tags = [],
   noIndex = false,
-  jsonLd
+  jsonLd,
+  articleBody,
+  keywords
 }: SEOHeadProps) {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : `${SITE_NAME} - Actualités du Real Madrid`;
   const canonicalUrl = url ? `${BASE_URL}${url}` : BASE_URL;
+  const wordCount = articleBody ? articleBody.trim().split(/\s+/).filter(Boolean).length : undefined;
+  const keywordList = (keywords && keywords.length ? keywords : tags).filter(Boolean);
+  const keywordString = keywordList.join(', ');
 
   // WebSite JSON-LD with SearchAction for Google sitelinks search box
   const webSiteJsonLd = {
@@ -90,10 +97,25 @@ export function SEOHead({
     '@type': 'NewsArticle',
     headline: title,
     description: description,
-    image: image,
+    image: {
+      '@type': 'ImageObject',
+      url: image,
+      width: 1200,
+      height: 630
+    },
     url: canonicalUrl,
     datePublished: publishedTime,
     dateModified: modifiedTime || publishedTime,
+    inLanguage: 'fr-FR',
+    isAccessibleForFree: true,
+    ...(keywordList.length ? { keywords: keywordString } : {}),
+    ...(section ? { articleSection: section } : {}),
+    ...(wordCount ? { wordCount } : {}),
+    ...(articleBody ? { articleBody: articleBody.slice(0, 5000) } : {}),
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['h1', '.prose']
+    },
     author: {
       '@type': 'Person',
       name: author || SITE_NAME
@@ -101,9 +123,12 @@ export function SEOHead({
     publisher: {
       '@type': 'Organization',
       name: SITE_NAME,
+      url: BASE_URL,
       logo: {
         '@type': 'ImageObject',
-        url: DEFAULT_IMAGE
+        url: DEFAULT_IMAGE,
+        width: 512,
+        height: 512
       }
     },
     mainEntityOfPage: {
@@ -145,7 +170,10 @@ export function SEOHead({
       <meta name="title" content={fullTitle} />
       <meta name="description" content={description} />
       <link rel="canonical" href={canonicalUrl} />
-      
+      {keywordString && <meta name="keywords" content={keywordString} />}
+      <meta name="robots" content={noIndex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'} />
+      <meta name="googlebot" content={noIndex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'} />
+
       {noIndex && <meta name="robots" content="noindex, nofollow" />}
       
       {/* Open Graph / Facebook */}
@@ -154,6 +182,9 @@ export function SEOHead({
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={image} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={title || SITE_NAME} />
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:locale" content="fr_FR" />
       

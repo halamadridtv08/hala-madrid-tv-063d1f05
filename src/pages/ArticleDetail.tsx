@@ -242,6 +242,20 @@ const ArticleDetail = () => {
         author={article.author_name || 'HALA MADRID TV'}
         section={article.category}
         tags={[article.category, 'Real Madrid', 'Football', 'Liga', 'Champions League']}
+        keywords={[
+          article.title,
+          article.category,
+          'Real Madrid',
+          'Hala Madrid',
+          'actualité Real Madrid',
+          'news Real Madrid',
+          'football',
+          'La Liga',
+          'Champions League',
+          'Merengues',
+          'Los Blancos'
+        ]}
+        articleBody={stripHtml(article.content)}
       />
       <Navbar />
       <main>
