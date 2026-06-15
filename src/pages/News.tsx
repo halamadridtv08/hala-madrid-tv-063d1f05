@@ -103,7 +103,7 @@ const News = () => {
     itemListElement: articles.slice(0, 20).map((article, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      url: `https://www.hala-madrid-tv.com/news/${article.slug || article.id}`,
+      url: `https://hala-madrid-tv.com/news/${article.slug || article.id}`,
       name: article.title
     }))
   } : undefined;

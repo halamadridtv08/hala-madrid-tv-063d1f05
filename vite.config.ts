@@ -8,7 +8,7 @@ import { resolve } from "path";
 
 const SUPABASE_URL = "https://qjnppcfbywfazwolfppo.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqbnBwY2ZieXdmYXp3b2xmcHBvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxNDA0MzksImV4cCI6MjA2MTcxNjQzOX0.1dPuqM42ASnYsfdBs4d2bLRgHxJQzmCSEW2dIUbcJOI";
-const BASE_URL = "https://www.hala-madrid-tv.com";
+const BASE_URL = "https://hala-madrid-tv.com";
 const SITE_NAME = "HALA MADRID TV";
 const DEFAULT_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/XQxJnbbi65bFpQPLSgRozceUApi1/social-images/social-1759705280620-logo hala madrid tv.png";
 

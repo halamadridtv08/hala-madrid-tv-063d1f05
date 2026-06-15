@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'HALA MADRID TV',
   webDir: 'dist',
   server: {
-    url: 'https://www.hala-madrid-tv.com?forceHideBadge=true',
+    url: 'https://hala-madrid-tv.com?forceHideBadge=true',
     cleartext: true
   },
   android: {

@@ -6,7 +6,7 @@ const corsHeaders = {
   'Content-Type': 'application/xml',
 };
 
-const BASE_URL = 'https://www.hala-madrid-tv.com';
+const BASE_URL = 'https://hala-madrid-tv.com';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
