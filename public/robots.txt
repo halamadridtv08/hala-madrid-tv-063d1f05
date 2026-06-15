@@ -27,7 +27,7 @@ Disallow: /auth-callback
 
 # Sitemap
 Sitemap: https://qjnppcfbywfazwolfppo.supabase.co/functions/v1/sitemap
-Sitemap: https://www.hala-madrid-tv.com/sitemap.xml
+Sitemap: https://hala-madrid-tv.com/sitemap.xml
 
 # Crawl-delay for generic bots
 User-agent: *

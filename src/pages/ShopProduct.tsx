@@ -101,7 +101,7 @@ const ShopProduct = () => {
           brand: { '@type': 'Brand', name: 'HALA MADRID TV' },
           offers: {
             '@type': 'Offer',
-            url: `https://www.hala-madrid-tv.com/shop/${product.slug}`,
+            url: `https://hala-madrid-tv.com/shop/${product.slug}`,
             priceCurrency: 'EUR',
             price: product.price,
             availability: product.stock > 0
