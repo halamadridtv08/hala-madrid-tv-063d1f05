@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Kit } from "@/types/Kit";
+import { SEOHead } from "@/components/SEOHead";
 import { KitImageGallery } from "@/components/kits/KitImageGallery";
 
 const Kits = () => {
@@ -121,6 +122,11 @@ const Kits = () => {
 
   return (
     <>
+      <SEOHead
+        title="Maillots Real Madrid"
+        description="Tous les maillots officiels du Real Madrid : domicile, extérieur, third et éditions spéciales. Galerie complète des kits de la saison."
+        url="/kits"
+      />
       <Navbar />
       <main className="min-h-screen">
         <div className="madrid-container py-4 sm:py-6 lg:py-8">

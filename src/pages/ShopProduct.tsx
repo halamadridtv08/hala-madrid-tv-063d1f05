@@ -5,7 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { useShopProduct, useShopProducts } from "@/hooks/useShopProducts";
 import { useShopCart } from "@/hooks/useShopCart";
 import { useShopWishlist } from "@/hooks/useShopWishlist";
-import { Helmet } from "react-helmet-async";
+import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -85,10 +85,32 @@ const ShopProduct = () => {
 
   return (
     <>
-      <Helmet>
-        <title>{product.name} - HALA MADRID TV Shop</title>
-        <meta name="description" content={product.description || `Achetez ${product.name} sur HALA MADRID TV`} />
-      </Helmet>
+      <SEOHead
+        title={product.name}
+        description={(product.description || `Achetez ${product.name} sur la boutique officielle HALA MADRID TV.`).slice(0, 160)}
+        url={`/shop/${product.slug}`}
+        image={product.images?.[0]}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.name,
+          description: product.description || undefined,
+          image: product.images?.length ? product.images : undefined,
+          sku: product.id,
+          category: product.category,
+          brand: { '@type': 'Brand', name: 'HALA MADRID TV' },
+          offers: {
+            '@type': 'Offer',
+            url: `https://www.hala-madrid-tv.com/shop/${product.slug}`,
+            priceCurrency: 'EUR',
+            price: product.price,
+            availability: product.stock > 0
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+            itemCondition: 'https://schema.org/NewCondition',
+          },
+        }}
+      />
 
       <div className="min-h-screen bg-background">
         <Navbar />

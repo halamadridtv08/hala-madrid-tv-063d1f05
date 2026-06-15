@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PressConference } from "@/types/PressConference";
 import { useYouTubeVideosByCategory } from "@/hooks/useYouTubeVideosByCategory";
+import { SEOHead } from "@/components/SEOHead";
 
 const Press = () => {
   const { data: pressConferences = [], isLoading, error } = useQuery({
@@ -92,6 +93,11 @@ const Press = () => {
 
   return (
     <>
+      <SEOHead
+        title="Conférences de presse Real Madrid"
+        description="Toutes les conférences de presse du Real Madrid : déclarations du coach et des joueurs avant et après les matchs."
+        url="/press"
+      />
       <Navbar />
       <main>
         <div className="madrid-container py-8">

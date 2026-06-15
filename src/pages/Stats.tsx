@@ -6,6 +6,7 @@ import { useRealStatsData } from "@/components/stats/RealStatsData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
+import { SEOHead } from "@/components/SEOHead";
 
 const Stats = () => {
   const { 
@@ -68,6 +69,11 @@ const Stats = () => {
 
   return (
     <>
+      <SEOHead
+        title="Statistiques Real Madrid"
+        description="Statistiques complètes du Real Madrid : buteurs, passeurs, classements et performances par compétition (Liga, Champions League, Coupe)."
+        url="/stats"
+      />
       <Navbar />
       <main className="overflow-x-hidden">
         <div className="madrid-container py-8">

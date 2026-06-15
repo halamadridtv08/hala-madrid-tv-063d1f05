@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SEOHead } from "@/components/SEOHead";
 
 const Videos = () => {
   const { videos, shorts, isLoading } = useAllVideos();
@@ -54,6 +55,11 @@ const Videos = () => {
 
   return (
     <>
+      <SEOHead
+        title="Vidéos Real Madrid"
+        description="Les meilleures vidéos du Real Madrid : résumés de matchs, buts, interviews et coulisses des Merengues."
+        url="/videos"
+      />
       <Navbar />
       <div className="min-h-screen bg-background">
         <div className="madrid-container py-8 md:py-12">
