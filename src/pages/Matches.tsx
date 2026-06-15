@@ -14,6 +14,7 @@ import { useMatches } from "@/hooks/useMatches";
 import { Match } from "@/types/Match";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { SEOHead } from "@/components/SEOHead";
 const Matches = () => {
   const [selectedMatch, setSelectedMatch] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -165,6 +166,34 @@ const Matches = () => {
     setShowFormations(true);
   };
   return <>
+      <SEOHead
+        title="Matchs Real Madrid"
+        description="Tous les matchs du Real Madrid : prochaines rencontres, résultats, compositions et compétitions (Liga, Champions League, Coupe)."
+        url="/matches"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: 'Matchs Real Madrid',
+          itemListElement: upcomingMatches.slice(0, 20).map((m, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            item: {
+              '@type': 'SportsEvent',
+              name: `${m.home_team} vs ${m.away_team}`,
+              startDate: m.match_date,
+              eventStatus: 'https://schema.org/EventScheduled',
+              eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+              location: m.venue
+                ? { '@type': 'Place', name: m.venue }
+                : undefined,
+              homeTeam: { '@type': 'SportsTeam', name: m.home_team },
+              awayTeam: { '@type': 'SportsTeam', name: m.away_team },
+              sport: 'Football',
+              ...(m.competition ? { superEvent: { '@type': 'SportsEvent', name: m.competition } } : {}),
+            },
+          })),
+        }}
+      />
       <Navbar />
       <main className="min-h-screen">
         <div className="bg-madrid-blue py-10">
