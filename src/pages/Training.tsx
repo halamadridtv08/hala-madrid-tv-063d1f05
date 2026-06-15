@@ -93,6 +93,11 @@ const Training = () => {
 
   return (
     <>
+      <SEOHead
+        title="Entraînements Real Madrid"
+        description="Suivez les séances d'entraînement du Real Madrid : vidéos, exercices et préparation des Merengues avant chaque match."
+        url="/training"
+      />
       <Navbar />
       <main>
         <div className="madrid-container py-8">

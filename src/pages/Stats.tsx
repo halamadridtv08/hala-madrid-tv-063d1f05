@@ -69,6 +69,11 @@ const Stats = () => {
 
   return (
     <>
+      <SEOHead
+        title="Statistiques Real Madrid"
+        description="Statistiques complètes du Real Madrid : buteurs, passeurs, classements et performances par compétition (Liga, Champions League, Coupe)."
+        url="/stats"
+      />
       <Navbar />
       <main className="overflow-x-hidden">
         <div className="madrid-container py-8">

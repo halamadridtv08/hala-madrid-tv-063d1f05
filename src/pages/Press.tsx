@@ -93,6 +93,11 @@ const Press = () => {
 
   return (
     <>
+      <SEOHead
+        title="Conférences de presse Real Madrid"
+        description="Toutes les conférences de presse du Real Madrid : déclarations du coach et des joueurs avant et après les matchs."
+        url="/press"
+      />
       <Navbar />
       <main>
         <div className="madrid-container py-8">
