@@ -1,0 +1,28 @@
+# HALA MADRID TV
+
+> Site francophone d'actualité non officiel dédié au Real Madrid : matchs, joueurs, statistiques, transferts, vidéos et boutique fan.
+
+## Pages
+
+- [Accueil](/): Vue d'ensemble du Real Madrid, dernières actus et prochains matchs.
+- [Actualités](/news): Articles, analyses et infos mercato sur le Real Madrid.
+- [Matchs](/matches): Prochaines rencontres, résultats et compositions.
+- [Calendrier](/calendar): Calendrier complet des matchs par compétition.
+- [Effectif](/players): Joueurs, entraîneur et staff de la saison.
+- [Statistiques](/stats): Buteurs, passeurs et classements par compétition.
+- [Vidéos](/videos): Résumés, buts et interviews.
+- [Conférences de presse](/press): Déclarations du coach et des joueurs.
+- [Entraînements](/training): Séances et préparation de l'équipe.
+- [Maillots](/kits): Maillots officiels de la saison.
+- [Transferts](/transfers): Arrivées et départs (mercato).
+- [Pronostics](/predictions): Faites vos pronostics et comparez-vous aux autres fans.
+- [Dream Team](/dream-team): Composez votre onze idéal.
+- [Comparateur de joueurs](/comparator): Comparez les statistiques de deux joueurs.
+- [Boutique](/shop): Maillots, accessoires, posters et gaming.
+
+## Optional
+
+- [Mentions légales](/mentions-legales)
+- [Politique de confidentialité](/politique-confidentialite)
+- [CGU](/cgu)
+- [Contact](/contact)

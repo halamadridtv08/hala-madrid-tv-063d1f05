@@ -12,7 +12,7 @@ import { useShopProducts } from "@/hooks/useShopProducts";
 import { useShopCart } from "@/hooks/useShopCart";
 import { useShopWishlist } from "@/hooks/useShopWishlist";
 import { useSiteVisibility } from "@/hooks/useSiteVisibility";
-import { Helmet } from "react-helmet-async";
+import { SEOHead } from "@/components/SEOHead";
 import { ShoppingCart, Heart, Package, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -132,13 +132,11 @@ const Shop = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Shop - HALA MADRID TV | Boutique Fan Officielle</title>
-        <meta
-          name="description"
-          content="Boutique officielle HALA MADRID TV. Maillots, accessoires, posters et articles gaming pour les fans du Real Madrid."
-        />
-      </Helmet>
+      <SEOHead
+        title="Boutique Fan Real Madrid"
+        description="Boutique officielle HALA MADRID TV : maillots, accessoires, posters et articles gaming pour les fans du Real Madrid."
+        url="/shop"
+      />
 
       <div className="min-h-screen bg-background">
         <Navbar />
