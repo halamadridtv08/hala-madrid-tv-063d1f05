@@ -13,6 +13,7 @@ import { Coach } from "@/types/Coach";
 import { Achievement } from "@/types/Achievement";
 import { useNavigate } from "react-router-dom";
 import { useAllPlayersStats } from "@/hooks/usePlayerStats";
+import { SEOHead } from "@/components/SEOHead";
 const Players = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("all");
@@ -184,6 +185,11 @@ const Players = () => {
       </>;
   }
   return <>
+      <SEOHead
+        title="Effectif Real Madrid 2024/25"
+        description="Découvrez l'effectif complet du Real Madrid : joueurs, entraîneur et staff. Statistiques, postes et profils détaillés des Merengues."
+        url="/players"
+      />
       <Navbar />
       <main className="min-h-screen">
         <div className="bg-madrid-blue py-10">

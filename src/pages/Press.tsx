@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PressConference } from "@/types/PressConference";
 import { useYouTubeVideosByCategory } from "@/hooks/useYouTubeVideosByCategory";
+import { SEOHead } from "@/components/SEOHead";
 
 const Press = () => {
   const { data: pressConferences = [], isLoading, error } = useQuery({

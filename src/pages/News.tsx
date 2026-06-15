@@ -111,8 +111,8 @@ const News = () => {
   return (
     <>
       <SEOHead 
-        title="Actualités Real Madrid - Toute l'actu des Merengues"
-        description="Toutes les actualités du Real Madrid en direct : résultats des matchs, transferts, conférences de presse, analyses et infos mercato."
+        title="Actu Real Madrid"
+        description="Actualités Real Madrid en direct : résultats, transferts, conférences de presse, analyses et infos mercato des Merengues."
         url="/news"
         jsonLd={itemListJsonLd}
       />

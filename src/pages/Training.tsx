@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TrainingSession } from "@/types/TrainingSession";
 import { useYouTubeVideosByCategory } from "@/hooks/useYouTubeVideosByCategory";
+import { SEOHead } from "@/components/SEOHead";
 
 const Training = () => {
   const { data: trainingSessions = [], isLoading, error } = useQuery({

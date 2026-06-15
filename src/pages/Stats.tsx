@@ -6,6 +6,7 @@ import { useRealStatsData } from "@/components/stats/RealStatsData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
+import { SEOHead } from "@/components/SEOHead";
 
 const Stats = () => {
   const { 

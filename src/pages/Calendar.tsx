@@ -10,6 +10,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Match } from "@/types/Match";
+import { SEOHead } from "@/components/SEOHead";
 import { useNavigate } from "react-router-dom";
 
 const CalendarPage = () => {
@@ -103,6 +104,11 @@ const CalendarPage = () => {
 
   return (
     <>
+      <SEOHead
+        title="Calendrier Real Madrid"
+        description="Le calendrier complet des matchs du Real Madrid : Liga, Champions League et Coupe du Roi. Dates, horaires et compétitions."
+        url="/calendar"
+      />
       <Navbar />
       <main className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
         <div className="madrid-container py-4 sm:py-8">

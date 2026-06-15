@@ -10,6 +10,7 @@ import { Loader2, Users, FileText, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { stripHtml } from "@/utils/stripHtml";
+import { SEOHead } from "@/components/SEOHead";
 
 export default function Search() {
   const [searchParams] = useSearchParams();
@@ -73,6 +74,12 @@ export default function Search() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+      <SEOHead
+        title="Recherche"
+        description="Recherchez des joueurs, articles et matchs du Real Madrid sur HALA MADRID TV."
+        url="/search"
+        noIndex
+      />
       <Navbar />
       
       <main className="flex-1 madrid-container py-8">
