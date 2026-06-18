@@ -16,6 +16,15 @@ import { Calendar, Clock, Upload, Crop, Image } from "lucide-react";
 import { uploadFile } from "@/utils/fileUpload";
 import { useModeratorActions } from "@/hooks/useModeratorActions";
 
+// Fire-and-forget: notify Google / Bing when an article goes live
+function notifySearchEngines(slug?: string | null, id?: string | null) {
+  const path = slug ? `/news/${slug}` : id ? `/news/${id}` : '/news';
+  const url = `https://www.hala-madrid-tv.com${path}`;
+  supabase.functions
+    .invoke('notify-search-engines', { body: { url, urls: [url] } })
+    .catch((err) => console.warn('notify-search-engines failed', err));
+}
+
 interface ArticleFormProps {
   article?: Article & { scheduled_at?: string; thumbnail_url?: string };
   onSuccess: () => void;
