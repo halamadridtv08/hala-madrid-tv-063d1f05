@@ -82,6 +82,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
         // Log if article is being published
         if (dataToSubmit.is_published && !article.is_published) {
           await logArticlePublished(article.id, formData.title);
+          notifySearchEngines((article as any).slug, article.id);
         }
         
         toast.success("Article mis à jour avec succès");
@@ -89,7 +90,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
         const { data: insertedData, error } = await supabase
           .from('articles')
           .insert([dataToSubmit])
-          .select('id')
+          .select('id, slug')
           .single();
 
         if (error) throw error;
@@ -97,6 +98,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
         // Log if new article is published directly
         if (dataToSubmit.is_published && insertedData?.id) {
           await logArticlePublished(insertedData.id, formData.title);
+          notifySearchEngines((insertedData as any).slug, insertedData.id);
         }
         
         toast.success("Article créé avec succès");
