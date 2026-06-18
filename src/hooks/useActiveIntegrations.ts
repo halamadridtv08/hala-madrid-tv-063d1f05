@@ -18,10 +18,7 @@ export const useActiveIntegrations = () => {
   useEffect(() => {
     const fetchActiveIntegrations = async () => {
       try {
-        const { data, error } = await supabase
-          .from('integrations')
-          .select('integration_key, config')
-          .eq('is_enabled', true);
+        const { data, error } = await supabase.rpc('get_public_integrations');
 
         if (error) throw error;
 
