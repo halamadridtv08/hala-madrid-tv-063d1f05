@@ -41,7 +41,12 @@ interface ApiFixture {
 async function callFootballApi<T>(action: string, params?: Record<string, string>): Promise<T | null> {
   try {
     const queryParams = new URLSearchParams({ action, ...params });
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/football-api?${queryParams}`);
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/football-api?${queryParams}`, {
+      headers: {
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
+    });
     
     if (!response.ok) {
       const errorData = await response.json();

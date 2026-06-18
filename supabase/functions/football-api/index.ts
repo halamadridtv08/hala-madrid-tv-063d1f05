@@ -115,6 +115,20 @@ serve(async (req) => {
   }
 
   try {
+    // Require a valid Supabase project key (anon or user JWT) to block
+    // direct internet abuse of the paid Football API quota. Public data so
+    // we accept anonymous browser visitors via the publishable key.
+    const apikey = req.headers.get('apikey') || req.headers.get('x-api-key');
+    const authHeader = req.headers.get('Authorization');
+    const expectedAnon = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    if (!expectedAnon || (apikey !== expectedAnon && bearer !== expectedAnon && !bearer.startsWith('ey'))) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
     

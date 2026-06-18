@@ -406,7 +406,44 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Require admin or moderator role
+    const serviceClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+    const [{ data: isAdmin }, { data: isMod }] = await Promise.all([
+      serviceClient.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
+      serviceClient.rpc('has_role', { _user_id: user.id, _role: 'moderator' }),
+    ]);
+    if (!isAdmin && !isMod) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Forbidden: admin or moderator role required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { url, match_id } = await req.json();
+
+    // Restrict scraping to an allowlist of hostnames to prevent SSRF and quota abuse
+    const ALLOWED_HOSTS = [
+      'realmadrid.com', 'www.realmadrid.com',
+      'fotmob.com', 'www.fotmob.com',
+      'marca.com', 'www.marca.com',
+      'as.com', 'www.as.com',
+    ];
+    try {
+      let candidate = (url ?? '').trim();
+      if (candidate && !candidate.startsWith('http')) candidate = `https://${candidate}`;
+      const host = new URL(candidate).hostname.toLowerCase();
+      if (!ALLOWED_HOSTS.some((h) => host === h || host.endsWith('.' + h))) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'URL hostname not allowed' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } catch {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid URL' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (!url) {
       return new Response(

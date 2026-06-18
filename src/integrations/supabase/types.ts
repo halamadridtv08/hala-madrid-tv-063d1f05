@@ -4115,6 +4115,13 @@ export type Database = {
           total_actions: number
         }[]
       }
+      get_public_integrations: {
+        Args: never
+        Returns: {
+          config: Json
+          integration_key: string
+        }[]
+      }
       get_recent_moderator_actions: {
         Args: { p_limit?: number; p_moderator_id?: string }
         Returns: {

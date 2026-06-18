@@ -119,11 +119,10 @@ const ShopCheckout = () => {
           body: {
             orderId: order.id,
             items: items.map((item) => ({
-              name: products[item.product_id]?.name || "Produit",
-              price: products[item.product_id]?.price || 0,
+              productId: item.product_id,
               quantity: item.quantity,
             })),
-            discountAmount,
+            discountCode: appliedDiscount?.code,
           },
         }
       );
