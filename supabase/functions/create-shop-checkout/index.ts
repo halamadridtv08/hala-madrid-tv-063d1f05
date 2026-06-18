@@ -29,10 +29,67 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
-    const { orderId, items, discountAmount = 0 } = await req.json();
+    const { orderId, items, discountCode } = await req.json();
 
-    if (!orderId || !items || items.length === 0) {
+    if (!orderId || !Array.isArray(items) || items.length === 0) {
       throw new Error("Données de commande invalides");
+    }
+
+    // Server-side trusted price lookup — never trust client-supplied prices
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
+    type ClientItem = { productId?: string; product_id?: string; quantity: number };
+    const normalized: { productId: string; quantity: number }[] = items.map((i: ClientItem) => {
+      const productId = i.productId || i.product_id;
+      const quantity = Math.max(1, Math.min(99, Math.floor(Number(i.quantity) || 0)));
+      if (!productId || quantity < 1) throw new Error("Article invalide dans la commande");
+      return { productId, quantity };
+    });
+
+    const { data: products, error: productsErr } = await supabaseAdmin
+      .from("shop_products")
+      .select("id, name, price")
+      .in("id", normalized.map((i) => i.productId));
+
+    if (productsErr) throw new Error("Impossible de récupérer les produits");
+    if (!products || products.length !== new Set(normalized.map((i) => i.productId)).size) {
+      throw new Error("Un ou plusieurs produits sont introuvables");
+    }
+
+    const productMap = new Map(products.map((p: any) => [p.id, p]));
+
+    // Server-side validated discount lookup
+    let discountAmount = 0;
+    const subtotal = normalized.reduce((sum, it) => {
+      const p: any = productMap.get(it.productId);
+      return sum + Number(p.price) * it.quantity;
+    }, 0);
+
+    if (discountCode && typeof discountCode === "string") {
+      const { data: discount } = await supabaseAdmin
+        .from("shop_discount_codes")
+        .select("*")
+        .eq("code", discountCode.toUpperCase())
+        .eq("is_active", true)
+        .maybeSingle();
+      if (discount) {
+        const now = new Date();
+        const validFrom = discount.valid_from ? new Date(discount.valid_from) : null;
+        const validUntil = discount.valid_until ? new Date(discount.valid_until) : null;
+        const withinDates = (!validFrom || validFrom <= now) && (!validUntil || validUntil >= now);
+        const underLimit = !discount.max_uses || (discount.times_used ?? 0) < discount.max_uses;
+        if (withinDates && underLimit) {
+          if (discount.discount_type === "percentage") {
+            discountAmount = (subtotal * Number(discount.discount_value)) / 100;
+          } else {
+            discountAmount = Number(discount.discount_value);
+          }
+          discountAmount = Math.max(0, Math.min(discountAmount, subtotal));
+        }
+      }
     }
 
     // Check for existing Stripe customer
@@ -42,17 +99,18 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    // Create line items for Stripe Checkout
-    const lineItems = items.map((item: { name: string; price: number; quantity: number }) => ({
-      price_data: {
-        currency: "eur",
-        product_data: {
-          name: item.name,
+    // Build Stripe line items using ONLY server-fetched prices
+    const lineItems = normalized.map((it) => {
+      const p: any = productMap.get(it.productId);
+      return {
+        price_data: {
+          currency: "eur",
+          product_data: { name: p.name },
+          unit_amount: Math.round(Number(p.price) * 100),
         },
-        unit_amount: Math.round(item.price * 100),
-      },
-      quantity: item.quantity,
-    }));
+        quantity: it.quantity,
+      };
+    });
 
     // Add discount as negative line item if applicable
     if (discountAmount > 0) {
@@ -83,12 +141,6 @@ serve(async (req) => {
         discount_amount: discountAmount.toString(),
       },
     });
-
-    // Update order with payment intent
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
 
     await supabaseAdmin
       .from("shop_orders")
