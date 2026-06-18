@@ -16,6 +16,15 @@ import { Calendar, Clock, Upload, Crop, Image } from "lucide-react";
 import { uploadFile } from "@/utils/fileUpload";
 import { useModeratorActions } from "@/hooks/useModeratorActions";
 
+// Fire-and-forget: notify Google / Bing when an article goes live
+function notifySearchEngines(slug?: string | null, id?: string | null) {
+  const path = slug ? `/news/${slug}` : id ? `/news/${id}` : '/news';
+  const url = `https://www.hala-madrid-tv.com${path}`;
+  supabase.functions
+    .invoke('notify-search-engines', { body: { url, urls: [url] } })
+    .catch((err) => console.warn('notify-search-engines failed', err));
+}
+
 interface ArticleFormProps {
   article?: Article & { scheduled_at?: string; thumbnail_url?: string };
   onSuccess: () => void;
@@ -82,6 +91,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
         // Log if article is being published
         if (dataToSubmit.is_published && !article.is_published) {
           await logArticlePublished(article.id, formData.title);
+          notifySearchEngines((article as any).slug, article.id);
         }
         
         toast.success("Article mis à jour avec succès");
@@ -89,7 +99,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
         const { data: insertedData, error } = await supabase
           .from('articles')
           .insert([dataToSubmit])
-          .select('id')
+          .select('id, slug')
           .single();
 
         if (error) throw error;
@@ -97,6 +107,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
         // Log if new article is published directly
         if (dataToSubmit.is_published && insertedData?.id) {
           await logArticlePublished(insertedData.id, formData.title);
+          notifySearchEngines((insertedData as any).slug, insertedData.id);
         }
         
         toast.success("Article créé avec succès");

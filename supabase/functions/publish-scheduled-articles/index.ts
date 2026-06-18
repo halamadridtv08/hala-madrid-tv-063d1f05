@@ -78,11 +78,30 @@ Deno.serve(async (req) => {
       .lte('scheduled_at', new Date().toISOString())
       .eq('is_published', false)
       .not('scheduled_at', 'is', null)
-      .select('id, title')
+      .select('id, title, slug')
 
     if (error) throw error
 
     console.log(`Published ${data?.length || 0} scheduled articles`)
+
+    // Notify search engines (IndexNow + GSC sitemap resubmit) for each new article
+    if (data && data.length > 0) {
+      const urls = data.map((a: any) =>
+        `https://www.hala-madrid-tv.com/news/${a.slug || a.id}`
+      )
+      try {
+        await fetch(`${supabaseUrl}/functions/v1/notify-search-engines`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`,
+          },
+          body: JSON.stringify({ urls }),
+        })
+      } catch (e) {
+        console.warn('notify-search-engines failed', e)
+      }
+    }
 
     return new Response(
       JSON.stringify({ 

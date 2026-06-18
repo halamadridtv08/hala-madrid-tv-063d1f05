@@ -65,3 +65,7 @@ verify_jwt = false
 # Shop checkout - requires authentication (validated in code)
 [functions.create-shop-checkout]
 verify_jwt = false
+
+# Search engine notification - called by admin after publish + by scheduled publisher
+[functions.notify-search-engines]
+verify_jwt = false
