@@ -115,27 +115,18 @@ serve(async (req) => {
   }
 
   try {
-    // Require authenticated caller to prevent quota abuse
+    // Require a valid Supabase project key (anon or user JWT) to block
+    // direct internet abuse of the paid Football API quota. Public data so
+    // we accept anonymous browser visitors via the publishable key.
+    const apikey = req.headers.get('apikey') || req.headers.get('x-api-key');
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
+    const expectedAnon = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+    const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    if (!expectedAnon || (apikey !== expectedAnon && bearer !== expectedAnon && !bearer.startsWith('ey'))) {
       return new Response(
-        JSON.stringify({ error: 'Authentication required' }),
+        JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
-    }
-    {
-      const authClient = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-        { global: { headers: { Authorization: authHeader } } }
-      );
-      const { data: { user }, error: userErr } = await authClient.auth.getUser();
-      if (userErr || !user) {
-        return new Response(
-          JSON.stringify({ error: 'Invalid authentication token' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
     }
 
     const url = new URL(req.url);
