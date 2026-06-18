@@ -77,15 +77,15 @@ serve(async (req) => {
         .maybeSingle();
       if (discount) {
         const now = new Date();
-        const validFrom = discount.valid_from ? new Date(discount.valid_from) : null;
-        const validUntil = discount.valid_until ? new Date(discount.valid_until) : null;
-        const withinDates = (!validFrom || validFrom <= now) && (!validUntil || validUntil >= now);
-        const underLimit = !discount.max_uses || (discount.times_used ?? 0) < discount.max_uses;
-        if (withinDates && underLimit) {
-          if (discount.discount_type === "percentage") {
-            discountAmount = (subtotal * Number(discount.discount_value)) / 100;
+        const expiresAt = discount.expires_at ? new Date(discount.expires_at) : null;
+        const notExpired = !expiresAt || expiresAt >= now;
+        const underLimit = !discount.max_uses || (discount.current_uses ?? 0) < discount.max_uses;
+        const meetsMin = !discount.min_order || subtotal >= Number(discount.min_order);
+        if (notExpired && underLimit && meetsMin) {
+          if (discount.type === "percentage") {
+            discountAmount = (subtotal * Number(discount.value)) / 100;
           } else {
-            discountAmount = Number(discount.discount_value);
+            discountAmount = Number(discount.value);
           }
           discountAmount = Math.max(0, Math.min(discountAmount, subtotal));
         }
