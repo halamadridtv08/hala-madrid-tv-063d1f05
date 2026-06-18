@@ -78,13 +78,15 @@ const REAL_MADRID_ID = 541;
 async function callFootballApi<T>(action: string, params?: Record<string, string>): Promise<T | null> {
   try {
     const queryParams = new URLSearchParams({ action, ...params });
-    
+
     const response = await fetch(
       `https://qjnppcfbywfazwolfppo.supabase.co/functions/v1/football-api?${queryParams}`,
       {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
       }
     );
