@@ -22,6 +22,17 @@ const ACTION_LABELS: Record<string, string> = {
   flash_news_published: "Flash news publié",
 };
 
+const ALLOWED_ACTION_TYPES = new Set(Object.keys(ACTION_LABELS));
+
+function escapeHtml(input: unknown): string {
+  return String(input ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 const handler = async (req: Request): Promise<Response> => {
   console.log("notify-moderator-action: Request received");
 
@@ -61,12 +72,35 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Require admin or moderator role
+    const [{ data: isAdmin }, { data: isMod }] = await Promise.all([
+      supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
+      supabase.rpc('has_role', { _user_id: user.id, _role: 'moderator' }),
+    ]);
+    if (!isAdmin && !isMod) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: admin or moderator role required' }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const { 
       action_type, 
       entity_id, 
       entity_title, 
       moderator_email 
     }: ModeratorActionRequest = await req.json();
+
+    if (!ALLOWED_ACTION_TYPES.has(action_type)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid action_type' }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const safeTitle = escapeHtml(entity_title).slice(0, 300);
+    const safeModEmail = escapeHtml(moderator_email).slice(0, 320);
+    const safeActionLabel = escapeHtml(ACTION_LABELS[action_type] || action_type);
 
     console.log(`Processing notification for ${action_type} by ${moderator_email}`);
 
@@ -91,7 +125,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending notification to ${adminEmails.length} admin(s)`);
 
-    const actionLabel = ACTION_LABELS[action_type] || action_type;
     const viewUrl = action_type === 'article_published' 
       ? `${supabaseUrl.replace('.supabase.co', '.lovable.app')}/news/${entity_id}`
       : `${supabaseUrl.replace('.supabase.co', '.lovable.app')}/admin?tab=flash-news`;
@@ -100,7 +133,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "HALA MADRID TV <notifications@resend.dev>",
       to: adminEmails,
-      subject: `🔔 [Modérateur] ${actionLabel}: ${entity_title}`,
+      subject: `🔔 [Modérateur] ${ACTION_LABELS[action_type] || action_type}: ${String(entity_title ?? '').slice(0, 200)}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -131,15 +164,15 @@ const handler = async (req: Request): Promise<Response> => {
               <div class="info-box">
                 <div class="info-row">
                   <span class="info-label">Action :</span>
-                  <span class="info-value"><strong>${actionLabel}</strong></span>
+                  <span class="info-value"><strong>${safeActionLabel}</strong></span>
                 </div>
                 <div class="info-row">
                   <span class="info-label">Titre :</span>
-                  <span class="info-value">${entity_title}</span>
+                  <span class="info-value">${safeTitle}</span>
                 </div>
                 <div class="info-row">
                   <span class="info-label">Modérateur :</span>
-                  <span class="info-value">${moderator_email}</span>
+                  <span class="info-value">${safeModEmail}</span>
                 </div>
                 <div class="info-row">
                   <span class="info-label">Date :</span>
