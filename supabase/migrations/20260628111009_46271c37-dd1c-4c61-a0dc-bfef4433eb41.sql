@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Public can view enabled automation" ON public.match_automation_settings;
