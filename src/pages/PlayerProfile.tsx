@@ -367,12 +367,10 @@ const PlayerProfile = () => {
                   </Card>
                 </TabsContent>
                 
-                <TabsContent value="media">
-                </TabsContent>
                 <TabsContent value="career">
                   {id && <PlayerCareerHistory playerId={id} />}
                 </TabsContent>
-                <TabsContent value="_media_placeholder" hidden>
+                <TabsContent value="media">
                   <Card>
                     <CardHeader>
                       <h2 className="text-2xl font-bold">Photos et vidéos</h2>
