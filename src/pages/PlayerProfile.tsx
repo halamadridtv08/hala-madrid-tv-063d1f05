@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Player } from "@/types/Player";
 import { usePlayerStats } from "@/hooks/usePlayerStats";
 import { useFavorites } from "@/hooks/useFavorites";
+import { PlayerCareerHistory } from "@/components/players/PlayerCareerHistory";
 
 const PlayerProfile = () => {
   const { id } = useParams();
@@ -241,9 +242,10 @@ const PlayerProfile = () => {
             {/* Colonne de droite avec onglets d'informations */}
             <div className="md:col-span-2">
               <Tabs defaultValue="bio">
-                <TabsList className="grid grid-cols-3 mb-6">
+                <TabsList className="grid grid-cols-4 mb-6">
                   <TabsTrigger value="bio">Biographie</TabsTrigger>
                   <TabsTrigger value="stats">Statistiques</TabsTrigger>
+                  <TabsTrigger value="career">Carrière</TabsTrigger>
                   <TabsTrigger value="media">Médias</TabsTrigger>
                 </TabsList>
                 
@@ -365,6 +367,9 @@ const PlayerProfile = () => {
                   </Card>
                 </TabsContent>
                 
+                <TabsContent value="career">
+                  {id && <PlayerCareerHistory playerId={id} />}
+                </TabsContent>
                 <TabsContent value="media">
                   <Card>
                     <CardHeader>

@@ -174,139 +174,23 @@ export function SeasonResetManager() {
       setProcessStep("Téléchargement du backup...");
       await downloadBackup();
 
-      // Step 2: Archive player stats
-      setProcessStep("Archivage des statistiques joueurs...");
-      const { data: playerStats } = await supabase.from("player_stats").select("*");
-      if (playerStats && playerStats.length > 0) {
-        const archiveData = playerStats.map((stat) => ({
-          season: currentSeason,
-          original_id: stat.id,
-          player_id: stat.player_id,
-          match_id: stat.match_id,
-          goals: stat.goals,
-          assists: stat.assists,
-          minutes_played: stat.minutes_played,
-          yellow_cards: stat.yellow_cards,
-          red_cards: stat.red_cards,
-          saves: stat.saves,
-          clean_sheets: stat.clean_sheets,
-          goals_conceded: stat.goals_conceded,
-          passes_completed: stat.passes_completed,
-          pass_accuracy: stat.pass_accuracy,
-          tackles: stat.tackles,
-          interceptions: stat.interceptions,
-          rating: (stat as any).rating || null,
-        }));
-        await supabase.from("season_player_stats_archive").insert(archiveData);
-      }
+      // Step 2: Transactional archive + reset via SECURITY DEFINER RPC
+      setProcessStep("Archivage transactionnel de toutes les données du club...");
+      const { data: result, error: rpcError } = await supabase.rpc(
+        "archive_and_reset_season" as any,
+        {
+          p_old_season: currentSeason,
+          p_new_season: newSeason,
+          p_reset_predictions: options.resetPredictions,
+        }
+      );
 
-      // Step 3: Archive matches
-      setProcessStep("Archivage des matchs...");
-      const { data: matches } = await supabase.from("matches").select("*");
-      if (matches && matches.length > 0) {
-        const archiveData = matches.map((match) => ({
-          season: currentSeason,
-          original_id: match.id,
-          home_team: match.home_team,
-          away_team: match.away_team,
-          home_score: match.home_score,
-          away_score: match.away_score,
-          match_date: match.match_date,
-          competition: match.competition,
-          venue: match.venue,
-          status: match.status,
-          home_team_logo: match.home_team_logo,
-          away_team_logo: match.away_team_logo,
-          match_details: match.match_details,
-        }));
-        await supabase.from("season_matches_archive").insert(archiveData);
-      }
+      if (rpcError) throw rpcError;
 
-      // Step 4: Archive predictions
-      setProcessStep("Archivage du classement pronostics...");
-      const { data: predictions } = await supabase.from("prediction_leaderboard").select("*");
-      if (predictions && predictions.length > 0) {
-        const archiveData = predictions.map((pred) => ({
-          season: currentSeason,
-          user_id: pred.user_id,
-          total_points: pred.total_points,
-          correct_scores: pred.correct_scores,
-          correct_outcomes: pred.correct_outcomes,
-          total_predictions: pred.total_predictions,
-          current_streak: pred.current_streak,
-          best_streak: pred.best_streak,
-        }));
-        await supabase.from("season_predictions_archive").insert(archiveData);
-      }
-
-      // Step 5: Archive live blog entries
-      setProcessStep("Archivage des entrées live blog...");
-      const { data: blogEntries } = await supabase.from("live_blog_entries").select("*");
-      if (blogEntries && blogEntries.length > 0) {
-        const archiveData = blogEntries.map((entry) => ({
-          season: currentSeason,
-          original_id: entry.id,
-          match_id: entry.match_id,
-          entry_type: entry.entry_type,
-          content: entry.content,
-          title: entry.title,
-          minute: entry.minute,
-          player_id: entry.player_id,
-          team_side: entry.team_side,
-          is_important: entry.is_important,
-          image_url: entry.image_url,
-        }));
-        await supabase.from("season_live_blog_archive").insert(archiveData);
-      }
-
-      // Step 6: Clear original tables
-      setProcessStep("Nettoyage des tables...");
-      await supabase.from("player_stats").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      await supabase.from("live_blog_entries").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      await supabase.from("match_formations").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      await supabase.from("match_formation_players").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      await supabase.from("match_lineups").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      await supabase.from("match_predictions").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      await supabase.from("match_probable_lineups").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      await supabase.from("match_absent_players").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      await supabase.from("match_timer_settings").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-      await supabase.from("matches").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-
-      // Step 7: Reset prediction leaderboard
-      if (options.resetPredictions) {
-        setProcessStep("Réinitialisation du classement...");
-        await supabase
-          .from("prediction_leaderboard")
-          .update({
-            total_points: 0,
-            correct_scores: 0,
-            correct_outcomes: 0,
-            total_predictions: 0,
-            current_streak: 0,
-          })
-          .neq("id", "00000000-0000-0000-0000-000000000000");
-      }
-
-      // Step 8: Update current season
-      setProcessStep("Mise à jour de la saison...");
-      await updateContent("current_season", newSeason);
-
-      // Step 9: Log the action
-      await supabase.from("admin_audit_logs").insert({
-        action: "season_reset",
-        entity_type: "season",
-        entity_id: newSeason,
-        details: {
-          old_season: currentSeason,
-          new_season: newSeason,
-          archived_stats: dataCounts.playerStats,
-          archived_matches: dataCounts.matches,
-          archived_blog_entries: dataCounts.liveBlogEntries,
-          archived_predictions: dataCounts.predictions,
-        },
-      });
-
-      toast.success(`Saison réinitialisée avec succès! Nouvelle saison: ${newSeason}`);
+      const archived = (result as any)?.archived ?? {};
+      toast.success(
+        `Saison archivée ! ${archived.player_stats ?? 0} stats, ${archived.matches ?? 0} matchs, ${archived.transfers ?? 0} transferts, ${archived.kits ?? 0} maillots sauvegardés.`
+      );
       setShowFinalConfirm(false);
       setShowConfirmDialog(false);
       setConfirmText("");
@@ -314,7 +198,7 @@ export function SeasonResetManager() {
       await fetchDataCounts();
     } catch (error) {
       console.error("Error resetting season:", error);
-      toast.error("Erreur lors de la réinitialisation de la saison");
+      toast.error(`Erreur lors de l'archivage: ${(error as Error).message}. Aucune donnée n'a été supprimée.`);
     } finally {
       setIsProcessing(false);
       setProcessStep("");

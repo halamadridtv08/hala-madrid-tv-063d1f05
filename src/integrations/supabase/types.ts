@@ -2827,6 +2827,84 @@ export type Database = {
         }
         Relationships: []
       }
+      season_coaches_archive: {
+        Row: {
+          age: number | null
+          archived_at: string
+          bio: string | null
+          experience_years: number | null
+          id: string
+          image_url: string | null
+          name: string | null
+          nationality: string | null
+          original_id: string | null
+          role: string | null
+          season: string
+        }
+        Insert: {
+          age?: number | null
+          archived_at?: string
+          bio?: string | null
+          experience_years?: number | null
+          id?: string
+          image_url?: string | null
+          name?: string | null
+          nationality?: string | null
+          original_id?: string | null
+          role?: string | null
+          season: string
+        }
+        Update: {
+          age?: number | null
+          archived_at?: string
+          bio?: string | null
+          experience_years?: number | null
+          id?: string
+          image_url?: string | null
+          name?: string | null
+          nationality?: string | null
+          original_id?: string | null
+          role?: string | null
+          season?: string
+        }
+        Relationships: []
+      }
+      season_kits_archive: {
+        Row: {
+          archived_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          original_id: string | null
+          price: number | null
+          season: string
+          title: string | null
+          type: string | null
+        }
+        Insert: {
+          archived_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          original_id?: string | null
+          price?: number | null
+          season: string
+          title?: string | null
+          type?: string | null
+        }
+        Update: {
+          archived_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          original_id?: string | null
+          price?: number | null
+          season?: string
+          title?: string | null
+          type?: string | null
+        }
+        Relationships: []
+      }
       season_live_blog_archive: {
         Row: {
           archived_at: string | null
@@ -2872,6 +2950,45 @@ export type Database = {
           season?: string
           team_side?: string | null
           title?: string | null
+        }
+        Relationships: []
+      }
+      season_match_absent_players_archive: {
+        Row: {
+          archived_at: string
+          id: string
+          match_id: string | null
+          original_id: string | null
+          player_id: string | null
+          player_name: string | null
+          reason: string | null
+          return_date: string | null
+          season: string
+          team_type: string | null
+        }
+        Insert: {
+          archived_at?: string
+          id?: string
+          match_id?: string | null
+          original_id?: string | null
+          player_id?: string | null
+          player_name?: string | null
+          reason?: string | null
+          return_date?: string | null
+          season: string
+          team_type?: string | null
+        }
+        Update: {
+          archived_at?: string
+          id?: string
+          match_id?: string | null
+          original_id?: string | null
+          player_id?: string | null
+          player_name?: string | null
+          reason?: string | null
+          return_date?: string | null
+          season?: string
+          team_type?: string | null
         }
         Relationships: []
       }
@@ -3034,6 +3151,48 @@ export type Database = {
         }
         Relationships: []
       }
+      season_press_conferences_archive: {
+        Row: {
+          archived_at: string
+          category: string | null
+          conference_date: string | null
+          description: string | null
+          duration: string | null
+          id: string
+          original_id: string | null
+          season: string
+          thumbnail_url: string | null
+          title: string | null
+          video_url: string | null
+        }
+        Insert: {
+          archived_at?: string
+          category?: string | null
+          conference_date?: string | null
+          description?: string | null
+          duration?: string | null
+          id?: string
+          original_id?: string | null
+          season: string
+          thumbnail_url?: string | null
+          title?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          archived_at?: string
+          category?: string | null
+          conference_date?: string | null
+          description?: string | null
+          duration?: string | null
+          id?: string
+          original_id?: string | null
+          season?: string
+          thumbnail_url?: string | null
+          title?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       season_statistics: {
         Row: {
           clean_sheets: number | null
@@ -3099,6 +3258,108 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      season_training_sessions_archive: {
+        Row: {
+          archived_at: string
+          category: string | null
+          description: string | null
+          duration: string | null
+          id: string
+          original_id: string | null
+          season: string
+          thumbnail_url: string | null
+          title: string | null
+          training_date: string | null
+          video_url: string | null
+        }
+        Insert: {
+          archived_at?: string
+          category?: string | null
+          description?: string | null
+          duration?: string | null
+          id?: string
+          original_id?: string | null
+          season: string
+          thumbnail_url?: string | null
+          title?: string | null
+          training_date?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          archived_at?: string
+          category?: string | null
+          description?: string | null
+          duration?: string | null
+          id?: string
+          original_id?: string | null
+          season?: string
+          thumbnail_url?: string | null
+          title?: string | null
+          training_date?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      season_transfers_archive: {
+        Row: {
+          archived_at: string
+          description: string | null
+          from_team: string | null
+          from_team_logo: string | null
+          id: string
+          is_official: boolean | null
+          original_id: string | null
+          player_id: string | null
+          player_image: string | null
+          player_name: string | null
+          return_date: string | null
+          season: string
+          to_team: string | null
+          to_team_logo: string | null
+          transfer_date: string | null
+          transfer_fee: string | null
+          transfer_type: string | null
+        }
+        Insert: {
+          archived_at?: string
+          description?: string | null
+          from_team?: string | null
+          from_team_logo?: string | null
+          id?: string
+          is_official?: boolean | null
+          original_id?: string | null
+          player_id?: string | null
+          player_image?: string | null
+          player_name?: string | null
+          return_date?: string | null
+          season: string
+          to_team?: string | null
+          to_team_logo?: string | null
+          transfer_date?: string | null
+          transfer_fee?: string | null
+          transfer_type?: string | null
+        }
+        Update: {
+          archived_at?: string
+          description?: string | null
+          from_team?: string | null
+          from_team_logo?: string | null
+          id?: string
+          is_official?: boolean | null
+          original_id?: string | null
+          player_id?: string | null
+          player_image?: string | null
+          player_name?: string | null
+          return_date?: string | null
+          season?: string
+          to_team?: string | null
+          to_team_logo?: string | null
+          transfer_date?: string | null
+          transfer_fee?: string | null
+          transfer_type?: string | null
+        }
+        Relationships: []
       }
       secure_totp_secrets: {
         Row: {
@@ -4047,6 +4308,14 @@ export type Database = {
       }
     }
     Functions: {
+      archive_and_reset_season: {
+        Args: {
+          p_new_season: string
+          p_old_season: string
+          p_reset_predictions?: boolean
+        }
+        Returns: Json
+      }
       check_login_blocked: {
         Args: { p_email: string; p_ip_address?: string }
         Returns: {
