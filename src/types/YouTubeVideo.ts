@@ -8,6 +8,8 @@ export interface YouTubeVideo {
   is_published: boolean;
   is_featured?: boolean;
   category?: string;
+  is_live_stream?: boolean;
+  stream_url?: string | null;
 }
 
 export const YOUTUBE_VIDEO_CATEGORIES = [
