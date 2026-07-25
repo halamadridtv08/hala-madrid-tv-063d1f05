@@ -9,7 +9,8 @@ import { StatsGlobalOverview } from "./StatsGlobalOverview";
 import { LaLigaStandings } from "./LaLigaStandings";
 import { LiveScores } from "./LiveScores";
 import { TeamStatsLive } from "./TeamStatsLive";
-import { Radio } from "lucide-react";
+import { Radio, Archive } from "lucide-react";
+import { SeasonHistory } from "./SeasonHistory";
 
 interface CompetitionTabsProps {
   topScorers: Record<string, any[]>;
@@ -42,6 +43,10 @@ export const CompetitionTabs = ({
           <TabsTrigger value="copaDelRey" className="text-xs sm:text-sm whitespace-nowrap">Copa del Rey</TabsTrigger>
           <TabsTrigger value="supercoupeEurope" className="text-xs sm:text-sm whitespace-nowrap">Supercoupe d'Europe</TabsTrigger>
           <TabsTrigger value="supercoupeEspagne" className="text-xs sm:text-sm whitespace-nowrap">Supercoupe d'Espagne</TabsTrigger>
+          <TabsTrigger value="history" className="text-xs sm:text-sm whitespace-nowrap flex items-center gap-1">
+            <Archive className="h-3 w-3" />
+            Historique
+          </TabsTrigger>
         </TabsList>
       </div>
 
@@ -66,6 +71,10 @@ export const CompetitionTabs = ({
           <StatsStandings standings={standings[competition]} />
         </TabsContent>
       ))}
+
+      <TabsContent value="history" className="space-y-8">
+        <SeasonHistory />
+      </TabsContent>
     </Tabs>
   );
 };
