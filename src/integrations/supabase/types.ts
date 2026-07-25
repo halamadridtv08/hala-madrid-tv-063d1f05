@@ -1242,6 +1242,39 @@ export type Database = {
           },
         ]
       }
+      live_chat_messages: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          is_hidden: boolean
+          message: string
+          room_key: string
+          user_id: string
+          video_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_hidden?: boolean
+          message: string
+          room_key?: string
+          user_id: string
+          video_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          is_hidden?: boolean
+          message?: string
+          room_key?: string
+          user_id?: string
+          video_id?: string | null
+        }
+        Relationships: []
+      }
       live_match_bar_settings: {
         Row: {
           active_match_id: string | null
@@ -4143,7 +4176,9 @@ export type Database = {
           created_at: string
           id: string
           is_featured: boolean | null
+          is_live_stream: boolean
           is_published: boolean | null
+          stream_url: string | null
           thumbnail_url: string
           title: string
           updated_at: string
@@ -4154,7 +4189,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_featured?: boolean | null
+          is_live_stream?: boolean
           is_published?: boolean | null
+          stream_url?: string | null
           thumbnail_url: string
           title: string
           updated_at?: string
@@ -4165,7 +4202,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_featured?: boolean | null
+          is_live_stream?: boolean
           is_published?: boolean | null
+          stream_url?: string | null
           thumbnail_url?: string
           title?: string
           updated_at?: string
