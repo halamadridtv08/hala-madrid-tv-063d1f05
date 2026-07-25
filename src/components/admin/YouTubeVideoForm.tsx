@@ -24,6 +24,8 @@ const YouTubeVideoForm = ({ video, onSuccess, onCancel }: YouTubeVideoFormProps)
     is_published: video?.is_published ?? true,
     is_featured: video?.is_featured ?? false,
     category: video?.category || "YouTube",
+    is_live_stream: video?.is_live_stream ?? false,
+    stream_url: video?.stream_url || "",
   });
 
   useEffect(() => {
@@ -35,6 +37,8 @@ const YouTubeVideoForm = ({ video, onSuccess, onCancel }: YouTubeVideoFormProps)
         is_published: video.is_published,
         is_featured: video.is_featured ?? false,
         category: video.category || "YouTube",
+        is_live_stream: video.is_live_stream ?? false,
+        stream_url: video.stream_url || "",
       });
     }
   }, [video]);
@@ -94,9 +98,23 @@ const YouTubeVideoForm = ({ video, onSuccess, onCancel }: YouTubeVideoFormProps)
               type="url"
               value={formData.youtube_url}
               onChange={(e) => setFormData({ ...formData, youtube_url: e.target.value })}
-              placeholder="https://youtube.com/watch?v=..."
+              placeholder="youtube.com/watch, youtu.be, /live/, /shorts/, /embed/..."
               required
             />
+          </div>
+
+          <div>
+            <Label htmlFor="stream_url">URL de flux direct (optionnel, .m3u8, .mp4...)</Label>
+            <Input
+              id="stream_url"
+              type="url"
+              value={formData.stream_url}
+              onChange={(e) => setFormData({ ...formData, stream_url: e.target.value })}
+              placeholder="https://exemple.com/live/stream.m3u8"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Si renseigné, cette URL sera lue en priorité (avec support HLS/m3u8).
+            </p>
           </div>
 
           <div>
@@ -157,6 +175,17 @@ const YouTubeVideoForm = ({ video, onSuccess, onCancel }: YouTubeVideoFormProps)
               }
             />
             <Label htmlFor="is_featured">Mise en avant sur l'accueil</Label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="is_live_stream"
+              checked={formData.is_live_stream}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, is_live_stream: checked })
+              }
+            />
+            <Label htmlFor="is_live_stream">Diffusion en direct (active le top chat)</Label>
           </div>
 
           <div className="flex gap-2">
