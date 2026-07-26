@@ -95,6 +95,7 @@ Deno.serve(async (req) => {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${supabaseKey}`,
+            'x-cron-secret': Deno.env.get('CRON_SECRET') ?? '',
           },
           body: JSON.stringify({ urls }),
         })

@@ -13,7 +13,7 @@
   "dependencies": {
     "@capacitor/android": "^8.1.0",
     "@capacitor/app": "^8.0.1",
-    "@capacitor/cli": "^8.1.0",
+    "@capacitor/cli": "^8.4.2",
     "@capacitor/core": "^8.1.0",
     "@capacitor/haptics": "^8.0.1",
     "@capacitor/ios": "^8.1.0",
@@ -102,8 +102,10 @@
     "vite-plugin-pwa": "^1.2.0",
     "zod": "^3.23.8"
   },
+  "overrides": {
+    "tar": "^7.5.3"
+  },
   "devDependencies": {
-    "@capacitor/assets": "^3.0.5",
     "@eslint/js": "^9.9.0",
     "@tailwindcss/typography": "^0.5.15",
     "@types/node": "^22.5.5",
