@@ -11,7 +11,12 @@ import {
   RefreshCw,
   Download,
   Calendar,
-  BarChart3
+  BarChart3,
+  Clock,
+  UserPlus,
+  Repeat,
+  Timer,
+  Layers
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays, subHours, startOfDay } from 'date-fns';
@@ -27,6 +32,10 @@ import TopContentTable from './analytics/TopContentTable';
 import DeviceBrowserStats from './analytics/DeviceBrowserStats';
 import RealTimeVisitors from './analytics/RealTimeVisitors';
 import WeeklyActivityChart from './analytics/WeeklyActivityChart';
+import HourlyHeatmap from './analytics/HourlyHeatmap';
+import TopPagesTable from './analytics/TopPagesTable';
+import TopReferrersTable from './analytics/TopReferrersTable';
+import EngagementMetrics from './analytics/EngagementMetrics';
 
 interface AnalyticsData {
   totalPageViews: number;
@@ -50,6 +59,17 @@ interface AnalyticsData {
   // New fields for dynamic article counts
   articlesInPeriod: number;
   totalArticlesPublished: number;
+  // Enrichissement
+  pagesPerSession: number;
+  avgSessionDurationSec: number;
+  newVisitors: number;
+  returningVisitors: number;
+  loggedInVisitors: number;
+  hourlyMatrix: number[][];
+  topPages: Array<{ path: string; views: number; visitors: number; sessions: number }>;
+  topReferrers: Array<{ source: string; visits: number; visitors: number }>;
+  entryPages: Array<{ path: string; count: number }>;
+  exitPages: Array<{ path: string; count: number }>;
 }
 
 const AnalyticsDashboard = () => {
@@ -78,6 +98,16 @@ const AnalyticsDashboard = () => {
     activeVisitors: 0,
     articlesInPeriod: 0,
     totalArticlesPublished: 0,
+    pagesPerSession: 0,
+    avgSessionDurationSec: 0,
+    newVisitors: 0,
+    returningVisitors: 0,
+    loggedInVisitors: 0,
+    hourlyMatrix: Array.from({ length: 7 }, () => Array(24).fill(0)),
+    topPages: [],
+    topReferrers: [],
+    entryPages: [],
+    exitPages: [],
   });
 
   const getPeriodDates = () => {
@@ -162,6 +192,101 @@ const AnalyticsDashboard = () => {
       });
       const singlePageSessions = Object.values(sessionPageCounts).filter(count => count === 1).length;
       const bounceRate = currentSessions > 0 ? (singlePageSessions / currentSessions) * 100 : 0;
+
+      // Pages per session
+      const pagesPerSession = currentSessions > 0 ? totalPageViews / currentSessions : 0;
+
+      // Sessions grouped: compute duration and entry/exit pages
+      const sessionEvents: Record<string, Array<{ path: string; ts: number }>> = {};
+      pageViews.forEach(pv => {
+        if (!pv.session_id) return;
+        (sessionEvents[pv.session_id] ||= []).push({
+          path: pv.page_path || '/',
+          ts: new Date(pv.created_at).getTime(),
+        });
+      });
+      let totalDurationSec = 0;
+      let durationSessions = 0;
+      const entryCounts: Record<string, number> = {};
+      const exitCounts: Record<string, number> = {};
+      Object.values(sessionEvents).forEach(events => {
+        events.sort((a, b) => a.ts - b.ts);
+        entryCounts[events[0].path] = (entryCounts[events[0].path] || 0) + 1;
+        exitCounts[events[events.length - 1].path] =
+          (exitCounts[events[events.length - 1].path] || 0) + 1;
+        if (events.length > 1) {
+          totalDurationSec += (events[events.length - 1].ts - events[0].ts) / 1000;
+          durationSessions++;
+        }
+      });
+      const avgSessionDurationSec = durationSessions > 0 ? totalDurationSec / durationSessions : 0;
+      const entryPages = Object.entries(entryCounts)
+        .map(([path, count]) => ({ path, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+      const exitPages = Object.entries(exitCounts)
+        .map(([path, count]) => ({ path, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+
+      // Nouveaux vs Retours: visiteurs déjà vus avant la période
+      const currentVisitorIds = Array.from(
+        new Set(pageViews.map(pv => pv.visitor_id).filter(Boolean) as string[])
+      );
+      let returningVisitors = 0;
+      if (currentVisitorIds.length > 0) {
+        const { data: priorSeen } = await supabase
+          .from('page_views')
+          .select('visitor_id')
+          .in('visitor_id', currentVisitorIds)
+          .lt('created_at', periodStart.toISOString())
+          .limit(10000);
+        returningVisitors = new Set((priorSeen || []).map(r => r.visitor_id)).size;
+      }
+      const newVisitors = Math.max(0, uniqueVisitors - returningVisitors);
+      const loggedInVisitors = new Set(
+        pageViews.filter(pv => pv.user_id).map(pv => pv.user_id)
+      ).size;
+
+      // Heatmap 7 jours × 24h (lun=0 .. dim=6)
+      const hourlyMatrix: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
+      pageViews.forEach(pv => {
+        const d = new Date(pv.created_at);
+        const day = (d.getDay() + 6) % 7; // Monday=0
+        hourlyMatrix[day][d.getHours()]++;
+      });
+
+      // Top pages (toutes)
+      const pageAgg: Record<string, { views: number; visitors: Set<string>; sessions: Set<string> }> = {};
+      pageViews.forEach(pv => {
+        const key = pv.page_path || '/';
+        if (!pageAgg[key]) pageAgg[key] = { views: 0, visitors: new Set(), sessions: new Set() };
+        pageAgg[key].views++;
+        if (pv.visitor_id) pageAgg[key].visitors.add(pv.visitor_id);
+        if (pv.session_id) pageAgg[key].sessions.add(pv.session_id);
+      });
+      const topPages = Object.entries(pageAgg)
+        .map(([path, v]) => ({ path, views: v.views, visitors: v.visitors.size, sessions: v.sessions.size }))
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 15);
+
+      // Top référents (domaines)
+      const refAgg: Record<string, { visits: number; visitors: Set<string> }> = {};
+      pageViews.forEach(pv => {
+        if (!pv.referrer) return;
+        let host = pv.referrer;
+        try {
+          host = new URL(pv.referrer).hostname.replace(/^www\./, '');
+        } catch { /* keep raw */ }
+        if (!host || host.includes('hala-madrid-tv') || host.includes('localhost')) return;
+        if (!refAgg[host]) refAgg[host] = { visits: 0, visitors: new Set() };
+        refAgg[host].visits++;
+        if (pv.visitor_id) refAgg[host].visitors.add(pv.visitor_id);
+      });
+      const topReferrers = Object.entries(refAgg)
+        .map(([source, v]) => ({ source, visits: v.visits, visitors: v.visitors.size }))
+        .sort((a, b) => b.visits - a.visits)
+        .slice(0, 15);
 
       // Device stats with percentages
       const deviceCounts: Record<string, number> = {};
@@ -404,7 +529,7 @@ const AnalyticsDashboard = () => {
         previousVisitors,
         totalClicks: currentSessions,
         previousClicks: previousSessions,
-        avgSessionDuration: 0,
+        avgSessionDuration: avgSessionDurationSec,
         previousSessionDuration: 0,
         bounceRate,
         topArticles,
@@ -418,6 +543,16 @@ const AnalyticsDashboard = () => {
         activeVisitors,
         articlesInPeriod: articlesInPeriod || 0,
         totalArticlesPublished: totalArticlesPublished || 0,
+        pagesPerSession,
+        avgSessionDurationSec,
+        newVisitors,
+        returningVisitors,
+        loggedInVisitors,
+        hourlyMatrix,
+        topPages,
+        topReferrers,
+        entryPages,
+        exitPages,
       });
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -434,8 +569,48 @@ const AnalyticsDashboard = () => {
   };
 
   const handleExport = () => {
-    toast.success('Export des données en cours...');
-    // TODO: Implement CSV export
+    const lines: string[] = [];
+    const push = (title: string, rows: (string | number)[][]) => {
+      lines.push(`# ${title}`);
+      rows.forEach(r => lines.push(r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')));
+      lines.push('');
+    };
+    push('KPIs', [
+      ['Métrique', 'Valeur'],
+      ['Pages vues', data.totalPageViews],
+      ['Visiteurs uniques', data.uniqueVisitors],
+      ['Nouveaux visiteurs', data.newVisitors],
+      ['Visiteurs récurrents', data.returningVisitors],
+      ['Visiteurs connectés', data.loggedInVisitors],
+      ['Sessions', data.totalClicks],
+      ['Pages / session', data.pagesPerSession.toFixed(2)],
+      ['Durée moyenne session (s)', data.avgSessionDurationSec.toFixed(1)],
+      ['Taux de rebond (%)', data.bounceRate.toFixed(2)],
+    ]);
+    push('Top pages', [
+      ['Page', 'Vues', 'Visiteurs', 'Sessions'],
+      ...data.topPages.map(p => [p.path, p.views, p.visitors, p.sessions]),
+    ]);
+    push('Referrers', [
+      ['Source', 'Visites', 'Visiteurs'],
+      ...data.topReferrers.map(r => [r.source, r.visits, r.visitors]),
+    ]);
+    push('Pays', [
+      ['Pays', 'Visiteurs', '%'],
+      ...data.countryStats.map(c => [c.country, c.visitors, c.percentage.toFixed(1)]),
+    ]);
+    push('Sources de trafic', [
+      ['Source', 'Visites', '%'],
+      ...data.trafficSources.map(s => [s.name, s.value, s.percentage.toFixed(1)]),
+    ]);
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `analytics-${period}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Export CSV téléchargé');
   };
 
   if (loading) {
@@ -499,10 +674,11 @@ const AnalyticsDashboard = () => {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-          <TabsList className="grid w-full min-w-max grid-cols-4 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full min-w-max grid-cols-5 lg:w-auto lg:inline-grid">
             <TabsTrigger value="overview" className="text-xs sm:text-sm whitespace-nowrap">Vue d'ensemble</TabsTrigger>
             <TabsTrigger value="audience" className="text-xs sm:text-sm whitespace-nowrap">Audience</TabsTrigger>
             <TabsTrigger value="content" className="text-xs sm:text-sm whitespace-nowrap">Contenu</TabsTrigger>
+            <TabsTrigger value="engagement" className="text-xs sm:text-sm whitespace-nowrap">Engagement</TabsTrigger>
             <TabsTrigger value="realtime" className="text-xs sm:text-sm whitespace-nowrap">Temps réel</TabsTrigger>
           </TabsList>
         </div>
@@ -564,6 +740,8 @@ const AnalyticsDashboard = () => {
             <TrafficSourcesChart data={data.trafficSources} />
             <GeographyMap data={data.countryStats} totalVisitors={data.uniqueVisitors} />
           </div>
+
+          <HourlyHeatmap matrix={data.hourlyMatrix} />
         </TabsContent>
 
         {/* Audience Tab */}
@@ -608,6 +786,37 @@ const AnalyticsDashboard = () => {
           />
 
           <GeographyMap data={data.countryStats} totalVisitors={data.uniqueVisitors} />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <AnalyticsStatCard
+              title="Nouveaux visiteurs"
+              value={data.newVisitors}
+              icon={<UserPlus className="h-5 w-5" />}
+              iconBgColor="bg-blue-500/10"
+              iconColor="text-blue-500"
+            />
+            <AnalyticsStatCard
+              title="Visiteurs récurrents"
+              value={data.returningVisitors}
+              icon={<Repeat className="h-5 w-5" />}
+              iconBgColor="bg-emerald-500/10"
+              iconColor="text-emerald-500"
+            />
+            <AnalyticsStatCard
+              title="Visiteurs connectés"
+              value={data.loggedInVisitors}
+              icon={<Users className="h-5 w-5" />}
+              iconBgColor="bg-purple-500/10"
+              iconColor="text-purple-500"
+            />
+            <AnalyticsStatCard
+              title="Anonymes"
+              value={Math.max(0, data.uniqueVisitors - data.loggedInVisitors)}
+              icon={<Users className="h-5 w-5" />}
+              iconBgColor="bg-amber-500/10"
+              iconColor="text-amber-500"
+            />
+          </div>
         </TabsContent>
 
         {/* Content Tab */}
@@ -654,6 +863,54 @@ const AnalyticsDashboard = () => {
             }))} 
             title="Articles Les Plus Lus (période)"
           />
+
+          <TopPagesTable pages={data.topPages} />
+        </TabsContent>
+
+        {/* Engagement Tab */}
+        <TabsContent value="engagement" className="space-y-6 mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <AnalyticsStatCard
+              title="Pages / session"
+              value={data.pagesPerSession.toFixed(2)}
+              icon={<Layers className="h-5 w-5" />}
+              iconBgColor="bg-blue-500/10"
+              iconColor="text-blue-500"
+            />
+            <AnalyticsStatCard
+              title="Durée moy. session"
+              value={
+                data.avgSessionDurationSec >= 60
+                  ? `${Math.floor(data.avgSessionDurationSec / 60)}m ${Math.round(data.avgSessionDurationSec % 60)}s`
+                  : `${Math.round(data.avgSessionDurationSec)}s`
+              }
+              icon={<Timer className="h-5 w-5" />}
+              iconBgColor="bg-emerald-500/10"
+              iconColor="text-emerald-500"
+            />
+            <AnalyticsStatCard
+              title="Taux de rebond"
+              value={`${data.bounceRate.toFixed(1)}%`}
+              icon={<FileText className="h-5 w-5" />}
+              iconBgColor="bg-purple-500/10"
+              iconColor="text-purple-500"
+            />
+            <AnalyticsStatCard
+              title="Sessions"
+              value={data.totalClicks}
+              icon={<MousePointerClick className="h-5 w-5" />}
+              trend={calculateTrend(data.totalClicks, data.previousClicks)}
+              previousValue={data.previousClicks}
+              iconBgColor="bg-amber-500/10"
+              iconColor="text-amber-500"
+            />
+          </div>
+
+          <EngagementMetrics entryPages={data.entryPages} exitPages={data.exitPages} />
+
+          <TopReferrersTable referrers={data.topReferrers} />
+
+          <HourlyHeatmap matrix={data.hourlyMatrix} />
         </TabsContent>
 
         {/* Real-time Tab */}
