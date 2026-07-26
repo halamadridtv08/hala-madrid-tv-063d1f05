@@ -3,6 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Match } from "@/types/Match";
 import { toast } from "sonner";
 
+const MATCHES_CHANNEL_LEGACY_TOPIC = "realtime:matches-changes";
+
+const createMatchesChannelName = () => {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return `matches-changes:${crypto.randomUUID()}`;
+  }
+
+  return `matches-changes:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+};
+
 export function useMatches() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,44 +41,64 @@ export function useMatches() {
   };
 
   useEffect(() => {
+    let isActive = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     // Chargement initial
     fetchMatches();
 
-    // Configuration de la synchronisation temps réel
-    const channel = supabase
-      .channel(`matches-changes-${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'matches'
-        },
-        (payload) => {
-          console.log('Changement détecté dans les matchs:', payload);
-          
-          if (payload.eventType === 'INSERT') {
-            setMatches(prev => [...prev, payload.new as Match]);
-            toast.success('Nouveau match ajouté');
-          } else if (payload.eventType === 'UPDATE') {
-            setMatches(prev => 
-              prev.map(match => 
-                match.id === payload.new.id ? payload.new as Match : match
-              )
-            );
-            toast.info('Match mis à jour');
-          } else if (payload.eventType === 'DELETE') {
-            setMatches(prev => 
-              prev.filter(match => match.id !== payload.old.id)
-            );
-            toast.info('Match supprimé');
+    const subscribeToMatches = async () => {
+      const legacyChannel = supabase
+        .getChannels()
+        .find((existingChannel) => existingChannel.topic === MATCHES_CHANNEL_LEGACY_TOPIC);
+
+      if (legacyChannel) {
+        await supabase.removeChannel(legacyChannel);
+      }
+
+      if (!isActive) return;
+
+      // Configuration de la synchronisation temps réel
+      channel = supabase
+        .channel(createMatchesChannelName())
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'matches'
+          },
+          (payload) => {
+            console.log('Changement détecté dans les matchs:', payload);
+            
+            if (payload.eventType === 'INSERT') {
+              setMatches(prev => [...prev, payload.new as Match]);
+              toast.success('Nouveau match ajouté');
+            } else if (payload.eventType === 'UPDATE') {
+              setMatches(prev => 
+                prev.map(match => 
+                  match.id === payload.new.id ? payload.new as Match : match
+                )
+              );
+              toast.info('Match mis à jour');
+            } else if (payload.eventType === 'DELETE') {
+              setMatches(prev => 
+                prev.filter(match => match.id !== payload.old.id)
+              );
+              toast.info('Match supprimé');
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+    };
+
+    void subscribeToMatches();
 
     return () => {
-      supabase.removeChannel(channel);
+      isActive = false;
+      if (channel) {
+        void supabase.removeChannel(channel);
+      }
     };
   }, []);
 
