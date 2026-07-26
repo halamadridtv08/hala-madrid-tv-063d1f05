@@ -41,7 +41,7 @@ export function useSiteVisibility() {
   // Subscribe to real-time changes
   useEffect(() => {
     const channel = supabase
-      .channel('site-visibility-changes')
+      .channel(`site-visibility-changes-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
