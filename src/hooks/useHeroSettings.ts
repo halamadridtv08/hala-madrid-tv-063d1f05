@@ -66,7 +66,7 @@ export function useHeroSettings() {
 
     // Subscribe to changes
     const channel = supabase
-      .channel('hero-settings-changes')
+      .channel(`hero-settings-changes-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {

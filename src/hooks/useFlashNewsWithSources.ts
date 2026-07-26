@@ -16,7 +16,7 @@ export const useFlashNewsWithSources = () => {
     fetchFlashNews();
 
     const channel = supabase
-      .channel('flash-news-changes')
+      .channel(`flash-news-changes-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {

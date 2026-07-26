@@ -10,7 +10,7 @@ export const useFeaturedYouTubeVideo = () => {
     fetchFeaturedVideo();
 
     const channel = supabase
-      .channel('featured-youtube-video-changes')
+      .channel(`featured-youtube-video-changes-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {

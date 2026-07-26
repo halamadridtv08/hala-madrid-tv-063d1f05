@@ -103,7 +103,7 @@ export function useMatchNotifications(matchId?: string) {
 export function useLiveMatchNotifications() {
   useEffect(() => {
     const channel = supabase
-      .channel('live-matches')
+      .channel(`live-matches-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {

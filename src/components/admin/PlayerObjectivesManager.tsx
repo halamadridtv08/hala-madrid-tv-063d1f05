@@ -49,7 +49,7 @@ export const PlayerObjectivesManager = () => {
 
     // Real-time updates
     const channel = supabase
-      .channel('player_objectives_changes')
+      .channel(`player_objectives_changes-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'player_objectives' },
         () => loadObjectives()

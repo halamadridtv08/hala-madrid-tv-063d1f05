@@ -35,7 +35,7 @@ export function useSocialLinks() {
     fetchLinks();
 
     const channel = supabase
-      .channel('social-links-changes')
+      .channel(`social-links-changes-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'social_links' },

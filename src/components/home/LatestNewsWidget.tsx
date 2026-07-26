@@ -55,7 +55,7 @@ export const LatestNewsWidget = () => {
 
     // Subscribe to new articles
     const channel = supabase
-      .channel('articles-realtime')
+      .channel(`articles-realtime-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {

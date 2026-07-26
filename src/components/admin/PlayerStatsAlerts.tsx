@@ -47,7 +47,7 @@ export const PlayerStatsAlerts = () => {
     
     // Set up real-time subscription for alerts
     const alertsChannel = supabase
-      .channel('player_alerts_changes')
+      .channel(`player_alerts_changes-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'player_alerts' },
         () => loadAlerts()

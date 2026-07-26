@@ -50,7 +50,7 @@ export function useAnnouncementBar() {
   // Subscribe to real-time changes
   useEffect(() => {
     const channel = supabase
-      .channel('announcement-bar-changes')
+      .channel(`announcement-bar-changes-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
