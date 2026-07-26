@@ -104,9 +104,8 @@
   },
   "overrides": {
     "tar": "^7.5.3",
-    "@capacitor/assets": {
-      "@capacitor/cli": "$@capacitor/cli"
-    }
+    "@capacitor/assets>@capacitor/cli>tar": "^7.5.3",
+    "@capacitor/assets>tar": "^7.5.3"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
