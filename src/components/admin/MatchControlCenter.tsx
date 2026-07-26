@@ -281,7 +281,7 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
     
     await supabase
       .from('matches')
-      .update({ [scoreField]: currentScore + 1 })
+      .update({ [scoreField]: currentScore + 1 } as any)
       .eq('id', selectedMatchId);
 
     // Add live blog entry
