@@ -39,7 +39,7 @@ export const useActiveIntegrations = () => {
 
     // Subscribe to changes
     const channel = supabase
-      .channel('integrations-changes')
+      .channel(`integrations-changes-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'integrations' }, () => {
         fetchActiveIntegrations();
       })

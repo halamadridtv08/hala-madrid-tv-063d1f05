@@ -45,7 +45,7 @@ export function useLiveMatchBarSettings() {
   // Real-time subscription
   useEffect(() => {
     const channel = supabase
-      .channel('live_match_bar_settings_changes')
+      .channel(`live_match_bar_settings_changes-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {

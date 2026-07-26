@@ -28,7 +28,7 @@ export const AdminNotifications = () => {
     
     // Subscribe to real-time updates
     const channel = supabase
-      .channel('admin-notifications')
+      .channel(`admin-notifications-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {

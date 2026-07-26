@@ -79,7 +79,7 @@ export function useExploreCards() {
     fetchCards();
 
     const channel = supabase
-      .channel('explore-cards-changes')
+      .channel(`explore-cards-changes-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'explore_cards' },

@@ -10,7 +10,7 @@ export const useYouTubeVideos = () => {
     fetchVideos();
 
     const channel = supabase
-      .channel('youtube-videos-changes')
+      .channel(`youtube-videos-changes-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {

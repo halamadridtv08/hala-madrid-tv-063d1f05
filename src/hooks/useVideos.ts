@@ -31,7 +31,7 @@ export function useVideos() {
 
     // Subscribe to realtime changes
     const channel = supabase
-      .channel('videos-changes')
+      .channel(`videos-changes-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {

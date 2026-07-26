@@ -58,7 +58,7 @@ export function useFooterBackground() {
     fetchSettings();
 
     const channel = supabase
-      .channel("footer-background-changes")
+      .channel(`footer-background-changes-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         {

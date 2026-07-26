@@ -192,7 +192,7 @@ export function useRealStats() {
 
     // Configuration de la synchronisation temps réel
     const channel = supabase
-      .channel('stats-changes')
+      .channel(`stats-changes-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {

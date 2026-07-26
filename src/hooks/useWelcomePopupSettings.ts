@@ -77,7 +77,7 @@ export function useWelcomePopupSettings() {
     fetchSettings();
 
     const channel = supabase
-      .channel('welcome-popup-changes')
+      .channel(`welcome-popup-changes-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'welcome_popup_settings' },
