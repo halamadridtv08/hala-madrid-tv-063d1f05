@@ -440,7 +440,7 @@ export const SyncPlayerStatsFromMatches = () => {
                 if (Object.keys(updateData).length > 1) { // More than just updated_at
                   await supabase
                     .from('player_stats')
-                    .update(updateData)
+                    .update(updateData as any)
                     .eq('id', existingStats.id);
                   statsUpdated++;
                 }
@@ -584,7 +584,7 @@ export const SyncPlayerStatsFromMatches = () => {
             if (Object.keys(updateData).length > 1) {
               await supabase
                 .from('player_stats')
-                .update(updateData)
+                .update(updateData as any)
                 .eq('id', existingStats.id);
               statsUpdated++;
             }
