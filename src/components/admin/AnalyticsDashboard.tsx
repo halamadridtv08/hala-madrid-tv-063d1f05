@@ -674,10 +674,11 @@ const AnalyticsDashboard = () => {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-          <TabsList className="grid w-full min-w-max grid-cols-4 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full min-w-max grid-cols-5 lg:w-auto lg:inline-grid">
             <TabsTrigger value="overview" className="text-xs sm:text-sm whitespace-nowrap">Vue d'ensemble</TabsTrigger>
             <TabsTrigger value="audience" className="text-xs sm:text-sm whitespace-nowrap">Audience</TabsTrigger>
             <TabsTrigger value="content" className="text-xs sm:text-sm whitespace-nowrap">Contenu</TabsTrigger>
+            <TabsTrigger value="engagement" className="text-xs sm:text-sm whitespace-nowrap">Engagement</TabsTrigger>
             <TabsTrigger value="realtime" className="text-xs sm:text-sm whitespace-nowrap">Temps réel</TabsTrigger>
           </TabsList>
         </div>
@@ -739,6 +740,8 @@ const AnalyticsDashboard = () => {
             <TrafficSourcesChart data={data.trafficSources} />
             <GeographyMap data={data.countryStats} totalVisitors={data.uniqueVisitors} />
           </div>
+
+          <HourlyHeatmap matrix={data.hourlyMatrix} />
         </TabsContent>
 
         {/* Audience Tab */}
@@ -783,6 +786,37 @@ const AnalyticsDashboard = () => {
           />
 
           <GeographyMap data={data.countryStats} totalVisitors={data.uniqueVisitors} />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <AnalyticsStatCard
+              title="Nouveaux visiteurs"
+              value={data.newVisitors}
+              icon={<UserPlus className="h-5 w-5" />}
+              iconBgColor="bg-blue-500/10"
+              iconColor="text-blue-500"
+            />
+            <AnalyticsStatCard
+              title="Visiteurs récurrents"
+              value={data.returningVisitors}
+              icon={<Repeat className="h-5 w-5" />}
+              iconBgColor="bg-emerald-500/10"
+              iconColor="text-emerald-500"
+            />
+            <AnalyticsStatCard
+              title="Visiteurs connectés"
+              value={data.loggedInVisitors}
+              icon={<Users className="h-5 w-5" />}
+              iconBgColor="bg-purple-500/10"
+              iconColor="text-purple-500"
+            />
+            <AnalyticsStatCard
+              title="Anonymes"
+              value={Math.max(0, data.uniqueVisitors - data.loggedInVisitors)}
+              icon={<Users className="h-5 w-5" />}
+              iconBgColor="bg-amber-500/10"
+              iconColor="text-amber-500"
+            />
+          </div>
         </TabsContent>
 
         {/* Content Tab */}
@@ -829,6 +863,54 @@ const AnalyticsDashboard = () => {
             }))} 
             title="Articles Les Plus Lus (période)"
           />
+
+          <TopPagesTable pages={data.topPages} />
+        </TabsContent>
+
+        {/* Engagement Tab */}
+        <TabsContent value="engagement" className="space-y-6 mt-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <AnalyticsStatCard
+              title="Pages / session"
+              value={data.pagesPerSession.toFixed(2)}
+              icon={<Layers className="h-5 w-5" />}
+              iconBgColor="bg-blue-500/10"
+              iconColor="text-blue-500"
+            />
+            <AnalyticsStatCard
+              title="Durée moy. session"
+              value={
+                data.avgSessionDurationSec >= 60
+                  ? `${Math.floor(data.avgSessionDurationSec / 60)}m ${Math.round(data.avgSessionDurationSec % 60)}s`
+                  : `${Math.round(data.avgSessionDurationSec)}s`
+              }
+              icon={<Timer className="h-5 w-5" />}
+              iconBgColor="bg-emerald-500/10"
+              iconColor="text-emerald-500"
+            />
+            <AnalyticsStatCard
+              title="Taux de rebond"
+              value={`${data.bounceRate.toFixed(1)}%`}
+              icon={<FileText className="h-5 w-5" />}
+              iconBgColor="bg-purple-500/10"
+              iconColor="text-purple-500"
+            />
+            <AnalyticsStatCard
+              title="Sessions"
+              value={data.totalClicks}
+              icon={<MousePointerClick className="h-5 w-5" />}
+              trend={calculateTrend(data.totalClicks, data.previousClicks)}
+              previousValue={data.previousClicks}
+              iconBgColor="bg-amber-500/10"
+              iconColor="text-amber-500"
+            />
+          </div>
+
+          <EngagementMetrics entryPages={data.entryPages} exitPages={data.exitPages} />
+
+          <TopReferrersTable referrers={data.topReferrers} />
+
+          <HourlyHeatmap matrix={data.hourlyMatrix} />
         </TabsContent>
 
         {/* Real-time Tab */}
