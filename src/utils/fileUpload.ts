@@ -2,39 +2,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-// Création du bucket s'il n'existe pas
-export const ensureBucketExists = async (bucketName: string) => {
-  try {
-    const { data: buckets } = await supabase.storage.listBuckets();
-    
-    // Si le bucket existe déjà, on retourne success
-    if (buckets?.find(bucket => bucket.name === bucketName)) {
-      return { success: true };
-    }
-    
-    // Sinon, on essaie de le créer
-    const { error } = await supabase.storage.createBucket(bucketName, {
-      public: true,
-      fileSizeLimit: 50 * 1024 * 1024, // 50MB
-    });
-    
-    // Si erreur RLS, le bucket existe probablement déjà - on continue
-    if (error && error.message?.includes('row-level security')) {
-      console.log(`Bucket "${bucketName}" existe déjà (erreur RLS ignorée).`);
-      return { success: true };
-    }
-    
-    if (error) throw error;
-    console.log(`Bucket "${bucketName}" créé avec succès.`);
-    return { success: true };
-  } catch (error: any) {
-    // Si c'est une erreur RLS, on considère que c'est OK
-    if (error.message?.includes('row-level security')) {
-      return { success: true };
-    }
-    console.error(`Erreur lors de la création du bucket "${bucketName}":`, error);
-    return { error: error.message };
-  }
+// Kept for backwards compatibility - R2 buckets are managed externally.
+export const ensureBucketExists = async (_bucketName: string) => {
+  return { success: true };
 };
 
 // Génère un nom de fichier unique
@@ -51,44 +21,58 @@ export const generateUniqueFileName = (file: File) => {
   return fileName;
 };
 
-// Fonction pour uploader un fichier à Supabase Storage
+// Upload a file to Cloudflare R2 via a Supabase Edge Function that mints a presigned URL.
+// The `bucketName` argument is kept for backwards compatibility and is folded into the
+// folder path so existing callers keep their logical namespacing.
 export const uploadFile = async (file: File, bucketName: string = 'media', folderPath: string = '') => {
   try {
-    // Création du bucket s'il n'existe pas
-    const bucketResult = await ensureBucketExists(bucketName);
-    if (bucketResult.error) {
-      return { error: bucketResult.error };
-    }
-    
     const fileName = generateUniqueFileName(file);
-    let filePath = fileName;
-    
-    if (folderPath) {
-      filePath = `${folderPath}/${fileName}`;
+    const folderParts = [bucketName, folderPath].filter(Boolean).join('/');
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) {
+      return { error: "Vous devez être connecté pour uploader un fichier." };
     }
-    
-    // Upload du fichier
-    const { error: uploadError, data } = await supabase.storage
-      .from(bucketName)
-      .upload(filePath, file);
-      
-    if (uploadError) {
-      console.error('Erreur lors de l\'upload:', uploadError);
-      return { error: uploadError.message };
+
+    const { data, error } = await supabase.functions.invoke('upload-to-r2', {
+      body: {
+        filename: fileName,
+        contentType: file.type || 'application/octet-stream',
+        folder: folderParts,
+      },
+    });
+
+    if (error) {
+      console.error("Erreur lors de la génération de l'URL présignée:", error);
+      return { error: error.message };
     }
-    
-    // Récupération de l'URL publique
-    const { data: urlData } = supabase.storage
-      .from(bucketName)
-      .getPublicUrl(filePath);
-    
-    if (!urlData) {
-      return { error: "Impossible d'obtenir l'URL du fichier" };
+
+    const { uploadUrl, publicUrl, key } = (data ?? {}) as {
+      uploadUrl?: string;
+      publicUrl?: string;
+      key?: string;
+    };
+
+    if (!uploadUrl || !publicUrl) {
+      return { error: "Réponse invalide du service d'upload." };
     }
-    
-    return { url: urlData.publicUrl, path: filePath, fileName, fileType: getFileType(file) };
+
+    const putRes = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      body: file,
+    });
+
+    if (!putRes.ok) {
+      const text = await putRes.text().catch(() => '');
+      console.error('Erreur upload R2:', putRes.status, text);
+      return { error: `Upload R2 échoué (${putRes.status})` };
+    }
+
+    return { url: publicUrl, path: key ?? fileName, fileName, fileType: getFileType(file) };
   } catch (error: any) {
-    console.error('Erreur lors de l\'upload:', error);
+    console.error("Erreur lors de l'upload:", error);
     return { error: error.message };
   }
 };
