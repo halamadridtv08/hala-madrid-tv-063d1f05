@@ -31,6 +31,29 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Only admins or moderators may mint presigned upload URLs
+    const userId = (claimsData.claims as any).sub as string | undefined
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const adminClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
+    const [{ data: isAdmin }, { data: isMod }] = await Promise.all([
+      adminClient.rpc('has_role', { _user_id: userId, _role: 'admin' }),
+      adminClient.rpc('has_role', { _user_id: userId, _role: 'moderator' }),
+    ])
+    if (!isAdmin && !isMod) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     const body = await req.json().catch(() => ({}))
     const { filename, contentType, folder } = body as {
       filename?: string

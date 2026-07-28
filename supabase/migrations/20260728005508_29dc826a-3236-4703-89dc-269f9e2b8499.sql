@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Only admins can view full leaderboard with emails" ON public.prediction_leaderboard;
