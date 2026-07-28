@@ -41,6 +41,20 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // Ownership check: order must belong to the authenticated user
+    const { data: existingOrder, error: orderErr } = await supabaseAdmin
+      .from("shop_orders")
+      .select("id, user_id")
+      .eq("id", orderId)
+      .maybeSingle();
+    if (orderErr) throw new Error("Impossible de vérifier la commande");
+    if (!existingOrder || existingOrder.user_id !== user.id) {
+      return new Response(JSON.stringify({ error: "Commande introuvable" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+      });
+    }
+
     type ClientItem = { productId?: string; product_id?: string; quantity: number };
     const normalized: { productId: string; quantity: number }[] = items.map((i: ClientItem) => {
       const productId = i.productId || i.product_id;
@@ -148,7 +162,8 @@ serve(async (req) => {
         payment_intent_id: session.id,
         payment_status: "processing",
       })
-      .eq("id", orderId);
+      .eq("id", orderId)
+      .eq("user_id", user.id);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
