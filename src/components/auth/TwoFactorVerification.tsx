@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield, Key } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import * as OTPAuth from "otpauth";
 
 interface TwoFactorVerificationProps {
   email: string;
@@ -22,119 +21,59 @@ export function TwoFactorVerification({ email, onVerificationSuccess, onCancel }
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const verifyTOTP = async () => {
-    if (totpCode.length !== 6) return;
-
+  // La vérification est faite côté serveur : le secret TOTP et les codes de
+  // récupération ne sont jamais exposés au navigateur.
+  const verifyCode = async (code: string, type: "totp" | "backup") => {
     setLoading(true);
     try {
-      // Récupérer le secret TOTP déchiffré via la fonction SQL
-      const { data: userSession } = await supabase.auth.getSession();
-      if (!userSession.session?.user) throw new Error("Utilisateur non authentifié");
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) throw new Error("Utilisateur non authentifié");
 
-      const { data: decryptedSecret, error: totpError } = await supabase.rpc('get_totp_secret', {
-        p_user_id: userSession.session.user.id
+      const { data, error } = await supabase.functions.invoke("verify-2fa", {
+        body: { code, type },
       });
 
-      if (totpError || !decryptedSecret) {
-        throw new Error("Configuration 2FA non trouvée");
-      }
+      if (error) throw new Error("Impossible de vérifier le code");
 
-      // Vérifier le code TOTP
-      const totp = new OTPAuth.TOTP({
-        issuer: "Hala Madrid TV",
-        label: email,
-        algorithm: "SHA1",
-        digits: 6,
-        period: 30,
-        secret: decryptedSecret,
-      });
-
-      const isValid = totp.validate({ token: totpCode, window: 1 }) !== null;
-
-      if (isValid) {
+      if (data?.verified) {
         await logLoginAttempt(email, true);
         onVerificationSuccess();
         toast({
           title: "Connexion réussie",
-          description: "Authentification à double facteur validée"
+          description:
+            type === "totp"
+              ? "Authentification à double facteur validée"
+              : "Code de récupération validé",
         });
       } else {
         await logLoginAttempt(email, false);
         toast({
           variant: "destructive",
           title: "Code invalide",
-          description: "Le code TOTP saisi n'est pas valide"
+          description: "Le code saisi n'est pas valide",
         });
       }
     } catch (error: any) {
-      console.error('Error verifying TOTP:', error);
+      console.error("Error verifying 2FA code");
       await logLoginAttempt(email, false);
       toast({
         variant: "destructive",
         title: "Erreur de vérification",
-        description: error.message || "Impossible de vérifier le code"
+        description: error.message || "Impossible de vérifier le code",
       });
     } finally {
       setLoading(false);
     }
   };
 
+  const verifyTOTP = async () => {
+    if (totpCode.length !== 6) return;
+    await verifyCode(totpCode, "totp");
+  };
+
   const verifyBackupCode = async () => {
     if (backupCode.length !== 8) return;
-
-    setLoading(true);
-    try {
-      const { data: userSession } = await supabase.auth.getSession();
-      if (!userSession.session?.user) throw new Error("Utilisateur non authentifié");
-
-      // Récupérer les codes de backup depuis la table sécurisée
-      const { data: totpData, error: totpError } = await supabase
-        .from('secure_totp_secrets')
-        .select('backup_codes')
-        .eq('user_id', userSession.session.user.id)
-        .single();
-
-      if (totpError || !totpData) {
-        throw new Error("Configuration 2FA non trouvée");
-      }
-
-      const backupCodes: string[] = totpData.backup_codes || [];
-      const codeIndex = backupCodes.findIndex((code: string) => code.toUpperCase() === backupCode.toUpperCase());
-
-      if (codeIndex !== -1) {
-        // Supprimer le code utilisé
-        const updatedCodes = backupCodes.filter((_: string, index: number) => index !== codeIndex);
-        
-        await supabase.rpc('save_backup_codes', {
-          p_user_id: userSession.session.user.id,
-          p_codes: updatedCodes
-        });
-
-        await logLoginAttempt(email, true);
-        onVerificationSuccess();
-        toast({
-          title: "Connexion réussie",
-          description: "Code de récupération validé"
-        });
-      } else {
-        await logLoginAttempt(email, false);
-        toast({
-          variant: "destructive",
-          title: "Code invalide",
-          description: "Le code de récupération saisi n'est pas valide"
-        });
-      }
-    } catch (error: any) {
-      console.error('Error verifying backup code:', error);
-      await logLoginAttempt(email, false);
-      toast({
-        variant: "destructive",
-        title: "Erreur de vérification",
-        description: error.message || "Impossible de vérifier le code de récupération"
-      });
-    } finally {
-      setLoading(false);
-    }
+    await verifyCode(backupCode, "backup");
   };
 
   const logLoginAttempt = async (email: string, success: boolean) => {

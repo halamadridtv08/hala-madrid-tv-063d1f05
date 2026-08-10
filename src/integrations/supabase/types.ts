@@ -4014,6 +4014,30 @@ export type Database = {
           },
         ]
       }
+      two_factor_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_favorites: {
         Row: {
           created_at: string | null
@@ -4364,6 +4388,10 @@ export type Database = {
         }[]
       }
       check_player_stats_alerts: { Args: never; Returns: undefined }
+      check_quiz_answer: {
+        Args: { p_answer: string; p_question_id: string }
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           p_action: string
@@ -4451,6 +4479,15 @@ export type Database = {
           integration_key: string
         }[]
       }
+      get_quiz_questions_public: {
+        Args: { p_quiz_id: string }
+        Returns: {
+          answers: string[]
+          display_order: number
+          id: string
+          question: string
+        }[]
+      }
       get_recent_moderator_actions: {
         Args: { p_limit?: number; p_moderator_id?: string }
         Returns: {
@@ -4490,6 +4527,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      has_2fa_enrolled: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -4497,9 +4535,25 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_verified_2fa: { Args: { _user_id: string }; Returns: boolean }
       has_voted_in_poll: {
         Args: { p_poll_id: string; p_user_identifier: string }
         Returns: boolean
+      }
+      internal_consume_backup_code: {
+        Args: { p_code: string; p_user_id: string }
+        Returns: boolean
+      }
+      internal_get_totp_material: {
+        Args: { p_user_id: string }
+        Returns: {
+          backup_codes: string[]
+          secret: string
+        }[]
+      }
+      internal_record_2fa_verification: {
+        Args: { p_ttl_minutes?: number; p_user_id: string }
+        Returns: string
       }
       is_email_domain_blocked: {
         Args: { p_email: string }
