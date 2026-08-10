@@ -73,3 +73,7 @@ verify_jwt = false
 # R2 upload presigner - validates JWT in code
 [functions.upload-to-r2]
 verify_jwt = false
+
+# Server-side 2FA (TOTP / backup code) verification - validates JWT in code
+[functions.verify-2fa]
+verify_jwt = false
