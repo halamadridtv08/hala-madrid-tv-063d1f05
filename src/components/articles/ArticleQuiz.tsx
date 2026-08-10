@@ -4,7 +4,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Brain, Check, X } from "lucide-react";
-import type { ArticleQuiz as ArticleQuizType, QuizQuestion } from "@/types/ArticleEngagement";
+import type { ArticleQuiz as ArticleQuizType } from "@/types/ArticleEngagement";
+
+interface PublicQuizQuestion {
+  id: string;
+  question: string;
+  display_order: number;
+  answers: string[];
+}
 
 interface ArticleQuizProps {
   articleId: string;
@@ -12,12 +19,12 @@ interface ArticleQuizProps {
 
 export const ArticleQuiz = ({ articleId }: ArticleQuizProps) => {
   const [quiz, setQuiz] = useState<ArticleQuizType | null>(null);
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const [questions, setQuestions] = useState<PublicQuizQuestion[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [answerFeedback, setAnswerFeedback] = useState<boolean | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
-  const [shuffledAnswers, setShuffledAnswers] = useState<string[][]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -35,31 +42,38 @@ export const ArticleQuiz = ({ articleId }: ArticleQuizProps) => {
     if (quizData) {
       setQuiz(quizData);
 
-      const { data: questionsData } = await supabase
-        .from("quiz_questions")
-        .select("*")
-        .eq("quiz_id", quizData.id)
-        .order("display_order");
+      // Les bonnes réponses ne sont jamais envoyées au navigateur :
+      // cette fonction renvoie uniquement les propositions mélangées.
+      const { data: questionsData } = await supabase.rpc("get_quiz_questions_public", {
+        p_quiz_id: quizData.id,
+      });
 
       if (questionsData) {
-        setQuestions(questionsData);
-        const shuffled = questionsData.map((q) => {
-          const allAnswers = [q.correct_answer, ...q.wrong_answers];
-          return allAnswers.sort(() => Math.random() - 0.5);
-        });
-        setShuffledAnswers(shuffled);
+        setQuestions(
+          (questionsData as PublicQuizQuestion[]).map((q) => ({
+            ...q,
+            answers: q.answers || [],
+          }))
+        );
       }
     }
   };
 
   const handleAnswer = (answer: string) => {
     setSelectedAnswer(answer);
+    setAnswerFeedback(null);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!selectedAnswer) return;
 
-    const isCorrect = selectedAnswer === questions[currentQuestion].correct_answer;
+    // La validation de la réponse est faite côté serveur.
+    const { data: isCorrectData } = await supabase.rpc("check_quiz_answer", {
+      p_question_id: questions[currentQuestion].id,
+      p_answer: selectedAnswer,
+    });
+    const isCorrect = isCorrectData === true;
+    setAnswerFeedback(isCorrect);
     if (isCorrect) {
       setScore(score + 1);
     }
@@ -67,6 +81,7 @@ export const ArticleQuiz = ({ articleId }: ArticleQuizProps) => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedAnswer(null);
+      setAnswerFeedback(null);
     } else {
       setShowResult(true);
       toast({
@@ -79,6 +94,7 @@ export const ArticleQuiz = ({ articleId }: ArticleQuizProps) => {
   const handleRestart = () => {
     setCurrentQuestion(0);
     setSelectedAnswer(null);
+    setAnswerFeedback(null);
     setShowResult(false);
     setScore(0);
   };
@@ -110,7 +126,7 @@ export const ArticleQuiz = ({ articleId }: ArticleQuizProps) => {
   }
 
   const question = questions[currentQuestion];
-  const currentAnswers = shuffledAnswers[currentQuestion] || [];
+  const currentAnswers = question?.answers || [];
 
   return (
     <Card className="p-6 mt-8">
@@ -134,7 +150,6 @@ export const ArticleQuiz = ({ articleId }: ArticleQuizProps) => {
       <div className="space-y-3 mb-6">
         {currentAnswers.map((answer, idx) => {
           const isSelected = selectedAnswer === answer;
-          const isCorrect = answer === question.correct_answer;
 
           return (
             <button
@@ -148,8 +163,8 @@ export const ArticleQuiz = ({ articleId }: ArticleQuizProps) => {
             >
               <div className="flex items-center justify-between">
                 <span>{answer}</span>
-                {isSelected && isCorrect && <Check className="w-5 h-5 text-green-500" />}
-                {isSelected && !isCorrect && <X className="w-5 h-5 text-destructive" />}
+                {isSelected && answerFeedback === true && <Check className="w-5 h-5 text-green-500" />}
+                {isSelected && answerFeedback === false && <X className="w-5 h-5 text-destructive" />}
               </div>
             </button>
           );
