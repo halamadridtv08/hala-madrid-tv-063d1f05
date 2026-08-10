@@ -4396,6 +4396,27 @@ export type Database = {
           user_name: string
         }[]
       }
+      get_dream_team_by_token: {
+        Args: { p_share_token: string }
+        Returns: {
+          created_at: string
+          formation: string
+          id: string
+          likes_count: number | null
+          players: Json
+          share_token: string | null
+          team_name: string
+          total_budget_used: number | null
+          updated_at: string
+          user_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "dream_teams"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_encryption_key: { Args: never; Returns: string }
       get_login_attempts_with_audit: {
         Args: { p_email?: string; p_limit?: number; p_offset?: number }
@@ -4474,6 +4495,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_voted_in_poll: {
+        Args: { p_poll_id: string; p_user_identifier: string }
         Returns: boolean
       }
       is_email_domain_blocked: {
