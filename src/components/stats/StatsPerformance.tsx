@@ -17,6 +17,7 @@ interface StatsPerformanceProps {
 export const StatsPerformance = ({ teamPerformance }: StatsPerformanceProps) => {
   // Couleurs pour les graphiques
   const COLORS = ["#00529F", "#FEBE10", "#FFFFFF", "#D5D5D5", "#111111"];
+  const totalMatches = (teamPerformance ?? []).reduce((sum, entry) => sum + (entry?.value ?? 0), 0);
 
   return (
     <Card className="transform transition-all hover:shadow-lg">
@@ -27,7 +28,7 @@ export const StatsPerformance = ({ teamPerformance }: StatsPerformanceProps) => 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {teamPerformance && teamPerformance.length > 0 ? (
+        {teamPerformance && teamPerformance.length > 0 && totalMatches > 0 ? (
           <ChartContainer
             config={{
               Victoires: { color: "#00529F" },
