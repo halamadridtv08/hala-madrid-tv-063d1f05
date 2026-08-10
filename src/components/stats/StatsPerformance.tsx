@@ -27,7 +27,7 @@ export const StatsPerformance = ({ teamPerformance }: StatsPerformanceProps) => 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {teamPerformance ? (
+        {teamPerformance && teamPerformance.length > 0 ? (
           <ChartContainer
             config={{
               Victoires: { color: "#00529F" },
@@ -58,7 +58,7 @@ export const StatsPerformance = ({ teamPerformance }: StatsPerformanceProps) => 
           </ChartContainer>
         ) : (
           <div className="flex justify-center items-center h-72">
-            <p className="text-gray-500">Données non disponibles</p>
+            <p className="text-muted-foreground">Aucune donnée disponible pour cette compétition</p>
           </div>
         )}
       </CardContent>

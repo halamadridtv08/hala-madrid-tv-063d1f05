@@ -19,7 +19,7 @@ export const StatsTopScorers = ({ topScorers }: StatsTopScorersProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {topScorers ? (
+        {topScorers && topScorers.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="overflow-x-auto">
               <ChartContainer
@@ -67,7 +67,7 @@ export const StatsTopScorers = ({ topScorers }: StatsTopScorersProps) => {
           </div>
         ) : (
           <div className="flex justify-center items-center h-72">
-            <p className="text-gray-500">Données non disponibles</p>
+            <p className="text-muted-foreground">Aucune donnée disponible pour cette compétition</p>
           </div>
         )}
       </CardContent>

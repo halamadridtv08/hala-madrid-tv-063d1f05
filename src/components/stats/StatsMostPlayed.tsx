@@ -13,7 +13,7 @@ export const StatsMostPlayed = ({ mostPlayed }: StatsMostPlayedProps) => {
         <CardTitle>Plus de Matchs Joués</CardTitle>
       </CardHeader>
       <CardContent>
-        {mostPlayed ? (
+        {mostPlayed && mostPlayed.length > 0 ? (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -43,7 +43,7 @@ export const StatsMostPlayed = ({ mostPlayed }: StatsMostPlayedProps) => {
           </div>
         ) : (
           <div className="flex justify-center items-center h-20">
-            <p className="text-gray-500">Données non disponibles</p>
+            <p className="text-muted-foreground">Aucune donnée disponible pour cette compétition</p>
           </div>
         )}
       </CardContent>
