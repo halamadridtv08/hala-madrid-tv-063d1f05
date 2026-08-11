@@ -419,6 +419,14 @@ export function SeasonResetManager() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <SensitiveActionDialog
+        open={showSecurityCheck}
+        onOpenChange={setShowSecurityCheck}
+        onConfirmed={handleResetSeason}
+        title="Archivage de saison — vérification"
+        description="Action irréversible : confirme ton identité avant d'archiver et réinitialiser la saison."
+      />
     </div>
   );
 }
