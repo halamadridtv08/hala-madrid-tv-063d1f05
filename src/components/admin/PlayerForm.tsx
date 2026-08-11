@@ -66,15 +66,16 @@ export const PlayerForm = ({ player, onSuccess, onCancel }: PlayerFormProps) => 
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="border-0 shadow-none sm:border sm:shadow-sm">
+      <CardHeader className="px-0 sm:px-6">
         <CardTitle>
           {player ? "Modifier le joueur" : "Nouveau joueur"}
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-0 sm:px-6">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2">
             <Label htmlFor="name">Nom</Label>
             <Input
               id="name"
@@ -84,7 +85,7 @@ export const PlayerForm = ({ player, onSuccess, onCancel }: PlayerFormProps) => 
             />
           </div>
           
-          <div>
+          <div className="sm:col-span-2">
             <Label htmlFor="position">Position</Label>
             <Input
               id="position"
@@ -139,6 +140,7 @@ export const PlayerForm = ({ player, onSuccess, onCancel }: PlayerFormProps) => 
               value={formData.weight}
               onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
             />
+          </div>
           </div>
           
           <div>
@@ -201,11 +203,11 @@ export const PlayerForm = ({ player, onSuccess, onCancel }: PlayerFormProps) => 
             </p>
           </div>
           
-          <div className="flex space-x-2">
-            <Button type="submit" disabled={loading}>
+          <div className="flex flex-col-reverse sm:flex-row gap-2">
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? "Enregistrement..." : "Enregistrer"}
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
               Annuler
             </Button>
           </div>
