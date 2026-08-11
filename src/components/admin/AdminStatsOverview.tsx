@@ -13,29 +13,48 @@ import {
   Video,
   Camera,
   Target,
-  Award
+  Award,
+  RefreshCw,
+  AlertTriangle
 } from "lucide-react";
 import { useRealStats } from "@/hooks/useRealStats";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const AdminStatsOverview = () => {
-  const { stats, loading, error } = useRealStats();
+  const { stats, loading, refreshing, error, refetch } = useRealStats();
 
   if (loading) {
     return (
-      <div className="space-y-8">
-        <Skeleton className="h-64 w-full" />
-        <Skeleton className="h-96 w-full" />
-        <Skeleton className="h-64 w-full" />
+      <div className="space-y-6" aria-busy="true">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full rounded-lg" />
+          ))}
+        </div>
+        <Skeleton className="h-40 w-full rounded-lg" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full rounded-lg" />
+          ))}
+        </div>
+        <Skeleton className="h-72 w-full rounded-lg" />
+        <Skeleton className="h-72 w-full rounded-lg" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-8">
-        <p className="text-red-600">Erreur lors du chargement des statistiques</p>
-      </div>
+      <Card>
+        <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
+          <AlertTriangle className="h-8 w-8 text-destructive" />
+          <p className="text-destructive">Erreur lors du chargement des statistiques</p>
+          <Button onClick={refetch} disabled={refreshing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
+            Réessayer
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -48,8 +67,18 @@ export const AdminStatsOverview = () => {
 
   return (
     <div className="space-y-8">
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm text-muted-foreground">
+          Données en temps réel (joueurs, matchs, statistiques)
+        </p>
+        <Button variant="outline" size="sm" onClick={refetch} disabled={refreshing}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
+          Actualiser
+        </Button>
+      </div>
+
       {/* Statistiques générales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 transition-opacity ${refreshing ? "opacity-60" : ""}`}>
         <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
