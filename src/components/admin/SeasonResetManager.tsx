@@ -399,7 +399,7 @@ export function SeasonResetManager() {
             </Button>
             <Button
               variant="destructive"
-              onClick={handleResetSeason}
+              onClick={() => setShowSecurityCheck(true)}
               disabled={confirmText !== "CONFIRMER ARCHIVAGE" || isProcessing}
             >
               {isProcessing ? (
