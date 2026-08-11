@@ -12,6 +12,7 @@ import { Calendar, AlertTriangle, Download, Archive, RotateCcw, CheckCircle2, Lo
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSiteContent } from "@/hooks/useSiteContent";
+import { SensitiveActionDialog } from "@/components/auth/SensitiveActionDialog";
 import Papa from "papaparse";
 
 interface DataCounts {
@@ -51,6 +52,7 @@ export function SeasonResetManager() {
   const [confirmText, setConfirmText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [processStep, setProcessStep] = useState("");
+  const [showSecurityCheck, setShowSecurityCheck] = useState(false);
 
   useEffect(() => {
     const season = getContent("current_season", "2025/26");
@@ -399,7 +401,7 @@ export function SeasonResetManager() {
             </Button>
             <Button
               variant="destructive"
-              onClick={handleResetSeason}
+              onClick={() => setShowSecurityCheck(true)}
               disabled={confirmText !== "CONFIRMER ARCHIVAGE" || isProcessing}
             >
               {isProcessing ? (
@@ -417,6 +419,14 @@ export function SeasonResetManager() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <SensitiveActionDialog
+        open={showSecurityCheck}
+        onOpenChange={setShowSecurityCheck}
+        onConfirmed={handleResetSeason}
+        title="Archivage de saison — vérification"
+        description="Action irréversible : confirme ton identité avant d'archiver et réinitialiser la saison."
+      />
     </div>
   );
 }

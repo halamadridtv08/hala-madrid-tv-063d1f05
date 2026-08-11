@@ -53,11 +53,14 @@ export function useRealStats() {
     mostPlayed: []
   });
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRealStats = async () => {
+  const fetchRealStats = async (attempt = 0, silent = false) => {
+    let willRetry = false;
     try {
-      setLoading(true);
+      if (silent) setRefreshing(true);
+      else setLoading(true);
       setError(null);
 
       // Récupérer les statistiques des joueurs
@@ -180,10 +183,19 @@ export function useRealStats() {
 
     } catch (err) {
       console.error('Erreur lors du chargement des statistiques:', err);
+      // Retry automatique (2 tentatives) avant d'afficher une erreur
+      if (attempt < 2) {
+        willRetry = true;
+        setTimeout(() => fetchRealStats(attempt + 1, silent), 800 * (attempt + 1));
+        return;
+      }
       setError('Erreur lors du chargement des statistiques');
       toast.error('Erreur lors du chargement des statistiques');
     } finally {
-      setLoading(false);
+      if (!willRetry) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   };
 
@@ -239,7 +251,8 @@ export function useRealStats() {
   return {
     stats,
     loading,
+    refreshing,
     error,
-    refetch: fetchRealStats
+    refetch: () => fetchRealStats(0, true)
   };
 }
