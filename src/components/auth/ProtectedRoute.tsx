@@ -3,8 +3,6 @@ import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Skeleton } from "@/components/ui/skeleton";
-import { useTwoFactorStepUp } from '@/hooks/useTwoFactorStepUp';
-import { TwoFactorStepUp } from '@/components/auth/TwoFactorStepUp';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -18,8 +16,6 @@ export const ProtectedRoute = ({
   requireAdminOnly = false 
 }: ProtectedRouteProps) => {
   const { user, isAdmin, isModerator, isLoading } = useAuth();
-  const needsStepUpCheck = (requireAdmin || requireAdminOnly) && !!user && isAdmin;
-  const { state: stepUpState, recheck } = useTwoFactorStepUp(needsStepUpCheck);
 
   if (isLoading) {
     return (
@@ -42,19 +38,6 @@ export const ProtectedRoute = ({
   // For admin routes, allow admin OR moderator
   if (requireAdmin && !isModerator) {
     return <Navigate to="/" replace />;
-  }
-
-  if (needsStepUpCheck && stepUpState === 'loading') {
-    return (
-      <div className="madrid-container py-12">
-        <Skeleton className="h-12 w-full mb-4" />
-        <Skeleton className="h-96 w-full" />
-      </div>
-    );
-  }
-
-  if (needsStepUpCheck && stepUpState === 'required') {
-    return <TwoFactorStepUp onSuccess={recheck} />;
   }
 
   return <>{children}</>;
