@@ -12,6 +12,7 @@ import { Calendar, AlertTriangle, Download, Archive, RotateCcw, CheckCircle2, Lo
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useSiteContent } from "@/hooks/useSiteContent";
+import { SensitiveActionDialog } from "@/components/auth/SensitiveActionDialog";
 import Papa from "papaparse";
 
 interface DataCounts {
@@ -51,6 +52,7 @@ export function SeasonResetManager() {
   const [confirmText, setConfirmText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [processStep, setProcessStep] = useState("");
+  const [showSecurityCheck, setShowSecurityCheck] = useState(false);
 
   useEffect(() => {
     const season = getContent("current_season", "2025/26");
