@@ -57,6 +57,7 @@ export function useRealStats() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchRealStats = async (attempt = 0, silent = false) => {
+    let willRetry = false;
     try {
       if (silent) setRefreshing(true);
       else setLoading(true);
@@ -184,14 +185,17 @@ export function useRealStats() {
       console.error('Erreur lors du chargement des statistiques:', err);
       // Retry automatique (2 tentatives) avant d'afficher une erreur
       if (attempt < 2) {
+        willRetry = true;
         setTimeout(() => fetchRealStats(attempt + 1, silent), 800 * (attempt + 1));
         return;
       }
       setError('Erreur lors du chargement des statistiques');
       toast.error('Erreur lors du chargement des statistiques');
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (!willRetry) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   };
 
