@@ -121,6 +121,7 @@ const FeaturedYouTubeVideo = () => {
 
           <div className="p-6">
             <h4 className="font-semibold text-lg mb-2">{video.title}</h4>
+            {video.youtube_url && (
             <Button 
               asChild 
               variant="ghost" 
@@ -137,6 +138,7 @@ const FeaturedYouTubeVideo = () => {
                 <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </a>
             </Button>
+            )}
           </div>
         </Card>
 
