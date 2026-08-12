@@ -48,6 +48,12 @@ const YouTubeVideoForm = ({ video, onSuccess, onCancel }: YouTubeVideoFormProps)
     setLoading(true);
 
     try {
+      if (!formData.youtube_url.trim() && !formData.stream_url.trim()) {
+        toast.error("Renseigne au moins une URL YouTube ou une URL de flux direct (.m3u8, .mp4...)");
+        setLoading(false);
+        return;
+      }
+
       if (video) {
         const { error } = await supabase
           .from("youtube_videos")
@@ -92,14 +98,13 @@ const YouTubeVideoForm = ({ video, onSuccess, onCancel }: YouTubeVideoFormProps)
           </div>
 
           <div>
-            <Label htmlFor="youtube_url">URL YouTube</Label>
+            <Label htmlFor="youtube_url">URL YouTube (optionnel si flux direct)</Label>
             <Input
               id="youtube_url"
               type="url"
               value={formData.youtube_url}
               onChange={(e) => setFormData({ ...formData, youtube_url: e.target.value })}
               placeholder="youtube.com/watch, youtu.be, /live/, /shorts/, /embed/..."
-              required
             />
           </div>
 
@@ -125,7 +130,6 @@ const YouTubeVideoForm = ({ video, onSuccess, onCancel }: YouTubeVideoFormProps)
               value={formData.thumbnail_url}
               onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
               placeholder="https://i.ytimg.com/vi/..."
-              required
             />
             {formData.thumbnail_url && (
               <img

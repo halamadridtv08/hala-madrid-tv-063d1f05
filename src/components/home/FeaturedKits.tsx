@@ -61,6 +61,9 @@ const FeaturedKits = () => {
     fetchFeaturedKits();
   }, []);
 
+  const seasonKits = featuredKits.filter((k) => k.season === currentSeason);
+  const kitsToShow = seasonKits.length > 0 ? seasonKits : featuredKits;
+
   if (loading) {
     return (
       <section className="py-6 sm:py-8 md:py-12 bg-gradient-to-br from-primary/5 to-primary/10">
@@ -98,7 +101,7 @@ const FeaturedKits = () => {
             className="w-full"
           >
             <CarouselContent className="-ml-4">
-              {featuredKits.map((kit) => (
+              {kitsToShow.map((kit) => (
                 <CarouselItem key={kit.id} className="pl-4 basis-[85%]">
                   <Card className="group overflow-hidden cursor-pointer hover:shadow-2xl transition-all duration-500">
                     <CardContent className="p-0 relative">
@@ -152,7 +155,7 @@ const FeaturedKits = () => {
 
         {/* Desktop grid */}
         <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {featuredKits.map((kit) => (
+          {kitsToShow.map((kit) => (
             <Card key={kit.id} className="group overflow-hidden cursor-pointer hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
               <CardContent className="p-0 relative">
                 <div className="aspect-[3/4] overflow-hidden bg-gradient-to-br from-background to-muted">
