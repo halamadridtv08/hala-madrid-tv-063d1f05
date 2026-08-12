@@ -12,10 +12,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Kit } from "@/types/Kit";
 import { SEOHead } from "@/components/SEOHead";
 import { KitImageGallery } from "@/components/kits/KitImageGallery";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 const Kits = () => {
   const [kits, setKits] = useState<Kit[]>([]);
   const [loading, setLoading] = useState(true);
+  const { getContent } = useSiteContent();
+  const currentSeason = getContent("current_season", "2025/26");
+  const [selectedSeason, setSelectedSeason] = useState<string>("");
 
   useEffect(() => {
     const fetchKits = async () => {
