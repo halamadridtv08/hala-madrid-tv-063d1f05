@@ -66,6 +66,7 @@ const Kits = () => {
   }, []);
 
   const getKitColor = (type: string) => {
+    void 0;
     switch (type) {
       case "domicile": return "bg-madrid-blue";
       case "exterieur": return "bg-black";
