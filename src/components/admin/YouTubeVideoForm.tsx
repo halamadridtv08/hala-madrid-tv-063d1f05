@@ -123,7 +123,7 @@ const YouTubeVideoForm = ({ video, onSuccess, onCancel }: YouTubeVideoFormProps)
           </div>
 
           <div>
-            <Label htmlFor="thumbnail_url">URL de la miniature</Label>
+            <Label htmlFor="thumbnail_url">URL de la miniature (optionnel)</Label>
             <Input
               id="thumbnail_url"
               type="url"
