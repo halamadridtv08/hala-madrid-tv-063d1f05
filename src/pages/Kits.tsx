@@ -148,18 +148,46 @@ const Kits = () => {
       <Navbar />
       <main className="min-h-screen">
         <div className="madrid-container py-4 sm:py-6 lg:py-8">
-          <h1 className="section-title mb-6 sm:mb-8 text-center sm:text-left text-2xl sm:text-3xl md:text-4xl">
-            Maillots {new Date().getFullYear()}/{(new Date().getFullYear() + 1).toString().slice(-2)}
-          </h1>
+          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <h1 className="section-title text-center sm:text-left text-2xl sm:text-3xl md:text-4xl">
+                Maillots {selectedSeason || currentSeason}
+              </h1>
+              {isArchive && (
+                <Badge variant="secondary" className="self-center sm:self-auto">
+                  Archive
+                </Badge>
+              )}
+            </div>
+
+            {seasons.length > 1 && (
+              <div className="flex items-center gap-2 self-center sm:self-auto">
+                <span className="text-sm text-muted-foreground">Saison</span>
+                <Select value={selectedSeason} onValueChange={setSelectedSeason}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Choisir" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {seasons.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                        {s === currentSeason ? " (en cours)" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
           
           {/* Responsive grid with better breakpoints */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-            {kits.length === 0 ? (
+            {visibleKits.length === 0 ? (
               <div className="col-span-full text-center py-12">
-                <p className="text-muted-foreground text-lg">Aucun maillot disponible pour le moment.</p>
+                <p className="text-muted-foreground text-lg">Aucun maillot disponible pour cette saison.</p>
               </div>
             ) : (
-              kits.map((kit) => (
+              visibleKits.map((kit) => (
                 <motion.div
                   key={kit.id}
                   className="h-full"
