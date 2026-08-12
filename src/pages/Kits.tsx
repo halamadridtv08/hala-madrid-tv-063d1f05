@@ -65,8 +65,20 @@ const Kits = () => {
     fetchKits();
   }, []);
 
+  const seasons = Array.from(new Set(kits.map((k) => k.season).filter(Boolean))).sort((a, b) =>
+    b.localeCompare(a)
+  );
+
+  useEffect(() => {
+    if (!selectedSeason && seasons.length > 0) {
+      setSelectedSeason(seasons.includes(currentSeason) ? currentSeason : seasons[0]);
+    }
+  }, [seasons.join("|"), currentSeason, selectedSeason]);
+
+  const visibleKits = selectedSeason ? kits.filter((k) => k.season === selectedSeason) : kits;
+  const isArchive = !!selectedSeason && selectedSeason !== currentSeason;
+
   const getKitColor = (type: string) => {
-    void 0;
     switch (type) {
       case "domicile": return "bg-madrid-blue";
       case "exterieur": return "bg-black";
