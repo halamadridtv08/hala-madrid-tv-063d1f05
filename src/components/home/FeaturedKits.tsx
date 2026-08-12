@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { useSiteContent } from "@/hooks/useSiteContent";
 import {
   Carousel,
   CarouselContent,
@@ -13,6 +14,8 @@ import {
 const FeaturedKits = () => {
   const [featuredKits, setFeaturedKits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { getContent } = useSiteContent();
+  const currentSeason = getContent("current_season", "2025/26");
 
   useEffect(() => {
     const fetchFeaturedKits = async () => {
