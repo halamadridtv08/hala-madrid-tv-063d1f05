@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, Upload, GripVertical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { uploadFile } from "@/utils/fileUpload";
 
 interface ArticleImage {
   id: string;
@@ -51,43 +52,26 @@ export const ArticleImageManager = ({ articleId }: ArticleImageManagerProps) => 
     setUploading(true);
     let successCount = 0;
     let errorCount = 0;
+    let lastError = "";
 
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         try {
-          // Générer un nom de fichier unique
-          const timestamp = new Date().getTime();
-          const random = Math.floor(Math.random() * 1000);
-          const fileExt = file.name.split('.').pop();
-          const fileName = `article-${articleId}-${timestamp}-${random}.${fileExt}`;
-          
-          // Upload direct vers le bucket media
-          const { error: uploadError, data } = await supabase.storage
-            .from('media')
-            .upload(fileName, file);
-            
-          if (uploadError) {
-            console.error("Storage upload error:", uploadError);
-            throw uploadError;
+          // Upload vers Cloudflare R2 (via l'edge function upload-to-r2)
+          const result = await uploadFile(file, 'media', `articles/${articleId}`);
+
+          if (result.error || !result.url) {
+            throw new Error(result.error || "Impossible d'obtenir l'URL du fichier");
           }
-          
-          // Récupérer l'URL publique
-          const { data: urlData } = supabase.storage
-            .from('media')
-            .getPublicUrl(fileName);
-          
-          if (!urlData.publicUrl) {
-            throw new Error("Impossible d'obtenir l'URL du fichier");
-          }
-          
+
           // Ajouter l'image à la galerie
           const maxOrder = images.length + successCount;
           const { error: dbError } = await supabase
             .from("article_images")
             .insert({
               article_id: articleId,
-              image_url: urlData.publicUrl,
+              image_url: result.url,
               display_order: maxOrder,
             });
 
@@ -97,8 +81,9 @@ export const ArticleImageManager = ({ articleId }: ArticleImageManagerProps) => 
           }
           
           successCount++;
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error uploading file:", error);
+          lastError = error?.message || String(error);
           errorCount++;
         }
       }
@@ -114,7 +99,7 @@ export const ArticleImageManager = ({ articleId }: ArticleImageManagerProps) => 
       if (errorCount > 0) {
         toast({
           title: "Erreur partielle",
-          description: `${errorCount} image(s) n'ont pas pu être téléchargées.`,
+          description: `${errorCount} image(s) n'ont pas pu être téléchargées.${lastError ? ` (${lastError})` : ""}`,
           variant: "destructive",
         });
       }
