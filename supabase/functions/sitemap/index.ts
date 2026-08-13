@@ -102,29 +102,8 @@ Deno.serve(async (req) => {
   </url>`;
     }
 
-    // Matches
-    for (const match of matches) {
-      const lastmod = match.updated_at ? new Date(match.updated_at).toISOString().split('T')[0] : '';
-      sitemap += `
-  <url>
-    <loc>${BASE_URL}/matches</loc>
-    ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>`;
-    }
-
-    // Kits
-    for (const kit of kits) {
-      const lastmod = kit.updated_at ? new Date(kit.updated_at).toISOString().split('T')[0] : '';
-      sitemap += `
-  <url>
-    <loc>${BASE_URL}/kits</loc>
-    ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>`;
-    }
+    // Matches and kits do not have individual routes: /matches and /kits are already
+    // listed once in staticPages, so we intentionally do not emit duplicate entries here.
 
     sitemap += `
 </urlset>`;
