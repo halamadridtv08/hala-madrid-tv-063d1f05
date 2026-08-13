@@ -29,6 +29,10 @@ export const LiveChat = ({ videoId, roomKey, onRequestLogin }: LiveChatProps) =>
   const room = roomKey || (videoId ? `video:${videoId}` : "global");
 
   useEffect(() => {
+    if (!user) {
+      setMessages([]);
+      return;
+    }
     let mounted = true;
     (async () => {
       const { data } = await supabase
@@ -57,7 +61,7 @@ export const LiveChat = ({ videoId, roomKey, onRequestLogin }: LiveChatProps) =>
       mounted = false;
       supabase.removeChannel(channel);
     };
-  }, [room]);
+  }, [room, user]);
 
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
@@ -99,7 +103,12 @@ export const LiveChat = ({ videoId, roomKey, onRequestLogin }: LiveChatProps) =>
       </div>
 
       <div ref={listRef} className="flex-1 overflow-y-auto p-3 space-y-2 min-h-[300px] max-h-[520px]">
-        {messages.length === 0 && (
+        {!user && (
+          <p className="text-xs text-muted-foreground text-center py-8">
+            Connecte-toi pour voir et participer au chat en direct.
+          </p>
+        )}
+        {user && messages.length === 0 && (
           <p className="text-xs text-muted-foreground text-center py-8">
             Sois le premier à écrire un message !
           </p>
