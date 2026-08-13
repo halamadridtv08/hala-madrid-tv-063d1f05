@@ -8,6 +8,7 @@ import { Kit } from "@/types/Kit";
 import { KitForm } from "./KitForm";
 import { Plus, Edit, Trash2, Shirt, Star } from "lucide-react";
 import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface KitTableProps {
   kits: Kit[];
@@ -18,6 +19,12 @@ const KitTable = ({ kits, setKits }: KitTableProps) => {
   const [loading, setLoading] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingKit, setEditingKit] = useState<Kit | undefined>(undefined);
+  const [seasonFilter, setSeasonFilter] = useState<string>("all");
+
+  const seasons = Array.from(new Set(kits.map((k) => k.season).filter(Boolean))).sort((a, b) =>
+    b.localeCompare(a)
+  );
+  const visibleKits = seasonFilter === "all" ? kits : kits.filter((k) => k.season === seasonFilter);
 
   const refreshKits = async () => {
     try {
@@ -106,14 +113,29 @@ const KitTable = ({ kits, setKits }: KitTableProps) => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gestion des Maillots</h2>
-        <Button onClick={() => setIsFormOpen(true)}>
+        <div className="flex items-center gap-2">
+          <Select value={seasonFilter} onValueChange={setSeasonFilter}>
+            <SelectTrigger className="w-[170px]">
+              <SelectValue placeholder="Saison" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les saisons</SelectItem>
+              {seasons.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button onClick={() => setIsFormOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nouveau maillot
-        </Button>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {kits.map((kit) => (
+        {visibleKits.map((kit) => (
           <Card key={kit.id} className="overflow-hidden">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -129,6 +151,7 @@ const KitTable = ({ kits, setKits }: KitTableProps) => {
                 <Badge variant={kit.is_published ? "default" : "secondary"}>
                   {kit.is_published ? "Publié" : "Brouillon"}
                 </Badge>
+                <Badge variant="outline">{kit.season}</Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
