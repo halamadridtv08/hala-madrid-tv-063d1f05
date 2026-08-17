@@ -202,21 +202,13 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
 
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `live-blog/${Date.now()}.${fileExt}`;
+      const result = await uploadFile(file, 'media', 'live-blog');
+      if (result.error || !result.url) {
+        throw new Error(result.error || "Impossible d'obtenir l'URL du fichier");
+      }
 
-      const { error: uploadError } = await supabase.storage
-        .from('media')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('media')
-        .getPublicUrl(fileName);
-
-      setImageUrl(publicUrl);
-      setImagePreview(publicUrl);
+      setImageUrl(result.url);
+      setImagePreview(result.url);
       toast({ title: 'Image uploadée' });
     } catch (error: any) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
