@@ -2553,6 +2553,7 @@ export type Database = {
           position_group_order: number | null
           profile_image_url: string | null
           social_media: Json | null
+          squad_type: string
           stats: Json | null
           updated_at: string
           weight: string | null
@@ -2577,6 +2578,7 @@ export type Database = {
           position_group_order?: number | null
           profile_image_url?: string | null
           social_media?: Json | null
+          squad_type?: string
           stats?: Json | null
           updated_at?: string
           weight?: string | null
@@ -2601,6 +2603,7 @@ export type Database = {
           position_group_order?: number | null
           profile_image_url?: string | null
           social_media?: Json | null
+          squad_type?: string
           stats?: Json | null
           updated_at?: string
           weight?: string | null
