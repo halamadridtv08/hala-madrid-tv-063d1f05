@@ -27,6 +27,7 @@ interface Player {
   social_media: any;
   is_active: boolean;
   is_featured?: boolean;
+  squad_type?: string;
 }
 
 interface PlayerEditFormProps {
@@ -51,7 +52,8 @@ export function PlayerEditForm({ player, onPlayerUpdated }: PlayerEditFormProps)
     biography: player.biography || "",
     social_media: player.social_media || { twitter: "", instagram: "", facebook: "" },
     is_active: player.is_active,
-    is_featured: player.is_featured || false
+    is_featured: player.is_featured || false,
+    squad_type: player.squad_type || "pro"
   });
 
   const { toast } = useToast();
@@ -245,6 +247,19 @@ export function PlayerEditForm({ player, onPlayerUpdated }: PlayerEditFormProps)
                 <p className="text-sm text-gray-500 dark:text-gray-400 ml-6">
                   Les joueurs vedettes apparaîtront dans le carrousel sur la page d'accueil
                 </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-squad-type">Effectif</Label>
+                <select
+                  id="edit-squad-type"
+                  value={formData.squad_type}
+                  onChange={(e) => setFormData(prev => ({ ...prev, squad_type: e.target.value }))}
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="pro">Équipe première (Pro)</option>
+                  <option value="castilla">Castilla / La Fábrica</option>
+                </select>
               </div>
             </div>
           </div>

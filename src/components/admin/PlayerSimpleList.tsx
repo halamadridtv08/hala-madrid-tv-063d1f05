@@ -322,6 +322,7 @@ const PlayerSimpleList = ({ players, setPlayers }: PlayerSimpleListProps) => {
                 social_media: editingPlayer.social_media,
                 is_active: editingPlayer.is_active ?? true,
                 is_featured: editingPlayer.is_featured,
+                squad_type: editingPlayer.squad_type ?? "pro",
               }}
               onPlayerUpdated={handlePlayerUpdated}
             />
