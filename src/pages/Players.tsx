@@ -48,18 +48,21 @@ const Players = () => {
     }];
     const groups = positions.map(pos => {
       let filteredPlayers: Player[] = [];
+      const source = activeTab === "castilla"
+        ? players.filter(p => p.squad_type === "castilla")
+        : players.filter(p => p.squad_type !== "castilla");
       switch (pos.id) {
         case 'gardien':
-          filteredPlayers = players.filter(player => player.position.toLowerCase().includes('gardien') || player.position.toLowerCase().includes('goalkeeper'));
+          filteredPlayers = source.filter(player => player.position.toLowerCase().includes('gardien') || player.position.toLowerCase().includes('goalkeeper'));
           break;
         case 'defenseur':
-          filteredPlayers = players.filter(player => player.position.toLowerCase().includes('défenseur') || player.position.toLowerCase().includes('defenseur') || player.position.toLowerCase().includes('arrière') || player.position.toLowerCase().includes('latéral') || player.position.toLowerCase().includes('lateral') || player.position.toLowerCase().includes('central') || player.position.toLowerCase().includes('defender'));
+          filteredPlayers = source.filter(player => player.position.toLowerCase().includes('défenseur') || player.position.toLowerCase().includes('defenseur') || player.position.toLowerCase().includes('arrière') || player.position.toLowerCase().includes('latéral') || player.position.toLowerCase().includes('lateral') || player.position.toLowerCase().includes('central') || player.position.toLowerCase().includes('defender'));
           break;
         case 'milieu':
-          filteredPlayers = players.filter(player => player.position.toLowerCase().includes('milieu') || player.position.toLowerCase().includes('midfielder') || player.position.toLowerCase().includes('centre') || player.position.toLowerCase().includes('médian') || player.position.toLowerCase().includes('median'));
+          filteredPlayers = source.filter(player => player.position.toLowerCase().includes('milieu') || player.position.toLowerCase().includes('midfielder') || player.position.toLowerCase().includes('centre') || player.position.toLowerCase().includes('médian') || player.position.toLowerCase().includes('median'));
           break;
         case 'attaquant':
-          filteredPlayers = players.filter(player => player.position.toLowerCase().includes('attaquant') || player.position.toLowerCase().includes('ailier') || player.position.toLowerCase().includes('avant') || player.position.toLowerCase().includes('striker') || player.position.toLowerCase().includes('forward') || player.position.toLowerCase().includes('winger'));
+          filteredPlayers = source.filter(player => player.position.toLowerCase().includes('attaquant') || player.position.toLowerCase().includes('ailier') || player.position.toLowerCase().includes('avant') || player.position.toLowerCase().includes('striker') || player.position.toLowerCase().includes('forward') || player.position.toLowerCase().includes('winger'));
           break;
       }
       return {
@@ -121,21 +124,24 @@ const Players = () => {
     if (players.length > 0) {
       organizePlayersByPosition();
     }
-  }, [players]);
+  }, [players, activeTab]);
 
   // Filter players based on active tab and search term - synchronized with admin logic
   const filteredPlayers = players.filter(player => {
     let matchesTab = false;
+    const isCastilla = player.squad_type === "castilla";
     if (activeTab === "all") {
-      matchesTab = true;
+      matchesTab = !isCastilla;
+    } else if (activeTab === "castilla") {
+      matchesTab = isCastilla;
     } else if (activeTab === "goalkeepers") {
-      matchesTab = player.position.toLowerCase().includes("gardien") || player.position.toLowerCase().includes("goalkeeper");
+      matchesTab = !isCastilla && (player.position.toLowerCase().includes("gardien") || player.position.toLowerCase().includes("goalkeeper"));
     } else if (activeTab === "defenders") {
-      matchesTab = player.position.toLowerCase().includes("défenseur") || player.position.toLowerCase().includes("defenseur") || player.position.toLowerCase().includes("arrière") || player.position.toLowerCase().includes("latéral") || player.position.toLowerCase().includes("lateral") || player.position.toLowerCase().includes("central") || player.position.toLowerCase().includes("defender");
+      matchesTab = !isCastilla && (player.position.toLowerCase().includes("défenseur") || player.position.toLowerCase().includes("defenseur") || player.position.toLowerCase().includes("arrière") || player.position.toLowerCase().includes("latéral") || player.position.toLowerCase().includes("lateral") || player.position.toLowerCase().includes("central") || player.position.toLowerCase().includes("defender"));
     } else if (activeTab === "midfielders") {
-      matchesTab = player.position.toLowerCase().includes("milieu") || player.position.toLowerCase().includes("midfielder") || player.position.toLowerCase().includes("centre") || player.position.toLowerCase().includes("médian") || player.position.toLowerCase().includes("median");
+      matchesTab = !isCastilla && (player.position.toLowerCase().includes("milieu") || player.position.toLowerCase().includes("midfielder") || player.position.toLowerCase().includes("centre") || player.position.toLowerCase().includes("médian") || player.position.toLowerCase().includes("median"));
     } else if (activeTab === "forwards") {
-      matchesTab = player.position.toLowerCase().includes("attaquant") || player.position.toLowerCase().includes("ailier") || player.position.toLowerCase().includes("avant") || player.position.toLowerCase().includes("striker") || player.position.toLowerCase().includes("forward") || player.position.toLowerCase().includes("winger");
+      matchesTab = !isCastilla && (player.position.toLowerCase().includes("attaquant") || player.position.toLowerCase().includes("ailier") || player.position.toLowerCase().includes("avant") || player.position.toLowerCase().includes("striker") || player.position.toLowerCase().includes("forward") || player.position.toLowerCase().includes("winger"));
     }
     const matchesSearch = searchTerm === "" || player.name.toLowerCase().includes(searchTerm.toLowerCase()) || player.nationality && player.nationality.toLowerCase().includes(searchTerm.toLowerCase()) || player.position.toLowerCase().includes(searchTerm.toLowerCase()) || player.jersey_number && player.jersey_number.toString().includes(searchTerm);
     return matchesTab && matchesSearch;
@@ -261,6 +267,7 @@ const Players = () => {
               <TabsTrigger value="defenders">Défenseurs</TabsTrigger>
               <TabsTrigger value="midfielders">Milieux</TabsTrigger>
               <TabsTrigger value="forwards">Attaquants</TabsTrigger>
+              <TabsTrigger value="castilla">Castilla / La Fábrica</TabsTrigger>
             </TabsList>
 
             <TabsContent value={activeTab} className="mt-0">
@@ -269,6 +276,7 @@ const Players = () => {
                 {positionGroups.filter(group => {
                 // Filtrer les groupes selon l'onglet actif
                 if (activeTab === "all") return true;
+                if (activeTab === "castilla") return true;
                 if (activeTab === "goalkeepers") return group.id === "gardien";
                 if (activeTab === "defenders") return group.id === "defenseur";
                 if (activeTab === "midfielders") return group.id === "milieu";
