@@ -30,6 +30,7 @@ export const PlayerForm = ({ player, onSuccess, onCancel }: PlayerFormProps) => 
     bio: player?.bio || "",
     is_active: player?.is_active !== false,
     is_featured: player?.is_featured || false,
+    squad_type: player?.squad_type || "pro",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -200,6 +201,22 @@ export const PlayerForm = ({ player, onSuccess, onCancel }: PlayerFormProps) => 
             </label>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Les joueurs vedettes apparaîtront dans le carrousel sur la page d'accueil
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="squad_type">Effectif</Label>
+            <select
+              id="squad_type"
+              value={formData.squad_type}
+              onChange={(e) => setFormData({ ...formData, squad_type: e.target.value })}
+              className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="pro">Équipe première (Pro)</option>
+              <option value="castilla">Castilla / La Fábrica</option>
+            </select>
+            <p className="text-sm text-muted-foreground">
+              Les joueurs Castilla apparaissent dans l'onglet dédié de la page Effectif
             </p>
           </div>
           
