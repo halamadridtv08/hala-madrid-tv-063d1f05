@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadFile } from "@/utils/fileUpload";
 import { Loader2, Save, Eye, Image, Link, Palette, MessageSquare, Play, Monitor } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -85,18 +86,11 @@ export function LiveMatchBarManager() {
     if (!file) return;
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `live-bar-${field}-${Date.now()}.${fileExt}`;
-      const filePath = `live-match-bar/${fileName}`;
-      const {
-        error: uploadError
-      } = await supabase.storage.from('media').upload(filePath, file);
-      if (uploadError) throw uploadError;
-      const {
-        data: {
-          publicUrl
-        }
-      } = supabase.storage.from('media').getPublicUrl(filePath);
+      const result = await uploadFile(file, 'media', 'live-match-bar');
+      if (result.error || !result.url) {
+        throw new Error(result.error || "Impossible d'obtenir l'URL du fichier");
+      }
+      const publicUrl = result.url;
       setFormData(prev => ({
         ...prev,
         [field]: publicUrl
