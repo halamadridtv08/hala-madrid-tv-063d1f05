@@ -2181,22 +2181,31 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_own_team: boolean
           logo_url: string | null
           name: string
+          short_name: string | null
+          stadium: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
+          is_own_team?: boolean
           logo_url?: string | null
           name: string
+          short_name?: string | null
+          stadium?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
+          is_own_team?: boolean
           logo_url?: string | null
           name?: string
+          short_name?: string | null
+          stadium?: string | null
           updated_at?: string
         }
         Relationships: []
