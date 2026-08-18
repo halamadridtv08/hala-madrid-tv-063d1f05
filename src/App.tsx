@@ -22,17 +22,47 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 // Lazy load non-critical pages for better Core Web Vitals
 const lazyRetry = (importFn: () => Promise<any>) =>
-  lazy(() =>
-    importFn().catch(() => {
-      // Force reload on stale chunk error (only once per session)
-      const key = 'chunk-retry';
-      if (!sessionStorage.getItem(key)) {
-        sessionStorage.setItem(key, '1');
-        window.location.reload();
+  lazy(async () => {
+    const key = 'chunk-retry-at';
+    try {
+      const mod = await importFn();
+      sessionStorage.removeItem(key);
+      return mod;
+    } catch (err) {
+      // Second attempt: transient network / partially deployed chunk
+      try {
+        await new Promise((r) => setTimeout(r, 600));
+        const mod = await importFn();
+        sessionStorage.removeItem(key);
+        return mod;
+      } catch (err2) {
+        // Stale build: force a hard reload, at most once every 10s
+        const last = Number(sessionStorage.getItem(key) || 0);
+        if (Date.now() - last > 10000) {
+          sessionStorage.setItem(key, String(Date.now()));
+          if ('caches' in window) {
+            try {
+              const names = await caches.keys();
+              await Promise.all(names.map((n) => caches.delete(n)));
+            } catch {
+              /* ignore */
+            }
+          }
+          if ('serviceWorker' in navigator) {
+            try {
+              const regs = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(regs.map((r) => r.unregister()));
+            } catch {
+              /* ignore */
+            }
+          }
+          window.location.reload();
+          return new Promise(() => {}) as Promise<any>;
+        }
+        throw err2;
       }
-      return importFn();
-    })
-  );
+    }
+  });
 
 const News = lazyRetry(() => import("./pages/News"));
 const Players = lazyRetry(() => import("./pages/Players"));
