@@ -12,11 +12,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { Plus, Edit, Trash2, Upload, FileJson, Download, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { uploadFile } from "@/utils/fileUpload";
 
 interface OpposingTeam {
   id: string;
   name: string;
   logo_url?: string;
+  short_name?: string | null;
+  stadium?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -50,8 +53,26 @@ export const OpposingTeamManager = () => {
 
   const [teamForm, setTeamForm] = useState({
     name: "",
-    logo_url: ""
+    logo_url: "",
+    short_name: "",
+    stadium: ""
   });
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  const handleLogoUpload = async (file: File) => {
+    setUploadingLogo(true);
+    try {
+      const result = await uploadFile(file, 'media', 'team-logos');
+      if (result.error || !result.url) {
+        toast.error(result.error || "Erreur lors de l'upload du logo");
+        return;
+      }
+      setTeamForm(prev => ({ ...prev, logo_url: result.url as string }));
+      toast.success("Logo uploadé");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   const [playerForm, setPlayerForm] = useState({
     name: "",
