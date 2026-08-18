@@ -163,6 +163,12 @@ export const OpposingTeamManager = () => {
 
         if (error) throw error;
         toast.success("Équipe modifiée avec succès");
+
+        // Propager le logo mis à jour sur tous les matchs de cette équipe
+        await Promise.all([
+          supabase.from('matches').update({ home_team_logo: teamForm.logo_url }).eq('home_team', teamForm.name),
+          supabase.from('matches').update({ away_team_logo: teamForm.logo_url }).eq('away_team', teamForm.name),
+        ]);
       } else {
         const { error } = await supabase
           .from('opposing_teams')
