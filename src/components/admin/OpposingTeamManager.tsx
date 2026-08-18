@@ -523,21 +523,56 @@ export const OpposingTeamManager = () => {
                         className="w-full text-xs h-8"
                         onClick={async () => {
                           try {
-                            const { data: newTeam, error } = await supabase
+                            // 1. Chercher une équipe existante (insensible à la casse)
+                            const { data: existing, error: findError } = await supabase
                               .from('opposing_teams')
-                              .insert([{ name: opponentName, logo_url: opponentLogo || "" }])
-                              .select()
-                              .single();
-                            if (error) throw error;
+                              .select('id, name, logo_url')
+                              .ilike('name', opponentName)
+                              .maybeSingle();
+                            if (findError) throw findError;
+
+                            let teamId = existing?.id as string | undefined;
+                            let teamLogo = existing?.logo_url || opponentLogo || "";
+
+                            // 2. Créer si absente
+                            if (!teamId) {
+                              const { data: newTeam, error: insertError } = await supabase
+                                .from('opposing_teams')
+                                .insert([{ name: opponentName, logo_url: opponentLogo || "" }])
+                                .select('id, logo_url')
+                                .single();
+                              if (insertError) throw insertError;
+                              teamId = newTeam.id;
+                              teamLogo = newTeam.logo_url || "";
+                            }
+
+                            // 3. Lier ce match + tous les autres matchs avec le même adversaire
+                            const logoPatch = teamLogo
+                              ? (isRealMadridHome ? { away_team_logo: teamLogo } : { home_team_logo: teamLogo })
+                              : {};
+
+                            const { error: linkError } = await supabase
+                              .from('matches')
+                              .update({ opposing_team_id: teamId, ...logoPatch })
+                              .eq('id', match.id);
+                            if (linkError) throw linkError;
+
                             await supabase
                               .from('matches')
-                              .update({ opposing_team_id: newTeam.id })
-                              .eq('id', match.id);
-                            toast.success(`Équipe ${opponentName} créée et liée au match`);
+                              .update({ opposing_team_id: teamId })
+                              .is('opposing_team_id', null)
+                              .or(`home_team.ilike.${opponentName},away_team.ilike.${opponentName}`);
+
+                            toast.success(
+                              existing
+                                ? `Équipe ${existing.name} déjà existante : match lié`
+                                : `Équipe ${opponentName} créée et liée au match`
+                            );
                             fetchTeams();
                             fetchUpcomingMatches();
-                          } catch (error) {
-                            toast.error("Erreur lors de la création de l'équipe");
+                          } catch (error: any) {
+                            console.error('Erreur création/liaison équipe:', error);
+                            toast.error(error?.message || "Erreur lors de la création de l'équipe");
                           }
                         }}
                       >
