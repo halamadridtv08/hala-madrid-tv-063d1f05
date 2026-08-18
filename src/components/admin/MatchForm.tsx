@@ -18,7 +18,7 @@ interface MatchFormProps {
 
 export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
   const [loading, setLoading] = useState(false);
-  const [opposingTeams, setOpposingTeams] = useState<Array<{id: string, name: string, logo_url?: string}>>([]);
+  const [opposingTeams, setOpposingTeams] = useState<Array<{id: string, name: string, logo_url?: string, stadium?: string | null}>>([]);
   
   const [formData, setFormData] = useState({
     home_team: match?.home_team || "Real Madrid",
@@ -41,7 +41,7 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
   const fetchOpposingTeams = async () => {
     const { data, error } = await supabase
       .from('opposing_teams')
-      .select('id, name, logo_url')
+      .select('id, name, logo_url, stadium')
       .order('name');
 
     if (error) {
@@ -49,24 +49,33 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
       return;
     }
 
-    setOpposingTeams(data || []);
+    setOpposingTeams((data as any) || []);
   };
 
-  const getLogoForTeam = (teamName: string): string => {
-    const team = opposingTeams.find(t => t.name === teamName);
-    return team?.logo_url || "";
+  const findTeamByName = (name: string) => opposingTeams.find(t => t.name === name);
+
+  // Sélection de l'équipe à domicile : nom, logo et stade repris du répertoire
+  const handleHomeTeamChange = (teamId: string) => {
+    const team = opposingTeams.find(t => t.id === teamId);
+    if (!team) return;
+    setFormData(prev => ({
+      ...prev,
+      home_team: team.name,
+      home_team_logo: team.logo_url || "",
+      venue: team.stadium || prev.venue,
+    }));
   };
 
-  const handleOpposingTeamChange = (teamId: string) => {
-    const selectedTeam = opposingTeams.find(team => team.id === teamId);
-    if (selectedTeam) {
-      setFormData({
-        ...formData,
-        opposing_team_id: teamId,
-        away_team: selectedTeam.name,
-        away_team_logo: selectedTeam.logo_url || ""
-      });
-    }
+  // Sélection de l'équipe à l'extérieur
+  const handleAwayTeamChange = (teamId: string) => {
+    const team = opposingTeams.find(t => t.id === teamId);
+    if (!team) return;
+    setFormData(prev => ({
+      ...prev,
+      opposing_team_id: teamId,
+      away_team: team.name,
+      away_team_logo: team.logo_url || "",
+    }));
   };
 
   const handleSwapTeams = () => {
@@ -78,6 +87,8 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
       away_team_logo: prev.home_team_logo,
       home_score: prev.away_score,
       away_score: prev.home_score,
+      opposing_team_id: findTeamByName(prev.home_team)?.id || "",
+      venue: findTeamByName(prev.away_team)?.stadium || prev.venue,
     }));
   };
 
