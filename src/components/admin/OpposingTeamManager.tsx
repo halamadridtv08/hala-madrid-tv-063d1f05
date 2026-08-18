@@ -174,7 +174,7 @@ export const OpposingTeamManager = () => {
 
       setIsTeamDialogOpen(false);
       setEditingTeam(null);
-      setTeamForm({ name: "", logo_url: "" });
+      setTeamForm({ name: "", logo_url: "", short_name: "", stadium: "" });
       fetchTeams();
       fetchUpcomingMatches(); // Rafraîchir aussi les matchs
     } catch (error) {
@@ -397,10 +397,10 @@ export const OpposingTeamManager = () => {
   const openTeamDialog = (team?: OpposingTeam) => {
     if (team) {
       setEditingTeam(team);
-      setTeamForm({ name: team.name, logo_url: team.logo_url || "" });
+      setTeamForm({ name: team.name, logo_url: team.logo_url || "", short_name: team.short_name || "", stadium: team.stadium || "" });
     } else {
       setEditingTeam(null);
-      setTeamForm({ name: "", logo_url: "" });
+      setTeamForm({ name: "", logo_url: "", short_name: "", stadium: "" });
     }
     setIsTeamDialogOpen(true);
   };
