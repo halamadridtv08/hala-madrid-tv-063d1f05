@@ -570,9 +570,40 @@ export const OpposingTeamManager = () => {
                     <label className="text-sm font-medium">Nom de l'équipe</label>
                     <Input value={teamForm.name} onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })} placeholder="Nom de l'équipe" className="h-9 text-sm" />
                   </div>
-                  <div>
-                    <label className="text-sm font-medium">URL du logo</label>
-                    <Input value={teamForm.logo_url} onChange={(e) => setTeamForm({ ...teamForm, logo_url: e.target.value })} placeholder="URL du logo" className="h-9 text-sm" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm font-medium">Nom court (optionnel)</label>
+                      <Input value={teamForm.short_name} onChange={(e) => setTeamForm({ ...teamForm, short_name: e.target.value })} placeholder="Ex: FCB" className="h-9 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Stade (optionnel)</label>
+                      <Input value={teamForm.stadium} onChange={(e) => setTeamForm({ ...teamForm, stadium: e.target.value })} placeholder="Ex: Camp Nou" className="h-9 text-sm" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Logo de l'équipe</label>
+                    <div className="flex items-center gap-3">
+                      {teamForm.logo_url ? (
+                        <img src={teamForm.logo_url} alt="Logo" className="h-14 w-14 object-contain rounded border" />
+                      ) : (
+                        <div className="h-14 w-14 rounded border bg-muted flex items-center justify-center text-[10px] text-muted-foreground">Logo</div>
+                      )}
+                      <div className="flex-1 space-y-2">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          disabled={uploadingLogo}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleLogoUpload(file);
+                          }}
+                          className="h-9 text-sm"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          {uploadingLogo ? "Upload en cours vers Cloudflare R2..." : "Le logo est enregistré une fois pour toutes et réutilisé sur chaque match."}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <Button onClick={handleSaveTeam} className="h-9 text-sm">Enregistrer</Button>
