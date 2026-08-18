@@ -12,11 +12,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { Plus, Edit, Trash2, Upload, FileJson, Download, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { uploadFile } from "@/utils/fileUpload";
 
 interface OpposingTeam {
   id: string;
   name: string;
   logo_url?: string;
+  short_name?: string | null;
+  stadium?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -50,8 +53,26 @@ export const OpposingTeamManager = () => {
 
   const [teamForm, setTeamForm] = useState({
     name: "",
-    logo_url: ""
+    logo_url: "",
+    short_name: "",
+    stadium: ""
   });
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  const handleLogoUpload = async (file: File) => {
+    setUploadingLogo(true);
+    try {
+      const result = await uploadFile(file, 'media', 'team-logos');
+      if (result.error || !result.url) {
+        toast.error(result.error || "Erreur lors de l'upload du logo");
+        return;
+      }
+      setTeamForm(prev => ({ ...prev, logo_url: result.url as string }));
+      toast.success("Logo uploadé");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   const [playerForm, setPlayerForm] = useState({
     name: "",
@@ -142,6 +163,12 @@ export const OpposingTeamManager = () => {
 
         if (error) throw error;
         toast.success("Équipe modifiée avec succès");
+
+        // Propager le logo mis à jour sur tous les matchs de cette équipe
+        await Promise.all([
+          supabase.from('matches').update({ home_team_logo: teamForm.logo_url }).eq('home_team', teamForm.name),
+          supabase.from('matches').update({ away_team_logo: teamForm.logo_url }).eq('away_team', teamForm.name),
+        ]);
       } else {
         const { error } = await supabase
           .from('opposing_teams')
@@ -153,7 +180,7 @@ export const OpposingTeamManager = () => {
 
       setIsTeamDialogOpen(false);
       setEditingTeam(null);
-      setTeamForm({ name: "", logo_url: "" });
+      setTeamForm({ name: "", logo_url: "", short_name: "", stadium: "" });
       fetchTeams();
       fetchUpcomingMatches(); // Rafraîchir aussi les matchs
     } catch (error) {
@@ -376,10 +403,10 @@ export const OpposingTeamManager = () => {
   const openTeamDialog = (team?: OpposingTeam) => {
     if (team) {
       setEditingTeam(team);
-      setTeamForm({ name: team.name, logo_url: team.logo_url || "" });
+      setTeamForm({ name: team.name, logo_url: team.logo_url || "", short_name: team.short_name || "", stadium: team.stadium || "" });
     } else {
       setEditingTeam(null);
-      setTeamForm({ name: "", logo_url: "" });
+      setTeamForm({ name: "", logo_url: "", short_name: "", stadium: "" });
     }
     setIsTeamDialogOpen(true);
   };
@@ -549,9 +576,40 @@ export const OpposingTeamManager = () => {
                     <label className="text-sm font-medium">Nom de l'équipe</label>
                     <Input value={teamForm.name} onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })} placeholder="Nom de l'équipe" className="h-9 text-sm" />
                   </div>
-                  <div>
-                    <label className="text-sm font-medium">URL du logo</label>
-                    <Input value={teamForm.logo_url} onChange={(e) => setTeamForm({ ...teamForm, logo_url: e.target.value })} placeholder="URL du logo" className="h-9 text-sm" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm font-medium">Nom court (optionnel)</label>
+                      <Input value={teamForm.short_name} onChange={(e) => setTeamForm({ ...teamForm, short_name: e.target.value })} placeholder="Ex: FCB" className="h-9 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Stade (optionnel)</label>
+                      <Input value={teamForm.stadium} onChange={(e) => setTeamForm({ ...teamForm, stadium: e.target.value })} placeholder="Ex: Camp Nou" className="h-9 text-sm" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Logo de l'équipe</label>
+                    <div className="flex items-center gap-3">
+                      {teamForm.logo_url ? (
+                        <img src={teamForm.logo_url} alt="Logo" className="h-14 w-14 object-contain rounded border" />
+                      ) : (
+                        <div className="h-14 w-14 rounded border bg-muted flex items-center justify-center text-[10px] text-muted-foreground">Logo</div>
+                      )}
+                      <div className="flex-1 space-y-2">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          disabled={uploadingLogo}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleLogoUpload(file);
+                          }}
+                          className="h-9 text-sm"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          {uploadingLogo ? "Upload en cours vers Cloudflare R2..." : "Le logo est enregistré une fois pour toutes et réutilisé sur chaque match."}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <Button onClick={handleSaveTeam} className="h-9 text-sm">Enregistrer</Button>

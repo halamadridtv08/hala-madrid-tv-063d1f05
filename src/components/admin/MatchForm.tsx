@@ -18,7 +18,7 @@ interface MatchFormProps {
 
 export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
   const [loading, setLoading] = useState(false);
-  const [opposingTeams, setOpposingTeams] = useState<Array<{id: string, name: string, logo_url?: string}>>([]);
+  const [opposingTeams, setOpposingTeams] = useState<Array<{id: string, name: string, logo_url?: string, stadium?: string | null}>>([]);
   
   const [formData, setFormData] = useState({
     home_team: match?.home_team || "Real Madrid",
@@ -41,7 +41,7 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
   const fetchOpposingTeams = async () => {
     const { data, error } = await supabase
       .from('opposing_teams')
-      .select('id, name, logo_url')
+      .select('id, name, logo_url, stadium')
       .order('name');
 
     if (error) {
@@ -49,24 +49,33 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
       return;
     }
 
-    setOpposingTeams(data || []);
+    setOpposingTeams((data as any) || []);
   };
 
-  const getLogoForTeam = (teamName: string): string => {
-    const team = opposingTeams.find(t => t.name === teamName);
-    return team?.logo_url || "";
+  const findTeamByName = (name: string) => opposingTeams.find(t => t.name === name);
+
+  // Sélection de l'équipe à domicile : nom, logo et stade repris du répertoire
+  const handleHomeTeamChange = (teamId: string) => {
+    const team = opposingTeams.find(t => t.id === teamId);
+    if (!team) return;
+    setFormData(prev => ({
+      ...prev,
+      home_team: team.name,
+      home_team_logo: team.logo_url || "",
+      venue: team.stadium || prev.venue,
+    }));
   };
 
-  const handleOpposingTeamChange = (teamId: string) => {
-    const selectedTeam = opposingTeams.find(team => team.id === teamId);
-    if (selectedTeam) {
-      setFormData({
-        ...formData,
-        opposing_team_id: teamId,
-        away_team: selectedTeam.name,
-        away_team_logo: selectedTeam.logo_url || ""
-      });
-    }
+  // Sélection de l'équipe à l'extérieur
+  const handleAwayTeamChange = (teamId: string) => {
+    const team = opposingTeams.find(t => t.id === teamId);
+    if (!team) return;
+    setFormData(prev => ({
+      ...prev,
+      opposing_team_id: teamId,
+      away_team: team.name,
+      away_team_logo: team.logo_url || "",
+    }));
   };
 
   const handleSwapTeams = () => {
@@ -78,6 +87,8 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
       away_team_logo: prev.home_team_logo,
       home_score: prev.away_score,
       away_score: prev.home_score,
+      opposing_team_id: findTeamByName(prev.home_team)?.id || "",
+      venue: findTeamByName(prev.away_team)?.stadium || prev.venue,
     }));
   };
 
@@ -158,42 +169,39 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
             {/* Équipe à domicile */}
             <div className="space-y-3">
               <div>
-                <Label htmlFor="home_team" className="text-sm">Équipe à domicile</Label>
-                <Input
-                  id="home_team"
-                  value={formData.home_team}
-                  onChange={(e) => {
-                    const name = e.target.value;
-                    setFormData({ ...formData, home_team: name, home_team_logo: getLogoForTeam(name) });
-                  }}
-                  required
-                  className="h-9 text-sm"
-                />
+                <Label className="text-sm">Équipe à domicile</Label>
+                <Select
+                  value={findTeamByName(formData.home_team)?.id || ""}
+                  onValueChange={handleHomeTeamChange}
+                >
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Sélectionner l'équipe à domicile" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {opposingTeams.map((team) => (
+                      <SelectItem key={team.id} value={team.id}>
+                        <div className="flex items-center gap-2">
+                          {team.logo_url && (
+                            <img src={team.logo_url} alt="" className="h-5 w-5 object-contain" />
+                          )}
+                          {team.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div>
-                <Label htmlFor="home_team_logo" className="text-sm">Logo équipe à domicile (URL)</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  {formData.home_team_logo && (
-                    <img src={formData.home_team_logo} alt="Logo domicile" className="h-10 w-10 object-contain rounded" />
-                  )}
-                  <Input
-                    id="home_team_logo"
-                    value={formData.home_team_logo}
-                    onChange={(e) => setFormData({ ...formData, home_team_logo: e.target.value })}
-                    placeholder="https://..."
-                    className="h-9 text-sm"
-                  />
-                </div>
-              </div>
+
+              <LogoPreview url={formData.home_team_logo} label="Logo équipe à domicile" />
             </div>
 
             {/* Équipe à l'extérieur */}
             <div className="space-y-3">
               <div>
-                <Label htmlFor="opposing_team" className="text-sm">Équipe adverse</Label>
+                <Label htmlFor="opposing_team" className="text-sm">Équipe à l'extérieur</Label>
                 <Select
-                  value={formData.opposing_team_id}
-                  onValueChange={handleOpposingTeamChange}
+                  value={formData.opposing_team_id || findTeamByName(formData.away_team)?.id || ""}
+                  onValueChange={handleAwayTeamChange}
                 >
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Sélectionner une équipe adverse" />
@@ -211,18 +219,6 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="away_team" className="text-sm">Nom de l'équipe (auto-rempli)</Label>
-                <Input
-                  id="away_team"
-                  value={formData.away_team}
-                  onChange={(e) => setFormData({ ...formData, away_team: e.target.value })}
-                  required
-                  disabled={!!formData.opposing_team_id}
-                  className="h-9 text-sm"
-                />
               </div>
               
               <LogoPreview url={formData.away_team_logo} label="Logo équipe à l'extérieur" />
