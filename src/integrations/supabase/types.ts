@@ -3913,6 +3913,92 @@ export type Database = {
         }
         Relationships: []
       }
+      story_items: {
+        Row: {
+          caption: string | null
+          created_at: string
+          display_order: number
+          duration_seconds: number
+          expires_at: string | null
+          id: string
+          link_label: string | null
+          link_url: string | null
+          media_type: string
+          media_url: string
+          ring_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          duration_seconds?: number
+          expires_at?: string | null
+          id?: string
+          link_label?: string | null
+          link_url?: string | null
+          media_type?: string
+          media_url: string
+          ring_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          display_order?: number
+          duration_seconds?: number
+          expires_at?: string | null
+          id?: string
+          link_label?: string | null
+          link_url?: string | null
+          media_type?: string
+          media_url?: string
+          ring_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_items_ring_id_fkey"
+            columns: ["ring_id"]
+            isOneToOne: false
+            referencedRelation: "story_rings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_rings: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          display_order: number
+          expires_at: string | null
+          id: string
+          is_highlight: boolean
+          is_published: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          display_order?: number
+          expires_at?: string | null
+          id?: string
+          is_highlight?: boolean
+          is_published?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          display_order?: number
+          expires_at?: string | null
+          id?: string
+          is_highlight?: boolean
+          is_published?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       training_sessions: {
         Row: {
           category: string | null
