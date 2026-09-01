@@ -98,6 +98,7 @@ const navigationCategories = [
     items: [
       { value: "newsletter", label: "Newsletter", icon: Mail, adminOnly: false },
       { value: "dream-teams", label: "Dream Teams", icon: Star, adminOnly: false },
+  { value: "stories", label: "Stories", icon: Star, adminOnly: false },
       { value: "notifications", label: "Notifications", icon: Bell, adminOnly: false },
     ]
   },
