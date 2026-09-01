@@ -3913,6 +3913,39 @@ export type Database = {
         }
         Relationships: []
       }
+      story_display_settings: {
+        Row: {
+          bar_background: string
+          id: string
+          ring_size: number
+          ring_style: string
+          show_titles: boolean
+          updated_at: string
+          viewer_backdrop: string
+          viewer_fit: string
+        }
+        Insert: {
+          bar_background?: string
+          id?: string
+          ring_size?: number
+          ring_style?: string
+          show_titles?: boolean
+          updated_at?: string
+          viewer_backdrop?: string
+          viewer_fit?: string
+        }
+        Update: {
+          bar_background?: string
+          id?: string
+          ring_size?: number
+          ring_style?: string
+          show_titles?: boolean
+          updated_at?: string
+          viewer_backdrop?: string
+          viewer_fit?: string
+        }
+        Relationships: []
+      }
       story_items: {
         Row: {
           caption: string | null
@@ -3926,6 +3959,7 @@ export type Database = {
           media_type: string
           media_url: string
           ring_id: string
+          scheduled_at: string | null
         }
         Insert: {
           caption?: string | null
@@ -3939,6 +3973,7 @@ export type Database = {
           media_type?: string
           media_url: string
           ring_id: string
+          scheduled_at?: string | null
         }
         Update: {
           caption?: string | null
@@ -3952,6 +3987,7 @@ export type Database = {
           media_type?: string
           media_url?: string
           ring_id?: string
+          scheduled_at?: string | null
         }
         Relationships: [
           {
@@ -3965,6 +4001,7 @@ export type Database = {
       }
       story_rings: {
         Row: {
+          archived_at: string | null
           cover_url: string | null
           created_at: string
           display_order: number
@@ -3972,10 +4009,12 @@ export type Database = {
           id: string
           is_highlight: boolean
           is_published: boolean
+          scheduled_at: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           cover_url?: string | null
           created_at?: string
           display_order?: number
@@ -3983,10 +4022,12 @@ export type Database = {
           id?: string
           is_highlight?: boolean
           is_published?: boolean
+          scheduled_at?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           cover_url?: string | null
           created_at?: string
           display_order?: number
@@ -3994,10 +4035,56 @@ export type Database = {
           id?: string
           is_highlight?: boolean
           is_published?: boolean
+          scheduled_at?: string | null
           title?: string
           updated_at?: string
         }
         Relationships: []
+      }
+      story_views: {
+        Row: {
+          completed: boolean
+          created_at: string
+          duration_ms: number
+          id: string
+          item_id: string | null
+          ring_id: string
+          session_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          duration_ms?: number
+          id?: string
+          item_id?: string | null
+          ring_id: string
+          session_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          duration_ms?: number
+          id?: string
+          item_id?: string | null
+          ring_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_views_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "story_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_views_ring_id_fkey"
+            columns: ["ring_id"]
+            isOneToOne: false
+            referencedRelation: "story_rings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       training_sessions: {
         Row: {
@@ -4612,6 +4699,19 @@ export type Database = {
           reason: string
           user_email: string
           user_id: string
+        }[]
+      }
+      get_story_stats: {
+        Args: { p_days?: number }
+        Returns: {
+          avg_duration_ms: number
+          completions: number
+          is_highlight: boolean
+          ring_id: string
+          title: string
+          total_duration_ms: number
+          unique_viewers: number
+          views: number
         }[]
       }
       get_totp_secret: { Args: { p_user_id: string }; Returns: string }
