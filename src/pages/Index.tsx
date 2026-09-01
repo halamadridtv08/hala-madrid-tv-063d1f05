@@ -14,6 +14,7 @@ import { LiveMatchBar } from "@/components/home/LiveMatchBar";
 import { AnnouncementBar } from "@/components/home/AnnouncementBar";
 import { PartnersSection } from "@/components/home/PartnersSection";
 import { Navbar } from "@/components/layout/Navbar";
+import { StoriesBar } from "@/components/stories/StoriesBar";
 import { Footer } from "@/components/layout/Footer";
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ const Index = () => {
       <WelcomePopup />
       <AnnouncementBar />
       <Navbar />
+      <StoriesBar />
       <LiveMatchBar />
       <main>
       {isVisible('hero_section') && <HeroSection />}

@@ -1,6 +1,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { StoriesManager } from "@/components/admin/StoriesManager";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { QuickStatsCard } from "@/components/admin/QuickStatsCard";
 import { AdminMenuBar } from "@/components/layout/AdminMenuBar";
@@ -127,6 +128,7 @@ const VALID_ADMIN_TABS = [
   "match-control",
   "newsletter",
   "dream-teams",
+  "stories",
   "notifications",
   "integrations",
   "shop",
@@ -818,6 +820,7 @@ const Admin = () => {
           <TabsContent value="match-control">{renderMatchControl()}</TabsContent>
           <TabsContent value="newsletter">{renderNewsletter()}</TabsContent>
           <TabsContent value="dream-teams">{renderDreamTeams()}</TabsContent>
+          <TabsContent value="stories"><StoriesManager /></TabsContent>
           <TabsContent value="notifications">{renderNotifications()}</TabsContent>
           <TabsContent value="integrations">
             <IntegrationsManager />
