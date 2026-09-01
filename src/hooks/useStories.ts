@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface StoryItem {
@@ -11,6 +11,7 @@ export interface StoryItem {
   link_label?: string | null;
   duration_seconds: number;
   display_order: number;
+  scheduled_at?: string | null;
   expires_at?: string | null;
   created_at: string;
 }
@@ -22,12 +23,43 @@ export interface StoryRing {
   is_highlight: boolean;
   is_published: boolean;
   display_order: number;
+  scheduled_at?: string | null;
+  archived_at?: string | null;
   expires_at?: string | null;
   created_at: string;
   items: StoryItem[];
 }
 
+export interface StoryDisplaySettings {
+  id: string;
+  bar_background: 'card' | 'transparent' | 'muted' | 'gradient';
+  ring_style: 'gradient' | 'solid' | 'minimal';
+  ring_size: number;
+  show_titles: boolean;
+  viewer_backdrop: 'blur' | 'dark' | 'gradient';
+  viewer_fit: 'contain' | 'cover';
+}
+
+export const DEFAULT_STORY_SETTINGS: StoryDisplaySettings = {
+  id: '',
+  bar_background: 'card',
+  ring_style: 'gradient',
+  ring_size: 64,
+  show_titles: true,
+  viewer_backdrop: 'blur',
+  viewer_fit: 'contain',
+};
+
 const db = supabase as any;
+
+export function isRingArchived(ring: StoryRing, now = Date.now()): boolean {
+  if (ring.archived_at) return true;
+  return !ring.is_highlight && !!ring.expires_at && new Date(ring.expires_at).getTime() <= now;
+}
+
+export function isRingScheduled(ring: StoryRing, now = Date.now()): boolean {
+  return !!ring.scheduled_at && new Date(ring.scheduled_at).getTime() > now;
+}
 
 export async function fetchStoryRings(includeUnpublished = false): Promise<StoryRing[]> {
   let query = db
@@ -62,11 +94,20 @@ export async function fetchStoryRings(includeUnpublished = false): Promise<Story
     byRing.set(item.ring_id, list);
   });
 
-  return ringList.map((ring) => ({ ...ring, items: byRing.get(ring.id) ?? [] })).filter((ring) => {
-    if (includeUnpublished) return true;
-    const expired = !ring.is_highlight && ring.expires_at && new Date(ring.expires_at).getTime() <= now;
-    return !expired && ring.items.length > 0;
-  });
+  return ringList
+    .map((ring) => {
+      const all = byRing.get(ring.id) ?? [];
+      const visible = includeUnpublished
+        ? all
+        : all.filter((it) => !it.scheduled_at || new Date(it.scheduled_at).getTime() <= now);
+      return { ...ring, items: visible };
+    })
+    .filter((ring) => {
+      if (includeUnpublished) return true;
+      if (isRingArchived(ring, now)) return false;
+      if (isRingScheduled(ring, now)) return false;
+      return ring.items.length > 0;
+    });
 }
 
 export function useStories() {
@@ -77,4 +118,72 @@ export function useStories() {
   });
 
   return { rings: data ?? [], isLoading, error, refetch };
+}
+
+export function useStoryDisplaySettings() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['story-display-settings'],
+    queryFn: async (): Promise<StoryDisplaySettings> => {
+      const { data, error } = await db.from('story_display_settings').select('*').limit(1).maybeSingle();
+      if (error) throw error;
+      return { ...DEFAULT_STORY_SETTINGS, ...(data ?? {}) } as StoryDisplaySettings;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  return { settings: data ?? DEFAULT_STORY_SETTINGS, isLoading };
+}
+
+export function useUpdateStoryDisplaySettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (patch: Partial<StoryDisplaySettings>) => {
+      const { data: existing } = await db.from('story_display_settings').select('id').limit(1).maybeSingle();
+      if (existing?.id) {
+        const { error } = await db
+          .from('story_display_settings')
+          .update({ ...patch, updated_at: new Date().toISOString() })
+          .eq('id', existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await db.from('story_display_settings').insert(patch);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['story-display-settings'] }),
+  });
+}
+
+const SESSION_KEY = 'hmtv-story-session';
+
+export function getStorySessionId(): string {
+  try {
+    let id = localStorage.getItem(SESSION_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(SESSION_KEY, id);
+    }
+    return id;
+  } catch {
+    return 'anonymous';
+  }
+}
+
+export async function trackStoryView(params: {
+  ringId: string;
+  itemId: string;
+  durationMs: number;
+  completed: boolean;
+}) {
+  try {
+    await db.from('story_views').insert({
+      ring_id: params.ringId,
+      item_id: params.itemId,
+      session_id: getStorySessionId(),
+      duration_ms: Math.max(0, Math.round(params.durationMs)),
+      completed: params.completed,
+    });
+  } catch {
+    /* analytics failures must never break playback */
+  }
 }
