@@ -24,11 +24,14 @@ import {
   Archive,
   RotateCcw,
   CalendarClock,
+  Wand2,
 } from 'lucide-react';
 import { StoryRing, StoryItem, fetchStoryRings, isRingArchived, isRingScheduled } from '@/hooks/useStories';
 import { StoriesAnalyticsPanel } from './StoriesAnalyticsPanel';
 import { StoryDisplaySettingsPanel } from './StoryDisplaySettingsPanel';
 import { StoryDiagnosticsPanel } from './StoryDiagnosticsPanel';
+import { Progress } from '@/components/ui/progress';
+import { transcodeToMp4 } from '@/lib/videoTranscode';
 
 const db = supabase as any;
 
@@ -102,7 +105,7 @@ const probeMedia = (file: File, kind: 'image' | 'video'): Promise<boolean> =>
   });
 
 // Validates a story upload before sending it to storage: type, size and readability.
-type StoryFileCheck = { ok: boolean; kind: 'image' | 'video'; message?: string };
+type StoryFileCheck = { ok: boolean; kind: 'image' | 'video'; message?: string; convertible?: boolean };
 
 const validateStoryFile = async (file: File): Promise<StoryFileCheck> => {
   const isVideo = file.type.startsWith('video/');
@@ -118,7 +121,7 @@ const validateStoryFile = async (file: File): Promise<StoryFileCheck> => {
   if (!readable) return { ok: false, kind, message: 'Le fichier semble corrompu ou illisible par le navigateur.' };
   if (isVideo) {
     const codecError = await validateVideoCodec(file);
-    if (codecError) return { ok: false, kind, message: codecError };
+    if (codecError) return { ok: false, kind, message: codecError, convertible: true };
   }
   return { ok: true, kind };
 };
@@ -135,6 +138,9 @@ export function StoriesManager() {
   const [uploadingItem, setUploadingItem] = useState<string | null>(null);
   const [archiveSearch, setArchiveSearch] = useState('');
   const [archiveType, setArchiveType] = useState('all');
+  const [conversion, setConversion] = useState<{ file: File; message: string; ringId: string | null } | null>(null);
+  const [converting, setConverting] = useState(false);
+  const [conversionProgress, setConversionProgress] = useState(0);
 
   const [newRing, setNewRing] = useState({
     title: '',
@@ -165,6 +171,10 @@ export function StoriesManager() {
   const handleCoverUpload = async (file: File) => {
     const check = await validateStoryFile(file);
     if (!check.ok || check.kind !== 'image') {
+      if (check.convertible) {
+        setConversion({ file, message: check.message || '', ringId: null });
+        return;
+      }
       toast({ title: 'Fichier refusé', description: check.message || 'La couverture doit être une image.', variant: 'destructive' });
       return;
     }
@@ -250,6 +260,10 @@ export function StoriesManager() {
   const addItem = async (ring: StoryRing, file: File) => {
     const check = await validateStoryFile(file);
     if (!check.ok) {
+      if (check.convertible) {
+        setConversion({ file, message: check.message || '', ringId: ring.id });
+        return;
+      }
       toast({ title: 'Fichier refusé', description: check.message, variant: 'destructive' });
       return;
     }
@@ -281,6 +295,31 @@ export function StoriesManager() {
     }
     toast({ title: 'Contenu ajouté' });
     load();
+  };
+
+  const runConversion = async () => {
+    if (!conversion) return;
+    const target = conversion;
+    setConverting(true);
+    setConversionProgress(0);
+    try {
+      const converted = await transcodeToMp4(target.file, (ratio) => setConversionProgress(Math.round(ratio * 100)));
+      const check = await validateStoryFile(converted);
+      if (!check.ok) throw new Error(check.message || 'La vidéo convertie reste illisible.');
+      setConversion(null);
+      const ring = target.ringId ? rings.find((r) => r.id === target.ringId) : null;
+      if (!ring) {
+        toast({ title: 'Conversion terminée', description: 'Story introuvable, réessayez l’ajout du fichier converti.', variant: 'destructive' });
+        return;
+      }
+      toast({ title: 'Conversion terminée', description: 'Import du MP4 H.264/AAC en cours…' });
+      await addItem(ring, converted);
+    } catch (e: any) {
+      toast({ title: 'Conversion impossible', description: e?.message || 'Échec du transcodage dans le navigateur.', variant: 'destructive' });
+    } finally {
+      setConverting(false);
+      setConversionProgress(0);
+    }
   };
 
   const updateItem = async (id: string, patch: Partial<StoryItem>) => {
@@ -720,6 +759,36 @@ export function StoriesManager() {
             </Button>
             <Button onClick={createRing} disabled={savingRing}>
               {savingRing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Créer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(conversion)} onOpenChange={(open) => { if (!open && !converting) setConversion(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Vidéo incompatible</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>{conversion?.message}</p>
+            <p>
+              Vous pouvez lancer une conversion automatique en MP4 H.264/AAC directement dans le navigateur.
+              L’opération peut prendre plusieurs minutes selon la taille du fichier.
+            </p>
+            {converting && (
+              <div className="space-y-2">
+                <Progress value={conversionProgress} />
+                <p className="text-xs">Conversion en cours… {conversionProgress}%</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConversion(null)} disabled={converting}>
+              Annuler
+            </Button>
+            <Button onClick={runConversion} disabled={converting}>
+              {converting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+              Convertir en MP4 H.264
             </Button>
           </DialogFooter>
         </DialogContent>
