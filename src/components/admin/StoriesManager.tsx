@@ -61,6 +61,25 @@ const readVideoDuration = (file: File): Promise<number> =>
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
 
+const readVideoCodecSignature = async (file: File): Promise<string> => {
+  const sampleSize = Math.min(file.size, 2 * 1024 * 1024);
+  const samples = [file.slice(0, sampleSize)];
+  if (file.size > sampleSize) samples.push(file.slice(Math.max(0, file.size - sampleSize)));
+  const buffers = await Promise.all(samples.map((sample) => sample.arrayBuffer()));
+  return buffers.map((buffer) => new TextDecoder('iso-8859-1').decode(buffer)).join('');
+};
+
+const validateVideoCodec = async (file: File): Promise<string | null> => {
+  const signature = await readVideoCodecSignature(file);
+  if (/hvc1|hev1|dvh1|dvhe/.test(signature)) {
+    return 'Cette vidéo utilise HEVC/H.265, un format non compatible avec tous les navigateurs. Convertissez-la en MP4 H.264 avec audio AAC avant de la réimporter.';
+  }
+  if ((file.type === 'video/quicktime' || /\.mov$/i.test(file.name)) && !signature.includes('avc1')) {
+    return 'Cette vidéo MOV n’est pas compatible avec tous les navigateurs. Convertissez-la en MP4 H.264 avec audio AAC avant de la réimporter.';
+  }
+  return null;
+};
+
 const probeMedia = (file: File, kind: 'image' | 'video'): Promise<boolean> =>
   new Promise((resolve) => {
     const objectUrl = URL.createObjectURL(file);
@@ -97,6 +116,10 @@ const validateStoryFile = async (file: File): Promise<StoryFileCheck> => {
   if (file.size === 0) return { ok: false, kind, message: 'Le fichier est vide.' };
   const readable = await probeMedia(file, kind);
   if (!readable) return { ok: false, kind, message: 'Le fichier semble corrompu ou illisible par le navigateur.' };
+  if (isVideo) {
+    const codecError = await validateVideoCodec(file);
+    if (codecError) return { ok: false, kind, message: codecError };
+  }
   return { ok: true, kind };
 };
 

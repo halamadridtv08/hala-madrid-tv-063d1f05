@@ -39,7 +39,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(() => {
     try {
-      return localStorage.getItem(STORY_AUDIO_PREFERENCE_KEY) === 'true';
+      return localStorage.getItem(STORY_AUDIO_PREFERENCE_KEY) === 'muted';
     } catch {
       return false;
     }
@@ -52,6 +52,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [visualFullscreen, setVisualFullscreen] = useState(false);
   const [retryDelay, setRetryDelay] = useState<number | null>(null);
   const [mediaErrorMessage, setMediaErrorMessage] = useState("Ce contenu n'a pas pu être chargé.");
+  const [mediaFormatUnsupported, setMediaFormatUnsupported] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -97,7 +98,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     setMuted(nextMuted);
     setAudioBlocked(false);
     try {
-      localStorage.setItem(STORY_AUDIO_PREFERENCE_KEY, String(nextMuted));
+      localStorage.setItem(STORY_AUDIO_PREFERENCE_KEY, nextMuted ? 'muted' : 'sound');
     } catch {
       /* the preference remains active for the current viewer session */
     }
@@ -110,6 +111,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     imageStartedAtRef.current = Date.now();
     setMediaReady(false);
     setMediaError(false);
+    setMediaFormatUnsupported(false);
     setMediaErrorMessage('Ce contenu n\'a pas pu être chargé.');
     setRetryDelay(null);
     if (retryTimerRef.current !== null) window.clearTimeout(retryTimerRef.current);
@@ -353,6 +355,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
 
   const retryMedia = useCallback(() => {
     setMediaError(false);
+    setMediaFormatUnsupported(false);
     setMediaReady(false);
     setRetryDelay(null);
     resumePositionRef.current = videoRef.current?.currentTime ?? resumePositionRef.current;
@@ -362,11 +365,16 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const handleMediaError = useCallback((event?: React.SyntheticEvent<HTMLVideoElement | HTMLImageElement>, forcedDetail?: string) => {
     const target = event?.currentTarget;
     const videoError = target instanceof HTMLVideoElement ? target.error : null;
-    const detail = forcedDetail || (videoError ? `Erreur média ${videoError.code}: ${videoError.message || 'chargement ou décodage impossible'}` : 'Ressource média inaccessible (réseau, CORS ou URL).');
+    const isUnsupportedFormat = videoError?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED;
+    const detail = forcedDetail || (isUnsupportedFormat
+      ? 'Format vidéo incompatible avec ce navigateur. Réencodez puis réimportez la vidéo en MP4 H.264 avec audio AAC.'
+      : videoError
+        ? `Erreur média ${videoError.code}: ${videoError.message || 'chargement ou décodage impossible'}`
+        : 'Ressource média inaccessible (réseau, CORS ou URL).');
     const attempt = autoRetryRef.current + 1;
     resumePositionRef.current = videoRef.current?.currentTime ?? resumePositionRef.current;
     void logStoryEvent({ ringId: ring?.id, itemId: item?.id, eventType: 'media_error', detail, mediaUrl: item?.media_url, attempt });
-    if (autoRetryRef.current < 4) {
+    if (!isUnsupportedFormat && autoRetryRef.current < 4) {
       autoRetryRef.current = attempt;
       const delay = Math.min(8000, 500 * 2 ** (attempt - 1)) + Math.round(Math.random() * 250);
       setRetryDelay(delay);
@@ -378,6 +386,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
       return;
     }
     setMediaErrorMessage(detail);
+    setMediaFormatUnsupported(isUnsupportedFormat);
     setMediaError(true);
     setMediaReady(false);
   }, [ring?.id, item?.id, item?.media_url]);
@@ -505,14 +514,14 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
               {posterSrc && <img src={posterSrc} alt="" className="h-24 w-24 rounded-xl object-cover opacity-70" />}
                <p className="text-sm text-foreground">{mediaErrorMessage}</p>
               <div className="flex gap-2">
-                <button onClick={retryMedia} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"><RotateCcw className="h-4 w-4" /> Réessayer</button>
+                {!mediaFormatUnsupported && <button onClick={retryMedia} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"><RotateCcw className="h-4 w-4" /> Réessayer</button>}
                  <button onClick={() => void goNext()} className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-foreground">Passer</button>
               </div>
             </div>
           )}
 
            {!mediaReady && !mediaError && <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-background/30"><div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" />{retryDelay !== null && <span className="text-xs text-foreground">Nouvelle tentative…</span>}</div>}
-           {audioBlocked && isVideo && <div className="absolute bottom-20 left-1/2 z-30 -translate-x-1/2"><Button size="sm" onClick={() => { setExplicitMutedPreference(false); void videoRef.current?.play(); }}><Volume2 className="h-4 w-4" /> Activer le son</Button></div>}
+           {audioBlocked && isVideo && !mediaError && <div className="absolute bottom-20 left-1/2 z-30 -translate-x-1/2"><Button size="sm" onClick={() => { setExplicitMutedPreference(false); void videoRef.current?.play(); }}><Volume2 className="h-4 w-4" /> Activer le son</Button></div>}
            <button className="absolute inset-y-16 left-0 z-10 w-1/3" aria-label="Précédent" onClick={() => void goPrev()} />
            <button className="absolute inset-y-16 right-0 z-10 w-1/3" aria-label="Suivant" onClick={() => void goNext()} />
           {item.caption && <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-background/90 to-transparent p-4 pt-12"><p className="text-sm text-foreground drop-shadow">{item.caption}</p></div>}

@@ -3,3 +3,5 @@
 - [x] Activer l’audio par défaut et mémoriser uniquement le choix explicite de l’utilisateur
 - [x] Maintenir le plein écran pendant le passage entre stories
 - [x] Vérifier puis publier les correctifs
+- [x] Détecter et refuser les vidéos HEVC/MOV incompatibles avant l’upload des stories
+- [x] Afficher une erreur de format claire sans relances réseau inutiles
