@@ -115,7 +115,7 @@ const News = () => {
     { name: "Tous", value: null },
     { name: "Match", value: "match" },
     { name: "Joueur", value: "joueur" },
-    { name: "Conférence", value: "conférence" },
+    { name: "Conférence", value: "conference" },
     { name: "Mercato", value: "mercato" },
     { name: "Hommage", value: "hommage" },
     { name: "Formation", value: "formation" },
@@ -207,7 +207,7 @@ const News = () => {
                         className="w-full h-full object-cover"
                       />
                       <Badge className={`absolute top-4 left-4 ${getCategoryColor(article.category)}`}>
-                        {article.category}
+                        {getCategoryLabel(normalizeCategory(article.category))}
                       </Badge>
                     </div>
                   )}
