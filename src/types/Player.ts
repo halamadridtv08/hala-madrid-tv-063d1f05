@@ -11,6 +11,7 @@ export interface Player {
   image_url?: string;
   bio?: string;
   profile_image_url?: string;
+  formation_image_url?: string;
   biography?: string;
   stats?: any;
   is_active: boolean;
