@@ -24,7 +24,6 @@ import {
   Archive,
   RotateCcw,
   CalendarClock,
-  Wand2,
 } from 'lucide-react';
 import { StoryRing, StoryItem, fetchStoryRings, isRingArchived, isRingScheduled } from '@/hooks/useStories';
 import { StoriesAnalyticsPanel } from './StoriesAnalyticsPanel';
@@ -73,11 +72,9 @@ const readVideoCodecSignature = async (file: File): Promise<string> => {
 
 const validateVideoCodec = async (file: File): Promise<string | null> => {
   const signature = await readVideoCodecSignature(file);
-  if (/hvc1|hev1|dvh1|dvhe/.test(signature)) {
-    return 'Cette vidéo utilise HEVC/H.265, un format non compatible avec tous les navigateurs. Convertissez-la en MP4 H.264 avec audio AAC avant de la réimporter.';
-  }
-  if ((file.type === 'video/quicktime' || /\.mov$/i.test(file.name)) && !signature.includes('avc1')) {
-    return 'Cette vidéo MOV n’est pas compatible avec tous les navigateurs. Convertissez-la en MP4 H.264 avec audio AAC avant de la réimporter.';
+  const isUniversalMp4 = (file.type === 'video/mp4' || /\.mp4$/i.test(file.name)) && signature.includes('avc1');
+  if (!isUniversalMp4) {
+    return 'La vidéo va être préparée automatiquement pour tous les navigateurs.';
   }
   return null;
 };
@@ -168,10 +165,6 @@ export function StoriesManager() {
   const handleCoverUpload = async (file: File) => {
     const check = await validateStoryFile(file);
     if (!check.ok || check.kind !== 'image') {
-      if (check.convertible) {
-        setConversion({ file, message: check.message || '', ringId: null });
-        return;
-      }
       toast({ title: 'Fichier refusé', description: check.message || 'La couverture doit être une image.', variant: 'destructive' });
       return;
     }

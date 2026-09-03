@@ -67,7 +67,6 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [visualFullscreen, setVisualFullscreen] = useState(false);
   const [retryDelay, setRetryDelay] = useState<number | null>(null);
-  const [mediaErrorMessage, setMediaErrorMessage] = useState("Ce contenu n'a pas pu être chargé.");
   const [mediaFormatUnsupported, setMediaFormatUnsupported] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -128,7 +127,6 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     setMediaReady(false);
     setMediaError(false);
     setMediaFormatUnsupported(false);
-    setMediaErrorMessage('Ce contenu n\'a pas pu être chargé.');
     setRetryDelay(null);
     if (retryTimerRef.current !== null) window.clearTimeout(retryTimerRef.current);
     if (stalledTimerRef.current !== null) window.clearTimeout(stalledTimerRef.current);
@@ -410,23 +408,13 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
       setRepairSrc(objectUrl);
       setMediaError(false);
       setMediaFormatUnsupported(false);
-      setMediaErrorMessage('');
       setMediaReady(false);
     } catch (error: any) {
-      setMediaErrorMessage(`Conversion impossible : ${error?.message || 'échec du transcodage local'}.`);
+      void logStoryEvent({ ringId: ring?.id, itemId: id, eventType: 'media_error', detail: error?.message || 'Échec du fallback vidéo automatique.', mediaUrl: url });
       setMediaError(true);
     } finally {
       setRepairing(false);
     }
-  }, []);
-
-  const retryMedia = useCallback(() => {
-    setMediaError(false);
-    setMediaFormatUnsupported(false);
-    setMediaReady(false);
-    setRetryDelay(null);
-    resumePositionRef.current = videoRef.current?.currentTime ?? resumePositionRef.current;
-    setRetryToken((value) => value + 1);
   }, []);
 
   const handleMediaError = useCallback((event?: React.SyntheticEvent<HTMLVideoElement | HTMLImageElement>, forcedDetail?: string) => {
@@ -452,7 +440,6 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
       }, delay);
       return;
     }
-    setMediaErrorMessage(detail);
     setMediaFormatUnsupported(isUnsupportedFormat);
     setMediaError(true);
     setMediaReady(false);
