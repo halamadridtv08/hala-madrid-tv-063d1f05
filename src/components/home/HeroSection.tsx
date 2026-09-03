@@ -5,6 +5,7 @@ import { useHeroSettings } from "@/hooks/useHeroSettings";
 import { ShinyButton } from "@/components/ui/shiny-button";
 import { VideoButton } from "@/components/ui/video-button";
 import { useSiteContent } from "@/hooks/useSiteContent";
+import { ResilientVideo } from "@/components/home/ResilientVideo";
 
 export function HeroSection() {
   const navigate = useNavigate();
@@ -36,19 +37,11 @@ export function HeroSection() {
           transition={{ duration: 0.8 }}
         >
           {/* Video background */}
-          <video
+          <ResilientVideo
+            src={backgroundVideoUrl}
             className="absolute inset-0 w-full h-full object-cover z-0"
-            autoPlay
-            muted
-            loop
-            playsInline
-            disablePictureInPicture
-            controlsList="nodownload noplaybackrate nofullscreen"
-            onContextMenu={(e) => e.preventDefault()}
-            key={backgroundVideoUrl}
-          >
-            <source src={backgroundVideoUrl} type="video/mp4" />
-          </video>
+            label="la vidéo d'arrière-plan"
+          />
 
           {/* Overlay sombre pour lisibilité */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30 z-10" />
@@ -132,21 +125,11 @@ export function HeroSection() {
               transition={{ duration: 0.5, delay: 0.4 }}
             >
               {mockupVideoUrl ? (
-                <video
+                <ResilientVideo
+                  src={mockupVideoUrl}
                   className="w-full h-full rounded-xl object-cover shadow-2xl"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  disablePictureInPicture
-                  controlsList="nodownload noplaybackrate nofullscreen"
-                  onContextMenu={(e) => e.preventDefault()}
-                  preload="auto"
-                  key={mockupVideoUrl}
-                >
-                  <source src={mockupVideoUrl} type="video/mp4" />
-                  Votre navigateur ne supporte pas la lecture vidéo.
-                </video>
+                  label="la vidéo de présentation"
+                />
               ) : (
                 <div className="w-full h-full rounded-xl bg-gradient-to-br from-madrid-blue/30 to-madrid-gold/20 flex items-center justify-center animate-pulse">
                   <div className="w-16 h-16 border-4 border-madrid-gold border-t-transparent rounded-full animate-spin" />

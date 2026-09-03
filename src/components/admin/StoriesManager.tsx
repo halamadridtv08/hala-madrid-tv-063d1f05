@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { uploadFile } from '@/utils/fileUpload';
+import { StoryExpiryLog } from './StoryExpiryLog';
 import {
   Loader2,
   Plus,
@@ -56,6 +57,50 @@ const readVideoDuration = (file: File): Promise<number> =>
     video.src = objectUrl;
   });
 
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
+
+const probeMedia = (file: File, kind: 'image' | 'video'): Promise<boolean> =>
+  new Promise((resolve) => {
+    const objectUrl = URL.createObjectURL(file);
+    const done = (ok: boolean) => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(ok);
+    };
+    if (kind === 'image') {
+      const img = new Image();
+      img.onload = () => done(img.naturalWidth > 0 && img.naturalHeight > 0);
+      img.onerror = () => done(false);
+      img.src = objectUrl;
+    } else {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => done(Number.isFinite(video.duration) && video.duration > 0);
+      video.onerror = () => done(false);
+      video.src = objectUrl;
+    }
+  });
+
+// Validates a story upload before sending it to storage: type, size and readability.
+type StoryFileCheck = { ok: boolean; kind: 'image' | 'video'; message?: string };
+
+const validateStoryFile = async (file: File): Promise<StoryFileCheck> => {
+  const isVideo = file.type.startsWith('video/');
+  const isImage = file.type.startsWith('image/');
+  const kind: 'image' | 'video' = isVideo ? 'video' : 'image';
+  if (!isVideo && !isImage) return { ok: false, kind, message: 'Format non pris en charge : choisissez une image ou une vidéo.' };
+  const limit = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+  if (file.size > limit) {
+    return { ok: false, kind, message: `Fichier trop lourd (${Math.round(file.size / 1024 / 1024)} Mo). Maximum ${Math.round(limit / 1024 / 1024)} Mo.` };
+  }
+  if (file.size === 0) return { ok: false, kind, message: 'Le fichier est vide.' };
+  const readable = await probeMedia(file, kind);
+  if (!readable) return { ok: false, kind, message: 'Le fichier semble corrompu ou illisible par le navigateur.' };
+  return { ok: true, kind };
+};
+
+
+
 export function StoriesManager() {
   const { toast } = useToast();
   const [rings, setRings] = useState<StoryRing[]>([]);
@@ -94,6 +139,11 @@ export function StoriesManager() {
   }, []);
 
   const handleCoverUpload = async (file: File) => {
+    const check = await validateStoryFile(file);
+    if (!check.ok || check.kind !== 'image') {
+      toast({ title: 'Fichier refusé', description: check.message || 'La couverture doit être une image.', variant: 'destructive' });
+      return;
+    }
     setUploadingCover(true);
     const res = await uploadFile(file, 'stories', 'covers');
     setUploadingCover(false);
@@ -174,9 +224,15 @@ export function StoriesManager() {
   };
 
   const addItem = async (ring: StoryRing, file: File) => {
+    const check = await validateStoryFile(file);
+    if (!check.ok) {
+      toast({ title: 'Fichier refusé', description: check.message, variant: 'destructive' });
+      return;
+    }
     setUploadingItem(ring.id);
-    const mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+    const mediaType = check.kind;
     const durationSeconds = mediaType === 'video' ? await readVideoDuration(file) : 30;
+
     const res = await uploadFile(file, 'stories', 'items');
     if (res.error) {
       setUploadingItem(null);
@@ -494,7 +550,9 @@ export function StoriesManager() {
           </TabsContent>
 
           <TabsContent value="archived" className="mt-4 space-y-4">
+            <StoryExpiryLog onArchived={load} />
             <div className="flex flex-wrap gap-2">
+
               <Input
                 placeholder="Rechercher une story archivée..."
                 value={archiveSearch}
