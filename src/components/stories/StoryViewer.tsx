@@ -476,6 +476,10 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
                 preload="auto"
                 controls={false}
                 onLoadedMetadata={onVideoReady}
+                onLoadedData={() => {
+                  setMediaReady(true);
+                  if (!paused) void videoRef.current?.play().catch(() => undefined);
+                }}
                  onCanPlay={() => { setMediaReady(true); if (stalledTimerRef.current !== null) window.clearTimeout(stalledTimerRef.current); }}
                 onWaiting={() => setMediaReady(false)}
                 onPlaying={() => setMediaReady(true)}

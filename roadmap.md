@@ -8,5 +8,4 @@
 
 - [x] Conversion auto MP4 H.264/AAC (ffmpeg.wasm) pour les vidéos de stories incompatibles
 - [x] Persistance des préférences son + plein écran des stories (localStorage)
-- [x] Supprimer toute demande de conversion côté visiteur et lancer le fallback automatiquement
-- [x] Convertir automatiquement les vidéos incompatibles avant leur upload depuis l’admin
+- [x] Restaurer le lecteur simple des stories, sans conversion ni contrôle de codec
