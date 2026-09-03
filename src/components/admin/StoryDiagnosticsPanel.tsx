@@ -22,8 +22,11 @@ interface PlaybackEvent {
 
 interface DomainDiagnostic {
   assetsMatch: boolean;
+  sameDestination: boolean;
   checkedAt: string;
-  results: Array<{ name: string; url: string; finalUrl?: string; ok: boolean; status: number; server?: string | null; cacheControl?: string | null; asset: string | null; error?: string }>;
+  missingOnCustom: string[];
+  unexpectedOnCustom: string[];
+  results: Array<{ name: string; url: string; finalUrl?: string; ok: boolean; status: number; server?: string | null; cacheControl?: string | null; assets: string[]; error?: string }>;
 }
 
 function currentAsset(): string {
@@ -80,21 +83,29 @@ export function StoryDiagnosticsPanel() {
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-sm">{domains?.assetsMatch ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <AlertTriangle className="h-4 w-4 text-destructive" />} Publication synchronisée</CardTitle></CardHeader>
-          <CardContent><Badge variant={domains?.assetsMatch ? 'secondary' : 'destructive'}>{domains === null ? 'Vérification…' : domains.assetsMatch ? 'Versions identiques' : 'Versions différentes'}</Badge><p className="mt-2 text-xs text-muted-foreground">Une différence signifie que Vercel n’a pas encore déployé la dernière version Lovable.</p></CardContent>
+          <CardContent><Badge variant={domains?.assetsMatch ? 'secondary' : 'destructive'}>{domains === null ? 'Vérification…' : domains.assetsMatch ? 'Versions identiques' : 'Versions différentes'}</Badge><p className="mt-2 text-xs text-muted-foreground">Une différence signifie que le domaine personnalisé ne sert pas encore les fichiers attendus.</p></CardContent>
         </Card>
       </div>
 
       {domains && (
         <Card>
           <CardHeader><CardTitle className="text-base">Comparaison des domaines</CardTitle></CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-2">
-            {domains.results.map((result) => (
-              <div key={result.url} className="rounded-md border border-border p-3">
-                <div className="flex items-center justify-between gap-2"><span className="font-medium">{result.name}</span><Badge variant={result.ok ? 'secondary' : 'destructive'}>HTTP {result.status}</Badge></div>
-                <p className="mt-2 break-all font-mono text-xs">{result.asset ?? 'Asset introuvable'}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Serveur : {result.server ?? '—'} · Cache : {result.cacheControl ?? '—'}</p>
-              </div>
-            ))}
+          <CardContent className="space-y-3">
+            {domains.sameDestination && <div className="rounded-md border border-border p-3 text-sm text-muted-foreground">La publication Lovable redirige actuellement vers le domaine personnalisé. Les deux contrôles atteignent donc la même destination.</div>}
+            <div className="grid gap-3 md:grid-cols-2">
+              {domains.results.map((result) => (
+                <div key={result.url} className="rounded-md border border-border p-3">
+                  <div className="flex items-center justify-between gap-2"><span className="font-medium">{result.name}</span><Badge variant={result.ok ? 'secondary' : 'destructive'}>HTTP {result.status}</Badge></div>
+                  <p className="mt-2 break-all text-xs text-muted-foreground">Destination : {result.finalUrl ?? result.url}</p>
+                  <div className="mt-2 space-y-1">{result.assets.length > 0 ? result.assets.map((entry) => <p key={entry} className="break-all font-mono text-xs">{entry}</p>) : <p className="text-xs text-destructive">Aucun asset détecté</p>}</div>
+                  <p className="mt-2 text-xs text-muted-foreground">Serveur : {result.server ?? '—'} · Cache : {result.cacheControl ?? '—'}</p>
+                </div>
+              ))}
+            </div>
+            {(domains.missingOnCustom.length > 0 || domains.unexpectedOnCustom.length > 0) && <div className="grid gap-3 md:grid-cols-2">
+              <div className="rounded-md border border-destructive/50 p-3"><p className="text-sm font-medium">Manquants sur le domaine</p>{domains.missingOnCustom.map((entry) => <p key={entry} className="mt-1 break-all font-mono text-xs text-destructive">{entry}</p>)}</div>
+              <div className="rounded-md border border-border p-3"><p className="text-sm font-medium">Fichiers inattendus</p>{domains.unexpectedOnCustom.map((entry) => <p key={entry} className="mt-1 break-all font-mono text-xs">{entry}</p>)}</div>
+            </div>}
           </CardContent>
         </Card>
       )}

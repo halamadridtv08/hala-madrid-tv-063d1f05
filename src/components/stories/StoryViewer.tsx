@@ -29,13 +29,23 @@ interface StoryViewerProps {
   settings?: StoryDisplaySettings;
 }
 
+const STORY_AUDIO_PREFERENCE_KEY = 'hmtv-story-audio';
+
+function readInitialMutedPreference(): boolean {
+  try {
+    return localStorage.getItem(STORY_AUDIO_PREFERENCE_KEY) === 'muted';
+  } catch {
+    return false;
+  }
+}
+
 export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settings = DEFAULT_STORY_SETTINGS }: StoryViewerProps) {
   const { toast } = useToast();
   const [ringIndex, setRingIndex] = useState(startRingIndex);
   const [itemIndex, setItemIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(readInitialMutedPreference);
   const [audioBlocked, setAudioBlocked] = useState(false);
   const [mediaReady, setMediaReady] = useState(false);
   const [mediaError, setMediaError] = useState(false);
@@ -84,6 +94,16 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
       : (progressRef.current / 100) * duration;
     await saveStoryProgress({ ringId: ring.id, itemId: item.id, positionSeconds, isCompleted: completed });
   }, [ring, item, isVideo]);
+
+  const setExplicitMutedPreference = useCallback((nextMuted: boolean) => {
+    setMuted(nextMuted);
+    setAudioBlocked(false);
+    try {
+      localStorage.setItem(STORY_AUDIO_PREFERENCE_KEY, nextMuted ? 'muted' : 'sound');
+    } catch {
+      /* the preference remains active for the current viewer session */
+    }
+  }, []);
 
   const resetTimeline = useCallback(() => {
     setProgress(0);
@@ -268,11 +288,20 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     const onChange = () => {
       const active = Boolean(document.fullscreenElement);
       setIsFullscreen(active);
-      if (!active && fullscreenIntentRef.current) setVisualFullscreen(true);
+      if (active) setVisualFullscreen(false);
+      else if (fullscreenIntentRef.current) setVisualFullscreen(true);
     };
     document.addEventListener('fullscreenchange', onChange);
     return () => document.removeEventListener('fullscreenchange', onChange);
   }, []);
+
+  useEffect(() => {
+    if (!fullscreenIntentRef.current || document.fullscreenElement) return;
+    const node = containerRef.current;
+    if (!node) return;
+    setVisualFullscreen(true);
+    if (node.requestFullscreen) void node.requestFullscreen().catch(() => setVisualFullscreen(true));
+  }, [item?.id]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -285,7 +314,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
       if (event.key === 'ArrowLeft') void goPrev();
       if (event.key === 'ArrowDown') void goNextRing();
       if (event.key === 'ArrowUp') void goPrevRing();
-      if (key === 'm') setMuted((value) => !value);
+       if (key === 'm') setExplicitMutedPreference(!muted);
       if (key === 'f') void toggleFullscreen();
       if (event.key === ' ') {
         event.preventDefault();
@@ -299,7 +328,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = previousOverflow;
     };
-  }, [goNext, goPrev, goNextRing, goPrevRing, onClose, persistCurrent, toggleFullscreen]);
+   }, [goNext, goPrev, goNextRing, goPrevRing, muted, onClose, persistCurrent, setExplicitMutedPreference, toggleFullscreen]);
 
   const onTouchStart = (event: React.TouchEvent) => {
     const touch = event.touches[0];
@@ -427,7 +456,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
           <div className="absolute left-0 right-0 top-4 z-30 flex items-center gap-2 px-3 pt-2">
             <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full ring-2 ring-foreground/70">{ring.cover_url ? <img src={ring.cover_url} alt="" className="h-full w-full object-cover" /> : <div className="h-full w-full bg-muted" />}</div>
             <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground drop-shadow">{ring.title}</span>
-            {isVideo && <button onClick={() => { setMuted((value) => !value); setAudioBlocked(false); }} aria-label={muted ? 'Activer le son' : 'Couper le son'} className="rounded-full p-1.5 text-foreground/90 hover:text-foreground">{muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}</button>}
+            {isVideo && <button onClick={() => setExplicitMutedPreference(!muted)} aria-label={muted ? 'Activer le son' : 'Couper le son'} className="rounded-full p-1.5 text-foreground/90 hover:text-foreground">{muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}</button>}
             <button onClick={() => setPaused((value) => !value)} aria-label={paused ? 'Reprendre' : 'Mettre en pause'} className="rounded-full p-1.5 text-foreground/90 hover:text-foreground">{paused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}</button>
             <button onClick={toggleFullscreen} aria-label={isFullscreen || visualFullscreen ? 'Quitter le plein écran' : 'Plein écran'} className="rounded-full p-1.5 text-foreground/90 hover:text-foreground">{isFullscreen || visualFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}</button>
             <button onClick={share} aria-label="Partager" className="rounded-full p-1.5 text-foreground/90 hover:text-foreground"><Send className="h-5 w-5" /></button>
@@ -485,7 +514,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
           )}
 
            {!mediaReady && !mediaError && <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-background/30"><div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" />{retryDelay !== null && <span className="text-xs text-foreground">Nouvelle tentative…</span>}</div>}
-           {audioBlocked && isVideo && <div className="absolute bottom-20 left-1/2 z-30 -translate-x-1/2"><Button size="sm" onClick={() => { setMuted(false); setAudioBlocked(false); void videoRef.current?.play(); }}><Volume2 className="h-4 w-4" /> Activer le son</Button></div>}
+           {audioBlocked && isVideo && <div className="absolute bottom-20 left-1/2 z-30 -translate-x-1/2"><Button size="sm" onClick={() => { setExplicitMutedPreference(false); void videoRef.current?.play(); }}><Volume2 className="h-4 w-4" /> Activer le son</Button></div>}
            <button className="absolute inset-y-16 left-0 z-10 w-1/3" aria-label="Précédent" onClick={() => void goPrev()} />
            <button className="absolute inset-y-16 right-0 z-10 w-1/3" aria-label="Suivant" onClick={() => void goNext()} />
           {item.caption && <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-background/90 to-transparent p-4 pt-12"><p className="text-sm text-foreground drop-shadow">{item.caption}</p></div>}
