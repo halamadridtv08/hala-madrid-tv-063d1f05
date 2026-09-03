@@ -188,7 +188,9 @@ export async function getStoryProgress(ringId: string): Promise<StoryProgress | 
     : null;
   if (!remote) return local;
   if (!local) return remote;
-  return new Date(remote.updatedAt).getTime() >= new Date(local.updatedAt).getTime() ? remote : local;
+  const remoteTime = new Date(remote.updatedAt).getTime() || 0;
+  const localTime = new Date(local.updatedAt).getTime() || 0;
+  return remoteTime >= localTime ? remote : local;
 }
 
 let progressWriteQueue = Promise.resolve();
