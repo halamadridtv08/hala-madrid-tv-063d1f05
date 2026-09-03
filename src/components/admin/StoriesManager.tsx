@@ -261,7 +261,9 @@ export function StoriesManager() {
     const check = await validateStoryFile(file);
     if (!check.ok) {
       if (check.convertible) {
-        setConversion({ file, message: check.message || '', ringId: ring.id });
+        const target = { file, message: check.message || '', ringId: ring.id };
+        setConversion(target);
+        void runConversion(target);
         return;
       }
       toast({ title: 'Fichier refusé', description: check.message, variant: 'destructive' });
@@ -297,9 +299,9 @@ export function StoriesManager() {
     load();
   };
 
-  const runConversion = async () => {
-    if (!conversion) return;
-    const target = conversion;
+  const runConversion = async (override?: { file: File; message: string; ringId: string | null }) => {
+    const target = override ?? conversion;
+    if (!target) return;
     setConverting(true);
     setConversionProgress(0);
     try {
