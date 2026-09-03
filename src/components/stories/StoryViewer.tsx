@@ -47,7 +47,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(() => {
     try {
-      return localStorage.getItem("hmtv-story-muted") === "true";
+      return localStorage.getItem(STORY_AUDIO_PREFERENCE_KEY) === "true";
     } catch {
       return false;
     }
@@ -84,7 +84,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
 
   useEffect(() => {
     try {
-      localStorage.setItem("hmtv-story-muted", String(muted));
+      localStorage.setItem(STORY_AUDIO_PREFERENCE_KEY, String(muted));
     } catch (e) {}
   }, [muted]);
 
