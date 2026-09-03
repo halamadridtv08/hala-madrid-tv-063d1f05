@@ -45,25 +45,19 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [itemIndex, setItemIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [muted, setMuted] = useState(readInitialMutedPreference);
+  const [muted, setMuted] = useState(() => {
+    try {
+      return localStorage.getItem("hmtv-story-muted") === "true";
+    } catch {
+      return false;
+    }
+  });
   const [audioBlocked, setAudioBlocked] = useState(false);
   const [mediaReady, setMediaReady] = useState(false);
   const [mediaError, setMediaError] = useState(false);
   const [retryToken, setRetryToken] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [visualFullscreen, setVisualFullscreen] = useState(() => {
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("hmtv-story-muted", String(muted));
-    } catch (e) {}
-  }, [muted]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem("hmtv-story-fullscreen", String(visualFullscreen || isFullscreen));
-    } catch (e) {}
-  }, [visualFullscreen, isFullscreen]);
     try {
       return localStorage.getItem("hmtv-story-fullscreen") === "true";
     } catch {
@@ -71,7 +65,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     }
   });
   const [retryDelay, setRetryDelay] = useState<number | null>(null);
-  const [mediaErrorMessage, setMediaErrorMessage] = useState('Ce contenu n\'a pas pu être chargé.');
+  const [mediaErrorMessage, setMediaErrorMessage] = useState('Ce contenu n'a pas pu être chargé.');
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -87,6 +81,18 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const fullscreenIntentRef = useRef(false);
   const touchRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const watchRef = useRef({ startedAt: Date.now(), elapsed: 0, itemId: '', ringId: '' });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("hmtv-story-muted", String(muted));
+    } catch (e) {}
+  }, [muted]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("hmtv-story-fullscreen", String(visualFullscreen || isFullscreen));
+    } catch (e) {}
+  }, [visualFullscreen, isFullscreen]);
 
   const ring = rings[ringIndex];
   const item = ring?.items[itemIndex];
