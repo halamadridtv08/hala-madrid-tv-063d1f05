@@ -29,12 +29,9 @@ interface StoryViewerProps {
   settings?: StoryDisplaySettings;
 }
 
-const STORY_AUDIO_PREFERENCE_KEY = 'hmtv-story-audio';
+const 'hmtv-story-audio' = 'hmtv-story-audio';
 
-function readInitialMutedPreference(): boolean {
-  try {
-    return localStorage.getItem(STORY_AUDIO_PREFERENCE_KEY) === 'muted';
-  } catch {
+ catch {
     return false;
   }
 }
@@ -47,7 +44,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(() => {
     try {
-      return localStorage.getItem('hmtv-story-muted') === 'true';
+      return localStorage.getItem('hmtv-story-audio') === 'true';
     } catch {
       return false;
     }
@@ -84,7 +81,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
 
   useEffect(() => {
     try {
-      localStorage.setItem('hmtv-story-muted', String(muted));
+      localStorage.setItem('hmtv-story-audio', String(muted));
     } catch (e) {}
   }, [muted]);
 
@@ -123,7 +120,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     setMuted(nextMuted);
     setAudioBlocked(false);
     try {
-      localStorage.setItem('hmtv-story-muted', String(nextMuted));
+      localStorage.setItem('hmtv-story-audio', String(nextMuted));
     } catch {
       /* the preference remains active for the current viewer session */
     }
