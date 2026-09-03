@@ -51,20 +51,49 @@ const News = () => {
     }
   };
 
+  // Normalise les catégories incohérentes en base (ex: "MATCH", "Match", "Avant-match",
+  // "Conférence de Presse ", "MERCATO", "ENTRAINEMENT") vers des clés canoniques.
+  const normalizeCategory = (raw: string | null | undefined): string => {
+    const c = (raw || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "");
+    if (c.includes("match")) return "match";
+    if (c.includes("conference")) return "conference";
+    if (c.includes("mercato") || c.includes("transfert")) return "mercato";
+    if (c.includes("entrainement") || c.includes("formation")) return "formation";
+    if (c.includes("hommage")) return "hommage";
+    if (c.includes("joueur") || c.includes("presentation")) return "joueur";
+    return "info";
+  };
+
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case "match": return "Match";
+      case "joueur": return "Joueur";
+      case "conference": return "Conférence";
+      case "mercato": return "Mercato";
+      case "hommage": return "Hommage";
+      case "formation": return "Formation";
+      default: return "Info";
+    }
+  };
+
   const filteredNews = articles.filter(article => {
     const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          article.description.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCategory = selectedCategory === null || article.category === selectedCategory;
+    const matchesCategory = selectedCategory === null || normalizeCategory(article.category) === selectedCategory;
     
     return matchesSearch && matchesCategory;
   });
 
   const getCategoryColor = (category: string) => {
-    switch (category) {
+    switch (normalizeCategory(category)) {
       case "match": return "bg-green-600";
       case "joueur": return "bg-blue-600";
-      case "conférence": return "bg-purple-600";
+      case "conference": return "bg-purple-600";
       case "mercato": return "bg-orange-600";
       case "hommage": return "bg-red-600";
       case "formation": return "bg-teal-600";
@@ -86,7 +115,7 @@ const News = () => {
     { name: "Tous", value: null },
     { name: "Match", value: "match" },
     { name: "Joueur", value: "joueur" },
-    { name: "Conférence", value: "conférence" },
+    { name: "Conférence", value: "conference" },
     { name: "Mercato", value: "mercato" },
     { name: "Hommage", value: "hommage" },
     { name: "Formation", value: "formation" },
@@ -178,7 +207,7 @@ const News = () => {
                         className="w-full h-full object-cover"
                       />
                       <Badge className={`absolute top-4 left-4 ${getCategoryColor(article.category)}`}>
-                        {article.category}
+                        {getCategoryLabel(normalizeCategory(article.category))}
                       </Badge>
                     </div>
                   )}
