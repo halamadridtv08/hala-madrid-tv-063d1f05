@@ -24,6 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Match } from '@/types/Match';
 import { EditEntryModal } from './liveblog/EditEntryModal';
 import { MatchAutomationPanel } from './MatchAutomationPanel';
+import { QuickActionsPanel } from './matchcontrol/QuickActionsPanel';
 
 interface MatchControlCenterProps {
   matchId?: string;
