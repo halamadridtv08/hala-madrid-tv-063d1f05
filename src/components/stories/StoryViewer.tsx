@@ -181,7 +181,6 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     const interval = window.setInterval(() => void persistCurrent(), 3000);
     return () => {
       window.clearInterval(interval);
-      void persistCurrent();
       flushView(false);
     };
   }, [item?.id, ring?.id]);
@@ -272,7 +271,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') void persistCurrent().then(onClose);
       if (event.key === 'ArrowRight') void goNext();
       if (event.key === 'ArrowLeft') void goPrev();
       if (event.key === 'ArrowDown') void goNextRing();
@@ -290,7 +289,6 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     return () => {
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = previousOverflow;
-      void persistCurrent();
     };
   }, [goNext, goPrev, goNextRing, goPrevRing, onClose, persistCurrent, toggleFullscreen]);
 
@@ -310,7 +308,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     if (Math.abs(dx) > Math.abs(dy)) {
       if (dx < 0) void goNextRing();
       else void goPrevRing();
-    } else if (dy > 0) onClose();
+    } else if (dy > 0) void persistCurrent().then(onClose);
     else void toggleFullscreen();
   };
 
@@ -421,7 +419,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
             <button onClick={() => setPaused((value) => !value)} aria-label={paused ? 'Reprendre' : 'Mettre en pause'} className="rounded-full p-1.5 text-foreground/90 hover:text-foreground">{paused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}</button>
             <button onClick={toggleFullscreen} aria-label={isFullscreen || visualFullscreen ? 'Quitter le plein écran' : 'Plein écran'} className="rounded-full p-1.5 text-foreground/90 hover:text-foreground">{isFullscreen || visualFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}</button>
             <button onClick={share} aria-label="Partager" className="rounded-full p-1.5 text-foreground/90 hover:text-foreground"><Send className="h-5 w-5" /></button>
-            <button onClick={onClose} aria-label="Fermer les stories" className="rounded-full p-1.5 text-foreground/90 hover:text-foreground"><X className="h-5 w-5" /></button>
+            <button onClick={() => void persistCurrent().then(onClose)} aria-label="Fermer les stories" className="rounded-full p-1.5 text-foreground/90 hover:text-foreground"><X className="h-5 w-5" /></button>
           </div>
 
           <div className="relative h-full w-full overflow-hidden bg-muted/20">
