@@ -1,5 +1,5 @@
-- [ ] Comparer les bundles et assets du domaine personnalisé avec la publication Lovable
-- [ ] Afficher tous les écarts de déploiement dans le diagnostic admin
-- [ ] Activer l’audio par défaut et mémoriser uniquement le choix explicite de l’utilisateur
-- [ ] Maintenir le plein écran pendant le passage entre stories
-- [ ] Vérifier puis publier les correctifs
+- [x] Comparer les bundles et assets du domaine personnalisé avec la publication Lovable
+- [x] Afficher tous les écarts de déploiement dans le diagnostic admin
+- [x] Activer l’audio par défaut et mémoriser uniquement le choix explicite de l’utilisateur
+- [x] Maintenir le plein écran pendant le passage entre stories
+- [x] Vérifier puis publier les correctifs
