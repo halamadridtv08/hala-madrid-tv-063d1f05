@@ -63,7 +63,7 @@ const DeviceBrowserStats = ({ deviceStats, browserStats }: DeviceBrowserStatsPro
         </CardHeader>
         <CardContent>
           {deviceStats.length > 0 ? (
-            <div className="flex items-center gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
               <ResponsiveContainer width={140} height={140}>
                 <PieChart>
                   <Pie
