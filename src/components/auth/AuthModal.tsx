@@ -125,18 +125,16 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
       if (!roleData) return false;
 
-      const { data: totpData, error: totpError } = await supabase
-        .from("secure_totp_secrets")
-        .select("user_id")
-        .eq("user_id", userId)
-        .maybeSingle();
+      const { data: totpData, error: totpError } = await supabase.rpc("user_has_totp", {
+        p_user_id: userId,
+      });
 
       if (totpError) {
         console.error("Error checking 2FA status:", totpError);
         return false;
       }
 
-      return !!totpData;
+      return totpData === true;
     } catch (error) {
       console.error("Error in 2FA check:", error);
       return false;
