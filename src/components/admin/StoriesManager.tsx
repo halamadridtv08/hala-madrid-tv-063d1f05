@@ -47,7 +47,7 @@ const readVideoDuration = (file: File): Promise<number> =>
     video.onloadedmetadata = () => {
       const duration = Number.isFinite(video.duration) ? Math.ceil(video.duration) : 15;
       URL.revokeObjectURL(objectUrl);
-      resolve(Math.max(2, Math.min(180, duration)));
+      resolve(Math.max(1, Math.min(21600, duration)));
     };
     video.onerror = () => {
       URL.revokeObjectURL(objectUrl);
