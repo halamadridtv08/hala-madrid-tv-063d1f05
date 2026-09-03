@@ -373,6 +373,54 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     else void toggleFullscreen();
   };
 
+  const [repairSrc, setRepairSrc] = useState<string | null>(null);
+  const [repairing, setRepairing] = useState(false);
+  const [repairProgress, setRepairProgress] = useState(0);
+  const repairCacheRef = useRef<Map<string, string>>(new Map());
+  const repairAttemptRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setRepairing(false);
+    setRepairProgress(0);
+    setRepairSrc(item?.id ? repairCacheRef.current.get(item.id) ?? null : null);
+  }, [item?.id]);
+
+  useEffect(() => {
+    const cache = repairCacheRef.current;
+    return () => {
+      cache.forEach((url) => URL.revokeObjectURL(url));
+      cache.clear();
+    };
+  }, []);
+
+  // Dernier recours : transcodage local en MP4 H.264/AAC pour lire n'importe quel format.
+  const repairMedia = useCallback(async (url: string, id: string) => {
+    if (repairAttemptRef.current === id) return;
+    repairAttemptRef.current = id;
+    setRepairing(true);
+    setRepairProgress(0);
+    try {
+      const { transcodeToMp4 } = await import('@/lib/videoTranscode');
+      const response = await fetch(url, { mode: 'cors' });
+      if (!response.ok) throw new Error('Téléchargement de la vidéo impossible.');
+      const blob = await response.blob();
+      const source = new File([blob], 'story-source', { type: blob.type || 'video/mp4' });
+      const converted = await transcodeToMp4(source, (ratio) => setRepairProgress(Math.round(ratio * 100)));
+      const objectUrl = URL.createObjectURL(converted);
+      repairCacheRef.current.set(id, objectUrl);
+      setRepairSrc(objectUrl);
+      setMediaError(false);
+      setMediaFormatUnsupported(false);
+      setMediaErrorMessage('');
+      setMediaReady(false);
+    } catch (error: any) {
+      setMediaErrorMessage(`Conversion impossible : ${error?.message || 'échec du transcodage local'}.`);
+      setMediaError(true);
+    } finally {
+      setRepairing(false);
+    }
+  }, []);
+
   const retryMedia = useCallback(() => {
     setMediaError(false);
     setMediaFormatUnsupported(false);
@@ -409,7 +457,10 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     setMediaFormatUnsupported(isUnsupportedFormat);
     setMediaError(true);
     setMediaReady(false);
-  }, [ring?.id, item?.id, item?.media_url]);
+    if (isUnsupportedFormat && item?.id && item?.media_url) {
+      void repairMedia(item.media_url, item.id);
+    }
+  }, [ring?.id, item?.id, item?.media_url, repairMedia]);
 
   const handleStalled = useCallback(() => {
     if (stalledTimerRef.current !== null) window.clearTimeout(stalledTimerRef.current);
@@ -424,7 +475,8 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const opacity = Math.max(0, Math.min(100, item.backdrop_opacity ?? 55)) / 100;
   const zoom = Math.max(1, Math.min(2, Number(item.media_zoom) || 1));
   const position = `${item.media_position_x ?? 50}% ${item.media_position_y ?? 50}%`;
-  const mediaSrc = retryToken > 0 ? `${item.media_url}${item.media_url.includes('?') ? '&' : '?'}r=${retryToken}` : item.media_url;
+  const fallbackSrc = retryToken > 0 ? `${item.media_url}${item.media_url.includes('?') ? '&' : '?'}r=${retryToken}` : item.media_url;
+  const mediaSrc = repairSrc ?? fallbackSrc;
   const posterSrc = ring.cover_url || undefined;
 
   const onVideoReady = async () => {
@@ -494,7 +546,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
             {isVideo ? (
               <video
                 ref={videoRef}
-                key={`${item.id}-${retryToken}`}
+                key={`${item.id}-${retryToken}-${repairSrc ? 'mp4' : 'src'}`}
                 src={mediaSrc}
                 poster={posterSrc}
                 className={cn('relative h-full w-full', fitClass)}
@@ -518,7 +570,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
               />
             ) : (
               <img
-                key={`${item.id}-${retryToken}`}
+                key={`${item.id}-${retryToken}-${repairSrc ? 'mp4' : 'src'}`}
                 src={mediaSrc}
                 alt={item.caption ?? ring.title}
                 className={cn('relative h-full w-full', fitClass)}
@@ -529,11 +581,22 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
             )}
           </div>
 
-          {mediaError && (
+          {repairing && (
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-background/90 px-6 text-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" />
+              <p className="text-sm font-semibold text-foreground">Conversion de la vidéo pour votre navigateur…</p>
+              <p className="text-xs text-muted-foreground">{repairProgress}%</p>
+            </div>
+          )}
+
+          {mediaError && !repairing && (
             <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-background/85 px-6 text-center">
               {posterSrc && <img src={posterSrc} alt="" className="h-24 w-24 rounded-xl object-cover opacity-70" />}
                <p className="text-sm text-foreground">{mediaErrorMessage}</p>
               <div className="flex gap-2">
+                {mediaFormatUnsupported && item?.media_url && (
+                  <button onClick={() => { repairAttemptRef.current = null; void repairMedia(item.media_url, item.id); }} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Convertir et lire</button>
+                )}
                 {!mediaFormatUnsupported && <button onClick={retryMedia} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"><RotateCcw className="h-4 w-4" /> Réessayer</button>}
                  <button onClick={() => void goNext()} className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-foreground">Passer</button>
               </div>
