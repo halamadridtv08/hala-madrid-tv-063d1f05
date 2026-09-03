@@ -6,7 +6,9 @@ const targets = [
   { name: 'Publication Lovable', url: 'https://hala-madrid-tv.lovable.app/' },
 ]
 
-const readAsset = (html: string) => html.match(/(?:src|href)=["']([^"']*\/assets\/index-[^"']+\.(?:js|css))["']/)?.[1] ?? null
+const readAssets = (html: string) => Array.from(
+  new Set(Array.from(html.matchAll(/(?:src|href)=["']([^"']*\/assets\/[^"']+)["']/g), (match) => match[1])),
+).sort()
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -45,15 +47,20 @@ Deno.serve(async (req) => {
         status: response.status,
         server: response.headers.get('server'),
         cacheControl: response.headers.get('cache-control'),
-        asset: readAsset(html),
+        assets: readAssets(html),
       }
     } catch (error) {
-      return { ...target, ok: false, status: 0, error: error instanceof Error ? error.message : 'Fetch failed', asset: null }
+      return { ...target, ok: false, status: 0, error: error instanceof Error ? error.message : 'Fetch failed', assets: [] }
     }
   }))
 
-  const assetsMatch = Boolean(results[0]?.asset && results[0].asset === results[1]?.asset)
-  return new Response(JSON.stringify({ checkedAt: new Date().toISOString(), assetsMatch, results }), {
+  const customAssets = results[0]?.assets ?? []
+  const expectedAssets = results[1]?.assets ?? []
+  const missingOnCustom = expectedAssets.filter((asset) => !customAssets.includes(asset))
+  const unexpectedOnCustom = customAssets.filter((asset) => !expectedAssets.includes(asset))
+  const sameDestination = Boolean(results[0]?.finalUrl && results[0].finalUrl === results[1]?.finalUrl)
+  const assetsMatch = customAssets.length > 0 && missingOnCustom.length === 0 && unexpectedOnCustom.length === 0
+  return new Response(JSON.stringify({ checkedAt: new Date().toISOString(), assetsMatch, sameDestination, missingOnCustom, unexpectedOnCustom, results }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
   })
 })
