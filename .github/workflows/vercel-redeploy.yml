@@ -1,0 +1,35 @@
+name: Redéploiement Vercel
+
+# Filet de sécurité : si le webhook GitHub → Vercel ne se déclenche pas,
+# ce workflow appelle le Deploy Hook Vercel à chaque push sur main.
+# Nécessite le secret de dépôt VERCEL_DEPLOY_HOOK_URL
+# (Vercel → Settings → Git → Deploy Hooks → branche "main").
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: vercel-redeploy
+  cancel-in-progress: false
+
+jobs:
+  redeploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Déclencher le Deploy Hook Vercel
+        env:
+          HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK_URL" ]; then
+            echo "::warning::VERCEL_DEPLOY_HOOK_URL absent — étape ignorée (Vercel déploie déjà via son intégration Git)."
+            exit 0
+          fi
+          status=$(curl -s -o /tmp/hook.json -w "%{http_code}" -X POST "$HOOK_URL")
+          echo "HTTP $status"
+          cat /tmp/hook.json || true
+          if [ "$status" -ge 400 ]; then
+            echo "::error::Le Deploy Hook Vercel a échoué (HTTP $status)."
+            exit 1
+          fi

@@ -2,17 +2,41 @@
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ],
+  "github": {
+    "silent": false,
+    "autoJobCancelation": true
+  },
   "headers": [
+    {
+      "source": "/",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate, no-cache" },
+        { "key": "CDN-Cache-Control", "value": "no-store" },
+        { "key": "Vercel-CDN-Cache-Control", "value": "no-store" }
+      ]
+    },
     {
       "source": "/index.html",
       "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+        { "key": "Cache-Control", "value": "no-store, max-age=0" },
+        { "key": "CDN-Cache-Control", "value": "no-store" },
+        { "key": "Vercel-CDN-Cache-Control", "value": "no-store" }
+      ]
+    },
+    {
+      "source": "/((?!assets/|.*\\.(?:js|css|png|jpg|jpeg|gif|svg|webp|avif|ico|woff|woff2|ttf|mp4|webm|txt|xml|json)$).*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate, no-cache" },
+        { "key": "CDN-Cache-Control", "value": "no-store" },
+        { "key": "Vercel-CDN-Cache-Control", "value": "no-store" }
       ]
     },
     {
       "source": "/news/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "CDN-Cache-Control", "value": "no-store" },
+        { "key": "Vercel-CDN-Cache-Control", "value": "no-store" }
       ]
     },
     {
