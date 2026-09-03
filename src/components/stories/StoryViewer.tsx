@@ -67,7 +67,6 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [visualFullscreen, setVisualFullscreen] = useState(false);
   const [retryDelay, setRetryDelay] = useState<number | null>(null);
-  const [mediaFormatUnsupported, setMediaFormatUnsupported] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -126,7 +125,6 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     imageStartedAtRef.current = Date.now();
     setMediaReady(false);
     setMediaError(false);
-    setMediaFormatUnsupported(false);
     setRetryDelay(null);
     if (retryTimerRef.current !== null) window.clearTimeout(retryTimerRef.current);
     if (stalledTimerRef.current !== null) window.clearTimeout(stalledTimerRef.current);
@@ -370,53 +368,6 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     else void toggleFullscreen();
   };
 
-  const [repairSrc, setRepairSrc] = useState<string | null>(null);
-  const [repairing, setRepairing] = useState(false);
-  const [repairProgress, setRepairProgress] = useState(0);
-  const repairCacheRef = useRef<Map<string, string>>(new Map());
-  const repairAttemptRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    setRepairing(false);
-    setRepairProgress(0);
-    setRepairSrc(item?.id ? repairCacheRef.current.get(item.id) ?? null : null);
-  }, [item?.id]);
-
-  useEffect(() => {
-    const cache = repairCacheRef.current;
-    return () => {
-      cache.forEach((url) => URL.revokeObjectURL(url));
-      cache.clear();
-    };
-  }, []);
-
-  // Dernier recours : transcodage local en MP4 H.264/AAC pour lire n'importe quel format.
-  const repairMedia = useCallback(async (url: string, id: string) => {
-    if (repairAttemptRef.current === id) return;
-    repairAttemptRef.current = id;
-    setRepairing(true);
-    setRepairProgress(0);
-    try {
-      const { transcodeToMp4 } = await import('@/lib/videoTranscode');
-      const response = await fetch(url, { mode: 'cors' });
-      if (!response.ok) throw new Error('Téléchargement de la vidéo impossible.');
-      const blob = await response.blob();
-      const source = new File([blob], 'story-source', { type: blob.type || 'video/mp4' });
-      const converted = await transcodeToMp4(source, (ratio) => setRepairProgress(Math.round(ratio * 100)));
-      const objectUrl = URL.createObjectURL(converted);
-      repairCacheRef.current.set(id, objectUrl);
-      setRepairSrc(objectUrl);
-      setMediaError(false);
-      setMediaFormatUnsupported(false);
-      setMediaReady(false);
-    } catch (error: any) {
-      void logStoryEvent({ ringId: ring?.id, itemId: id, eventType: 'media_error', detail: error?.message || 'Échec du fallback vidéo automatique.', mediaUrl: url });
-      setMediaError(true);
-    } finally {
-      setRepairing(false);
-    }
-  }, []);
-
   const handleMediaError = useCallback((event?: React.SyntheticEvent<HTMLVideoElement | HTMLImageElement>, forcedDetail?: string) => {
     const target = event?.currentTarget;
     const videoError = target instanceof HTMLVideoElement ? target.error : null;
@@ -440,13 +391,10 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
       }, delay);
       return;
     }
-    setMediaFormatUnsupported(isUnsupportedFormat);
     setMediaError(true);
     setMediaReady(false);
-    if (isUnsupportedFormat && item?.id && item?.media_url) {
-      void repairMedia(item.media_url, item.id);
-    }
-  }, [ring?.id, item?.id, item?.media_url, repairMedia]);
+    retryTimerRef.current = window.setTimeout(() => void goNext(), 1500);
+  }, [ring?.id, item?.id, item?.media_url, goNext]);
 
   const handleStalled = useCallback(() => {
     if (stalledTimerRef.current !== null) window.clearTimeout(stalledTimerRef.current);
@@ -462,7 +410,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const zoom = Math.max(1, Math.min(2, Number(item.media_zoom) || 1));
   const position = `${item.media_position_x ?? 50}% ${item.media_position_y ?? 50}%`;
   const fallbackSrc = retryToken > 0 ? `${item.media_url}${item.media_url.includes('?') ? '&' : '?'}r=${retryToken}` : item.media_url;
-  const mediaSrc = repairSrc ?? fallbackSrc;
+  const mediaSrc = fallbackSrc;
   const posterSrc = ring.cover_url || undefined;
 
   const onVideoReady = async () => {
@@ -532,7 +480,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
             {isVideo ? (
               <video
                 ref={videoRef}
-                key={`${item.id}-${retryToken}-${repairSrc ? 'mp4' : 'src'}`}
+                key={`${item.id}-${retryToken}`}
                 src={mediaSrc}
                 poster={posterSrc}
                 className={cn('relative h-full w-full', fitClass)}
@@ -556,7 +504,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
               />
             ) : (
               <img
-                key={`${item.id}-${retryToken}-${repairSrc ? 'mp4' : 'src'}`}
+                key={`${item.id}-${retryToken}`}
                 src={mediaSrc}
                 alt={item.caption ?? ring.title}
                 className={cn('relative h-full w-full', fitClass)}
@@ -567,15 +515,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
             )}
           </div>
 
-          {repairing && (
-            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-background/90 px-6 text-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" />
-              <p className="text-sm font-semibold text-foreground">Chargement de la vidéo…</p>
-              <p className="text-xs text-muted-foreground">{repairProgress}%</p>
-            </div>
-          )}
-
-          {mediaError && !repairing && (
+          {mediaError && (
             <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-background/85 px-6 text-center">
                {posterSrc && <img src={posterSrc} alt="" className="h-full w-full object-cover opacity-70" />}
                <div className="absolute inset-0 flex items-center justify-center bg-background/45">
