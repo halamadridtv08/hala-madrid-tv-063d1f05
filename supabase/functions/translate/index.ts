@@ -5,7 +5,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const getAllowedOrigins = () => {
   return [
     'https://qjnppcfbywfazwolfppo.lovableproject.com',
-    'https://realmadridfr.lovable.app'
+    'https://realmadridfr.lovable.app',
+    'https://hala-madrid-tv.lovable.app',
+    'https://hala-madrid-tv.com',
+    'https://www.hala-madrid-tv.com'
   ];
 };
 
@@ -13,7 +16,10 @@ const getCorsHeaders = (origin: string | null) => {
   const allowedOrigins = getAllowedOrigins();
   const isAllowed = origin && (
     allowedOrigins.includes(origin) || 
-    /https:\/\/.*\.lovableproject\.com/.test(origin)
+    /^https:\/\/.*\.lovableproject\.com$/.test(origin) ||
+    /^https:\/\/.*\.lovable\.app$/.test(origin) ||
+    /^https:\/\/([a-z0-9-]+\.)*hala-madrid-tv\.com$/.test(origin) ||
+    /^capacitor:\/\/localhost$/.test(origin)
   );
   
   return {
