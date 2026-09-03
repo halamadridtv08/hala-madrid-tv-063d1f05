@@ -3948,6 +3948,8 @@ export type Database = {
       }
       story_items: {
         Row: {
+          backdrop_blur: number
+          backdrop_opacity: number
           caption: string | null
           created_at: string
           display_order: number
@@ -3956,12 +3958,17 @@ export type Database = {
           id: string
           link_label: string | null
           link_url: string | null
+          media_position_x: number
+          media_position_y: number
           media_type: string
           media_url: string
+          media_zoom: number
           ring_id: string
           scheduled_at: string | null
         }
         Insert: {
+          backdrop_blur?: number
+          backdrop_opacity?: number
           caption?: string | null
           created_at?: string
           display_order?: number
@@ -3970,12 +3977,17 @@ export type Database = {
           id?: string
           link_label?: string | null
           link_url?: string | null
+          media_position_x?: number
+          media_position_y?: number
           media_type?: string
           media_url: string
+          media_zoom?: number
           ring_id: string
           scheduled_at?: string | null
         }
         Update: {
+          backdrop_blur?: number
+          backdrop_opacity?: number
           caption?: string | null
           created_at?: string
           display_order?: number
@@ -3984,8 +3996,11 @@ export type Database = {
           id?: string
           link_label?: string | null
           link_url?: string | null
+          media_position_x?: number
+          media_position_y?: number
           media_type?: string
           media_url?: string
+          media_zoom?: number
           ring_id?: string
           scheduled_at?: string | null
         }
