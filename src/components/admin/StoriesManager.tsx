@@ -39,6 +39,23 @@ const toLocalInput = (iso?: string | null) => {
   return new Date(d.getTime() - off).toISOString().slice(0, 16);
 };
 
+const readVideoDuration = (file: File): Promise<number> =>
+  new Promise((resolve) => {
+    const video = document.createElement('video');
+    const objectUrl = URL.createObjectURL(file);
+    video.preload = 'metadata';
+    video.onloadedmetadata = () => {
+      const duration = Number.isFinite(video.duration) ? Math.ceil(video.duration) : 15;
+      URL.revokeObjectURL(objectUrl);
+      resolve(Math.max(2, Math.min(180, duration)));
+    };
+    video.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(15);
+    };
+    video.src = objectUrl;
+  });
+
 export function StoriesManager() {
   const { toast } = useToast();
   const [rings, setRings] = useState<StoryRing[]>([]);
@@ -158,18 +175,19 @@ export function StoriesManager() {
 
   const addItem = async (ring: StoryRing, file: File) => {
     setUploadingItem(ring.id);
+    const mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+    const durationSeconds = mediaType === 'video' ? await readVideoDuration(file) : 30;
     const res = await uploadFile(file, 'stories', 'items');
     if (res.error) {
       setUploadingItem(null);
       toast({ title: 'Erreur upload', description: res.error, variant: 'destructive' });
       return;
     }
-    const mediaType = file.type.startsWith('video/') ? 'video' : 'image';
     const { error } = await db.from('story_items').insert({
       ring_id: ring.id,
       media_url: res.url,
       media_type: mediaType,
-      duration_seconds: mediaType === 'video' ? 15 : 6,
+      duration_seconds: durationSeconds,
       display_order: ring.items.length,
       expires_at: ring.is_highlight ? null : new Date(Date.now() + DAY_MS).toISOString(),
     });
@@ -321,7 +339,7 @@ export function StoriesManager() {
                         e.target.value !== (item.caption ?? '') && updateItem(item.id, { caption: e.target.value })
                       }
                     />
-                    <div className="flex gap-2">
+                    <div className="grid gap-2 sm:grid-cols-2">
                       <Input
                         defaultValue={item.link_url ?? ''}
                         placeholder="Lien (optionnel)"
@@ -329,14 +347,24 @@ export function StoriesManager() {
                           e.target.value !== (item.link_url ?? '') && updateItem(item.id, { link_url: e.target.value })
                         }
                       />
-                      <Input
-                        type="number"
-                        min={2}
-                        max={60}
-                        className="w-20"
-                        defaultValue={item.duration_seconds}
-                        onBlur={(e) => updateItem(item.id, { duration_seconds: Number(e.target.value) || 6 })}
-                      />
+                      {item.media_type === 'image' ? (
+                        <Select
+                          value={String(item.duration_seconds)}
+                          onValueChange={(value) => updateItem(item.id, { duration_seconds: Number(value) })}
+                        >
+                          <SelectTrigger aria-label="Durée d’affichage"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="30">30 secondes</SelectItem>
+                            <SelectItem value="45">45 secondes</SelectItem>
+                            <SelectItem value="60">1 minute</SelectItem>
+                            <SelectItem value="180">3 minutes</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="flex items-center rounded-md border border-border px-3 text-sm text-muted-foreground">
+                          Durée vidéo : {item.duration_seconds}s
+                        </div>
+                      )}
                     </div>
                     <Input
                       defaultValue={item.link_label ?? ''}
@@ -346,6 +374,28 @@ export function StoriesManager() {
                         updateItem(item.id, { link_label: e.target.value })
                       }
                     />
+                    <div className="grid gap-3 rounded-md border border-border p-3 sm:grid-cols-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Flou : {item.backdrop_blur ?? 32}px</Label>
+                        <Input type="range" min="0" max="64" value={item.backdrop_blur ?? 32} onChange={(e) => setRings((current) => current.map((r) => ({ ...r, items: r.items.map((it) => it.id === item.id ? { ...it, backdrop_blur: Number(e.target.value) } : it) })))} onMouseUp={(e) => updateItem(item.id, { backdrop_blur: Number(e.currentTarget.value) })} onTouchEnd={(e) => updateItem(item.id, { backdrop_blur: Number(e.currentTarget.value) })} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Opacité : {item.backdrop_opacity ?? 55}%</Label>
+                        <Input type="range" min="0" max="100" value={item.backdrop_opacity ?? 55} onChange={(e) => setRings((current) => current.map((r) => ({ ...r, items: r.items.map((it) => it.id === item.id ? { ...it, backdrop_opacity: Number(e.target.value) } : it) })))} onMouseUp={(e) => updateItem(item.id, { backdrop_opacity: Number(e.currentTarget.value) })} onTouchEnd={(e) => updateItem(item.id, { backdrop_opacity: Number(e.currentTarget.value) })} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Zoom : {Number(item.media_zoom ?? 1).toFixed(2)}×</Label>
+                        <Input type="range" min="1" max="2" step="0.05" value={Number(item.media_zoom ?? 1)} onChange={(e) => setRings((current) => current.map((r) => ({ ...r, items: r.items.map((it) => it.id === item.id ? { ...it, media_zoom: Number(e.target.value) } : it) })))} onMouseUp={(e) => updateItem(item.id, { media_zoom: Number(e.currentTarget.value) })} onTouchEnd={(e) => updateItem(item.id, { media_zoom: Number(e.currentTarget.value) })} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Position horizontale : {item.media_position_x ?? 50}%</Label>
+                        <Input type="range" min="0" max="100" value={item.media_position_x ?? 50} onChange={(e) => setRings((current) => current.map((r) => ({ ...r, items: r.items.map((it) => it.id === item.id ? { ...it, media_position_x: Number(e.target.value) } : it) })))} onMouseUp={(e) => updateItem(item.id, { media_position_x: Number(e.currentTarget.value) })} onTouchEnd={(e) => updateItem(item.id, { media_position_x: Number(e.currentTarget.value) })} />
+                      </div>
+                      <div className="space-y-1 sm:col-span-2">
+                        <Label className="text-xs">Position verticale : {item.media_position_y ?? 50}%</Label>
+                        <Input type="range" min="0" max="100" value={item.media_position_y ?? 50} onChange={(e) => setRings((current) => current.map((r) => ({ ...r, items: r.items.map((it) => it.id === item.id ? { ...it, media_position_y: Number(e.target.value) } : it) })))} onMouseUp={(e) => updateItem(item.id, { media_position_y: Number(e.currentTarget.value) })} onTouchEnd={(e) => updateItem(item.id, { media_position_y: Number(e.currentTarget.value) })} />
+                      </div>
+                    </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Diffusion programmée</Label>
                       <Input
