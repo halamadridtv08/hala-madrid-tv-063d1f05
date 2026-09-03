@@ -2142,6 +2142,7 @@ export type Database = {
       opposing_players: {
         Row: {
           created_at: string
+          formation_image_url: string | null
           id: string
           is_starter: boolean | null
           jersey_number: number | null
@@ -2153,6 +2154,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          formation_image_url?: string | null
           id?: string
           is_starter?: boolean | null
           jersey_number?: number | null
@@ -2164,6 +2166,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          formation_image_url?: string | null
           id?: string
           is_starter?: boolean | null
           jersey_number?: number | null
@@ -2555,6 +2558,7 @@ export type Database = {
           created_at: string
           "Date de naissance": string | null
           display_order: number | null
+          formation_image_url: string | null
           height: string | null
           id: string
           image_url: string | null
@@ -2580,6 +2584,7 @@ export type Database = {
           created_at?: string
           "Date de naissance"?: string | null
           display_order?: number | null
+          formation_image_url?: string | null
           height?: string | null
           id?: string
           image_url?: string | null
@@ -2605,6 +2610,7 @@ export type Database = {
           created_at?: string
           "Date de naissance"?: string | null
           display_order?: number | null
+          formation_image_url?: string | null
           height?: string | null
           id?: string
           image_url?: string | null
