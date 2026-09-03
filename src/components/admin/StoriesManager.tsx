@@ -29,7 +29,6 @@ import { StoryRing, StoryItem, fetchStoryRings, isRingArchived, isRingScheduled 
 import { StoriesAnalyticsPanel } from './StoriesAnalyticsPanel';
 import { StoryDisplaySettingsPanel } from './StoryDisplaySettingsPanel';
 import { StoryDiagnosticsPanel } from './StoryDiagnosticsPanel';
-import { transcodeToMp4 } from '@/lib/videoTranscode';
 
 const db = supabase as any;
 
@@ -62,23 +61,6 @@ const readVideoDuration = (file: File): Promise<number> =>
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
 
-const readVideoCodecSignature = async (file: File): Promise<string> => {
-  const sampleSize = Math.min(file.size, 2 * 1024 * 1024);
-  const samples = [file.slice(0, sampleSize)];
-  if (file.size > sampleSize) samples.push(file.slice(Math.max(0, file.size - sampleSize)));
-  const buffers = await Promise.all(samples.map((sample) => sample.arrayBuffer()));
-  return buffers.map((buffer) => new TextDecoder('iso-8859-1').decode(buffer)).join('');
-};
-
-const validateVideoCodec = async (file: File): Promise<string | null> => {
-  const signature = await readVideoCodecSignature(file);
-  const isUniversalMp4 = (file.type === 'video/mp4' || /\.mp4$/i.test(file.name)) && signature.includes('avc1');
-  if (!isUniversalMp4) {
-    return 'La vidéo va être préparée automatiquement pour tous les navigateurs.';
-  }
-  return null;
-};
-
 const probeMedia = (file: File, kind: 'image' | 'video'): Promise<boolean> =>
   new Promise((resolve) => {
     const objectUrl = URL.createObjectURL(file);
@@ -101,7 +83,7 @@ const probeMedia = (file: File, kind: 'image' | 'video'): Promise<boolean> =>
   });
 
 // Validates a story upload before sending it to storage: type, size and readability.
-type StoryFileCheck = { ok: boolean; kind: 'image' | 'video'; message?: string; convertible?: boolean };
+type StoryFileCheck = { ok: boolean; kind: 'image' | 'video'; message?: string };
 
 const validateStoryFile = async (file: File): Promise<StoryFileCheck> => {
   const isVideo = file.type.startsWith('video/');
@@ -115,10 +97,6 @@ const validateStoryFile = async (file: File): Promise<StoryFileCheck> => {
   if (file.size === 0) return { ok: false, kind, message: 'Le fichier est vide.' };
   const readable = await probeMedia(file, kind);
   if (!readable) return { ok: false, kind, message: 'Le fichier semble corrompu ou illisible par le navigateur.' };
-  if (isVideo) {
-    const codecError = await validateVideoCodec(file);
-    if (codecError) return { ok: false, kind, message: codecError, convertible: true };
-  }
   return { ok: true, kind };
 };
 
@@ -134,7 +112,6 @@ export function StoriesManager() {
   const [uploadingItem, setUploadingItem] = useState<string | null>(null);
   const [archiveSearch, setArchiveSearch] = useState('');
   const [archiveType, setArchiveType] = useState('all');
-  const [conversionProgress, setConversionProgress] = useState(0);
 
   const [newRing, setNewRing] = useState({
     title: '',
@@ -248,43 +225,18 @@ export function StoriesManager() {
   };
 
   const addItem = async (ring: StoryRing, file: File) => {
-    const initialCheck = await validateStoryFile(file);
-    const isVideoUpload = file.type.startsWith('video/') || /\.(mp4|mov|m4v|webm|mkv|avi|3gp|mpeg|mpg|mts|m2ts|wmv|flv)$/i.test(file.name);
-
-    if (!initialCheck.ok && !isVideoUpload) {
-      toast({ title: 'Fichier refusé', description: initialCheck.message, variant: 'destructive' });
-      return;
-    }
-
-    setUploadingItem(ring.id);
-    let uploadCandidate = file;
-
-    if (isVideoUpload && (!initialCheck.ok || initialCheck.convertible)) {
-      try {
-        setConversionProgress(0);
-        uploadCandidate = await transcodeToMp4(file, (ratio) => setConversionProgress(Math.round(ratio * 100)));
-      } catch (error: any) {
-        setUploadingItem(null);
-        setConversionProgress(0);
-        toast({ title: 'Vidéo illisible', description: error?.message || 'Ce format ne peut pas être préparé.', variant: 'destructive' });
-        return;
-      }
-    }
-
-    const check = await validateStoryFile(uploadCandidate);
+    const check = await validateStoryFile(file);
     if (!check.ok) {
-      setUploadingItem(null);
-      setConversionProgress(0);
       toast({ title: 'Fichier refusé', description: check.message, variant: 'destructive' });
       return;
     }
+    setUploadingItem(ring.id);
     const mediaType = check.kind;
-    const durationSeconds = mediaType === 'video' ? await readVideoDuration(uploadCandidate) : 30;
+    const durationSeconds = mediaType === 'video' ? await readVideoDuration(file) : 30;
 
-    const res = await uploadFile(uploadCandidate, 'stories', 'items');
+    const res = await uploadFile(file, 'stories', 'items');
     if (res.error) {
       setUploadingItem(null);
-      setConversionProgress(0);
       toast({ title: 'Erreur upload', description: res.error, variant: 'destructive' });
       return;
     }
@@ -297,7 +249,6 @@ export function StoriesManager() {
       expires_at: ring.is_highlight ? null : new Date(Date.now() + DAY_MS).toISOString(),
     });
     setUploadingItem(null);
-    setConversionProgress(0);
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
       return;
@@ -546,8 +497,7 @@ export function StoriesManager() {
             />
             {uploadingItem === ring.id && (
               <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {conversionProgress > 0 ? `Préparation vidéo… ${conversionProgress}%` : 'Upload en cours...'}
+                <Loader2 className="h-4 w-4 animate-spin" /> Upload en cours...
               </p>
             )}
           </div>
@@ -751,7 +701,6 @@ export function StoriesManager() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }
