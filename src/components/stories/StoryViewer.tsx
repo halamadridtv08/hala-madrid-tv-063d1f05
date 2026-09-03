@@ -29,12 +29,7 @@ interface StoryViewerProps {
   settings?: StoryDisplaySettings;
 }
 
-const 'hmtv-story-audio' = 'hmtv-story-audio';
-
- catch {
-    return false;
-  }
-}
+const STORY_AUDIO_PREFERENCE_KEY = 'hmtv-story-audio';
 
 export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settings = DEFAULT_STORY_SETTINGS }: StoryViewerProps) {
   const { toast } = useToast();
@@ -44,7 +39,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(() => {
     try {
-      return localStorage.getItem('hmtv-story-audio') === 'true';
+      return localStorage.getItem(STORY_AUDIO_PREFERENCE_KEY) === 'true';
     } catch {
       return false;
     }
@@ -54,13 +49,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [mediaError, setMediaError] = useState(false);
   const [retryToken, setRetryToken] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [visualFullscreen, setVisualFullscreen] = useState(() => {
-    try {
-      return localStorage.getItem('hmtv-story-fullscreen') === 'true';
-    } catch {
-      return false;
-    }
-  });
+  const [visualFullscreen, setVisualFullscreen] = useState(false);
   const [retryDelay, setRetryDelay] = useState<number | null>(null);
   const [mediaErrorMessage, setMediaErrorMessage] = useState("Ce contenu n'a pas pu être chargé.");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -78,18 +67,6 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const fullscreenIntentRef = useRef(false);
   const touchRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const watchRef = useRef({ startedAt: Date.now(), elapsed: 0, itemId: '', ringId: '' });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('hmtv-story-audio', String(muted));
-    } catch (e) {}
-  }, [muted]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('hmtv-story-fullscreen', String(visualFullscreen || isFullscreen));
-    } catch (e) {}
-  }, [visualFullscreen, isFullscreen]);
 
   const ring = rings[ringIndex];
   const item = ring?.items[itemIndex];
@@ -120,7 +97,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     setMuted(nextMuted);
     setAudioBlocked(false);
     try {
-      localStorage.setItem('hmtv-story-audio', String(nextMuted));
+      localStorage.setItem(STORY_AUDIO_PREFERENCE_KEY, String(nextMuted));
     } catch {
       /* the preference remains active for the current viewer session */
     }
