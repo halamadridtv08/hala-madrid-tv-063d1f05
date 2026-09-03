@@ -52,17 +52,13 @@ export function SecuritySettings() {
     if (!user?.id) return;
 
     try {
-      const { data, error } = await supabase
-        .from('secure_totp_secrets')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('has_totp_enabled');
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         throw error;
       }
 
-      setHas2FA(!!data);
+      setHas2FA(data === true);
     } catch (error: any) {
       console.error('Error checking 2FA status:', error);
     } finally {

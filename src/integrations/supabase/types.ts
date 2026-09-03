@@ -4857,6 +4857,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_totp_enabled: { Args: never; Returns: boolean }
       has_verified_2fa: { Args: { _user_id: string }; Returns: boolean }
       has_voted_in_poll: {
         Args: { p_poll_id: string; p_user_identifier: string }
@@ -4956,6 +4957,7 @@ export type Database = {
       }
       update_all_players_ages: { Args: never; Returns: undefined }
       update_player_objectives_progress: { Args: never; Returns: undefined }
+      user_has_totp: { Args: { p_user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user" | "moderator"
