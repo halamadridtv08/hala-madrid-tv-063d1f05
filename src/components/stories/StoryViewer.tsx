@@ -115,7 +115,10 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
       if (nextItem) void saveStoryProgress({ ringId: nextRing.id, itemId: nextItem.id, positionSeconds: 0 });
       setRingIndex((value) => value + 1);
       setItemIndex(0);
-    } else onClose();
+    } else {
+      fullscreenIntentRef.current = false;
+      onClose();
+    }
   }, [flushView, persistCurrent, resetTimeline, ring, itemIndex, ringIndex, rings, onClose]);
 
   const goPrev = useCallback(async () => {
@@ -139,7 +142,10 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
       if (nextItem) void saveStoryProgress({ ringId: nextRing.id, itemId: nextItem.id, positionSeconds: 0 });
       setRingIndex((value) => value + 1);
       setItemIndex(0);
-    } else onClose();
+    } else {
+      fullscreenIntentRef.current = false;
+      onClose();
+    }
   }, [flushView, persistCurrent, resetTimeline, ringIndex, rings, onClose]);
 
   const goPrevRing = useCallback(async () => {
@@ -271,7 +277,10 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
-      if (event.key === 'Escape') void persistCurrent().then(onClose);
+      if (event.key === 'Escape') {
+        fullscreenIntentRef.current = false;
+        void persistCurrent().then(onClose);
+      }
       if (event.key === 'ArrowRight') void goNext();
       if (event.key === 'ArrowLeft') void goPrev();
       if (event.key === 'ArrowDown') void goNextRing();
@@ -308,7 +317,10 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     if (Math.abs(dx) > Math.abs(dy)) {
       if (dx < 0) void goNextRing();
       else void goPrevRing();
-    } else if (dy > 0) void persistCurrent().then(onClose);
+    } else if (dy > 0) {
+      fullscreenIntentRef.current = false;
+      void persistCurrent().then(onClose);
+    }
     else void toggleFullscreen();
   };
 
@@ -419,7 +431,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
             <button onClick={() => setPaused((value) => !value)} aria-label={paused ? 'Reprendre' : 'Mettre en pause'} className="rounded-full p-1.5 text-foreground/90 hover:text-foreground">{paused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}</button>
             <button onClick={toggleFullscreen} aria-label={isFullscreen || visualFullscreen ? 'Quitter le plein écran' : 'Plein écran'} className="rounded-full p-1.5 text-foreground/90 hover:text-foreground">{isFullscreen || visualFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}</button>
             <button onClick={share} aria-label="Partager" className="rounded-full p-1.5 text-foreground/90 hover:text-foreground"><Send className="h-5 w-5" /></button>
-            <button onClick={() => void persistCurrent().then(onClose)} aria-label="Fermer les stories" className="rounded-full p-1.5 text-foreground/90 hover:text-foreground"><X className="h-5 w-5" /></button>
+            <button onClick={() => { fullscreenIntentRef.current = false; void persistCurrent().then(onClose); }} aria-label="Fermer les stories" className="rounded-full p-1.5 text-foreground/90 hover:text-foreground"><X className="h-5 w-5" /></button>
           </div>
 
           <div className="relative h-full w-full overflow-hidden bg-muted/20">
