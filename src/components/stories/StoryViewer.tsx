@@ -1,6 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronLeft, ChevronRight, ExternalLink, Pause, Play, Send, SkipBack, SkipForward, Volume2, VolumeX, X } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Maximize2,
+  Minimize2,
+  Pause,
+  Play,
+  RotateCcw,
+  Send,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  VolumeX,
+  X,
+} from 'lucide-react';
 import { DEFAULT_STORY_SETTINGS, getStoryProgress, saveStoryProgress, StoryDisplaySettings, StoryRing, trackStoryView } from '@/hooks/useStories';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -21,12 +36,19 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(true);
   const [mediaReady, setMediaReady] = useState(false);
+  const [mediaError, setMediaError] = useState(false);
+  const [retryToken, setRetryToken] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
   const imageStartedAtRef = useRef(Date.now());
   const imageElapsedRef = useRef(0);
   const progressRef = useRef(0);
+  const restoredRef = useRef(false);
+  const autoRetryRef = useRef(0);
+  const touchRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const watchRef = useRef({ startedAt: Date.now(), elapsed: 0, itemId: '', ringId: '' });
 
   const ring = rings[ringIndex];
@@ -54,10 +76,19 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     void saveStoryProgress({ ringId: ring.id, itemId: item.id, positionSeconds });
   }, [ring, item, isVideo]);
 
+  const resetTimeline = useCallback(() => {
+    setProgress(0);
+    progressRef.current = 0;
+    imageElapsedRef.current = 0;
+    imageStartedAtRef.current = Date.now();
+    setMediaReady(false);
+    setMediaError(false);
+    autoRetryRef.current = 0;
+  }, []);
+
   const goNext = useCallback(() => {
     flushView(true);
-    setProgress(0);
-    imageElapsedRef.current = 0;
+    resetTimeline();
     if (!ring) return;
     if (itemIndex < ring.items.length - 1) {
       const nextItem = ring.items[itemIndex + 1];
@@ -71,23 +102,22 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
       setRingIndex((value) => value + 1);
       setItemIndex(0);
     } else onClose();
-  }, [flushView, ring, itemIndex, ringIndex, rings, onClose]);
+  }, [flushView, resetTimeline, ring, itemIndex, ringIndex, rings, onClose]);
 
   const goPrev = useCallback(() => {
     persistCurrent();
-    setProgress(0);
-    imageElapsedRef.current = 0;
+    resetTimeline();
     if (itemIndex > 0) setItemIndex((value) => value - 1);
     else if (ringIndex > 0) {
       const previous = ringIndex - 1;
       setRingIndex(previous);
       setItemIndex(Math.max(0, rings[previous].items.length - 1));
     }
-  }, [persistCurrent, itemIndex, ringIndex, rings]);
+  }, [persistCurrent, resetTimeline, itemIndex, ringIndex, rings]);
 
   const goNextRing = useCallback(() => {
     flushView(true);
-    setProgress(0);
+    resetTimeline();
     if (ringIndex < rings.length - 1) {
       const nextRing = rings[ringIndex + 1];
       const nextItem = nextRing.items[0];
@@ -95,21 +125,22 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
       setRingIndex((value) => value + 1);
       setItemIndex(0);
     } else onClose();
-  }, [flushView, ringIndex, rings, onClose]);
+  }, [flushView, resetTimeline, ringIndex, rings, onClose]);
 
   const goPrevRing = useCallback(() => {
     persistCurrent();
-    setProgress(0);
+    resetTimeline();
     if (ringIndex > 0) {
       setRingIndex((value) => value - 1);
       setItemIndex(0);
     } else setItemIndex(0);
-  }, [persistCurrent, ringIndex]);
+  }, [persistCurrent, resetTimeline, ringIndex]);
 
+  // Cross-device resume: restore the saved position once, for the story the user opened.
   useEffect(() => {
-    if (!ring) return;
+    if (!ring || restoredRef.current) return;
+    restoredRef.current = true;
     let active = true;
-    setMediaReady(false);
     void getStoryProgress(ring.id).then((saved) => {
       if (!active || !saved) return;
       const savedIndex = ring.items.findIndex((candidate) => candidate.id === saved.itemId);
@@ -184,11 +215,33 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     return () => window.clearTimeout(frame);
   }, [isVideo, mediaReady, item?.id]);
 
+  const toggleFullscreen = useCallback(async () => {
+    const node = containerRef.current;
+    if (!node) return;
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await node.requestFullscreen();
+    } catch {
+      /* fullscreen can be refused by the browser */
+    }
+  }, []);
+
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
       if (event.key === 'Escape') onClose();
       if (event.key === 'ArrowRight') goNext();
       if (event.key === 'ArrowLeft') goPrev();
+      if (event.key === 'ArrowDown') goNextRing();
+      if (event.key === 'ArrowUp') goPrevRing();
+      if (key === 'm') setMuted((value) => !value);
+      if (key === 'f') void toggleFullscreen();
       if (event.key === ' ') {
         event.preventDefault();
         setPaused((value) => !value);
@@ -201,21 +254,45 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = previousOverflow;
       persistCurrent();
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
     };
-  }, [goNext, goPrev, onClose, persistCurrent]);
+  }, [goNext, goPrev, goNextRing, goPrevRing, onClose, persistCurrent, toggleFullscreen]);
 
-  const share = async () => {
-    const url = item?.link_url || window.location.href;
-    try {
-      if (navigator.share) await navigator.share({ title: ring?.title, url });
-      else {
-        await navigator.clipboard.writeText(url);
-        toast({ title: 'Lien copié' });
-      }
-    } catch {
-      /* sharing was cancelled */
-    }
+  const onTouchStart = (event: React.TouchEvent) => {
+    const touch = event.touches[0];
+    touchRef.current = { x: touch.clientX, y: touch.clientY, t: Date.now() };
   };
+
+  const onTouchEnd = (event: React.TouchEvent) => {
+    const start = touchRef.current;
+    touchRef.current = null;
+    if (!start) return;
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < 45 && Math.abs(dy) < 60) return;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) goNextRing();
+      else goPrevRing();
+    } else if (dy > 0) onClose();
+    else void toggleFullscreen();
+  };
+
+  const retryMedia = useCallback(() => {
+    setMediaError(false);
+    setMediaReady(false);
+    setRetryToken((value) => value + 1);
+  }, []);
+
+  const handleMediaError = useCallback(() => {
+    if (autoRetryRef.current < 2) {
+      autoRetryRef.current += 1;
+      window.setTimeout(() => setRetryToken((value) => value + 1), 600);
+      return;
+    }
+    setMediaError(true);
+    setMediaReady(false);
+  }, []);
 
   if (!ring || !item) return null;
 
@@ -224,6 +301,9 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const opacity = Math.max(0, Math.min(100, item.backdrop_opacity ?? 55)) / 100;
   const zoom = Math.max(1, Math.min(2, Number(item.media_zoom) || 1));
   const position = `${item.media_position_x ?? 50}% ${item.media_position_y ?? 50}%`;
+  const mediaSrc = retryToken > 0 ? `${item.media_url}${item.media_url.includes('?') ? '&' : '?'}r=${retryToken}` : item.media_url;
+  const posterSrc = ring.cover_url || undefined;
+
   const onVideoReady = async () => {
     const video = videoRef.current;
     if (!video) return;
@@ -232,17 +312,23 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
       video.currentTime = saved.positionSeconds;
     }
     setMediaReady(true);
+    setMediaError(false);
     if (!paused) void video.play().catch(() => setPaused(true));
   };
 
   return createPortal(
-    <div className="dark fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-background">
+    <div
+      ref={containerRef}
+      className="dark fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-background"
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
       {settings.viewer_backdrop === 'blur' && (
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
           {isVideo ? (
             <canvas ref={canvasRef} className="h-full w-full scale-125 object-cover" style={{ filter: `blur(${blur}px)`, opacity }} />
           ) : (
-            <img src={item.media_url} alt="" className="h-full w-full scale-125 object-cover" style={{ filter: `blur(${blur}px)`, opacity, objectPosition: position }} />
+            <img src={mediaSrc} alt="" className="h-full w-full scale-125 object-cover" style={{ filter: `blur(${blur}px)`, opacity, objectPosition: position }} />
           )}
           <div className="absolute inset-0 bg-background/40" />
         </div>
@@ -259,8 +345,8 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
         <button onClick={goNextRing} aria-label="Story suivante" className="rounded-full p-3 text-foreground/80 transition hover:text-foreground"><SkipForward className="h-6 w-6" /></button>
       </div>
 
-      <div className="relative z-10 flex h-full w-full max-w-[440px] flex-col items-center justify-center gap-3 py-2 md:py-6">
-        <div className="relative h-full w-full overflow-hidden bg-background/40 shadow-2xl md:h-[86vh] md:rounded-2xl">
+      <div className={cn('relative z-10 flex h-full w-full flex-col items-center justify-center gap-3 py-2 md:py-6', isFullscreen ? 'max-w-none' : 'max-w-[440px]')}>
+        <div className={cn('relative h-full w-full overflow-hidden bg-background/40 shadow-2xl', isFullscreen ? '' : 'md:h-[86vh] md:rounded-2xl')}>
           <div className="absolute left-0 right-0 top-0 z-30 flex gap-1 p-3">
             {ring.items.map((candidate, index) => (
               <div key={candidate.id} className="h-1 flex-1 overflow-hidden rounded-full bg-foreground/30">
@@ -274,6 +360,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
             <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground drop-shadow">{ring.title}</span>
             {isVideo && <button onClick={() => setMuted((value) => !value)} aria-label={muted ? 'Activer le son' : 'Couper le son'} className="rounded-full p-1.5 text-foreground/90 hover:text-foreground">{muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}</button>}
             <button onClick={() => setPaused((value) => !value)} aria-label={paused ? 'Reprendre' : 'Mettre en pause'} className="rounded-full p-1.5 text-foreground/90 hover:text-foreground">{paused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}</button>
+            <button onClick={toggleFullscreen} aria-label={isFullscreen ? 'Quitter le plein écran' : 'Plein écran'} className="rounded-full p-1.5 text-foreground/90 hover:text-foreground">{isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}</button>
             <button onClick={share} aria-label="Partager" className="rounded-full p-1.5 text-foreground/90 hover:text-foreground"><Send className="h-5 w-5" /></button>
             <button onClick={onClose} aria-label="Fermer les stories" className="rounded-full p-1.5 text-foreground/90 hover:text-foreground"><X className="h-5 w-5" /></button>
           </div>
@@ -282,8 +369,9 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
             {isVideo ? (
               <video
                 ref={videoRef}
-                key={item.id}
-                src={item.media_url}
+                key={`${item.id}-${retryToken}`}
+                src={mediaSrc}
+                poster={posterSrc}
                 className={cn('relative h-full w-full', fitClass)}
                 style={{ transform: `scale(${zoom})`, objectPosition: position }}
                 autoPlay
@@ -295,6 +383,8 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
                 onCanPlay={() => setMediaReady(true)}
                 onWaiting={() => setMediaReady(false)}
                 onPlaying={() => setMediaReady(true)}
+                onError={handleMediaError}
+                onStalled={handleMediaError}
                 onTimeUpdate={(event) => {
                   const video = event.currentTarget;
                   if (Number.isFinite(video.duration) && video.duration > 0) setProgress(Math.min(100, (video.currentTime / video.duration) * 100));
@@ -302,11 +392,30 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
                 onEnded={goNext}
               />
             ) : (
-              <img src={item.media_url} alt={item.caption ?? ring.title} className={cn('relative h-full w-full', fitClass)} style={{ transform: `scale(${zoom})`, objectPosition: position }} onLoad={() => setMediaReady(true)} />
+              <img
+                key={`${item.id}-${retryToken}`}
+                src={mediaSrc}
+                alt={item.caption ?? ring.title}
+                className={cn('relative h-full w-full', fitClass)}
+                style={{ transform: `scale(${zoom})`, objectPosition: position }}
+                onLoad={() => setMediaReady(true)}
+                onError={handleMediaError}
+              />
             )}
           </div>
 
-          {!mediaReady && <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-background/30"><div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" /></div>}
+          {mediaError && (
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-background/85 px-6 text-center">
+              {posterSrc && <img src={posterSrc} alt="" className="h-24 w-24 rounded-xl object-cover opacity-70" />}
+              <p className="text-sm text-foreground">Ce contenu n'a pas pu être chargé.</p>
+              <div className="flex gap-2">
+                <button onClick={retryMedia} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"><RotateCcw className="h-4 w-4" /> Réessayer</button>
+                <button onClick={goNext} className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-foreground">Passer</button>
+              </div>
+            </div>
+          )}
+
+          {!mediaReady && !mediaError && <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-background/30"><div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" /></div>}
           <button className="absolute inset-y-16 left-0 z-10 w-1/3" aria-label="Précédent" onClick={goPrev} />
           <button className="absolute inset-y-16 right-0 z-10 w-1/3" aria-label="Suivant" onClick={goNext} />
           {item.caption && <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-background/90 to-transparent p-4 pt-12"><p className="text-sm text-foreground drop-shadow">{item.caption}</p></div>}
@@ -321,4 +430,19 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     </div>,
     document.body,
   );
+
+  function share() {
+    const url = item?.link_url || window.location.href;
+    void (async () => {
+      try {
+        if (navigator.share) await navigator.share({ title: ring?.title, url });
+        else {
+          await navigator.clipboard.writeText(url);
+          toast({ title: 'Lien copié' });
+        }
+      } catch {
+        /* sharing was cancelled */
+      }
+    })();
+  }
 }
