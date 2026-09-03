@@ -215,9 +215,15 @@ export function StoriesManager() {
   };
 
   const addItem = async (ring: StoryRing, file: File) => {
+    const check = await validateStoryFile(file);
+    if (!check.ok) {
+      toast({ title: 'Fichier refusé', description: check.message, variant: 'destructive' });
+      return;
+    }
     setUploadingItem(ring.id);
-    const mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+    const mediaType = check.kind;
     const durationSeconds = mediaType === 'video' ? await readVideoDuration(file) : 30;
+
     const res = await uploadFile(file, 'stories', 'items');
     if (res.error) {
       setUploadingItem(null);
