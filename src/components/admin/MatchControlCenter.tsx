@@ -926,39 +926,171 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
 
               {/* Quick actions */}
               <Separator />
-              <div className="space-y-2">
-                <Label>Actions rapides</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => quickGoal('home')}
-                    className="text-xs"
-                  >
-                    ⚽ But {selectedMatch?.home_team?.substring(0, 10)}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => quickGoal('away')}
-                    className="text-xs"
-                  >
-                    ⚽ But {selectedMatch?.away_team?.substring(0, 10)}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => quickCard('yellow')}
-                    size="sm"
-                  >
-                    🟨 Jaune
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => quickCard('red')}
-                    size="sm"
-                  >
-                    🟥 Rouge
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Actions rapides</Label>
+                  <Badge variant="outline" className="text-[10px]">
+                    {currentMinute}' • {getPeriodLabel?.() ?? ''}
+                  </Badge>
+                </div>
+
+                {/* Player search */}
+                <Input
+                  placeholder="Rechercher un joueur..."
+                  value={playerFilter}
+                  onChange={(e) => setPlayerFilter(e.target.value)}
+                  className="h-9"
+                />
+
+                {/* Goal block */}
+                <div className="rounded-lg border p-3 space-y-3">
+                  <div className="text-xs font-semibold uppercase text-muted-foreground">But</div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs">Buteur ({selectedMatch ? (ownSide === 'home' ? selectedMatch.home_team : selectedMatch.away_team) : 'Real Madrid'})</Label>
+                    <Select value={quickScorerId} onValueChange={setQuickScorerId}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Qui a marqué ?" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-64">
+                        {filteredPlayers.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.jersey_number ? `#${p.jersey_number} ` : ''}{p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs">Passe décisive (optionnel)</Label>
+                    <Select value={quickAssistId} onValueChange={(v) => setQuickAssistId(v === '__none__' ? '' : v)}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Passeur" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-64">
+                        <SelectItem value="__none__">Aucun</SelectItem>
+                        {filteredPlayers.filter(p => p.id !== quickScorerId).map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.jersey_number ? `#${p.jersey_number} ` : ''}{p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-1">
+                    {([
+                      { value: 'normal', label: 'Normal' },
+                      { value: 'penalty', label: 'Penalty' },
+                      { value: 'header', label: 'Tête' },
+                      { value: 'own_goal', label: 'CSC' },
+                    ] as const).map((opt) => (
+                      <Button
+                        key={opt.value}
+                        type="button"
+                        size="sm"
+                        variant={quickGoalType === opt.value ? 'default' : 'outline'}
+                        className="text-[11px] px-1"
+                        onClick={() => setQuickGoalType(opt.value)}
+                      >
+                        {opt.label}
+                      </Button>
+                    ))}
+                  </div>
+
+                  <Input
+                    placeholder="Buteur adverse (nom libre)"
+                    value={quickOpponentName}
+                    onChange={(e) => setQuickOpponentName(e.target.value)}
+                    className="h-9"
+                  />
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      disabled={quickSubmitting || !selectedMatchId}
+                      onClick={() => quickGoal('home')}
+                      className="text-xs"
+                    >
+                      ⚽ {selectedMatch?.home_team?.substring(0, 12)}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      disabled={quickSubmitting || !selectedMatchId}
+                      onClick={() => quickGoal('away')}
+                      className="text-xs"
+                    >
+                      ⚽ {selectedMatch?.away_team?.substring(0, 12)}
+                    </Button>
+                  </div>
+                  {quickScorerId && (
+                    <p className="text-[11px] text-muted-foreground">
+                      Aperçu : ⚽ BUT! {playerLabel(quickScorerId)}
+                      {quickAssistId ? ` — passe de ${playerLabel(quickAssistId)}` : ''}
+                    </p>
+                  )}
+                </div>
+
+                {/* Cards block */}
+                <div className="rounded-lg border p-3 space-y-3">
+                  <div className="text-xs font-semibold uppercase text-muted-foreground">Cartons</div>
+                  <Select value={quickCardPlayerId} onValueChange={(v) => setQuickCardPlayerId(v === '__none__' ? '' : v)}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Joueur averti" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-64">
+                      <SelectItem value="__none__">Joueur adverse (nom libre)</SelectItem>
+                      {filteredPlayers.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.jersey_number ? `#${p.jersey_number} ` : ''}{p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" size="sm" disabled={quickSubmitting} onClick={() => quickCard('yellow')}>
+                      🟨 Jaune
+                    </Button>
+                    <Button variant="outline" size="sm" disabled={quickSubmitting} onClick={() => quickCard('red')}>
+                      🟥 Rouge
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Substitution block */}
+                <div className="rounded-lg border p-3 space-y-3">
+                  <div className="text-xs font-semibold uppercase text-muted-foreground">Remplacement</div>
+                  <Select value={quickSubOutId} onValueChange={setQuickSubOutId}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Sortant" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-64">
+                      {filteredPlayers.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.jersey_number ? `#${p.jersey_number} ` : ''}{p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={quickSubInId} onValueChange={setQuickSubInId}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Entrant" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-64">
+                      {filteredPlayers.filter(p => p.id !== quickSubOutId).map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.jersey_number ? `#${p.jersey_number} ` : ''}{p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" className="w-full" disabled={quickSubmitting} onClick={quickSubstitution}>
+                    🔄 Publier le changement
                   </Button>
                 </div>
               </div>
+
             </CardContent>
           </Card>
 
