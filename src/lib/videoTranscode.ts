@@ -11,8 +11,8 @@ async function getFFmpeg() {
       const [{ FFmpeg }, { toBlobURL }, coreAsset, wasmAsset] = await Promise.all([
         import('@ffmpeg/ffmpeg'),
         import('@ffmpeg/util'),
-        import('@/assets/wasm/ffmpeg-core-script.asset.json').then((m) => m.default as { url: string }),
-        import('@/assets/wasm/ffmpeg-core-binary.asset.json').then((m) => m.default as { url: string }),
+        import('@/assets/ffmpeg/ffmpeg-core-script.asset.json').then((m) => m.default as { url: string }),
+        import('@/assets/ffmpeg/ffmpeg-core-binary.asset.json').then((m) => m.default as { url: string }),
       ]);
       const ffmpeg = new FFmpeg();
       await ffmpeg.load({
