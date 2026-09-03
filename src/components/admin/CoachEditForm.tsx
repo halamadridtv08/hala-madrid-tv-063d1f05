@@ -15,6 +15,8 @@ interface Coach {
   name: string;
   role: string;
   nationality: string | null;
+  birth_date?: string | null;
+  at_club_since?: string | null;
   age: number | null;
   experience_years: number | null;
   image_url: string | null;
@@ -37,6 +39,8 @@ export function CoachEditForm({ coach, onCoachUpdated }: CoachEditFormProps) {
     name: coach.name,
     role: coach.role,
     nationality: coach.nationality || "",
+    birth_date: coach.birth_date || "",
+    at_club_since: coach.at_club_since || "",
     age: coach.age?.toString() || "",
     experience_years: coach.experience_years?.toString() || "",
     image_url: coach.image_url || "",
@@ -128,6 +132,26 @@ export function CoachEditForm({ coach, onCoachUpdated }: CoachEditFormProps) {
                 id="edit-coach-nationality"
                 value={formData.nationality}
                 onChange={(e) => setFormData(prev => ({ ...prev, nationality: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-coach-birth-date">Né le</Label>
+              <Input
+                id="edit-coach-birth-date"
+                placeholder="25 Novembre 1981"
+                value={formData.birth_date}
+                onChange={(e) => setFormData(prev => ({ ...prev, birth_date: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-coach-at-club-since">Au club depuis</Label>
+              <Input
+                id="edit-coach-at-club-since"
+                placeholder="Juin 2025"
+                value={formData.at_club_since}
+                onChange={(e) => setFormData(prev => ({ ...prev, at_club_since: e.target.value }))}
               />
             </div>
 

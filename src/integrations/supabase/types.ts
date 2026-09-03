@@ -620,8 +620,10 @@ export type Database = {
       coaches: {
         Row: {
           age: number | null
+          at_club_since: string | null
           bio: string | null
           biography: string | null
+          birth_date: string | null
           created_at: string
           experience_years: number | null
           id: string
@@ -636,8 +638,10 @@ export type Database = {
         }
         Insert: {
           age?: number | null
+          at_club_since?: string | null
           bio?: string | null
           biography?: string | null
+          birth_date?: string | null
           created_at?: string
           experience_years?: number | null
           id?: string
@@ -652,8 +656,10 @@ export type Database = {
         }
         Update: {
           age?: number | null
+          at_club_since?: string | null
           bio?: string | null
           biography?: string | null
+          birth_date?: string | null
           created_at?: string
           experience_years?: number | null
           id?: string

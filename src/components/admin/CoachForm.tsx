@@ -23,6 +23,8 @@ export const CoachForm = ({ coach, onSuccess, onCancel }: CoachFormProps) => {
     role: coach?.role || "",
     age: coach?.age || 0,
     nationality: coach?.nationality || "",
+    birth_date: coach?.birth_date || "",
+    at_club_since: coach?.at_club_since || "",
     image_url: coach?.image_url || "",
     bio: coach?.bio || "",
     experience_years: coach?.experience_years || 0,
@@ -114,6 +116,26 @@ export const CoachForm = ({ coach, onSuccess, onCancel }: CoachFormProps) => {
             />
           </div>
           
+          <div>
+            <Label htmlFor="birth_date">Né le</Label>
+            <Input
+              id="birth_date"
+              placeholder="25 Novembre 1981"
+              value={formData.birth_date}
+              onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="at_club_since">Au club depuis</Label>
+            <Input
+              id="at_club_since"
+              placeholder="Juin 2025"
+              value={formData.at_club_since}
+              onChange={(e) => setFormData({ ...formData, at_club_since: e.target.value })}
+            />
+          </div>
+
           <div>
             <Label htmlFor="image_url">URL de l'image</Label>
             <div className="space-y-2">

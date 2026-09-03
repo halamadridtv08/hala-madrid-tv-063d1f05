@@ -5,6 +5,8 @@ export interface Coach {
   role: string;
   age?: number;
   nationality?: string;
+  birth_date?: string;
+  at_club_since?: string;
   image_url?: string;
   bio?: string;
   profile_image_url?: string;
