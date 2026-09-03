@@ -56,6 +56,47 @@ const readVideoDuration = (file: File): Promise<number> =>
     video.src = objectUrl;
   });
 
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
+
+const probeMedia = (file: File, kind: 'image' | 'video'): Promise<boolean> =>
+  new Promise((resolve) => {
+    const objectUrl = URL.createObjectURL(file);
+    const done = (ok: boolean) => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(ok);
+    };
+    if (kind === 'image') {
+      const img = new Image();
+      img.onload = () => done(img.naturalWidth > 0 && img.naturalHeight > 0);
+      img.onerror = () => done(false);
+      img.src = objectUrl;
+    } else {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => done(Number.isFinite(video.duration) && video.duration > 0);
+      video.onerror = () => done(false);
+      video.src = objectUrl;
+    }
+  });
+
+// Validates a story upload before sending it to storage: type, size and readability.
+const validateStoryFile = async (file: File): Promise<{ ok: true; kind: 'image' | 'video' } | { ok: false; message: string }> => {
+  const isVideo = file.type.startsWith('video/');
+  const isImage = file.type.startsWith('image/');
+  if (!isVideo && !isImage) return { ok: false, message: 'Format non pris en charge : choisissez une image ou une vidéo.' };
+  const limit = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+  if (file.size > limit) {
+    return { ok: false, message: `Fichier trop lourd (${Math.round(file.size / 1024 / 1024)} Mo). Maximum ${Math.round(limit / 1024 / 1024)} Mo.` };
+  }
+  if (file.size === 0) return { ok: false, message: 'Le fichier est vide.' };
+  const readable = await probeMedia(file, isVideo ? 'video' : 'image');
+  if (!readable) return { ok: false, message: 'Le fichier semble corrompu ou illisible par le navigateur.' };
+  return { ok: true, kind: isVideo ? 'video' : 'image' };
+};
+
+
+
 export function StoriesManager() {
   const { toast } = useToast();
   const [rings, setRings] = useState<StoryRing[]>([]);
