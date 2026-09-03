@@ -8,7 +8,6 @@ import {
   Minimize2,
   Pause,
   Play,
-  RotateCcw,
   Send,
   SkipBack,
   SkipForward,
@@ -584,22 +583,17 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
           {repairing && (
             <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-background/90 px-6 text-center">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" />
-              <p className="text-sm font-semibold text-foreground">Conversion de la vidéo pour votre navigateur…</p>
+              <p className="text-sm font-semibold text-foreground">Chargement de la vidéo…</p>
               <p className="text-xs text-muted-foreground">{repairProgress}%</p>
             </div>
           )}
 
           {mediaError && !repairing && (
             <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-background/85 px-6 text-center">
-              {posterSrc && <img src={posterSrc} alt="" className="h-24 w-24 rounded-xl object-cover opacity-70" />}
-               <p className="text-sm text-foreground">{mediaErrorMessage}</p>
-              <div className="flex gap-2">
-                {mediaFormatUnsupported && item?.media_url && (
-                  <button onClick={() => { repairAttemptRef.current = null; void repairMedia(item.media_url, item.id); }} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Convertir et lire</button>
-                )}
-                {!mediaFormatUnsupported && <button onClick={retryMedia} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"><RotateCcw className="h-4 w-4" /> Réessayer</button>}
-                 <button onClick={() => void goNext()} className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-foreground">Passer</button>
-              </div>
+               {posterSrc && <img src={posterSrc} alt="" className="h-full w-full object-cover opacity-70" />}
+               <div className="absolute inset-0 flex items-center justify-center bg-background/45">
+                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" />
+               </div>
             </div>
           )}
 

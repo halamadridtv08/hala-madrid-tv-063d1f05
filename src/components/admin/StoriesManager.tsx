@@ -30,7 +30,6 @@ import { StoryRing, StoryItem, fetchStoryRings, isRingArchived, isRingScheduled 
 import { StoriesAnalyticsPanel } from './StoriesAnalyticsPanel';
 import { StoryDisplaySettingsPanel } from './StoryDisplaySettingsPanel';
 import { StoryDiagnosticsPanel } from './StoryDiagnosticsPanel';
-import { Progress } from '@/components/ui/progress';
 import { transcodeToMp4 } from '@/lib/videoTranscode';
 
 const db = supabase as any;
@@ -138,8 +137,6 @@ export function StoriesManager() {
   const [uploadingItem, setUploadingItem] = useState<string | null>(null);
   const [archiveSearch, setArchiveSearch] = useState('');
   const [archiveType, setArchiveType] = useState('all');
-  const [conversion, setConversion] = useState<{ file: File; message: string; ringId: string | null } | null>(null);
-  const [converting, setConverting] = useState(false);
   const [conversionProgress, setConversionProgress] = useState(0);
 
   const [newRing, setNewRing] = useState({
@@ -258,24 +255,43 @@ export function StoriesManager() {
   };
 
   const addItem = async (ring: StoryRing, file: File) => {
-    const check = await validateStoryFile(file);
-    if (!check.ok) {
-      if (check.convertible) {
-        const target = { file, message: check.message || '', ringId: ring.id };
-        setConversion(target);
-        void runConversion(target);
+    const initialCheck = await validateStoryFile(file);
+    const isVideoUpload = file.type.startsWith('video/') || /\.(mp4|mov|m4v|webm|mkv|avi|3gp|mpeg|mpg|mts|m2ts|wmv|flv)$/i.test(file.name);
+
+    if (!initialCheck.ok && !isVideoUpload) {
+      toast({ title: 'Fichier refusé', description: initialCheck.message, variant: 'destructive' });
+      return;
+    }
+
+    setUploadingItem(ring.id);
+    let uploadCandidate = file;
+
+    if (isVideoUpload && (!initialCheck.ok || initialCheck.convertible)) {
+      try {
+        setConversionProgress(0);
+        uploadCandidate = await transcodeToMp4(file, (ratio) => setConversionProgress(Math.round(ratio * 100)));
+      } catch (error: any) {
+        setUploadingItem(null);
+        setConversionProgress(0);
+        toast({ title: 'Vidéo illisible', description: error?.message || 'Ce format ne peut pas être préparé.', variant: 'destructive' });
         return;
       }
+    }
+
+    const check = await validateStoryFile(uploadCandidate);
+    if (!check.ok) {
+      setUploadingItem(null);
+      setConversionProgress(0);
       toast({ title: 'Fichier refusé', description: check.message, variant: 'destructive' });
       return;
     }
-    setUploadingItem(ring.id);
     const mediaType = check.kind;
-    const durationSeconds = mediaType === 'video' ? await readVideoDuration(file) : 30;
+    const durationSeconds = mediaType === 'video' ? await readVideoDuration(uploadCandidate) : 30;
 
-    const res = await uploadFile(file, 'stories', 'items');
+    const res = await uploadFile(uploadCandidate, 'stories', 'items');
     if (res.error) {
       setUploadingItem(null);
+      setConversionProgress(0);
       toast({ title: 'Erreur upload', description: res.error, variant: 'destructive' });
       return;
     }
@@ -288,6 +304,7 @@ export function StoriesManager() {
       expires_at: ring.is_highlight ? null : new Date(Date.now() + DAY_MS).toISOString(),
     });
     setUploadingItem(null);
+    setConversionProgress(0);
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
       return;
@@ -297,31 +314,6 @@ export function StoriesManager() {
     }
     toast({ title: 'Contenu ajouté' });
     load();
-  };
-
-  const runConversion = async (override?: { file: File; message: string; ringId: string | null }) => {
-    const target = override ?? conversion;
-    if (!target) return;
-    setConverting(true);
-    setConversionProgress(0);
-    try {
-      const converted = await transcodeToMp4(target.file, (ratio) => setConversionProgress(Math.round(ratio * 100)));
-      const check = await validateStoryFile(converted);
-      if (!check.ok) throw new Error(check.message || 'La vidéo convertie reste illisible.');
-      setConversion(null);
-      const ring = target.ringId ? rings.find((r) => r.id === target.ringId) : null;
-      if (!ring) {
-        toast({ title: 'Conversion terminée', description: 'Story introuvable, réessayez l’ajout du fichier converti.', variant: 'destructive' });
-        return;
-      }
-      toast({ title: 'Conversion terminée', description: 'Import du MP4 H.264/AAC en cours…' });
-      await addItem(ring, converted);
-    } catch (e: any) {
-      toast({ title: 'Conversion impossible', description: e?.message || 'Échec du transcodage dans le navigateur.', variant: 'destructive' });
-    } finally {
-      setConverting(false);
-      setConversionProgress(0);
-    }
   };
 
   const updateItem = async (id: string, patch: Partial<StoryItem>) => {
@@ -561,7 +553,8 @@ export function StoriesManager() {
             />
             {uploadingItem === ring.id && (
               <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Upload en cours...
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {conversionProgress > 0 ? `Préparation vidéo… ${conversionProgress}%` : 'Upload en cours...'}
               </p>
             )}
           </div>
@@ -766,35 +759,6 @@ export function StoriesManager() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(conversion)} onOpenChange={(open) => { if (!open && !converting) setConversion(null); }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Vidéo incompatible</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 text-sm text-muted-foreground">
-            <p>{conversion?.message}</p>
-            <p>
-              Vous pouvez lancer une conversion automatique en MP4 H.264/AAC directement dans le navigateur.
-              L’opération peut prendre plusieurs minutes selon la taille du fichier.
-            </p>
-            {converting && (
-              <div className="space-y-2">
-                <Progress value={conversionProgress} />
-                <p className="text-xs">Conversion en cours… {conversionProgress}%</p>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConversion(null)} disabled={converting}>
-              Annuler
-            </Button>
-            <Button onClick={() => void runConversion()} disabled={converting}>
-              {converting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-              Convertir en MP4 H.264
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
