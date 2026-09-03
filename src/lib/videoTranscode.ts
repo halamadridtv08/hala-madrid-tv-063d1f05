@@ -8,16 +8,16 @@ let ffmpegPromise: Promise<any> | null = null;
 async function getFFmpeg() {
   if (!ffmpegPromise) {
     ffmpegPromise = (async () => {
-      const [{ FFmpeg }, { toBlobURL }, coreUrl, wasmUrl] = await Promise.all([
+      const [{ FFmpeg }, { toBlobURL }, coreAsset, wasmAsset] = await Promise.all([
         import('@ffmpeg/ffmpeg'),
         import('@ffmpeg/util'),
-        import('@ffmpeg/core?url').then((m) => m.default as string),
-        import('@ffmpeg/core/wasm?url').then((m) => m.default as string),
+        import('@/assets/wasm/ffmpeg-core.js.asset.json').then((m) => m.default as { url: string }),
+        import('@/assets/wasm/ffmpeg-core.wasm.asset.json').then((m) => m.default as { url: string }),
       ]);
       const ffmpeg = new FFmpeg();
       await ffmpeg.load({
-        coreURL: await toBlobURL(new URL(coreUrl, window.location.href).href, 'text/javascript'),
-        wasmURL: await toBlobURL(new URL(wasmUrl, window.location.href).href, 'application/wasm'),
+        coreURL: await toBlobURL(new URL(coreAsset.url, window.location.href).href, 'text/javascript'),
+        wasmURL: await toBlobURL(new URL(wasmAsset.url, window.location.href).href, 'application/wasm'),
       });
       return ffmpeg;
     })().catch((error) => {
