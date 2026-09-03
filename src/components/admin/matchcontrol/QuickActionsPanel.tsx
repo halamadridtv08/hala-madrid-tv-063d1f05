@@ -294,7 +294,7 @@ export const QuickActionsPanel = ({
       .eq('match_id', match.id)
       .maybeSingle();
     if (existing) {
-      const next = Math.max(0, ((existing as Record<string, number>)[field] || 0) + amount);
+      const next = Math.max(0, (((existing as unknown as Record<string, number>)[field] as number) || 0) + amount);
       await supabase.from('player_stats').update({ [field]: next } as never).eq('id', existing.id);
     } else if (amount > 0) {
       await supabase
