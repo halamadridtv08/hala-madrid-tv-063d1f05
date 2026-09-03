@@ -788,7 +788,7 @@ export function StoriesManager() {
             <Button variant="outline" onClick={() => setConversion(null)} disabled={converting}>
               Annuler
             </Button>
-            <Button onClick={runConversion} disabled={converting}>
+            <Button onClick={() => void runConversion()} disabled={converting}>
               {converting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
               Convertir en MP4 H.264
             </Button>
