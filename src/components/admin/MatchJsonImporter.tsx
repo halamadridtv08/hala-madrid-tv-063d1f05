@@ -364,11 +364,20 @@ export const MatchJsonImporter = () => {
       const teams = Object.keys(jsonData.score || jsonData.possession || {});
       const realMadridKey = teams.find(t => t.includes('real_madrid') || t.includes('realmadrid')) || 'real_madrid';
       
-      // Collecter les noms depuis les buts - SEULEMENT Real Madrid
+      // Détection des buts contre son camp (marqués par un joueur adverse)
+      const isOwnGoal = (goal: any) => {
+        const flag = goal.own_goal ?? goal.is_own_goal ?? goal.ownGoal;
+        if (flag === true) return true;
+        const raw = `${goal.type || ''} ${goal.goal_type || ''} ${goal.note || ''} ${goal.scorer || ''}`.toLowerCase();
+        return /own[_ -]?goal|\bcsc\b|\(og\)|\bog\b/.test(raw);
+      };
+
+      // Collecter les noms depuis les buts - SEULEMENT Real Madrid, hors CSC
       const goals = jsonData.goals || jsonData.events?.goals || [];
       goals.forEach((goal: any) => {
         if (goal.team === realMadridKey) {
-          if (goal.scorer) playerNames.add(goal.scorer);
+          // Un but contre son camp est marqué par un joueur adverse : on ne le valide pas
+          if (goal.scorer && !isOwnGoal(goal)) playerNames.add(goal.scorer);
           if (goal.assist) playerNames.add(goal.assist);
         }
       });

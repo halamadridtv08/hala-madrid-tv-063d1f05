@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2, Search } from "lucide-react";
+import { AlertCircle, CheckCircle2, Search, UserX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PlayerNameMatch {
@@ -18,6 +18,7 @@ interface PlayerNameMatch {
   }>;
   selectedId?: string;
   isConfirmed: boolean;
+  isIgnored?: boolean;
 }
 
 interface PlayerNameValidatorProps {
@@ -129,8 +130,22 @@ export const PlayerNameValidator = ({ playerNames, onValidationComplete }: Playe
   const handleSelectPlayer = (originalName: string, playerId: string) => {
     setMatches(prev => prev.map(m => 
       m.originalName === originalName 
-        ? { ...m, selectedId: playerId, isConfirmed: true }
+        ? { ...m, selectedId: playerId, isConfirmed: true, isIgnored: false }
         : m
+    ));
+  };
+
+  const handleIgnorePlayer = (originalName: string) => {
+    setMatches(prev => prev.map(m =>
+      m.originalName === originalName
+        ? { ...m, selectedId: undefined, isConfirmed: true, isIgnored: true }
+        : m
+    ));
+  };
+
+  const handleIgnoreAllUnmatched = () => {
+    setMatches(prev => prev.map(m =>
+      m.isConfirmed ? m : { ...m, selectedId: undefined, isConfirmed: true, isIgnored: true }
     ));
   };
 
@@ -187,8 +202,15 @@ export const PlayerNameValidator = ({ playerNames, onValidationComplete }: Playe
         {unconfirmedCount > 0 && (
           <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {unconfirmedCount} joueur(s) nécessite(nt) une validation manuelle
+            <AlertDescription className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                {unconfirmedCount} joueur(s) nécessite(nt) une validation manuelle.
+                Si c'est un joueur adverse (but contre son camp), ignorez-le.
+              </span>
+              <Button size="sm" variant="outline" onClick={handleIgnoreAllUnmatched}>
+                <UserX className="h-4 w-4 mr-2" />
+                Ignorer tous les joueurs non trouvés
+              </Button>
             </AlertDescription>
           </Alert>
         )}
@@ -196,7 +218,7 @@ export const PlayerNameValidator = ({ playerNames, onValidationComplete }: Playe
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
             {matches.map((match, index) => (
-              <Card key={index} className={match.isConfirmed ? "border-green-500" : "border-orange-500"}>
+              <Card key={index} className={match.isConfirmed ? (match.isIgnored ? "border-muted" : "border-green-500") : "border-orange-500"}>
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
@@ -204,10 +226,17 @@ export const PlayerNameValidator = ({ playerNames, onValidationComplete }: Playe
                       <p className="text-sm text-muted-foreground">Nom du JSON</p>
                     </div>
                     {match.isConfirmed && (
-                      <Badge variant="default" className="gap-1">
-                        <CheckCircle2 className="h-3 w-3" />
-                        Confirmé
-                      </Badge>
+                      match.isIgnored ? (
+                        <Badge variant="secondary" className="gap-1">
+                          <UserX className="h-3 w-3" />
+                          Ignoré (joueur adverse)
+                        </Badge>
+                      ) : (
+                        <Badge variant="default" className="gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Confirmé
+                        </Badge>
+                      )
                     )}
                   </div>
 
@@ -220,10 +249,23 @@ export const PlayerNameValidator = ({ playerNames, onValidationComplete }: Playe
                       <Button variant="outline" size="icon">
                         <Search className="h-4 w-4" />
                       </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="whitespace-nowrap"
+                        onClick={() => handleIgnorePlayer(match.originalName)}
+                      >
+                        <UserX className="h-4 w-4 mr-2" />
+                        Ignorer
+                      </Button>
                     </div>
                   )}
 
-                  {match.suggestions.length > 0 ? (
+                  {match.isIgnored ? (
+                    <p className="text-sm text-muted-foreground">
+                      Ce nom sera ignoré : aucune statistique ne lui sera attribuée.
+                    </p>
+                  ) : match.suggestions.length > 0 ? (
                     <div className="space-y-2">
                       <p className="text-sm font-medium">Suggestions:</p>
                       {match.suggestions.map(suggestion => (
@@ -248,7 +290,8 @@ export const PlayerNameValidator = ({ playerNames, onValidationComplete }: Playe
                     <Alert variant="destructive">
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
-                        Aucun joueur trouvé. Vérifiez l'orthographe ou ajoutez ce joueur à la base.
+                        Aucun joueur trouvé. Vérifiez l'orthographe, ajoutez ce joueur à la base,
+                        ou cliquez sur « Ignorer » s'il s'agit d'un joueur adverse (but contre son camp).
                       </AlertDescription>
                     </Alert>
                   )}
@@ -263,7 +306,7 @@ export const PlayerNameValidator = ({ playerNames, onValidationComplete }: Playe
           disabled={!allConfirmed}
           className="w-full"
         >
-          Confirmer et continuer ({matches.length - unconfirmedCount}/{matches.length})
+          Confirmer et continuer ({matches.filter(m => m.selectedId).length} joueur(s) lié(s){matches.filter(m => m.isIgnored).length > 0 ? `, ${matches.filter(m => m.isIgnored).length} ignoré(s)` : ''})
         </Button>
       </CardContent>
     </Card>
