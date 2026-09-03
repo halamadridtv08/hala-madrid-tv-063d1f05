@@ -11,8 +11,8 @@ async function getFFmpeg() {
       const [{ FFmpeg }, { toBlobURL }, coreUrl, wasmUrl] = await Promise.all([
         import('@ffmpeg/ffmpeg'),
         import('@ffmpeg/util'),
-        import('@ffmpeg/core/dist/esm/ffmpeg-core.js?url').then((m) => m.default as string),
-        import('@ffmpeg/core/dist/esm/ffmpeg-core.wasm?url').then((m) => m.default as string),
+        import('@ffmpeg/core?url').then((m) => m.default as string),
+        import('@ffmpeg/core/wasm?url').then((m) => m.default as string),
       ]);
       const ffmpeg = new FFmpeg();
       await ffmpeg.load({
