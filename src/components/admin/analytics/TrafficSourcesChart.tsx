@@ -51,8 +51,8 @@ const TrafficSourcesChart = ({ data }: TrafficSourcesChartProps) => {
         <CardDescription>D'où viennent vos visiteurs</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center gap-6">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row items-center gap-6">
+          <div className="relative shrink-0">
             <ResponsiveContainer width={180} height={180}>
               <PieChart>
                 <Pie

@@ -43,7 +43,7 @@ const VisitorActivityChart = ({ data, period, onPeriodChange }: VisitorActivityC
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-primary" />
@@ -52,7 +52,7 @@ const VisitorActivityChart = ({ data, period, onPeriodChange }: VisitorActivityC
             <CardDescription>Pages vues et visiteurs dans le temps</CardDescription>
           </div>
           <Select value={period} onValueChange={onPeriodChange}>
-            <SelectTrigger className="w-36">
+            <SelectTrigger className="w-full sm:w-36">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -63,7 +63,7 @@ const VisitorActivityChart = ({ data, period, onPeriodChange }: VisitorActivityC
             </SelectContent>
           </Select>
         </div>
-        <div className="flex gap-6 mt-4">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-primary" />
             <span className="text-sm text-muted-foreground">Pages vues</span>

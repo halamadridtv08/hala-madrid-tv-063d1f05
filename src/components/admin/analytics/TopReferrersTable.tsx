@@ -20,6 +20,7 @@ const TopReferrersTable = ({ referrers }: { referrers: RefRow[] }) => (
     </CardHeader>
     <CardContent>
       {referrers.length ? (
+        <div className="overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0">
         <Table>
           <TableHeader>
             <TableRow>
@@ -40,6 +41,7 @@ const TopReferrersTable = ({ referrers }: { referrers: RefRow[] }) => (
             ))}
           </TableBody>
         </Table>
+        </div>
       ) : (
         <div className="h-40 flex items-center justify-center text-muted-foreground">
           Aucun référent identifié

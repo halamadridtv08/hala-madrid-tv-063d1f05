@@ -31,6 +31,7 @@ const List = ({
     </CardHeader>
     <CardContent>
       {rows.length ? (
+        <div className="overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0">
         <Table>
           <TableHeader>
             <TableRow>
@@ -49,6 +50,7 @@ const List = ({
             ))}
           </TableBody>
         </Table>
+        </div>
       ) : (
         <div className="h-32 flex items-center justify-center text-muted-foreground text-sm">
           Aucune donnée

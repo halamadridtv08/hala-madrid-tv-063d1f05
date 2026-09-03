@@ -40,13 +40,14 @@ const TopContentTable = ({ articles, title = "Articles Les Plus Lus" }: TopConte
       </CardHeader>
       <CardContent>
         {articles.length > 0 ? (
+          <div className="overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">#</TableHead>
+                <TableHead className="w-10">#</TableHead>
                 <TableHead>Article</TableHead>
-                <TableHead className="w-24 text-center">Vues</TableHead>
-                <TableHead className="w-24 text-center">Tendance</TableHead>
+                <TableHead className="w-16 sm:w-24 text-center">Vues</TableHead>
+                <TableHead className="w-24 text-center hidden sm:table-cell">Tendance</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -79,7 +80,7 @@ const TopContentTable = ({ articles, title = "Articles Les Plus Lus" }: TopConte
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden sm:table-cell">
                     <div className="flex items-center justify-center">
                       {article.trend !== undefined ? (
                         <Badge 
@@ -100,6 +101,7 @@ const TopContentTable = ({ articles, title = "Articles Les Plus Lus" }: TopConte
               ))}
             </TableBody>
           </Table>
+          </div>
         ) : (
           <div className="h-48 flex flex-col items-center justify-center text-muted-foreground">
             <FileText className="h-12 w-12 mb-3 opacity-30" />

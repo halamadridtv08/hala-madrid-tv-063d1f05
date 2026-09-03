@@ -45,26 +45,26 @@ const AnalyticsStatCard = ({
 
   return (
     <Card className="relative overflow-hidden border-border/50 bg-card hover:shadow-lg transition-all duration-300">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="space-y-3">
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold tracking-tight">{formatValue(value)}</span>
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-2 sm:space-y-3 min-w-0">
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{title}</p>
+            <div className="flex flex-wrap items-baseline gap-x-2">
+              <span className="text-xl sm:text-3xl font-bold tracking-tight">{formatValue(value)}</span>
               {trend !== undefined && (
-                <div className={cn('flex items-center gap-1 text-sm font-medium', getTrendColor())}>
+                <div className={cn('flex items-center gap-1 text-xs sm:text-sm font-medium', getTrendColor())}>
                   {getTrendIcon()}
                   <span>{Math.abs(trend).toFixed(1)}%</span>
                 </div>
               )}
             </div>
             {previousValue !== undefined && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] sm:text-xs text-muted-foreground">
                 vs. {formatValue(previousValue)} {trendLabel}
               </p>
             )}
           </div>
-          <div className={cn('p-3 rounded-xl', iconBgColor)}>
+          <div className={cn('p-2 sm:p-3 rounded-xl shrink-0', iconBgColor)}>
             <div className={cn(iconColor)}>{icon}</div>
           </div>
         </div>
