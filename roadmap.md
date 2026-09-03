@@ -1,6 +1,5 @@
-- [x] Diagnose and fix published custom-domain update visibility
-- [x] Make story video audio enabled by default with browser-block feedback
-- [x] Keep fullscreen active across story navigation
-- [x] Strengthen cross-device resume and reliable progress writes
-- [x] Add retry backoff, poster recovery, and admin failure diagnostics
-- [x] Validate and publish
+- [ ] Comparer les bundles et assets du domaine personnalisé avec la publication Lovable
+- [ ] Afficher tous les écarts de déploiement dans le diagnostic admin
+- [ ] Activer l’audio par défaut et mémoriser uniquement le choix explicite de l’utilisateur
+- [ ] Maintenir le plein écran pendant le passage entre stories
+- [ ] Vérifier puis publier les correctifs
