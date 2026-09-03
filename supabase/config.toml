@@ -77,3 +77,7 @@ verify_jwt = false
 # Server-side 2FA (TOTP / backup code) verification - validates JWT in code
 [functions.verify-2fa]
 verify_jwt = false
+
+# Admin-only deployment/domain diagnostics; validates JWT and role in code
+[functions.story-domain-diagnostics]
+verify_jwt = false

@@ -20,6 +20,12 @@ interface PlaybackEvent {
   story_rings?: { title?: string } | null;
 }
 
+interface DomainDiagnostic {
+  assetsMatch: boolean;
+  checkedAt: string;
+  results: Array<{ name: string; url: string; finalUrl?: string; ok: boolean; status: number; server?: string | null; cacheControl?: string | null; asset: string | null; error?: string }>;
+}
+
 function currentAsset(): string {
   const script = Array.from(document.scripts).find((node) => node.src.includes('/assets/index-'));
   return script?.src.split('/').pop() ?? 'Mode développement';
@@ -28,7 +34,7 @@ function currentAsset(): string {
 export function StoryDiagnosticsPanel() {
   const [events, setEvents] = useState<PlaybackEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [domainReachable, setDomainReachable] = useState<boolean | null>(null);
+  const [domains, setDomains] = useState<DomainDiagnostic | null>(null);
   const asset = useMemo(currentAsset, []);
   const isLovableHost = window.location.hostname.endsWith('lovable.app') || window.location.hostname.endsWith('lovableproject.com');
 
@@ -40,12 +46,10 @@ export function StoryDiagnosticsPanel() {
         .select('id,event_type,detail,origin,page_url,media_url,attempt,asset_version,created_at,story_rings(title)')
         .order('created_at', { ascending: false })
         .limit(100),
-      fetch('https://hala-madrid-tv.com/', { method: 'HEAD', mode: 'no-cors', cache: 'no-store' })
-        .then(() => true)
-        .catch(() => false),
+      supabase.functions.invoke('story-domain-diagnostics'),
     ]);
     setEvents((data ?? []) as PlaybackEvent[]);
-    setDomainReachable(domainResult);
+    setDomains((domainResult.data ?? null) as DomainDiagnostic | null);
     setLoading(false);
   }, []);
 
@@ -75,10 +79,25 @@ export function StoryDiagnosticsPanel() {
           <CardContent><p className="break-all font-mono text-xs">{asset}</p><p className="mt-2 text-xs text-muted-foreground">Les deux domaines doivent afficher le même fichier après publication.</p></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-sm">{domainReachable === false ? <AlertTriangle className="h-4 w-4 text-destructive" /> : <CheckCircle2 className="h-4 w-4 text-primary" />} Domaine public</CardTitle></CardHeader>
-          <CardContent><p className="text-sm font-medium">hala-madrid-tv.com</p><Badge className="mt-2" variant={domainReachable === false ? 'destructive' : 'secondary'}>{domainReachable === null ? 'Vérification…' : domainReachable ? 'Accessible' : 'Inaccessible'}</Badge></CardContent>
+          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-sm">{domains?.assetsMatch ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <AlertTriangle className="h-4 w-4 text-destructive" />} Publication synchronisée</CardTitle></CardHeader>
+          <CardContent><Badge variant={domains?.assetsMatch ? 'secondary' : 'destructive'}>{domains === null ? 'Vérification…' : domains.assetsMatch ? 'Versions identiques' : 'Versions différentes'}</Badge><p className="mt-2 text-xs text-muted-foreground">Une différence signifie que Vercel n’a pas encore déployé la dernière version Lovable.</p></CardContent>
         </Card>
       </div>
+
+      {domains && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Comparaison des domaines</CardTitle></CardHeader>
+          <CardContent className="grid gap-3 md:grid-cols-2">
+            {domains.results.map((result) => (
+              <div key={result.url} className="rounded-md border border-border p-3">
+                <div className="flex items-center justify-between gap-2"><span className="font-medium">{result.name}</span><Badge variant={result.ok ? 'secondary' : 'destructive'}>HTTP {result.status}</Badge></div>
+                <p className="mt-2 break-all font-mono text-xs">{result.asset ?? 'Asset introuvable'}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Serveur : {result.server ?? '—'} · Cache : {result.cacheControl ?? '—'}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader><CardTitle className="text-base">100 derniers incidents</CardTitle></CardHeader>
