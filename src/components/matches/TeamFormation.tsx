@@ -85,10 +85,10 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
     if (opposingPlayerIds.length > 0) {
       const {
         data: opposingPlayers
-      } = await supabase.from('opposing_players').select('id, photo_url').in('id', opposingPlayerIds);
+      } = await supabase.from('opposing_players').select('id, formation_image_url').in('id', opposingPlayerIds);
       opposingPlayers?.forEach(p => {
-        if (p.photo_url) {
-          opposingPlayersMap[p.id] = p.photo_url;
+        if (p.formation_image_url) {
+          opposingPlayersMap[p.id] = p.formation_image_url;
         }
       });
     }
@@ -98,10 +98,10 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
     if (playerIds.length > 0) {
       const {
         data: players
-      } = await supabase.from('players').select('id, profile_image_url').in('id', playerIds);
+      } = await supabase.from('players').select('id, formation_image_url').in('id', playerIds);
       players?.forEach(p => {
-        if (p.profile_image_url) {
-          playersMap[p.id] = p.profile_image_url;
+        if (p.formation_image_url) {
+          playersMap[p.id] = p.formation_image_url;
         }
       });
     }
@@ -112,7 +112,7 @@ export const TeamFormation: React.FC<TeamFormationProps> = ({
         formation: formation.formation,
         players: (formation.match_formation_players || []).map((player: any) => ({
           ...player,
-          player_image_url: player.player_image_url || (player.opposing_player_id ? opposingPlayersMap[player.opposing_player_id] : null) || (player.player_id ? playersMap[player.player_id] : null) || null
+          player_image_url: (player.opposing_player_id ? opposingPlayersMap[player.opposing_player_id] : null) || (player.player_id ? playersMap[player.player_id] : null) || null
         }))
       };
     });

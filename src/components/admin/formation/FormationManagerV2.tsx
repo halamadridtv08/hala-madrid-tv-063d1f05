@@ -46,6 +46,7 @@ interface Player {
   jersey_number: number;
   image_url?: string;
   profile_image_url?: string;
+  formation_image_url?: string;
 }
 
 interface FormationPlayer {
@@ -197,7 +198,7 @@ export const FormationManagerV2: React.FC = () => {
     if (activeTeam === "real_madrid") {
       const { data } = await supabase
         .from('players')
-        .select('id, name, position, jersey_number, image_url, profile_image_url')
+        .select('id, name, position, jersey_number, image_url, profile_image_url, formation_image_url')
         .eq('is_active', true)
         .order('jersey_number');
 
@@ -377,7 +378,7 @@ export const FormationManagerV2: React.FC = () => {
           player_name: player.name,
           player_position: player.position,
           jersey_number: player.jersey_number,
-          player_image_url: activeTeam === "real_madrid" ? (player.profile_image_url || player.image_url) : null,
+          player_image_url: (player as any).formation_image_url || null,
           position_x: templatePos.x,
           position_y: templatePos.y,
           is_starter: true,
@@ -518,7 +519,7 @@ export const FormationManagerV2: React.FC = () => {
               player_name: player.name,
               player_position: player.position,
               jersey_number: player.jersey_number,
-              player_image_url: activeTeam === "real_madrid" ? (player.profile_image_url || player.image_url) : null,
+              player_image_url: (player as any).formation_image_url || null,
               position_x: Math.max(5, Math.min(95, percentX)),
               position_y: Math.max(10, Math.min(90, percentY)),
               is_starter: true,
@@ -548,7 +549,7 @@ export const FormationManagerV2: React.FC = () => {
             player_name: player.name,
             player_position: player.position,
             jersey_number: player.jersey_number,
-            player_image_url: activeTeam === "real_madrid" ? (player.profile_image_url || player.image_url) : null,
+            player_image_url: (player as any).formation_image_url || null,
             position_x: 0,
             position_y: 0,
             is_starter: false,
@@ -790,7 +791,7 @@ export const FormationManagerV2: React.FC = () => {
     for (const fp of playersToUpdate) {
       const { data: playerData } = await supabase
         .from('players')
-        .select('profile_image_url, image_url')
+        .select('formation_image_url')
         .eq('id', fp.player_id)
         .single();
 
@@ -798,7 +799,7 @@ export const FormationManagerV2: React.FC = () => {
         await supabase
           .from('match_formation_players')
           .update({
-            player_image_url: playerData.profile_image_url || playerData.image_url
+            player_image_url: playerData.formation_image_url
           })
           .eq('id', fp.id);
       }
@@ -836,7 +837,7 @@ export const FormationManagerV2: React.FC = () => {
         player_name: player.name,
         player_position: selectedPositionSlot.position,
         jersey_number: player.jersey_number,
-        player_image_url: activeTeam === "real_madrid" ? (player.profile_image_url || player.image_url) : null,
+        player_image_url: (player as any).formation_image_url || null,
         position_x: selectedPositionSlot.x,
         position_y: selectedPositionSlot.y,
         is_starter: true,

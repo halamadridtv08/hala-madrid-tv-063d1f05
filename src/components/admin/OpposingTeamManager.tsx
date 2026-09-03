@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Plus, Edit, Trash2, Upload, FileJson, Download, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { uploadFile } from "@/utils/fileUpload";
+import { MediaUploader } from "./MediaUploader";
 
 interface OpposingTeam {
   id: string;
@@ -31,6 +32,7 @@ interface OpposingPlayer {
   position: string;
   jersey_number?: number;
   photo_url?: string;
+  formation_image_url?: string;
   is_starter: boolean;
   created_at: string;
   updated_at: string;
@@ -79,6 +81,7 @@ export const OpposingTeamManager = () => {
     position: "",
     jersey_number: "",
     photo_url: "",
+    formation_image_url: "",
     is_starter: true
   });
 
@@ -198,7 +201,8 @@ export const OpposingTeamManager = () => {
       ...playerForm,
       team_id: selectedTeam,
       jersey_number: playerForm.jersey_number ? parseInt(playerForm.jersey_number) : null,
-      photo_url: playerForm.photo_url || null
+      photo_url: playerForm.photo_url || null,
+      formation_image_url: playerForm.formation_image_url || null
     };
 
     try {
@@ -221,7 +225,7 @@ export const OpposingTeamManager = () => {
 
       setIsPlayerDialogOpen(false);
       setEditingPlayer(null);
-      setPlayerForm({ name: "", position: "", jersey_number: "", photo_url: "", is_starter: true });
+      setPlayerForm({ name: "", position: "", jersey_number: "", photo_url: "", formation_image_url: "", is_starter: true });
       fetchPlayers(selectedTeam);
     } catch (error) {
       toast.error("Erreur lors de la sauvegarde");
@@ -419,11 +423,12 @@ export const OpposingTeamManager = () => {
         position: player.position,
         jersey_number: player.jersey_number?.toString() || "",
         photo_url: player.photo_url || "",
+        formation_image_url: player.formation_image_url || "",
         is_starter: player.is_starter
       });
     } else {
       setEditingPlayer(null);
-      setPlayerForm({ name: "", position: "", jersey_number: "", photo_url: "", is_starter: true });
+      setPlayerForm({ name: "", position: "", jersey_number: "", photo_url: "", formation_image_url: "", is_starter: true });
     }
     setIsPlayerDialogOpen(true);
   };
@@ -871,6 +876,24 @@ export const OpposingTeamManager = () => {
                             <img src={playerForm.photo_url} alt="Preview" className="w-12 h-12 object-cover rounded-full border" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                           </div>
                         )}
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Photo pour les compositions</label>
+                        <Input value={playerForm.formation_image_url} onChange={(e) => setPlayerForm({ ...playerForm, formation_image_url: e.target.value })} placeholder="URL de la photo affichée sur le terrain" className="h-9 text-sm" />
+                        <MediaUploader
+                          onSuccess={(url) => setPlayerForm({ ...playerForm, formation_image_url: url })}
+                          acceptTypes="image/*"
+                          maxSizeMB={10}
+                          buttonText="Télécharger une photo de compo"
+                          bucketName="compos"
+                          folderPath="opposing-players"
+                          currentValue={playerForm.formation_image_url}
+                          showPreview={true}
+                          className="mt-2"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Sans photo de compo, les initiales sont affichées sur le terrain.
+                        </p>
                       </div>
                       <div>
                         <label className="text-sm font-medium">Type</label>

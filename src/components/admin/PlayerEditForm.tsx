@@ -23,6 +23,7 @@ interface Player {
   image_url: string | null;
   bio: string | null;
   profile_image_url: string | null;
+  formation_image_url?: string | null;
   biography: string | null;
   social_media: any;
   is_active: boolean;
@@ -49,6 +50,7 @@ export function PlayerEditForm({ player, onPlayerUpdated }: PlayerEditFormProps)
     image_url: player.image_url || "",
     bio: player.bio || "",
     profile_image_url: player.profile_image_url || "",
+    formation_image_url: player.formation_image_url || "",
     biography: player.biography || "",
     social_media: player.social_media || { twitter: "", instagram: "", facebook: "" },
     is_active: player.is_active,
@@ -197,6 +199,32 @@ export function PlayerEditForm({ player, onPlayerUpdated }: PlayerEditFormProps)
                 />
                 <p className="text-xs text-muted-foreground">
                   Recommandé: image PNG ou JPG de haute résolution (min. 800x800px)
+                </p>
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
+              <Label htmlFor="edit-formation-image">Photo pour les compositions</Label>
+              <div className="space-y-2">
+                <Input
+                  id="edit-formation-image"
+                  type="url"
+                  value={formData.formation_image_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, formation_image_url: e.target.value }))}
+                  placeholder="URL de la photo utilisée sur le terrain"
+                />
+                <MediaUploader
+                  onSuccess={(url) => setFormData(prev => ({ ...prev, formation_image_url: url }))}
+                  acceptTypes="image/*"
+                  maxSizeMB={10}
+                  buttonText="Télécharger une photo de compo"
+                  bucketName="compos"
+                  folderPath="players"
+                  currentValue={formData.formation_image_url}
+                  showPreview={true}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Utilisée uniquement dans les compositions. Sans photo, les initiales s'affichent.
                 </p>
               </div>
             </div>

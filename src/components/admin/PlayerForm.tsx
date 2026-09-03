@@ -27,6 +27,7 @@ export const PlayerForm = ({ player, onSuccess, onCancel }: PlayerFormProps) => 
     height: player?.height || "",
     weight: player?.weight || "",
     image_url: player?.image_url || "",
+    formation_image_url: player?.formation_image_url || "",
     bio: player?.bio || "",
     is_active: player?.is_active !== false,
     is_featured: player?.is_featured || false,
@@ -169,6 +170,33 @@ export const PlayerForm = ({ player, onSuccess, onCancel }: PlayerFormProps) => 
             </div>
           </div>
           
+
+          <div>
+            <Label htmlFor="formation_image_url">Photo pour les compositions</Label>
+            <div className="space-y-2">
+              <Input
+                id="formation_image_url"
+                type="url"
+                value={formData.formation_image_url}
+                onChange={(e) => setFormData({ ...formData, formation_image_url: e.target.value })}
+                placeholder="URL de la photo utilisée sur le terrain"
+              />
+              <MediaUploader
+                onSuccess={(url) => setFormData({ ...formData, formation_image_url: url })}
+                acceptTypes="image/*"
+                maxSizeMB={10}
+                buttonText="Télécharger une photo de compo"
+                bucketName="compos"
+                folderPath="players"
+                currentValue={formData.formation_image_url}
+                showPreview={true}
+              />
+              <p className="text-xs text-muted-foreground">
+                Utilisée uniquement pour les têtes des joueurs dans les compositions. Sans photo, les initiales sont affichées.
+              </p>
+            </div>
+          </div>
+
           <div>
             <Label htmlFor="bio">Biographie</Label>
             <Textarea

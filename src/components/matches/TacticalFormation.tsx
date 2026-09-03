@@ -98,30 +98,30 @@ export const TacticalFormation = ({
 
       const { data: players } = await supabase
         .from('players')
-        .select('id, profile_image_url, image_url');
+        .select('id, formation_image_url');
 
       const { data: opposingPlayers } = await supabase
         .from('opposing_players')
-        .select('id, photo_url');
+        .select('id, formation_image_url');
 
       const playerPhotos: { [key: string]: string } = {};
       players?.forEach(p => {
-        if (p.profile_image_url || p.image_url) {
-          playerPhotos[p.id] = p.profile_image_url || p.image_url || '';
+        if (p.formation_image_url) {
+          playerPhotos[p.id] = p.formation_image_url;
         }
       });
 
       const opposingPlayerPhotos: { [key: string]: string } = {};
       opposingPlayers?.forEach(p => {
-        if (p.photo_url) {
-          opposingPlayerPhotos[p.id] = p.photo_url;
+        if (p.formation_image_url) {
+          opposingPlayerPhotos[p.id] = p.formation_image_url;
         }
       });
 
       const formationsData: { [key: string]: Formation } = {};
       data?.forEach(formation => {
         const playersWithPhotos = (formation.match_formation_players || []).map(player => {
-          let imageUrl = player.player_image_url;
+          let imageUrl: string | null = null;
           
           if (!imageUrl && player.player_id && playerPhotos[player.player_id]) {
             imageUrl = playerPhotos[player.player_id];
