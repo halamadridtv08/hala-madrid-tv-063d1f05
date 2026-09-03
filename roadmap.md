@@ -3,4 +3,4 @@
 - [x] Keep fullscreen active across story navigation
 - [x] Strengthen cross-device resume and reliable progress writes
 - [x] Add retry backoff, poster recovery, and admin failure diagnostics
-- [ ] Validate and publish
+- [x] Validate and publish
