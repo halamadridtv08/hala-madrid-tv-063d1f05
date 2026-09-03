@@ -521,7 +521,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
           )}
 
            {!mediaReady && !mediaError && <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-background/30"><div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" />{retryDelay !== null && <span className="text-xs text-foreground">Nouvelle tentative…</span>}</div>}
-           {audioBlocked && isVideo && <div className="absolute bottom-20 left-1/2 z-30 -translate-x-1/2"><Button size="sm" onClick={() => { setExplicitMutedPreference(false); void videoRef.current?.play(); }}><Volume2 className="h-4 w-4" /> Activer le son</Button></div>}
+           {audioBlocked && isVideo && !mediaError && <div className="absolute bottom-20 left-1/2 z-30 -translate-x-1/2"><Button size="sm" onClick={() => { setExplicitMutedPreference(false); void videoRef.current?.play(); }}><Volume2 className="h-4 w-4" /> Activer le son</Button></div>}
            <button className="absolute inset-y-16 left-0 z-10 w-1/3" aria-label="Précédent" onClick={() => void goPrev()} />
            <button className="absolute inset-y-16 right-0 z-10 w-1/3" aria-label="Suivant" onClick={() => void goNext()} />
           {item.caption && <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-background/90 to-transparent p-4 pt-12"><p className="text-sm text-foreground drop-shadow">{item.caption}</p></div>}
