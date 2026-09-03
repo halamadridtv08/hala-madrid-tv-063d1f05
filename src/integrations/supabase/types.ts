@@ -4014,9 +4014,71 @@ export type Database = {
           },
         ]
       }
+      story_playback_events: {
+        Row: {
+          asset_version: string | null
+          attempt: number
+          created_at: string
+          detail: string | null
+          event_type: string
+          id: string
+          item_id: string | null
+          media_url: string | null
+          origin: string | null
+          page_url: string | null
+          ring_id: string | null
+          session_id: string
+        }
+        Insert: {
+          asset_version?: string | null
+          attempt?: number
+          created_at?: string
+          detail?: string | null
+          event_type: string
+          id?: string
+          item_id?: string | null
+          media_url?: string | null
+          origin?: string | null
+          page_url?: string | null
+          ring_id?: string | null
+          session_id: string
+        }
+        Update: {
+          asset_version?: string | null
+          attempt?: number
+          created_at?: string
+          detail?: string | null
+          event_type?: string
+          id?: string
+          item_id?: string | null
+          media_url?: string | null
+          origin?: string | null
+          page_url?: string | null
+          ring_id?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_playback_events_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "story_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_playback_events_ring_id_fkey"
+            columns: ["ring_id"]
+            isOneToOne: false
+            referencedRelation: "story_rings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       story_progress: {
         Row: {
+          client_updated_at: string
           id: string
+          is_completed: boolean
           item_id: string
           position_seconds: number
           ring_id: string
@@ -4024,7 +4086,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          client_updated_at?: string
           id?: string
+          is_completed?: boolean
           item_id: string
           position_seconds?: number
           ring_id: string
@@ -4032,7 +4096,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          client_updated_at?: string
           id?: string
+          is_completed?: boolean
           item_id?: string
           position_seconds?: number
           ring_id?: string
@@ -4855,6 +4921,16 @@ export type Database = {
       publish_scheduled_flash_news: { Args: never; Returns: undefined }
       save_backup_codes: {
         Args: { p_codes: string[]; p_user_id: string }
+        Returns: boolean
+      }
+      save_story_progress: {
+        Args: {
+          p_client_updated_at: string
+          p_is_completed?: boolean
+          p_item_id: string
+          p_position_seconds: number
+          p_ring_id: string
+        }
         Returns: boolean
       }
       save_totp_secret: {

@@ -1,6 +1,6 @@
-- [ ] Diagnose and fix published custom-domain update visibility
-- [ ] Make story video audio enabled by default with browser-block feedback
-- [ ] Keep fullscreen active across story navigation
-- [ ] Strengthen cross-device resume and reliable progress writes
-- [ ] Add retry backoff, poster recovery, and admin failure diagnostics
-- [ ] Validate and publish
+- [x] Diagnose and fix published custom-domain update visibility
+- [x] Make story video audio enabled by default with browser-block feedback
+- [x] Keep fullscreen active across story navigation
+- [x] Strengthen cross-device resume and reliable progress writes
+- [x] Add retry backoff, poster recovery, and admin failure diagnostics
+- [x] Validate and publish

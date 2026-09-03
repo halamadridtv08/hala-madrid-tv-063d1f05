@@ -26,8 +26,7 @@ const stripHtml = (html: string) =>
 /**
  * Build-time prerender: generates dist/news/<slug>/index.html for every
  * published article with article-specific <title>, meta, OG, Twitter and
- * NewsArticle JSON-LD baked into the HTML. Crawlers (Google, LinkedIn,
- * Slack, Facebook) see the right tags without executing JS.
+ * NewsArticle JSON-LD baked into the HTML.
  */
 function articleSEOPrerender() {
   return {
@@ -143,16 +142,15 @@ function articleSEOPrerender() {
     <meta property="article:modified_time" content="${escapeHtml(article.updated_at || article.published_at || "")}" />
     <meta property="article:author" content="${escapeHtml(article.author_name || SITE_NAME)}" />
     <meta property="article:section" content="${escapeHtml(article.category || "")}" />
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="${escapeHtml(url)}" />
-    <meta property="twitter:title" content="${escapeHtml(title)}" />
-    <meta property="twitter:description" content="${escapeHtml(description)}" />
-    <meta property="twitter:image" content="${escapeHtml(image)}" />
-    <meta property="twitter:site" content="@HalaMadrid360" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="${escapeHtml(url)}" />
+    <meta name="twitter:title" content="${escapeHtml(title)}" />
+    <meta name="twitter:description" content="${escapeHtml(description)}" />
+    <meta name="twitter:image" content="${escapeHtml(image)}" />
+    <meta name="twitter:site" content="@HalaMadrid360" />
     <script type="application/ld+json">${JSON.stringify(articleJsonLd)}</script>
     <script type="application/ld+json">${JSON.stringify(breadcrumbJsonLd)}</script>`;
 
-          // Remove existing title + meta description + canonical + og + twitter + ld+json from template
           let html = template
             .replace(/<title>[^<]*<\/title>/i, "")
             .replace(/<meta\s+name=["'](?:title|description|keywords|robots|googlebot)["'][^>]*>/gi, "")
@@ -176,7 +174,6 @@ function articleSEOPrerender() {
   };
 }
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
@@ -203,36 +200,14 @@ export default defineConfig(({ mode }) => ({
         categories: ['sports', 'news', 'entertainment'],
         lang: 'fr',
         icons: [
-          {
-            src: '/pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: '/pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'maskable'
-          }
-        ],
-        screenshots: [
-          {
-            src: '/pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            form_factor: 'wide',
-            label: 'HALA MADRID TV'
-          }
+          { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
         ]
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MiB
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
@@ -240,16 +215,14 @@ export default defineConfig(({ mode }) => ({
         navigateFallbackDenylist: [/^\/api/, /\.json$/, /^\/supabase/, /^\/~oauth/],
         runtimeCaching: [
           {
-            // Force fresh JS/CSS bundles - always check network first
-            urlPattern: /\.(?:js|css)$/,
-            handler: 'NetworkFirst',
+            urlPattern: /\.(?:js|css|woff2?|ttf)$/i,
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'static-resources',
+              cacheName: 'static-assets',
               expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 // 24 hours
-              },
-              networkTimeoutSeconds: 3
+                maxEntries: 60,
+                maxAgeSeconds: 60 * 60 * 24 * 30
+              }
             }
           },
           {
@@ -263,7 +236,7 @@ export default defineConfig(({ mode }) => ({
               cacheName: 'supabase-cache',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+                maxAgeSeconds: 60 * 60 * 24
               }
             }
           },
@@ -274,18 +247,18 @@ export default defineConfig(({ mode }) => ({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                maxAgeSeconds: 60 * 60 * 24 * 365
               }
             }
           },
           {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/i,
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'images-cache',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
+                maxAgeSeconds: 60 * 60 * 24 * 7
               }
             }
           }

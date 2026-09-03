@@ -132,7 +132,18 @@ export interface StoryProgress {
   ringId: string;
   itemId: string;
   positionSeconds: number;
+  updatedAt: string;
+  isCompleted?: boolean;
 }
+
+export type StoryPlaybackEventType =
+  | 'media_error'
+  | 'retry'
+  | 'autoplay_blocked'
+  | 'fullscreen_denied'
+  | 'stalled'
+  | 'progress_sync_failed'
+  | 'poster_error';
 
 function readLocalProgress(ringId: string): StoryProgress | null {
   try {
@@ -161,32 +172,54 @@ export async function getStoryProgress(ringId: string): Promise<StoryProgress | 
 
   const { data } = await db
     .from('story_progress')
-    .select('ring_id,item_id,position_seconds')
+    .select('ring_id,item_id,position_seconds,client_updated_at,is_completed')
     .eq('user_id', userId)
     .eq('ring_id', ringId)
     .maybeSingle();
 
-  return data
-    ? { ringId: data.ring_id, itemId: data.item_id, positionSeconds: Number(data.position_seconds) || 0 }
-    : local;
+  const remote = data
+    ? {
+        ringId: data.ring_id,
+        itemId: data.item_id,
+        positionSeconds: Number(data.position_seconds) || 0,
+        updatedAt: data.client_updated_at,
+        isCompleted: Boolean(data.is_completed),
+      }
+    : null;
+  if (!remote) return local;
+  if (!local) return remote;
+  const remoteTime = new Date(remote.updatedAt).getTime() || 0;
+  const localTime = new Date(local.updatedAt).getTime() || 0;
+  return remoteTime >= localTime ? remote : local;
 }
 
-export async function saveStoryProgress(progress: StoryProgress) {
-  writeLocalProgress(progress);
+let progressWriteQueue = Promise.resolve();
+
+export async function saveStoryProgress(progress: Omit<StoryProgress, 'updatedAt'> & { updatedAt?: string }) {
+  const normalized: StoryProgress = { ...progress, updatedAt: progress.updatedAt ?? new Date().toISOString() };
+  writeLocalProgress(normalized);
   const { data: authData } = await supabase.auth.getSession();
   const userId = authData.session?.user.id;
   if (!userId) return;
 
-  await db.from('story_progress').upsert(
-    {
-      user_id: userId,
-      ring_id: progress.ringId,
-      item_id: progress.itemId,
-      position_seconds: Math.max(0, progress.positionSeconds),
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'user_id,ring_id' },
-  );
+  progressWriteQueue = progressWriteQueue.then(async () => {
+    const { error } = await db.rpc('save_story_progress', {
+      p_ring_id: normalized.ringId,
+      p_item_id: normalized.itemId,
+      p_position_seconds: Math.max(0, normalized.positionSeconds),
+      p_client_updated_at: normalized.updatedAt,
+      p_is_completed: normalized.isCompleted ?? false,
+    });
+    if (error) {
+      await logStoryEvent({
+        ringId: normalized.ringId,
+        itemId: normalized.itemId,
+        eventType: 'progress_sync_failed',
+        detail: error.message,
+      });
+    }
+  }).catch(() => undefined);
+  return progressWriteQueue;
 }
 
 export function useStoryDisplaySettings() {
@@ -235,6 +268,37 @@ export function getStorySessionId(): string {
     return id;
   } catch {
     return 'anonymous';
+  }
+}
+
+function currentAssetVersion(): string {
+  const script = Array.from(document.scripts).find((node) => node.src.includes('/assets/index-'));
+  return script?.src.split('/').pop() ?? 'development';
+}
+
+export async function logStoryEvent(params: {
+  ringId?: string;
+  itemId?: string;
+  eventType: StoryPlaybackEventType;
+  detail?: string;
+  mediaUrl?: string;
+  attempt?: number;
+}) {
+  try {
+    await db.from('story_playback_events').insert({
+      ring_id: params.ringId ?? null,
+      item_id: params.itemId ?? null,
+      session_id: getStorySessionId(),
+      event_type: params.eventType,
+      detail: params.detail?.slice(0, 1000) ?? null,
+      origin: window.location.origin.slice(0, 255),
+      page_url: window.location.href.slice(0, 1000),
+      media_url: params.mediaUrl?.slice(0, 2000) ?? null,
+      attempt: Math.max(0, Math.min(10, params.attempt ?? 0)),
+      asset_version: currentAssetVersion().slice(0, 255),
+    });
+  } catch {
+    /* diagnostics must never interrupt playback */
   }
 }
 

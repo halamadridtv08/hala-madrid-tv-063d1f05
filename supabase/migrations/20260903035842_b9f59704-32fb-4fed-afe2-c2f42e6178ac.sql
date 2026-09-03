@@ -1,0 +1,1 @@
+ALTER FUNCTION public.save_story_progress(uuid, uuid, numeric, timestamptz, boolean) SECURITY INVOKER;
