@@ -272,6 +272,13 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
   };
 
   // ---- Quick actions helpers ----
+  const activeMatch = matches.find(m => m.id === selectedMatchId);
+  const ownSide: 'home' | 'away' =
+    activeMatch?.away_team?.toLowerCase().includes('real madrid') ? 'away' : 'home';
+  const filteredPlayers = players.filter(p =>
+    p.name.toLowerCase().includes(playerFilter.trim().toLowerCase())
+  );
+
   const playerLabel = (id: string) => {
     const p = players.find((pl) => pl.id === id);
     if (!p) return '';
