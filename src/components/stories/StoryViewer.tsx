@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { prefetchMedia } from '@/lib/mediaPrefetch';
 import { createPortal } from 'react-dom';
 import {
   ChevronLeft,
@@ -75,6 +76,16 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   useEffect(() => {
     progressRef.current = progress;
   }, [progress]);
+
+  // Précharge le média suivant pour supprimer l'attente au changement de story
+  useEffect(() => {
+    if (!ring) return;
+    const upcoming = [ring.items[itemIndex + 1], ring.items[itemIndex + 2], rings[ringIndex + 1]?.items[0]];
+    upcoming.forEach((next, i) => {
+      if (!next) return;
+      prefetchMedia(next.media_url, next.media_type === 'video' ? 'video' : 'image', i === 0 ? 'auto' : 'metadata');
+    });
+  }, [ring, rings, ringIndex, itemIndex]);
 
   const flushView = useCallback((completed: boolean) => {
     const watch = watchRef.current;
