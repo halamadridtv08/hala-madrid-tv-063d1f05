@@ -8,6 +8,7 @@ import {
   Minimize2,
   Pause,
   Play,
+  RotateCcw,
   Send,
   SkipBack,
   SkipForward,
@@ -29,23 +30,6 @@ interface StoryViewerProps {
 }
 
 const STORY_AUDIO_PREFERENCE_KEY = 'hmtv-story-audio';
-const STORY_FULLSCREEN_PREFERENCE_KEY = 'hmtv-story-fullscreen';
-
-const readFullscreenPreference = (): boolean => {
-  try {
-    return localStorage.getItem(STORY_FULLSCREEN_PREFERENCE_KEY) === 'on';
-  } catch {
-    return false;
-  }
-};
-
-const writeFullscreenPreference = (value: boolean) => {
-  try {
-    localStorage.setItem(STORY_FULLSCREEN_PREFERENCE_KEY, value ? 'on' : 'off');
-  } catch {
-    /* ignore */
-  }
-};
 
 export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settings = DEFAULT_STORY_SETTINGS }: StoryViewerProps) {
   const { toast } = useToast();
@@ -55,7 +39,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(() => {
     try {
-      return localStorage.getItem(STORY_AUDIO_PREFERENCE_KEY) === 'muted';
+      return localStorage.getItem(STORY_AUDIO_PREFERENCE_KEY) === 'true';
     } catch {
       return false;
     }
@@ -67,6 +51,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [visualFullscreen, setVisualFullscreen] = useState(false);
   const [retryDelay, setRetryDelay] = useState<number | null>(null);
+  const [mediaErrorMessage, setMediaErrorMessage] = useState("Ce contenu n'a pas pu être chargé.");
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -79,7 +64,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const retryTimerRef = useRef<number | null>(null);
   const stalledTimerRef = useRef<number | null>(null);
   const resumePositionRef = useRef(0);
-  const fullscreenIntentRef = useRef(readFullscreenPreference());
+  const fullscreenIntentRef = useRef(false);
   const touchRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const watchRef = useRef({ startedAt: Date.now(), elapsed: 0, itemId: '', ringId: '' });
 
@@ -112,7 +97,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     setMuted(nextMuted);
     setAudioBlocked(false);
     try {
-      localStorage.setItem(STORY_AUDIO_PREFERENCE_KEY, nextMuted ? 'muted' : 'sound');
+      localStorage.setItem(STORY_AUDIO_PREFERENCE_KEY, String(nextMuted));
     } catch {
       /* the preference remains active for the current viewer session */
     }
@@ -125,6 +110,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     imageStartedAtRef.current = Date.now();
     setMediaReady(false);
     setMediaError(false);
+    setMediaErrorMessage('Ce contenu n\'a pas pu être chargé.');
     setRetryDelay(null);
     if (retryTimerRef.current !== null) window.clearTimeout(retryTimerRef.current);
     if (stalledTimerRef.current !== null) window.clearTimeout(stalledTimerRef.current);
@@ -283,12 +269,10 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     try {
       if (document.fullscreenElement || visualFullscreen) {
         fullscreenIntentRef.current = false;
-        writeFullscreenPreference(false);
         setVisualFullscreen(false);
         if (document.fullscreenElement) await document.exitFullscreen();
       } else {
         fullscreenIntentRef.current = true;
-        writeFullscreenPreference(true);
         if (node.requestFullscreen) await node.requestFullscreen();
         else setVisualFullscreen(true);
       }
@@ -310,8 +294,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   }, []);
 
   useEffect(() => {
-    if (!fullscreenIntentRef.current) return;
-    if (document.fullscreenElement) { setVisualFullscreen(false); return; }
+    if (!fullscreenIntentRef.current || document.fullscreenElement) return;
     const node = containerRef.current;
     if (!node) return;
     setVisualFullscreen(true);
@@ -368,19 +351,22 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     else void toggleFullscreen();
   };
 
+  const retryMedia = useCallback(() => {
+    setMediaError(false);
+    setMediaReady(false);
+    setRetryDelay(null);
+    resumePositionRef.current = videoRef.current?.currentTime ?? resumePositionRef.current;
+    setRetryToken((value) => value + 1);
+  }, []);
+
   const handleMediaError = useCallback((event?: React.SyntheticEvent<HTMLVideoElement | HTMLImageElement>, forcedDetail?: string) => {
     const target = event?.currentTarget;
     const videoError = target instanceof HTMLVideoElement ? target.error : null;
-    const isUnsupportedFormat = videoError?.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED;
-    const detail = forcedDetail || (isUnsupportedFormat
-      ? 'Format vidéo incompatible avec ce navigateur. Réencodez puis réimportez la vidéo en MP4 H.264 avec audio AAC.'
-      : videoError
-        ? `Erreur média ${videoError.code}: ${videoError.message || 'chargement ou décodage impossible'}`
-        : 'Ressource média inaccessible (réseau, CORS ou URL).');
+    const detail = forcedDetail || (videoError ? `Erreur média ${videoError.code}: ${videoError.message || 'chargement ou décodage impossible'}` : 'Ressource média inaccessible (réseau, CORS ou URL).');
     const attempt = autoRetryRef.current + 1;
     resumePositionRef.current = videoRef.current?.currentTime ?? resumePositionRef.current;
     void logStoryEvent({ ringId: ring?.id, itemId: item?.id, eventType: 'media_error', detail, mediaUrl: item?.media_url, attempt });
-    if (!isUnsupportedFormat && autoRetryRef.current < 4) {
+    if (autoRetryRef.current < 4) {
       autoRetryRef.current = attempt;
       const delay = Math.min(8000, 500 * 2 ** (attempt - 1)) + Math.round(Math.random() * 250);
       setRetryDelay(delay);
@@ -391,10 +377,10 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
       }, delay);
       return;
     }
+    setMediaErrorMessage(detail);
     setMediaError(true);
     setMediaReady(false);
-    retryTimerRef.current = window.setTimeout(() => void goNext(), 1500);
-  }, [ring?.id, item?.id, item?.media_url, goNext]);
+  }, [ring?.id, item?.id, item?.media_url]);
 
   const handleStalled = useCallback(() => {
     if (stalledTimerRef.current !== null) window.clearTimeout(stalledTimerRef.current);
@@ -409,8 +395,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const opacity = Math.max(0, Math.min(100, item.backdrop_opacity ?? 55)) / 100;
   const zoom = Math.max(1, Math.min(2, Number(item.media_zoom) || 1));
   const position = `${item.media_position_x ?? 50}% ${item.media_position_y ?? 50}%`;
-  const fallbackSrc = retryToken > 0 ? `${item.media_url}${item.media_url.includes('?') ? '&' : '?'}r=${retryToken}` : item.media_url;
-  const mediaSrc = fallbackSrc;
+  const mediaSrc = retryToken > 0 ? `${item.media_url}${item.media_url.includes('?') ? '&' : '?'}r=${retryToken}` : item.media_url;
   const posterSrc = ring.cover_url || undefined;
 
   const onVideoReady = async () => {
@@ -491,6 +476,10 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
                 preload="auto"
                 controls={false}
                 onLoadedMetadata={onVideoReady}
+                onLoadedData={() => {
+                  setMediaReady(true);
+                  if (!paused) void videoRef.current?.play().catch(() => undefined);
+                }}
                  onCanPlay={() => { setMediaReady(true); if (stalledTimerRef.current !== null) window.clearTimeout(stalledTimerRef.current); }}
                 onWaiting={() => setMediaReady(false)}
                 onPlaying={() => setMediaReady(true)}
@@ -517,15 +506,17 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
 
           {mediaError && (
             <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-background/85 px-6 text-center">
-               {posterSrc && <img src={posterSrc} alt="" className="h-full w-full object-cover opacity-70" />}
-               <div className="absolute inset-0 flex items-center justify-center bg-background/45">
-                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" />
-               </div>
+              {posterSrc && <img src={posterSrc} alt="" className="h-24 w-24 rounded-xl object-cover opacity-70" />}
+               <p className="text-sm text-foreground">{mediaErrorMessage}</p>
+              <div className="flex gap-2">
+                <button onClick={retryMedia} className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"><RotateCcw className="h-4 w-4" /> Réessayer</button>
+                 <button onClick={() => void goNext()} className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-foreground">Passer</button>
+              </div>
             </div>
           )}
 
            {!mediaReady && !mediaError && <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-background/30"><div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground/30 border-t-foreground" />{retryDelay !== null && <span className="text-xs text-foreground">Nouvelle tentative…</span>}</div>}
-           {audioBlocked && isVideo && !mediaError && <div className="absolute bottom-20 left-1/2 z-30 -translate-x-1/2"><Button size="sm" onClick={() => { setExplicitMutedPreference(false); void videoRef.current?.play(); }}><Volume2 className="h-4 w-4" /> Activer le son</Button></div>}
+           {audioBlocked && isVideo && <div className="absolute bottom-20 left-1/2 z-30 -translate-x-1/2"><Button size="sm" onClick={() => { setExplicitMutedPreference(false); void videoRef.current?.play(); }}><Volume2 className="h-4 w-4" /> Activer le son</Button></div>}
            <button className="absolute inset-y-16 left-0 z-10 w-1/3" aria-label="Précédent" onClick={() => void goPrev()} />
            <button className="absolute inset-y-16 right-0 z-10 w-1/3" aria-label="Suivant" onClick={() => void goNext()} />
           {item.caption && <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-background/90 to-transparent p-4 pt-12"><p className="text-sm text-foreground drop-shadow">{item.caption}</p></div>}
