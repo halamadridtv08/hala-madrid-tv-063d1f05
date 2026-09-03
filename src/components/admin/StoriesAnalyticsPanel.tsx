@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, RefreshCw, Eye, Users, CheckCircle2, Timer } from 'lucide-react';
+import { Loader2, RefreshCw, Eye, Users, CheckCircle2, Timer, FileDown, FileText } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { useToast } from '@/hooks/use-toast';
 
 const db = supabase as any;
@@ -31,6 +33,7 @@ export function StoriesAnalyticsPanel() {
   const [stats, setStats] = useState<StoryStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState('30');
+  const [type, setType] = useState('all');
 
   const load = async () => {
     setLoading(true);
@@ -48,7 +51,9 @@ export function StoriesAnalyticsPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days]);
 
-  const totals = stats.reduce(
+  const filteredStats = stats.filter((stat) => type === 'all' || (type === 'highlight' ? stat.is_highlight : !stat.is_highlight));
+
+  const totals = filteredStats.reduce(
     (acc, s) => ({
       views: acc.views + Number(s.views),
       unique: acc.unique + Number(s.unique_viewers),
@@ -69,11 +74,44 @@ export function StoriesAnalyticsPanel() {
     { label: 'Temps total', value: formatDuration(totals.time), icon: Timer },
   ];
 
+  const rows = filteredStats.map((stat) => [
+    stat.title,
+    stat.is_highlight ? 'À la une' : '24 h',
+    Number(stat.views),
+    Number(stat.unique_viewers),
+    Number(stat.completions),
+    Number(stat.views) ? `${Math.round((Number(stat.completions) / Number(stat.views)) * 100)}%` : '0%',
+    formatDuration(Number(stat.avg_duration_ms)),
+  ]);
+
+  const exportCsv = () => {
+    const header = ['Story', 'Type', 'Vues', 'Uniques', 'Complétions', 'Taux', 'Temps moyen'];
+    const escape = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
+    const csv = [header, ...rows].map((row) => row.map(escape).join(';')).join('\n');
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' }));
+    link.download = `stories-${days}j-${type}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  };
+
+  const exportPdf = () => {
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(16);
+    doc.text(`Statistiques des stories — ${days} jours`, 14, 16);
+    autoTable(doc, {
+      startY: 23,
+      head: [['Story', 'Type', 'Vues', 'Uniques', 'Complétions', 'Taux', 'Temps moyen']],
+      body: rows,
+    });
+    doc.save(`stories-${days}j-${type}.pdf`);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-lg font-semibold">Statistiques des stories</h3>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Select value={days} onValueChange={setDays}>
             <SelectTrigger className="w-[150px]">
               <SelectValue />
@@ -86,6 +124,20 @@ export function StoriesAnalyticsPanel() {
               <SelectItem value="365">1 an</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={type} onValueChange={setType}>
+            <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les types</SelectItem>
+              <SelectItem value="daily">Stories 24 h</SelectItem>
+              <SelectItem value="highlight">À la une</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" onClick={exportCsv} disabled={!filteredStats.length}>
+            <FileDown className="mr-2 h-4 w-4" /> CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportPdf} disabled={!filteredStats.length}>
+            <FileText className="mr-2 h-4 w-4" /> PDF
+          </Button>
           <Button variant="outline" size="icon" onClick={load} aria-label="Actualiser">
             <RefreshCw className={loading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} />
           </Button>
@@ -110,7 +162,7 @@ export function StoriesAnalyticsPanel() {
         <div className="flex justify-center py-10">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
-      ) : stats.length === 0 ? (
+      ) : filteredStats.length === 0 ? (
         <p className="text-sm text-muted-foreground">Aucune donnée sur cette période.</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
@@ -126,7 +178,7 @@ export function StoriesAnalyticsPanel() {
               </tr>
             </thead>
             <tbody>
-              {stats.map((s) => (
+              {filteredStats.map((s) => (
                 <tr key={s.ring_id} className="border-t border-border">
                   <td className="p-3">
                     <div className="flex items-center gap-2">

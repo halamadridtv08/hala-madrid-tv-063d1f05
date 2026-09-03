@@ -25,9 +25,11 @@ if ('serviceWorker' in navigator) {
   });
 
   // Check for updates immediately on page load
-  navigator.serviceWorker.ready.then(registration => {
-    registration.update();
-  });
+  navigator.serviceWorker.ready
+    .then(registration => registration.update())
+    .catch(() => {
+      // A stale registration can briefly point to a removed worker after a deployment.
+    });
 }
 
 // Inject auth buttons when the app loads

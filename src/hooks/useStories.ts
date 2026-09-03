@@ -13,6 +13,11 @@ export interface StoryItem {
   display_order: number;
   scheduled_at?: string | null;
   expires_at?: string | null;
+  backdrop_blur: number;
+  backdrop_opacity: number;
+  media_zoom: number;
+  media_position_x: number;
+  media_position_y: number;
   created_at: string;
 }
 
@@ -115,9 +120,73 @@ export function useStories() {
     queryKey: ['story-rings'],
     queryFn: () => fetchStoryRings(false),
     staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   return { rings: data ?? [], isLoading, error, refetch };
+}
+
+const PROGRESS_KEY = 'hmtv-story-progress';
+
+export interface StoryProgress {
+  ringId: string;
+  itemId: string;
+  positionSeconds: number;
+}
+
+function readLocalProgress(ringId: string): StoryProgress | null {
+  try {
+    const all = JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}') as Record<string, StoryProgress>;
+    return all[ringId] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalProgress(progress: StoryProgress) {
+  try {
+    const all = JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}') as Record<string, StoryProgress>;
+    all[progress.ringId] = progress;
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(all));
+  } catch {
+    /* local persistence is best effort */
+  }
+}
+
+export async function getStoryProgress(ringId: string): Promise<StoryProgress | null> {
+  const local = readLocalProgress(ringId);
+  const { data: authData } = await supabase.auth.getSession();
+  const userId = authData.session?.user.id;
+  if (!userId) return local;
+
+  const { data } = await db
+    .from('story_progress')
+    .select('ring_id,item_id,position_seconds')
+    .eq('user_id', userId)
+    .eq('ring_id', ringId)
+    .maybeSingle();
+
+  return data
+    ? { ringId: data.ring_id, itemId: data.item_id, positionSeconds: Number(data.position_seconds) || 0 }
+    : local;
+}
+
+export async function saveStoryProgress(progress: StoryProgress) {
+  writeLocalProgress(progress);
+  const { data: authData } = await supabase.auth.getSession();
+  const userId = authData.session?.user.id;
+  if (!userId) return;
+
+  await db.from('story_progress').upsert(
+    {
+      user_id: userId,
+      ring_id: progress.ringId,
+      item_id: progress.itemId,
+      position_seconds: Math.max(0, progress.positionSeconds),
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id,ring_id' },
+  );
 }
 
 export function useStoryDisplaySettings() {

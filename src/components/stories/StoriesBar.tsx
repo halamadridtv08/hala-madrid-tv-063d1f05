@@ -3,6 +3,7 @@ import { useStories, useStoryDisplaySettings } from '@/hooks/useStories';
 import { StoryViewer } from './StoryViewer';
 import { cn } from '@/lib/utils';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Film } from 'lucide-react';
 
 const SEEN_KEY = 'hmtv-seen-stories';
 
@@ -83,7 +84,9 @@ export function StoriesBar() {
                         >
                           {preview ? (
                             previewIsVideo ? (
-                              <video src={preview} muted playsInline className="h-full w-full object-cover" />
+                              <span className="flex h-full w-full items-center justify-center bg-muted" aria-label="Story vidéo">
+                                <Film className="h-6 w-6 text-muted-foreground" />
+                              </span>
                             ) : (
                               <img
                                 src={preview}
