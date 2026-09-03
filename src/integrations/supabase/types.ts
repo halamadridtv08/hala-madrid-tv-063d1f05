@@ -4621,6 +4621,7 @@ export type Database = {
         }
         Returns: Json
       }
+      archive_expired_stories: { Args: never; Returns: Json }
       check_login_blocked: {
         Args: { p_email: string; p_ip_address?: string }
         Returns: {
