@@ -29,7 +29,22 @@ export default function Search() {
 
       setLoading(true);
       try {
-        const searchTerm = `%${query}%`;
+        // Neutralise les caractères ayant une signification pour les filtres PostgREST
+        const sanitized = query
+          .replace(/[,()."'\\*]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 100);
+
+        if (!sanitized) {
+          setPlayers([]);
+          setArticles([]);
+          setMatches([]);
+          setLoading(false);
+          return;
+        }
+
+        const searchTerm = `%${sanitized}%`;
 
         // Rechercher les joueurs
         const { data: playersData } = await supabase
