@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { uploadFile } from '@/utils/fileUpload';
+import { StoryExpiryLog } from './StoryExpiryLog';
 import {
   Loader2,
   Plus,
