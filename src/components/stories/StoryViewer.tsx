@@ -30,6 +30,23 @@ interface StoryViewerProps {
 }
 
 const STORY_AUDIO_PREFERENCE_KEY = 'hmtv-story-audio';
+const STORY_FULLSCREEN_PREFERENCE_KEY = 'hmtv-story-fullscreen';
+
+const readFullscreenPreference = (): boolean => {
+  try {
+    return localStorage.getItem(STORY_FULLSCREEN_PREFERENCE_KEY) === 'on';
+  } catch {
+    return false;
+  }
+};
+
+const writeFullscreenPreference = (value: boolean) => {
+  try {
+    localStorage.setItem(STORY_FULLSCREEN_PREFERENCE_KEY, value ? 'on' : 'off');
+  } catch {
+    /* ignore */
+  }
+};
 
 export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settings = DEFAULT_STORY_SETTINGS }: StoryViewerProps) {
   const { toast } = useToast();
@@ -65,7 +82,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const retryTimerRef = useRef<number | null>(null);
   const stalledTimerRef = useRef<number | null>(null);
   const resumePositionRef = useRef(0);
-  const fullscreenIntentRef = useRef(false);
+  const fullscreenIntentRef = useRef(readFullscreenPreference());
   const touchRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const watchRef = useRef({ startedAt: Date.now(), elapsed: 0, itemId: '', ringId: '' });
 
@@ -271,10 +288,12 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     try {
       if (document.fullscreenElement || visualFullscreen) {
         fullscreenIntentRef.current = false;
+        writeFullscreenPreference(false);
         setVisualFullscreen(false);
         if (document.fullscreenElement) await document.exitFullscreen();
       } else {
         fullscreenIntentRef.current = true;
+        writeFullscreenPreference(true);
         if (node.requestFullscreen) await node.requestFullscreen();
         else setVisualFullscreen(true);
       }
@@ -296,7 +315,8 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   }, []);
 
   useEffect(() => {
-    if (!fullscreenIntentRef.current || document.fullscreenElement) return;
+    if (!fullscreenIntentRef.current) return;
+    if (document.fullscreenElement) { setVisualFullscreen(false); return; }
     const node = containerRef.current;
     if (!node) return;
     setVisualFullscreen(true);
