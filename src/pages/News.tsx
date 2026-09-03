@@ -190,7 +190,7 @@ const News = () => {
                     <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        <span>Admin</span>
+                        <span>Hala Madrid TV</span>
                       </div>
                       <span>{formatDate(article.published_at)}</span>
                     </div>
