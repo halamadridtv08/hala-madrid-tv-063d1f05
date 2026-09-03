@@ -28,6 +28,7 @@ import {
 import { StoryRing, StoryItem, fetchStoryRings, isRingArchived, isRingScheduled } from '@/hooks/useStories';
 import { StoriesAnalyticsPanel } from './StoriesAnalyticsPanel';
 import { StoryDisplaySettingsPanel } from './StoryDisplaySettingsPanel';
+import { StoryDiagnosticsPanel } from './StoryDiagnosticsPanel';
 
 const db = supabase as any;
 
@@ -530,6 +531,7 @@ export function StoriesManager() {
             <TabsTrigger value="highlights">À la une ({highlights.length})</TabsTrigger>
             <TabsTrigger value="archived">Archives ({archived.length})</TabsTrigger>
             <TabsTrigger value="stats">Statistiques</TabsTrigger>
+            <TabsTrigger value="diagnostics">Diagnostic</TabsTrigger>
             <TabsTrigger value="display">Affichage</TabsTrigger>
           </TabsList>
 
@@ -608,6 +610,10 @@ export function StoriesManager() {
 
           <TabsContent value="stats" className="mt-4">
             <StoriesAnalyticsPanel />
+          </TabsContent>
+
+          <TabsContent value="diagnostics" className="mt-4">
+            <StoryDiagnosticsPanel />
           </TabsContent>
 
           <TabsContent value="display" className="mt-4">
