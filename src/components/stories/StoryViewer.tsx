@@ -47,7 +47,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(() => {
     try {
-      return localStorage.getItem(STORY_AUDIO_PREFERENCE_KEY) === "true";
+      return localStorage.getItem('hmtv-story-muted') === 'true';
     } catch {
       return false;
     }
@@ -59,13 +59,13 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [visualFullscreen, setVisualFullscreen] = useState(() => {
     try {
-      return localStorage.getItem("hmtv-story-fullscreen") === "true";
+      return localStorage.getItem('hmtv-story-fullscreen') === 'true';
     } catch {
       return false;
     }
   });
   const [retryDelay, setRetryDelay] = useState<number | null>(null);
-  const [mediaErrorMessage, setMediaErrorMessage] = useState('Ce contenu n'a pas pu être chargé.');
+  const [mediaErrorMessage, setMediaErrorMessage] = useState("Ce contenu n'a pas pu être chargé.");
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -84,13 +84,13 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORY_AUDIO_PREFERENCE_KEY, String(muted));
+      localStorage.setItem('hmtv-story-muted', String(muted));
     } catch (e) {}
   }, [muted]);
 
   useEffect(() => {
     try {
-      localStorage.setItem("hmtv-story-fullscreen", String(visualFullscreen || isFullscreen));
+      localStorage.setItem('hmtv-story-fullscreen', String(visualFullscreen || isFullscreen));
     } catch (e) {}
   }, [visualFullscreen, isFullscreen]);
 
@@ -123,7 +123,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     setMuted(nextMuted);
     setAudioBlocked(false);
     try {
-      localStorage.setItem(STORY_AUDIO_PREFERENCE_KEY, nextMuted ? 'muted' : 'sound');
+      localStorage.setItem('hmtv-story-muted', String(nextMuted));
     } catch {
       /* the preference remains active for the current viewer session */
     }
