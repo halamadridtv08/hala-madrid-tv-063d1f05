@@ -1,91 +1,40 @@
-
-# Archivage sécurisé + Historique carrière style Fotmob
+# Fiabiliser les stories et le domaine publié
 
 ## Objectif
-1. Rendre le changement de saison **transactionnel** (tout-ou-rien) côté serveur, pour qu'aucune donnée ne puisse être supprimée sans être archivée d'abord.
-2. Afficher sur la fiche publique de chaque joueur **tout son historique par saison** (matchs, buts, passes, cartons, minutes, note moyenne) et par compétition (Liga, C1, Copa, Supercoupes, Mondial des clubs), en pointant sur les tables d'archives.
-3. Étendre l'archivage à **toutes les données du club** encore manquantes (transferts, kits, entraînements, conférences de presse, blessés, formations, objectifs joueurs, alertes).
+Rendre les stories identiques et fiables sur l’aperçu Lovable et le domaine personnalisé, avec audio actif par défaut, plein écran persistant, reprise multi-appareils et diagnostic visible dans l’admin.
 
----
+## Mise en œuvre
 
-## Partie 1 — Archivage transactionnel côté serveur
+### 1. Publication et cache du domaine personnalisé
+- Confirmer et afficher dans l’admin que `hala-madrid-tv.com` est servi par Vercel tandis que `hala-madrid-tv.lovable.app` est servi par Lovable, avec leurs versions d’assets actuellement différentes.
+- Durcir la stratégie PWA : ne jamais conserver une ancienne page HTML ou un ancien bundle après publication, activer immédiatement le nouveau service worker et proposer une actualisation contrôlée lorsqu’une nouvelle version est détectée.
+- Ajouter des en-têtes Vercel sans cache pour le document HTML et les fichiers du service worker, tout en gardant les assets versionnés en cache long.
+- Publier la version Lovable à jour. Le diagnostic admin indiquera explicitement si le domaine Vercel n’a pas encore déployé le même build afin d’éviter de confondre un problème applicatif avec un déploiement GitHub/Vercel en retard.
 
-### Nouvelles tables d'archives (les manquantes)
-Créer ces tables avec `season TEXT` + `archived_at` + `original_id` :
-- `season_transfers_archive`
-- `season_kits_archive`
-- `season_training_sessions_archive`
-- `season_press_conferences_archive`
-- `season_match_absent_players_archive`
-- `season_match_formations_archive` (+ `season_match_formation_players_archive`)
-- `season_match_lineups_archive`
-- `season_probable_lineups_archive`
-- `season_player_objectives_archive`
-- `season_player_alerts_archive`
-- `season_coaches_archive` (snapshot du staff de la saison)
-- `season_standings_archive` (classement final Liga si dispo)
+### 2. Diagnostic automatique des stories
+- Ajouter une table sécurisée de diagnostics média et une fonction serveur limitée aux événements autorisés.
+- Enregistrer les erreurs utiles : chargement vidéo/poster, CORS ou réseau probable, lecture automatique bloquée, métadonnées invalides, échec de reprise et épuisement des tentatives.
+- Ajouter un onglet « Diagnostic » dans la gestion des stories avec état du domaine, version d’asset, URL média, origine, type d’erreur, nombre de tentatives, date et bouton d’actualisation.
+- Ne jamais enregistrer de jeton, cookie, donnée d’authentification ou contenu sensible.
 
-Grants complets (SELECT authenticated + public si lecture publique voulue, ALL service_role) et RLS.
+### 3. Audio et plein écran
+- Initialiser les vidéos avec le son activé.
+- Si le navigateur interdit la lecture automatique avec son, poursuivre de façon compatible et afficher un contrôle clair « Activer le son » ; enregistrer ce blocage dans le diagnostic.
+- Stabiliser le plein écran sur le conteneur de la visionneuse afin qu’un changement manuel ou automatique de contenu ne le ferme pas.
+- Prévoir le mode plein écran visuel comme solution de repli sur iOS ou quand l’API Fullscreen est indisponible/refusée.
 
-### Fonction SQL `public.archive_and_reset_season(p_old_season, p_new_season, p_reset_predictions)`
-- `SECURITY DEFINER`, réservée aux admins (`has_role`).
-- Wrappe **une seule transaction** : INSERT ... SELECT depuis chaque table active vers son archive, PUIS DELETE, PUIS UPDATE `site_content.current_season`.
-- Si une étape échoue → rollback complet, rien n'est perdu.
-- Log dans `admin_audit_logs` à la fin.
+### 4. Reprise multi-appareils fiable
+- Faire de la position serveur la référence pour les utilisateurs connectés, avec horodatage pour départager la position locale et distante.
+- Sauvegarder immédiatement avant chaque changement de contenu/story et attendre cette écriture sur les navigations explicites quand nécessaire.
+- Sérialiser les mises à jour pour empêcher une ancienne écriture asynchrone d’écraser une position plus récente.
+- Restaurer précisément l’élément et le temps vidéo après chargement des métadonnées, avec repli local hors connexion.
 
-### Nouvelle Edge Function `archive-season`
-- Vérifie JWT admin.
-- Appelle la fonction SQL ci-dessus.
-- Retourne un résumé (counts par table).
+### 5. Chargement média robuste
+- Remplacer les deux relances fixes par plusieurs tentatives avec délai progressif et cache-busting.
+- Conserver le poster visible pendant la préparation et après un échec, puis reprendre à la dernière seconde connue après rechargement.
+- Différencier les erreurs réseau, décodage, source absente et blocage navigateur dans le message utilisateur et le journal admin.
 
-### Refonte `SeasonResetManager.tsx`
-- Toujours télécharger le backup JSON localement d'abord (sécurité).
-- Remplacer la chaîne de `supabase.from(...).delete()` par un seul appel à `archive-season`.
-- Afficher les compteurs de toutes les nouvelles tables archivées.
-
----
-
-## Partie 2 — Historique carrière style Fotmob sur `PlayerProfile`
-
-### Vue SQL `player_career_by_season`
-Union entre `player_stats` (saison en cours) et `season_player_stats_archive` (saisons passées), jointe à `matches` / `season_matches_archive` pour obtenir la compétition et la date. Agrège par (`player_id`, `season`, `competition`) :
-- matchs joués, buts, passes, minutes, cartons jaunes/rouges, note moyenne.
-
-Une vue "totaux par saison" (`competition = 'ALL'` calculé) pour la ligne d'en-tête.
-
-### Nouveau composant `PlayerCareerHistory.tsx`
-- Onglet **"Carrière"** avec sous-onglets **Club / Saison** (comme Fotmob).
-- Tableau : colonnes `Saison / Compétition | MJ | Buts | Passes | Note`.
-- Chaque saison est repliable, avec la ligne totale en tête et le détail par compétition en dessous (Liga, C1, Copa, Supercoupes, Mondial des clubs).
-- Utilise les logos de compétition déjà présents dans le projet.
-- Design cohérent avec la fiche joueur existante.
-
-### Intégration `PlayerProfile.tsx`
-Ajouter l'onglet "Carrière" à côté des onglets actuels, chargement lazy pour ne pas alourdir la page.
-
----
-
-## Partie 3 — Vue admin enrichie
-
-Étendre `SeasonArchiveViewer.tsx` avec des onglets supplémentaires pour les nouvelles tables (transferts, kits, staff, entraînements…), avec export CSV par section.
-
----
-
-## Sécurité
-- Toutes les nouvelles tables d'archives : SELECT public autorisé uniquement sur les données non sensibles (stats, matchs, kits, transferts publiés). Les données admin (alertes, objectifs) restent restreintes aux rôles admin/moderator.
-- La fonction `archive_and_reset_season` refuse tout appelant non-admin.
-- L'Edge Function valide le JWT et le rôle admin avant tout.
-
----
-
-## Ordre d'exécution
-1. Migration SQL (tables + fonction + vue + RLS + grants).
-2. Edge Function `archive-season`.
-3. Refonte `SeasonResetManager.tsx`.
-4. Composant `PlayerCareerHistory.tsx` + intégration `PlayerProfile.tsx`.
-5. Extension `SeasonArchiveViewer.tsx`.
-
-## Ce que tu verras après
-- **Fiche joueur publique** : nouvel onglet "Carrière" qui liste toutes les saisons (2024/25, 2025/26, …) avec les stats par compétition, exactement comme sur ta capture Fotmob.
-- **Panneau admin "Gestion de la Saison"** : un seul bouton qui archive tout en une transaction sûre — impossible d'avoir des données supprimées sans archive.
-- **Panneau "Archives des saisons"** : consultation de toutes les données historiques du club (pas seulement stats/matchs).
+## Validation
+- Vérifier les migrations/RLS, les types TypeScript et les parcours story image/vidéo.
+- Tester audio, navigation, plein écran, retry et reprise dans Chromium desktop et mobile.
+- Comparer les URLs d’assets et les en-têtes entre Lovable et le domaine personnalisé après publication.
