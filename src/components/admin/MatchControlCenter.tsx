@@ -1229,6 +1229,27 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
         </div>
       )}
 
+      {/* Quick actions (express mode) */}
+      {selectedMatchId && (
+        <QuickActionsPanel
+          match={selectedMatch}
+          ownPlayers={players}
+          playersLoading={loadingMatches}
+          currentMinute={currentMinute}
+          periodLabel={getPeriodLabel?.() ?? ''}
+          getNumericMinute={getNumericMinute}
+          addEntry={addEntry}
+          deleteEntry={deleteEntry}
+          userId={user?.id}
+          userLabel={user?.email || 'Admin'}
+          onScoreChange={(home, away) =>
+            setMatches((prev) =>
+              prev.map((m) => (m.id === selectedMatchId ? ({ ...m, home_score: home, away_score: away } as Match) : m))
+            )
+          }
+        />
+      )}
+
       {/* Timeline */}
       {selectedMatchId && (
         <Card>
