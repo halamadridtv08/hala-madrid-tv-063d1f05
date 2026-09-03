@@ -5,3 +5,6 @@
 - [x] Vérifier puis publier les correctifs
 - [x] Détecter et refuser les vidéos HEVC/MOV incompatibles avant l’upload des stories
 - [x] Afficher une erreur de format claire sans relances réseau inutiles
+
+- [x] Conversion auto MP4 H.264/AAC (ffmpeg.wasm) pour les vidéos de stories incompatibles
+- [x] Persistance des préférences son + plein écran des stories (localStorage)
