@@ -100,6 +100,17 @@ export const MatchControlCenter = ({ matchId: propMatchId }: MatchControlCenterP
   
   // Extra time input
   const [extraTimeInput, setExtraTimeInput] = useState<string>('');
+
+  // Quick actions state
+  const [quickScorerId, setQuickScorerId] = useState('');
+  const [quickAssistId, setQuickAssistId] = useState('');
+  const [quickCardPlayerId, setQuickCardPlayerId] = useState('');
+  const [quickSubOutId, setQuickSubOutId] = useState('');
+  const [quickSubInId, setQuickSubInId] = useState('');
+  const [quickOpponentName, setQuickOpponentName] = useState('');
+  const [quickGoalType, setQuickGoalType] = useState<'normal' | 'penalty' | 'header' | 'own_goal'>('normal');
+  const [quickSubmitting, setQuickSubmitting] = useState(false);
+  const [playerFilter, setPlayerFilter] = useState('');
   
   // Import from URL states
   const [importUrl, setImportUrl] = useState('');
