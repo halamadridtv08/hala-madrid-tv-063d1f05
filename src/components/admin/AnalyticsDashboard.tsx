@@ -725,8 +725,8 @@ const AnalyticsDashboard = () => {
           </div>
 
           {/* Main Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="lg:col-span-2 min-w-0">
               <VisitorActivityChart
                 data={data.pageViewsByDay}
                 period={period}
@@ -737,7 +737,7 @@ const AnalyticsDashboard = () => {
           </div>
 
           {/* Bottom Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <TrafficSourcesChart data={data.trafficSources} />
             <GeographyMap data={data.countryStats} totalVisitors={data.uniqueVisitors} />
           </div>
@@ -747,7 +747,7 @@ const AnalyticsDashboard = () => {
 
         {/* Audience Tab */}
         <TabsContent value="audience" className="space-y-6 mt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <AnalyticsStatCard
               title="Visiteurs Uniques"
               value={data.uniqueVisitors}
@@ -788,7 +788,7 @@ const AnalyticsDashboard = () => {
 
           <GeographyMap data={data.countryStats} totalVisitors={data.uniqueVisitors} />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <AnalyticsStatCard
               title="Nouveaux visiteurs"
               value={data.newVisitors}
@@ -822,7 +822,7 @@ const AnalyticsDashboard = () => {
 
         {/* Content Tab */}
         <TabsContent value="content" className="space-y-6 mt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <AnalyticsStatCard
               title="Pages Vues"
               value={data.totalPageViews}
@@ -870,7 +870,7 @@ const AnalyticsDashboard = () => {
 
         {/* Engagement Tab */}
         <TabsContent value="engagement" className="space-y-6 mt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <AnalyticsStatCard
               title="Pages / session"
               value={data.pagesPerSession.toFixed(2)}
@@ -916,8 +916,8 @@ const AnalyticsDashboard = () => {
 
         {/* Real-time Tab */}
         <TabsContent value="realtime" className="space-y-6 mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="lg:col-span-2 min-w-0">
               <VisitorActivityChart
                 data={data.pageViewsByDay}
                 period={period}
@@ -930,7 +930,7 @@ const AnalyticsDashboard = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <WeeklyActivityChart data={data.weeklyActivity} />
             <TrafficSourcesChart data={data.trafficSources} />
           </div>
