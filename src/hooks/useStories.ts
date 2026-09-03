@@ -155,8 +155,8 @@ function writeLocalProgress(progress: StoryProgress) {
 
 export async function getStoryProgress(ringId: string): Promise<StoryProgress | null> {
   const local = readLocalProgress(ringId);
-  const { data: authData } = await supabase.auth.getUser();
-  const userId = authData.user?.id;
+  const { data: authData } = await supabase.auth.getSession();
+  const userId = authData.session?.user.id;
   if (!userId) return local;
 
   const { data } = await db
@@ -173,8 +173,8 @@ export async function getStoryProgress(ringId: string): Promise<StoryProgress | 
 
 export async function saveStoryProgress(progress: StoryProgress) {
   writeLocalProgress(progress);
-  const { data: authData } = await supabase.auth.getUser();
-  const userId = authData.user?.id;
+  const { data: authData } = await supabase.auth.getSession();
+  const userId = authData.session?.user.id;
   if (!userId) return;
 
   await db.from('story_progress').upsert(

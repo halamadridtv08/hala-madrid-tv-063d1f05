@@ -23,7 +23,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [mediaReady, setMediaReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number | null>(null);
   const imageStartedAtRef = useRef(Date.now());
   const imageElapsedRef = useRef(0);
   const progressRef = useRef(0);
@@ -56,16 +56,22 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
 
   const goNext = useCallback(() => {
     flushView(true);
-    persistCurrent();
     setProgress(0);
     imageElapsedRef.current = 0;
     if (!ring) return;
-    if (itemIndex < ring.items.length - 1) setItemIndex((value) => value + 1);
+    if (itemIndex < ring.items.length - 1) {
+      const nextItem = ring.items[itemIndex + 1];
+      void saveStoryProgress({ ringId: ring.id, itemId: nextItem.id, positionSeconds: 0 });
+      setItemIndex((value) => value + 1);
+    }
     else if (ringIndex < rings.length - 1) {
+      const nextRing = rings[ringIndex + 1];
+      const nextItem = nextRing.items[0];
+      if (nextItem) void saveStoryProgress({ ringId: nextRing.id, itemId: nextItem.id, positionSeconds: 0 });
       setRingIndex((value) => value + 1);
       setItemIndex(0);
     } else onClose();
-  }, [flushView, persistCurrent, ring, itemIndex, ringIndex, rings.length, onClose]);
+  }, [flushView, ring, itemIndex, ringIndex, rings, onClose]);
 
   const goPrev = useCallback(() => {
     persistCurrent();
@@ -81,13 +87,15 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
 
   const goNextRing = useCallback(() => {
     flushView(true);
-    persistCurrent();
     setProgress(0);
     if (ringIndex < rings.length - 1) {
+      const nextRing = rings[ringIndex + 1];
+      const nextItem = nextRing.items[0];
+      if (nextItem) void saveStoryProgress({ ringId: nextRing.id, itemId: nextItem.id, positionSeconds: 0 });
       setRingIndex((value) => value + 1);
       setItemIndex(0);
     } else onClose();
-  }, [flushView, persistCurrent, ringIndex, rings.length, onClose]);
+  }, [flushView, ringIndex, rings, onClose]);
 
   const goPrevRing = useCallback(() => {
     persistCurrent();
@@ -143,7 +151,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     };
     animationRef.current = requestAnimationFrame(tick);
     return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
       imageElapsedRef.current += Date.now() - imageStartedAtRef.current;
     };
   }, [item?.id, item?.duration_seconds, isVideo, paused, mediaReady, goNext]);
