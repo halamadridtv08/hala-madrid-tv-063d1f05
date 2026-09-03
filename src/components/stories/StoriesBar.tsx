@@ -4,6 +4,7 @@ import { StoryViewer } from './StoryViewer';
 import { cn } from '@/lib/utils';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Film } from 'lucide-react';
+import { prefetchMedia, prefetchWhenIdle } from '@/lib/mediaPrefetch';
 
 const SEEN_KEY = 'hmtv-seen-stories';
 
@@ -31,6 +32,26 @@ export function StoriesBar() {
   useEffect(() => {
     setSeen(loadSeen());
   }, []);
+
+  // Préchauffe le cache HTTP des premiers médias dès que le navigateur est disponible
+  useEffect(() => {
+    if (!rings.length) return;
+    prefetchWhenIdle(() => {
+      rings.slice(0, 6).forEach((ring) => {
+        const first = ring.items[0];
+        if (!first) return;
+        prefetchMedia(first.media_url, first.media_type === 'video' ? 'video' : 'image', 'metadata');
+      });
+    });
+  }, [rings]);
+
+  const warmRing = (ringIndex: number) => {
+    const ring = rings[ringIndex];
+    if (!ring) return;
+    ring.items.slice(0, 2).forEach((item, i) => {
+      prefetchMedia(item.media_url, item.media_type === 'video' ? 'video' : 'image', i === 0 ? 'auto' : 'metadata');
+    });
+  };
 
   const markSeen = (ringId: string) => {
     setSeen((prev) => {
@@ -71,6 +92,9 @@ export function StoriesBar() {
                   <button
                     key={ring.id}
                     onClick={() => setOpenIndex(index)}
+                    onPointerEnter={() => warmRing(index)}
+                    onTouchStart={() => warmRing(index)}
+                    onFocus={() => warmRing(index)}
                     className="flex shrink-0 flex-col items-center gap-1.5 focus:outline-none"
                     style={{ width: size + 12 }}
                   >
