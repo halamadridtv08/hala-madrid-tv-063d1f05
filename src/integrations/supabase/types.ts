@@ -4014,6 +4014,48 @@ export type Database = {
           },
         ]
       }
+      story_progress: {
+        Row: {
+          id: string
+          item_id: string
+          position_seconds: number
+          ring_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          position_seconds?: number
+          ring_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          position_seconds?: number
+          ring_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_progress_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "story_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_progress_ring_id_fkey"
+            columns: ["ring_id"]
+            isOneToOne: false
+            referencedRelation: "story_rings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       story_rings: {
         Row: {
           archived_at: string | null
