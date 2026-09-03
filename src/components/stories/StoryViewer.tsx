@@ -51,7 +51,25 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const [mediaError, setMediaError] = useState(false);
   const [retryToken, setRetryToken] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [visualFullscreen, setVisualFullscreen] = useState(false);
+  const [visualFullscreen, setVisualFullscreen] = useState(() => {
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("hmtv-story-muted", String(muted));
+    } catch (e) {}
+  }, [muted]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("hmtv-story-fullscreen", String(visualFullscreen || isFullscreen));
+    } catch (e) {}
+  }, [visualFullscreen, isFullscreen]);
+    try {
+      return localStorage.getItem("hmtv-story-fullscreen") === "true";
+    } catch {
+      return false;
+    }
+  });
   const [retryDelay, setRetryDelay] = useState<number | null>(null);
   const [mediaErrorMessage, setMediaErrorMessage] = useState('Ce contenu n\'a pas pu être chargé.');
   const containerRef = useRef<HTMLDivElement>(null);
