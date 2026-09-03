@@ -9,27 +9,25 @@ initSentry();
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-// PWA: Check for updates but don't auto-reload
+// PWA: Check for updates and handle reload reliably
 if ('serviceWorker' in navigator) {
-  // Only reload on controller change if the page was just loaded (not on window focus)
-  let isInitialLoad = true;
-  setTimeout(() => {
-    isInitialLoad = false;
-  }, 5000);
-
+  let refreshing = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    // Only reload if this is happening during initial page load
-    if (isInitialLoad) {
-      window.location.reload();
-    }
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
   });
 
-  // Check for updates immediately on page load
-  navigator.serviceWorker.ready
-    .then(registration => registration.update())
-    .catch(() => {
-      // A stale registration can briefly point to a removed worker after a deployment.
+  // Check for updates on load and periodically
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.ready.then((reg) => {
+      reg.update();
+      // Periodically check for updates (every hour)
+      setInterval(() => reg.update(), 60 * 60 * 1000);
+    }).catch(() => {
+      // Stale registration recovery
     });
+  });
 }
 
 // Inject auth buttons when the app loads
