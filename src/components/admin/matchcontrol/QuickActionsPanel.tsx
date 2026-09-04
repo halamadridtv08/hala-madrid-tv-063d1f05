@@ -255,8 +255,11 @@ export const QuickActionsPanel = ({
   const guidance = useMemo(() => {
     if (!match) return { tone: 'info' as const, text: 'Sélectionnez un match pour activer les actions express.' };
     if (kind === 'goal') {
-      if (isOwnSide && !scorerId)
-        return { tone: 'warn' as const, text: `But de ${teamName(side)} : sélection obligatoire du buteur.` };
+      if (isOwnSide && !scorerId && !freeName.trim())
+        return {
+          tone: 'warn' as const,
+          text: `But de ${teamName(side)} : sélectionnez le buteur ou saisissez un nom libre (ex. CSC adverse).`,
+        };
       if (!isOwnSide && !scorerId && !freeName.trim())
         return {
           tone: 'warn' as const,
