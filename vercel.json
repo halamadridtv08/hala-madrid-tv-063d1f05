@@ -47,7 +47,7 @@
       ]
     },
     {
-      "source": "/(sw.js|registerSW.js|workbox-(.*).js|manifest.webmanifest)",
+      "source": "/(sw\\.js|registerSW\\.js|workbox-(.*)\\.js|manifest\\.webmanifest)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
