@@ -1159,6 +1159,60 @@ export type Database = {
         }
         Relationships: []
       }
+      live_blog_comments: {
+        Row: {
+          content: string
+          created_at: string
+          display_name: string
+          entry_id: string | null
+          id: string
+          is_hidden: boolean
+          is_pinned: boolean
+          match_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          display_name: string
+          entry_id?: string | null
+          id?: string
+          is_hidden?: boolean
+          is_pinned?: boolean
+          match_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          display_name?: string
+          entry_id?: string | null
+          id?: string
+          is_hidden?: boolean
+          is_pinned?: boolean
+          match_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_blog_comments_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "live_blog_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_blog_comments_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_blog_entries: {
         Row: {
           assist_player_id: string | null
@@ -1244,6 +1298,38 @@ export type Database = {
             columns: ["substituted_player_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_blog_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          entry_id: string
+          id: string
+          user_identifier: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          entry_id: string
+          id?: string
+          user_identifier: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          entry_id?: string
+          id?: string
+          user_identifier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_blog_reactions_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "live_blog_entries"
             referencedColumns: ["id"]
           },
         ]
@@ -4767,6 +4853,15 @@ export type Database = {
         }
       }
       get_encryption_key: { Args: never; Returns: string }
+      get_live_blog_reactions: {
+        Args: { p_match_id: string; p_user_identifier?: string }
+        Returns: {
+          emoji: string
+          entry_id: string
+          reacted: boolean
+          total: number
+        }[]
+      }
       get_login_attempts_with_audit: {
         Args: { p_email?: string; p_limit?: number; p_offset?: number }
         Returns: {
@@ -4962,6 +5057,10 @@ export type Database = {
       subscribe_to_newsletter: {
         Args: { p_email: string; p_subscription_type?: string }
         Returns: string
+      }
+      toggle_live_blog_reaction: {
+        Args: { p_emoji: string; p_entry_id: string; p_user_identifier: string }
+        Returns: boolean
       }
       unsubscribe_newsletter: {
         Args: { p_confirmation_token: string; p_email: string }
