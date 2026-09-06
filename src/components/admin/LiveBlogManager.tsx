@@ -18,6 +18,7 @@ import { GoalEntryModal } from './liveblog/GoalEntryModal';
 import { CardEntryModal } from './liveblog/CardEntryModal';
 import { SubstitutionModal } from './liveblog/SubstitutionModal';
 import { GroupedEntriesView } from './liveblog/GroupedEntriesView';
+import { LiveBlogCommentsModeration } from './liveblog/LiveBlogCommentsModeration';
 import { EditEntryModal } from './liveblog/EditEntryModal';
 interface LiveBlogManagerProps {
   matchId?: string;
