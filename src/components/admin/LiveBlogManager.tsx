@@ -450,6 +450,9 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
           </CardContent>
         </Card>
       )}
+
+      {selectedMatchId && <LiveBlogCommentsModeration matchId={selectedMatchId} />}
+      
       
       {!selectedMatchId && !loadingMatches && (
         <Card>
