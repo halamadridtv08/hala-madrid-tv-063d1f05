@@ -144,9 +144,43 @@ const LiveBlog = () => {
   const [match, setMatch] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
   const [matchMinute, setMatchMinute] = useState(0);
+  const [players, setPlayers] = useState<Record<string, LiveBlogPlayer>>({});
   
   const { entries, loading: entriesLoading } = useLiveBlog(matchId);
   const { currentMinute: manualMinute, timerSettings } = useMatchTimer(matchId || '');
+  const { counts: reactionCounts, mine: myReactions, toggleReaction } = useLiveBlogReactions(matchId);
+
+  useEffect(() => {
+    const fetchPlayers = async () => {
+      const [{ data: squad }, { data: opponents }] = await Promise.all([
+        supabase.from('players').select('id, name, jersey_number, position, image_url'),
+        supabase.from('opposing_players').select('id, name, jersey_number, position'),
+      ]);
+
+      const map: Record<string, LiveBlogPlayer> = {};
+      (squad || []).forEach((p: any) => {
+        map[p.id] = {
+          id: p.id,
+          name: p.name,
+          jersey_number: p.jersey_number,
+          position: p.position,
+          image_url: p.image_url,
+        };
+      });
+      (opponents || []).forEach((p: any) => {
+        map[p.id] = {
+          id: p.id,
+          name: p.name,
+          jersey_number: p.jersey_number,
+          position: p.position,
+          image_url: null,
+        };
+      });
+      setPlayers(map);
+    };
+
+    fetchPlayers();
+  }, []);
 
   useEffect(() => {
     const fetchMatch = async () => {
