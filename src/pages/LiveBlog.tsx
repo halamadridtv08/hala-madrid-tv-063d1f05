@@ -16,6 +16,9 @@ import { Match } from '@/types/Match';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { SEOHead } from '@/components/SEOHead';
+import { LiveBlogEntryCard, LiveBlogPlayer } from '@/components/liveblog/LiveBlogEntryCard';
+import { LiveBlogComments } from '@/components/liveblog/LiveBlogComments';
+import { useLiveBlogReactions } from '@/hooks/useLiveBlogSocial';
 
 const translations = {
   fr: {
