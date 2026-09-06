@@ -274,6 +274,7 @@ const LiveBlog = () => {
   const matchDate = new Date(match.match_date);
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
+  const ownSide: 'home' | 'away' = /real madrid/i.test(match.home_team || '') ? 'home' : 'away';
 
   // Detect halftime: timer is paused after first half (current_half = 1, is_paused = true)
   const isHalftime = timerSettings?.current_half === 1 && timerSettings?.is_paused === true;
