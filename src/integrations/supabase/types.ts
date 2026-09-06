@@ -1159,6 +1159,53 @@ export type Database = {
         }
         Relationships: []
       }
+      live_blog_comment_reports: {
+        Row: {
+          comment_id: string
+          created_at: string
+          handled_at: string | null
+          handled_by: string | null
+          id: string
+          reason: string
+          reporter_identifier: string | null
+          reporter_user_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          reason: string
+          reporter_identifier?: string | null
+          reporter_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          reason?: string
+          reporter_identifier?: string | null
+          reporter_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_blog_comment_reports_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "live_blog_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_blog_comments: {
         Row: {
           content: string
@@ -1169,6 +1216,7 @@ export type Database = {
           is_hidden: boolean
           is_pinned: boolean
           match_id: string
+          parent_id: string | null
           updated_at: string
           user_id: string
         }
@@ -1181,6 +1229,7 @@ export type Database = {
           is_hidden?: boolean
           is_pinned?: boolean
           match_id: string
+          parent_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1193,6 +1242,7 @@ export type Database = {
           is_hidden?: boolean
           is_pinned?: boolean
           match_id?: string
+          parent_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1209,6 +1259,13 @@ export type Database = {
             columns: ["match_id"]
             isOneToOne: false
             referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_blog_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "live_blog_comments"
             referencedColumns: ["id"]
           },
         ]
@@ -1301,6 +1358,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      live_blog_moderation_logs: {
+        Row: {
+          action: string
+          comment_id: string | null
+          created_at: string
+          details: Json
+          id: string
+          match_id: string | null
+          moderator_email: string | null
+          moderator_id: string
+        }
+        Insert: {
+          action: string
+          comment_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          match_id?: string | null
+          moderator_email?: string | null
+          moderator_id?: string
+        }
+        Update: {
+          action?: string
+          comment_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          match_id?: string | null
+          moderator_email?: string | null
+          moderator_id?: string
+        }
+        Relationships: []
       }
       live_blog_reactions: {
         Row: {
@@ -4464,6 +4554,45 @@ export type Database = {
           entity_id?: string
           entity_type?: string
           id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_notifications: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          is_read: boolean
+          link: string | null
+          message: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          message?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          message?: string | null
+          title?: string
+          type?: string
           user_id?: string
         }
         Relationships: []
