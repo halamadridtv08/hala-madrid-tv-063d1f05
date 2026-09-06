@@ -16,6 +16,9 @@ import { Match } from '@/types/Match';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { SEOHead } from '@/components/SEOHead';
+import { LiveBlogEntryCard, LiveBlogPlayer } from '@/components/liveblog/LiveBlogEntryCard';
+import { LiveBlogComments } from '@/components/liveblog/LiveBlogComments';
+import { useLiveBlogReactions } from '@/hooks/useLiveBlogSocial';
 
 const translations = {
   fr: {
@@ -141,9 +144,43 @@ const LiveBlog = () => {
   const [match, setMatch] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
   const [matchMinute, setMatchMinute] = useState(0);
+  const [players, setPlayers] = useState<Record<string, LiveBlogPlayer>>({});
   
   const { entries, loading: entriesLoading } = useLiveBlog(matchId);
   const { currentMinute: manualMinute, timerSettings } = useMatchTimer(matchId || '');
+  const { counts: reactionCounts, mine: myReactions, toggleReaction } = useLiveBlogReactions(matchId);
+
+  useEffect(() => {
+    const fetchPlayers = async () => {
+      const [{ data: squad }, { data: opponents }] = await Promise.all([
+        supabase.from('players').select('id, name, jersey_number, position, image_url'),
+        supabase.from('opposing_players').select('id, name, jersey_number, position'),
+      ]);
+
+      const map: Record<string, LiveBlogPlayer> = {};
+      (squad || []).forEach((p: any) => {
+        map[p.id] = {
+          id: p.id,
+          name: p.name,
+          jersey_number: p.jersey_number,
+          position: p.position,
+          image_url: p.image_url,
+        };
+      });
+      (opponents || []).forEach((p: any) => {
+        map[p.id] = {
+          id: p.id,
+          name: p.name,
+          jersey_number: p.jersey_number,
+          position: p.position,
+          image_url: null,
+        };
+      });
+      setPlayers(map);
+    };
+
+    fetchPlayers();
+  }, []);
 
   useEffect(() => {
     const fetchMatch = async () => {
@@ -237,6 +274,7 @@ const LiveBlog = () => {
   const matchDate = new Date(match.match_date);
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
+  const ownSide: 'home' | 'away' = /real madrid/i.test(match.home_team || '') ? 'home' : 'away';
 
   // Detect halftime: timer is paused after first half (current_half = 1, is_paused = true)
   const isHalftime = timerSettings?.current_half === 1 && timerSettings?.is_paused === true;
@@ -392,53 +430,24 @@ const LiveBlog = () => {
             <div className="space-y-4">
               <AnimatePresence mode="popLayout">
                 {entries.map((entry, index) => (
-                  <motion.div
+                  <LiveBlogEntryCard
                     key={entry.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Card className={entry.is_important ? 'border-primary/50 bg-primary/5' : ''}>
-                      <CardContent className="p-4">
-                        <div className="flex gap-4">
-                          <div className="flex-shrink-0 mt-1">
-                            {getEntryIcon(entry.entry_type)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-2 flex-wrap">
-                              {entry.minute !== null && (
-                                <Badge variant="outline" className="font-mono text-sm">
-                                  {entry.minute}'
-                                </Badge>
-                              )}
-                              <Badge className={getEntryBadgeColor(entry.entry_type)}>
-                                {getEntryLabel(entry.entry_type)}
-                              </Badge>
-                              <span className="text-xs text-muted-foreground ml-auto">
-                                {format(new Date(entry.created_at), 'HH:mm', { locale: dateLocale })}
-                              </span>
-                            </div>
-                            {entry.title && (
-                              <h3 className="font-semibold text-foreground mb-1 text-lg">{entry.title}</h3>
-                            )}
-                            <p className="text-muted-foreground">{entry.content}</p>
-                            {entry.image_url && (
-                              <img 
-                                src={entry.image_url} 
-                                alt={entry.title || 'Live blog image'}
-                                className="mt-3 rounded-lg max-h-64 w-auto object-cover"
-                              />
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                    entry={entry}
+                    index={index}
+                    players={players}
+                    ownSide={ownSide}
+                    ownTeamLogo={ownSide === 'home' ? match.home_team_logo : match.away_team_logo}
+                    opponentLogo={ownSide === 'home' ? match.away_team_logo : match.home_team_logo}
+                    reactionCounts={reactionCounts[entry.id] || {}}
+                    myReactions={myReactions[entry.id] || []}
+                    onToggleReaction={(emoji) => toggleReaction(entry.id, emoji)}
+                  />
                 ))}
               </AnimatePresence>
             </div>
           )}
+
+          <LiveBlogComments matchId={match.id} />
         </div>
       </div>
 
