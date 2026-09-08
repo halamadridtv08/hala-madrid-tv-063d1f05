@@ -108,6 +108,7 @@ export interface LiveBlogComment {
   id: string;
   match_id: string;
   entry_id: string | null;
+  parent_id: string | null;
   user_id: string;
   display_name: string;
   content: string;
@@ -115,6 +116,24 @@ export interface LiveBlogComment {
   is_pinned: boolean;
   created_at: string;
 }
+
+/** Journalise une action de modération (épingler, masquer, supprimer). */
+export const logLiveBlogModeration = async (params: {
+  action: string;
+  commentId?: string | null;
+  matchId?: string | null;
+  email?: string | null;
+  details?: Record<string, unknown>;
+}) => {
+  const { error } = await (supabase as any).from('live_blog_moderation_logs').insert({
+    action: params.action,
+    comment_id: params.commentId ?? null,
+    match_id: params.matchId ?? null,
+    moderator_email: params.email ?? null,
+    details: params.details ?? {},
+  });
+  if (error) console.error('Error writing moderation log:', error);
+};
 
 /** Comments posted by signed-in supporters under a match live blog. */
 export const useLiveBlogComments = (matchId: string | undefined, includeHidden = false) => {
@@ -163,7 +182,7 @@ export const useLiveBlogComments = (matchId: string | undefined, includeHidden =
   }, [matchId, fetchComments]);
 
   const addComment = useCallback(
-    async (content: string, entryId?: string | null) => {
+    async (content: string, entryId?: string | null, parentId?: string | null) => {
       if (!user || !matchId) throw new Error('not-authenticated');
       const displayName =
         (user.user_metadata?.full_name as string) ||
@@ -174,6 +193,7 @@ export const useLiveBlogComments = (matchId: string | undefined, includeHidden =
       const { error } = await (supabase as any).from('live_blog_comments').insert({
         match_id: matchId,
         entry_id: entryId ?? null,
+        parent_id: parentId ?? null,
         user_id: user.id,
         display_name: displayName.slice(0, 60),
         content: content.trim().slice(0, 1000),
@@ -186,11 +206,21 @@ export const useLiveBlogComments = (matchId: string | undefined, includeHidden =
 
   const deleteComment = useCallback(
     async (id: string) => {
+      const target = comments.find((c) => c.id === id);
       const { error } = await (supabase as any).from('live_blog_comments').delete().eq('id', id);
       if (error) throw error;
+      if (user) {
+        await logLiveBlogModeration({
+          action: 'delete',
+          commentId: id,
+          matchId: matchId ?? null,
+          email: user.email ?? null,
+          details: { author: target?.display_name, content: target?.content?.slice(0, 200) },
+        });
+      }
       await fetchComments();
     },
-    [fetchComments]
+    [fetchComments, comments, matchId, user]
   );
 
   const setHidden = useCallback(
@@ -200,9 +230,17 @@ export const useLiveBlogComments = (matchId: string | undefined, includeHidden =
         .update({ is_hidden: hidden })
         .eq('id', id);
       if (error) throw error;
+      if (user) {
+        await logLiveBlogModeration({
+          action: hidden ? 'hide' : 'unhide',
+          commentId: id,
+          matchId: matchId ?? null,
+          email: user.email ?? null,
+        });
+      }
       await fetchComments();
     },
-    [fetchComments]
+    [fetchComments, matchId, user]
   );
 
   const setPinned = useCallback(
@@ -212,10 +250,41 @@ export const useLiveBlogComments = (matchId: string | undefined, includeHidden =
         .update({ is_pinned: pinned })
         .eq('id', id);
       if (error) throw error;
+      if (user) {
+        await logLiveBlogModeration({
+          action: pinned ? 'pin' : 'unpin',
+          commentId: id,
+          matchId: matchId ?? null,
+          email: user.email ?? null,
+        });
+      }
       await fetchComments();
     },
-    [fetchComments]
+    [fetchComments, matchId, user]
   );
 
-  return { comments, loading, addComment, deleteComment, setHidden, setPinned, refresh: fetchComments };
+  const reportComment = useCallback(
+    async (id: string, reason: string) => {
+      const { error } = await (supabase as any).from('live_blog_comment_reports').insert({
+        comment_id: id,
+        reason: reason.trim().slice(0, 500),
+        reporter_user_id: user?.id ?? null,
+        reporter_identifier: getVisitorIdentifier(),
+        status: 'pending',
+      });
+      if (error) throw error;
+    },
+    [user]
+  );
+
+  return {
+    comments,
+    loading,
+    addComment,
+    deleteComment,
+    setHidden,
+    setPinned,
+    reportComment,
+    refresh: fetchComments,
+  };
 };
