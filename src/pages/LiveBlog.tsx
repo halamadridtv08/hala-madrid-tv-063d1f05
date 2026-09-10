@@ -413,23 +413,82 @@ const LiveBlog = () => {
             {t.liveBlog}
           </h2>
 
+          {/* Filtres */}
+          {!entriesLoading && entries.length > 0 && (
+            <div className="mb-6 flex flex-wrap gap-2">
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-[170px]">
+                  <SelectValue placeholder="Type d'événement" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les événements</SelectItem>
+                  {availableTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={playerFilter} onValueChange={setPlayerFilter}>
+                <SelectTrigger className="w-[170px]">
+                  <SelectValue placeholder="Joueur" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les joueurs</SelectItem>
+                  {players.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={periodFilter} onValueChange={setPeriodFilter}>
+                <SelectTrigger className="w-[170px]">
+                  <SelectValue placeholder="Période" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tout le match</SelectItem>
+                  <SelectItem value="first">1re mi-temps (1-45)</SelectItem>
+                  <SelectItem value="second">2e mi-temps (46+)</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {(typeFilter !== 'all' || playerFilter !== 'all' || periodFilter !== 'all') && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setTypeFilter('all');
+                    setPlayerFilter('all');
+                    setPeriodFilter('all');
+                  }}
+                >
+                  Réinitialiser
+                </Button>
+              )}
+            </div>
+          )}
+
           {entriesLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
                 <Skeleton key={i} className="h-24 w-full" />
               ))}
             </div>
-          ) : entries.length === 0 ? (
+          ) : filteredEntries.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <Clock className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground">{t.waitingForUpdates}</p>
+                <p className="text-muted-foreground">
+                  {entries.length === 0 ? t.waitingForUpdates : 'Aucun événement ne correspond à ces filtres.'}
+                </p>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-4">
               <AnimatePresence mode="popLayout">
-                {entries.map((entry, index) => (
+                {visibleEntries.map((entry, index) => (
                   <LiveBlogEntryCard
                     key={entry.id}
                     entry={entry}
@@ -444,6 +503,14 @@ const LiveBlog = () => {
                   />
                 ))}
               </AnimatePresence>
+
+              {visibleEntries.length < filteredEntries.length && (
+                <div className="pt-2 text-center">
+                  <Button variant="outline" onClick={() => setVisibleCount((c) => c + 15)}>
+                    Charger plus ({filteredEntries.length - visibleEntries.length} restants)
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
