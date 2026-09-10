@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, differenceInMinutes } from 'date-fns';
 import { fr, es, enUS } from 'date-fns/locale';
@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLiveBlog, LiveBlogEntry } from '@/hooks/useLiveBlog';
 import { useMatchTimer } from '@/hooks/useMatchTimer';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -149,6 +150,49 @@ const LiveBlog = () => {
   const { entries, loading: entriesLoading } = useLiveBlog(matchId);
   const { currentMinute: manualMinute, timerSettings } = useMatchTimer(matchId || '');
   const { counts: reactionCounts, mine: myReactions, toggleReaction } = useLiveBlogReactions(matchId);
+
+  // Filtres + chargement progressif
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [playerFilter, setPlayerFilter] = useState('all');
+  const [periodFilter, setPeriodFilter] = useState('all');
+  const [visibleCount, setVisibleCount] = useState(15);
+
+  const availableTypes = useMemo(
+    () => Array.from(new Set(entries.map((e) => e.entry_type).filter(Boolean))) as string[],
+    [entries]
+  );
+
+  const playerOptions = useMemo(() => Object.values(players), [players]);
+
+  const filteredEntries = useMemo(
+    () =>
+      entries.filter((entry) => {
+        if (typeFilter !== 'all' && entry.entry_type !== typeFilter) return false;
+        if (
+          playerFilter !== 'all' &&
+          entry.player_id !== playerFilter &&
+          entry.assist_player_id !== playerFilter &&
+          entry.substituted_player_id !== playerFilter
+        )
+          return false;
+        if (periodFilter !== 'all') {
+          const minute = entry.minute ?? 0;
+          if (periodFilter === 'first' && minute > 45) return false;
+          if (periodFilter === 'second' && minute <= 45) return false;
+        }
+        return true;
+      }),
+    [entries, typeFilter, playerFilter, periodFilter]
+  );
+
+  const visibleEntries = useMemo(
+    () => filteredEntries.slice(0, visibleCount),
+    [filteredEntries, visibleCount]
+  );
+
+  useEffect(() => {
+    setVisibleCount(15);
+  }, [typeFilter, playerFilter, periodFilter]);
 
   useEffect(() => {
     const fetchPlayers = async () => {
