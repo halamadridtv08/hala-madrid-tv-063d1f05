@@ -6,6 +6,7 @@ import { LanguageSelector } from "./LanguageSelector";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu, X, Calendar, Users, Video, FileText, Image, Search, Plus, Star, ShoppingBag } from "lucide-react";
 import { AuthButtons } from "./AuthButtons";
+import { UserNotificationBell } from "@/components/notifications/UserNotificationBell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useSiteVisibility } from "@/hooks/useSiteVisibility";
@@ -195,6 +196,7 @@ export function Navbar() {
           
           {isVisible('language_selector') && <LanguageSelector />}
           <ThemeToggle />
+          <UserNotificationBell />
           <AuthButtons />
         </nav>
 

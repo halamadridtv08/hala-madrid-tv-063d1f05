@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, differenceInMinutes } from 'date-fns';
 import { fr, es, enUS } from 'date-fns/locale';
@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLiveBlog, LiveBlogEntry } from '@/hooks/useLiveBlog';
 import { useMatchTimer } from '@/hooks/useMatchTimer';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -149,6 +150,49 @@ const LiveBlog = () => {
   const { entries, loading: entriesLoading } = useLiveBlog(matchId);
   const { currentMinute: manualMinute, timerSettings } = useMatchTimer(matchId || '');
   const { counts: reactionCounts, mine: myReactions, toggleReaction } = useLiveBlogReactions(matchId);
+
+  // Filtres + chargement progressif
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [playerFilter, setPlayerFilter] = useState('all');
+  const [periodFilter, setPeriodFilter] = useState('all');
+  const [visibleCount, setVisibleCount] = useState(15);
+
+  const availableTypes = useMemo(
+    () => Array.from(new Set(entries.map((e) => e.entry_type).filter(Boolean))) as string[],
+    [entries]
+  );
+
+  const playerOptions = useMemo(() => Object.values(players), [players]);
+
+  const filteredEntries = useMemo(
+    () =>
+      entries.filter((entry) => {
+        if (typeFilter !== 'all' && entry.entry_type !== typeFilter) return false;
+        if (
+          playerFilter !== 'all' &&
+          entry.player_id !== playerFilter &&
+          entry.assist_player_id !== playerFilter &&
+          entry.substituted_player_id !== playerFilter
+        )
+          return false;
+        if (periodFilter !== 'all') {
+          const minute = entry.minute ?? 0;
+          if (periodFilter === 'first' && minute > 45) return false;
+          if (periodFilter === 'second' && minute <= 45) return false;
+        }
+        return true;
+      }),
+    [entries, typeFilter, playerFilter, periodFilter]
+  );
+
+  const visibleEntries = useMemo(
+    () => filteredEntries.slice(0, visibleCount),
+    [filteredEntries, visibleCount]
+  );
+
+  useEffect(() => {
+    setVisibleCount(15);
+  }, [typeFilter, playerFilter, periodFilter]);
 
   useEffect(() => {
     const fetchPlayers = async () => {
@@ -413,23 +457,82 @@ const LiveBlog = () => {
             {t.liveBlog}
           </h2>
 
+          {/* Filtres */}
+          {!entriesLoading && entries.length > 0 && (
+            <div className="mb-6 flex flex-wrap gap-2">
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-[170px]">
+                  <SelectValue placeholder="Type d'événement" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les événements</SelectItem>
+                  {availableTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={playerFilter} onValueChange={setPlayerFilter}>
+                <SelectTrigger className="w-[170px]">
+                  <SelectValue placeholder="Joueur" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les joueurs</SelectItem>
+                  {playerOptions.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={periodFilter} onValueChange={setPeriodFilter}>
+                <SelectTrigger className="w-[170px]">
+                  <SelectValue placeholder="Période" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tout le match</SelectItem>
+                  <SelectItem value="first">1re mi-temps (1-45)</SelectItem>
+                  <SelectItem value="second">2e mi-temps (46+)</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {(typeFilter !== 'all' || playerFilter !== 'all' || periodFilter !== 'all') && (
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setTypeFilter('all');
+                    setPlayerFilter('all');
+                    setPeriodFilter('all');
+                  }}
+                >
+                  Réinitialiser
+                </Button>
+              )}
+            </div>
+          )}
+
           {entriesLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
                 <Skeleton key={i} className="h-24 w-full" />
               ))}
             </div>
-          ) : entries.length === 0 ? (
+          ) : filteredEntries.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <Clock className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground">{t.waitingForUpdates}</p>
+                <p className="text-muted-foreground">
+                  {entries.length === 0 ? t.waitingForUpdates : 'Aucun événement ne correspond à ces filtres.'}
+                </p>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-4">
               <AnimatePresence mode="popLayout">
-                {entries.map((entry, index) => (
+                {visibleEntries.map((entry, index) => (
                   <LiveBlogEntryCard
                     key={entry.id}
                     entry={entry}
@@ -444,6 +547,14 @@ const LiveBlog = () => {
                   />
                 ))}
               </AnimatePresence>
+
+              {visibleEntries.length < filteredEntries.length && (
+                <div className="pt-2 text-center">
+                  <Button variant="outline" onClick={() => setVisibleCount((c) => c + 15)}>
+                    Charger plus ({filteredEntries.length - visibleEntries.length} restants)
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
