@@ -480,7 +480,7 @@ const LiveBlog = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les joueurs</SelectItem>
-                  {players.map((p) => (
+                  {playerOptions.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.name}
                     </SelectItem>
