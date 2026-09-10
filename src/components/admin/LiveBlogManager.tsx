@@ -454,6 +454,8 @@ export const LiveBlogManager = ({ matchId: propMatchId }: LiveBlogManagerProps) 
       )}
 
       {selectedMatchId && <LiveBlogCommentsModeration matchId={selectedMatchId} />}
+      {selectedMatchId && <LiveBlogCommentReports matchId={selectedMatchId} />}
+      {selectedMatchId && <LiveBlogModerationLog matchId={selectedMatchId} />}
       
       
       {!selectedMatchId && !loadingMatches && (
