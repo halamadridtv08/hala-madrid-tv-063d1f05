@@ -30,8 +30,6 @@ export const ArticleComments = ({ articleId }: ArticleCommentsProps) => {
       .from("article_comments_public")
       .select("id, article_id, user_name, content, created_at, updated_at, is_approved, is_published")
       .eq("article_id", articleId)
-      .eq("is_approved", true)
-      .eq("is_published", true)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -61,11 +59,12 @@ export const ArticleComments = ({ articleId }: ArticleCommentsProps) => {
     } else {
       toast({
         title: "Commentaire envoyé",
-        description: "Votre commentaire est en attente de modération",
+        description: "Votre commentaire est publié s’il respecte les règles de discussion",
       });
       setUserName("");
       setUserEmail("");
       setContent("");
+      fetchComments();
     }
 
     setLoading(false);

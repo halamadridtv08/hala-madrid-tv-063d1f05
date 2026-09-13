@@ -42,8 +42,8 @@ const Index = () => {
       <WelcomePopup />
       <AnnouncementBar />
       <Navbar />
-      <StoriesBar />
       <LiveMatchBar />
+      <StoriesBar />
       <main>
       {isVisible('hero_section') && <HeroSection />}
       {isVisible('youtube_videos') && <FeaturedYouTubeVideo />}

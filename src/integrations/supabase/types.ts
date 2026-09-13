@@ -274,8 +274,10 @@ export type Database = {
           article_id: string
           content: string
           created_at: string | null
+          flagged_reason: string | null
           id: string
           is_approved: boolean | null
+          is_flagged: boolean
           is_published: boolean | null
           updated_at: string | null
           user_name: string
@@ -284,8 +286,10 @@ export type Database = {
           article_id: string
           content: string
           created_at?: string | null
+          flagged_reason?: string | null
           id?: string
           is_approved?: boolean | null
+          is_flagged?: boolean
           is_published?: boolean | null
           updated_at?: string | null
           user_name: string
@@ -294,8 +298,10 @@ export type Database = {
           article_id?: string
           content?: string
           created_at?: string | null
+          flagged_reason?: string | null
           id?: string
           is_approved?: boolean | null
+          is_flagged?: boolean
           is_published?: boolean | null
           updated_at?: string | null
           user_name?: string
@@ -551,6 +557,27 @@ export type Database = {
           updated_at?: string | null
           video_url?: string | null
           view_count?: number | null
+        }
+        Relationships: []
+      }
+      blocked_comment_words: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          word: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          word: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          word?: string
         }
         Relationships: []
       }
@@ -4107,6 +4134,7 @@ export type Database = {
           id: string
           ring_size: number
           ring_style: string
+          show_floating_rail: boolean
           show_titles: boolean
           updated_at: string
           viewer_backdrop: string
@@ -4117,6 +4145,7 @@ export type Database = {
           id?: string
           ring_size?: number
           ring_style?: string
+          show_floating_rail?: boolean
           show_titles?: boolean
           updated_at?: string
           viewer_backdrop?: string
@@ -4127,6 +4156,7 @@ export type Database = {
           id?: string
           ring_size?: number
           ring_style?: string
+          show_floating_rail?: boolean
           show_titles?: boolean
           updated_at?: string
           viewer_backdrop?: string
@@ -4946,14 +4976,24 @@ export type Database = {
       delete_totp_secret: { Args: { p_user_id: string }; Returns: undefined }
       generate_slug: { Args: { title: string }; Returns: string }
       get_admin_emails: { Args: never; Returns: string[] }
+      get_article_comment_counts: {
+        Args: never
+        Returns: {
+          article_id: string
+          hidden: number
+          total: number
+        }[]
+      }
       get_article_comments_with_emails: {
         Args: { p_article_id: string }
         Returns: {
           article_id: string
           content: string
           created_at: string
+          flagged_reason: string
           id: string
           is_approved: boolean
+          is_flagged: boolean
           is_published: boolean
           updated_at: string
           user_email: string

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Trash2 } from "lucide-react";
 import type { ArticleComment } from "@/types/ArticleEngagement";
 
 interface CommentWithEmail extends ArticleComment {
@@ -34,21 +34,21 @@ export const CommentsManager = ({ articleId }: CommentsManagerProps) => {
     }
   };
 
-  const handleApprove = async (commentId: string) => {
+  const handleVisibility = async (commentId: string, visible: boolean) => {
     setLoading(true);
     const { error } = await supabase
       .from("article_comments")
-      .update({ is_approved: true })
+      .update({ is_published: visible, is_flagged: false, flagged_reason: null })
       .eq("id", commentId);
 
     if (error) {
       toast({
         title: "Erreur",
-        description: "Impossible d'approuver le commentaire",
+        description: "Impossible de modifier la visibilité du commentaire",
         variant: "destructive",
       });
     } else {
-      toast({ title: "Commentaire approuvé" });
+      toast({ title: visible ? "Commentaire affiché" : "Commentaire masqué" });
       fetchComments();
     }
     setLoading(false);
@@ -82,10 +82,12 @@ export const CommentsManager = ({ articleId }: CommentsManagerProps) => {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-semibold">{comment.user_name}</span>
-                {comment.is_approved ? (
-                  <Badge variant="default">Approuvé</Badge>
+                {comment.is_flagged ? (
+                  <Badge variant="destructive">Signalé</Badge>
+                ) : comment.is_published ? (
+                  <Badge variant="default">Visible</Badge>
                 ) : (
-                  <Badge variant="secondary">En attente</Badge>
+                  <Badge variant="secondary">Masqué</Badge>
                 )}
               </div>
               {comment.user_email && (
@@ -98,18 +100,13 @@ export const CommentsManager = ({ articleId }: CommentsManagerProps) => {
           </div>
           
           <p className="text-foreground">{comment.content}</p>
+          {comment.flagged_reason && <p className="text-sm text-destructive">Mot détecté : {comment.flagged_reason}</p>}
 
           <div className="flex gap-2">
-            {!comment.is_approved && (
-              <Button
-                size="sm"
-                onClick={() => handleApprove(comment.id)}
-                disabled={loading}
-              >
-                <Check className="w-4 h-4 mr-1" />
-                Approuver
-              </Button>
-            )}
+            <Button size="sm" variant="outline" onClick={() => handleVisibility(comment.id, !comment.is_published)} disabled={loading}>
+              {comment.is_published ? <EyeOff className="w-4 h-4 mr-1" /> : <Eye className="w-4 h-4 mr-1" />}
+              {comment.is_published ? "Masquer" : "Afficher"}
+            </Button>
             <Button
               size="sm"
               variant="destructive"

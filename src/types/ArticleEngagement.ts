@@ -5,6 +5,8 @@ export interface ArticleComment {
   content: string;
   is_approved: boolean;
   is_published: boolean;
+  is_flagged: boolean;
+  flagged_reason?: string | null;
   created_at: string;
   updated_at: string;
 }
