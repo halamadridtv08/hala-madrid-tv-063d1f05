@@ -253,9 +253,6 @@ export function StoriesManager() {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
       return;
     }
-    if (!ring.is_highlight && !ring.scheduled_at) {
-      await db.from('story_rings').update({ expires_at: new Date(Date.now() + DAY_MS).toISOString() }).eq('id', ring.id);
-    }
     toast({ title: 'Contenu ajouté' });
     load();
   };

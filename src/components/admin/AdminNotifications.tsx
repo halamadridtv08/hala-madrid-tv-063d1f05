@@ -1,12 +1,10 @@
-import { useState, useEffect } from "react";
+import { useAdminNotifications } from "@/hooks/useAdminNotificationCenter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
 import { Bell, Check, Trash2, MessageCircle, BarChart3, HelpCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
-import { toast } from "sonner";
 
 interface AdminNotification {
   id: string;
@@ -20,96 +18,7 @@ interface AdminNotification {
 }
 
 export const AdminNotifications = () => {
-  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchNotifications();
-    
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel(`admin-notifications-${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'admin_notifications'
-        },
-        () => fetchNotifications()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const fetchNotifications = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('admin_notifications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-      setNotifications(data || []);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const markAsRead = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('admin_notifications')
-        .update({ is_read: true, read_at: new Date().toISOString() })
-        .eq('id', id);
-
-      if (error) throw error;
-      setNotifications(prev => 
-        prev.map(n => n.id === id ? { ...n, is_read: true } : n)
-      );
-    } catch (error) {
-      console.error('Error marking as read:', error);
-      toast.error("Erreur lors de la mise à jour");
-    }
-  };
-
-  const markAllAsRead = async () => {
-    try {
-      const { error } = await supabase
-        .from('admin_notifications')
-        .update({ is_read: true, read_at: new Date().toISOString() })
-        .eq('is_read', false);
-
-      if (error) throw error;
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-      toast.success("Toutes les notifications marquées comme lues");
-    } catch (error) {
-      console.error('Error marking all as read:', error);
-      toast.error("Erreur lors de la mise à jour");
-    }
-  };
-
-  const deleteNotification = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('admin_notifications')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-      setNotifications(prev => prev.filter(n => n.id !== id));
-      toast.success("Notification supprimée");
-    } catch (error) {
-      console.error('Error deleting notification:', error);
-      toast.error("Erreur lors de la suppression");
-    }
-  };
+  const { notifications, loading, markAsRead, markAllAsRead, remove: deleteNotification } = useAdminNotifications();
 
   const getTypeIcon = (type: string) => {
     switch (type) {

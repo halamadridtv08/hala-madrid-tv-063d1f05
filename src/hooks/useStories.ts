@@ -43,6 +43,7 @@ export interface StoryDisplaySettings {
   show_titles: boolean;
   viewer_backdrop: 'blur' | 'dark' | 'gradient';
   viewer_fit: 'contain' | 'cover';
+  show_floating_rail: boolean;
 }
 
 export const DEFAULT_STORY_SETTINGS: StoryDisplaySettings = {
@@ -53,6 +54,7 @@ export const DEFAULT_STORY_SETTINGS: StoryDisplaySettings = {
   show_titles: true,
   viewer_backdrop: 'blur',
   viewer_fit: 'contain',
+  show_floating_rail: true,
 };
 
 const db = supabase as any;
@@ -104,7 +106,10 @@ export async function fetchStoryRings(includeUnpublished = false): Promise<Story
       const all = byRing.get(ring.id) ?? [];
       const visible = includeUnpublished
         ? all
-        : all.filter((it) => !it.scheduled_at || new Date(it.scheduled_at).getTime() <= now);
+        : all.filter((it) =>
+            (!it.scheduled_at || new Date(it.scheduled_at).getTime() <= now) &&
+            (!it.expires_at || new Date(it.expires_at).getTime() > now)
+          );
       return { ...ring, items: visible };
     })
     .filter((ring) => {

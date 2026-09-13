@@ -139,6 +139,17 @@ export function StoryDisplaySettingsPanel() {
           />
         </div>
 
+        <div className="flex items-center justify-between rounded-lg border border-border p-3">
+          <div>
+            <p className="font-medium">Afficher le rail flottant</p>
+            <p className="text-sm text-muted-foreground">Stories verticales à gauche sur ordinateur</p>
+          </div>
+          <Switch
+            checked={form.show_floating_rail}
+            onCheckedChange={(v) => setForm((f) => ({ ...f, show_floating_rail: v }))}
+          />
+        </div>
+
         <Button onClick={save} disabled={update.isPending}>
           {update.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
           Enregistrer

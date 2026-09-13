@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStories, useStoryDisplaySettings } from '@/hooks/useStories';
 import { StoryViewer } from './StoryViewer';
 import { cn } from '@/lib/utils';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Film } from 'lucide-react';
 import { prefetchMedia, prefetchWhenIdle } from '@/lib/mediaPrefetch';
 
@@ -15,13 +15,6 @@ function loadSeen(): Record<string, string> {
     return {};
   }
 }
-
-const BAR_BG: Record<string, string> = {
-  card: 'bg-card border-b border-border',
-  muted: 'bg-muted/40 border-b border-border',
-  transparent: 'bg-transparent',
-  gradient: 'bg-gradient-to-r from-primary/10 via-background to-secondary/10 border-b border-border',
-};
 
 export function StoriesBar() {
   const { rings, isLoading } = useStories();
@@ -65,16 +58,16 @@ export function StoriesBar() {
     });
   };
 
-  if (isLoading || rings.length === 0) return null;
+  if (isLoading || rings.length === 0 || !settings.show_floating_rail) return null;
 
-  const size = Math.min(96, Math.max(48, settings.ring_size || 64));
+  const size = Math.min(68, Math.max(48, settings.ring_size || 60));
 
   return (
     <>
-      <div className={cn(BAR_BG[settings.bar_background] ?? BAR_BG.card)}>
-        <div className="madrid-container py-3">
-          <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex items-start gap-4 pb-2">
+      <aside className="fixed left-2 top-40 z-30 hidden sm:block" aria-label="Stories">
+        <div className="w-[92px] rounded-md border border-border bg-card/95 p-2 shadow-xl backdrop-blur-md">
+          <ScrollArea className="max-h-[62vh]">
+            <div className="flex flex-col items-center gap-3 pr-1">
               {rings.map((ring, index) => {
                 const isSeen = Boolean(seen[ring.id]);
                 const ringClass = isSeen
@@ -95,8 +88,7 @@ export function StoriesBar() {
                     onPointerEnter={() => warmRing(index)}
                     onTouchStart={() => warmRing(index)}
                     onFocus={() => warmRing(index)}
-                    className="flex shrink-0 flex-col items-center gap-1.5 focus:outline-none"
-                    style={{ width: size + 12 }}
+                    className="flex w-full shrink-0 flex-col items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <span
                       className={cn('rounded-full p-[2.5px] transition-transform hover:scale-105', ringClass)}
@@ -132,9 +124,29 @@ export function StoriesBar() {
                 );
               })}
             </div>
-            <ScrollBar orientation="horizontal" className="h-1.5" />
           </ScrollArea>
         </div>
+      </aside>
+
+      <div className="border-b border-border bg-card sm:hidden">
+        <ScrollArea className="w-full whitespace-nowrap">
+          <div className="flex items-start gap-3 px-3 py-2">
+            {rings.map((ring, index) => {
+              const preview = ring.cover_url || ring.items[0]?.media_url;
+              const isSeen = Boolean(seen[ring.id]);
+              return (
+                <button key={ring.id} onClick={() => setOpenIndex(index)} className="flex w-16 shrink-0 flex-col items-center gap-1">
+                  <span className={cn('rounded-full p-0.5', isSeen ? 'bg-muted-foreground/30' : 'bg-primary')}>
+                    <span className="block h-12 w-12 overflow-hidden rounded-full border-2 border-card bg-muted">
+                      {preview && <img src={preview} alt={ring.title} className="h-full w-full object-cover" />}
+                    </span>
+                  </span>
+                  {settings.show_titles && <span className="w-full truncate text-center text-[10px]">{ring.title}</span>}
+                </button>
+              );
+            })}
+          </div>
+        </ScrollArea>
       </div>
 
       {openIndex !== null && (
