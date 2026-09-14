@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useStories, useStoryDisplaySettings } from '@/hooks/useStories';
 import { StoryViewer } from './StoryViewer';
 import { cn } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Film } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ChevronDown, Film } from 'lucide-react';
 import { prefetchMedia, prefetchWhenIdle } from '@/lib/mediaPrefetch';
 
 const SEEN_KEY = 'hmtv-seen-stories';
@@ -21,6 +21,7 @@ export function StoriesBar() {
   const { settings } = useStoryDisplaySettings();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [seen, setSeen] = useState<Record<string, string>>({});
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     setSeen(loadSeen());
@@ -61,14 +62,19 @@ export function StoriesBar() {
   if (isLoading || rings.length === 0 || !settings.show_floating_rail) return null;
 
   const size = Math.min(68, Math.max(48, settings.ring_size || 60));
+  const orderedRings = rings
+    .map((ring, originalIndex) => ({ ring, originalIndex }))
+    .sort((a, b) => {
+      if (a.ring.is_highlight !== b.ring.is_highlight) return a.ring.is_highlight ? 1 : -1;
+      return a.ring.display_order - b.ring.display_order;
+    });
+  const visibleRings = isExpanded ? orderedRings : orderedRings.slice(0, 1);
 
   return (
     <>
-      <aside className="fixed left-2 top-40 z-30 hidden sm:block" aria-label="Stories">
-        <div className="w-[92px] rounded-md border border-border bg-card/95 p-2 shadow-xl backdrop-blur-md">
-          <ScrollArea className="max-h-[62vh]">
-            <div className="flex flex-col items-center gap-3 pr-1">
-              {rings.map((ring, index) => {
+      <aside className="fixed left-3 top-32 z-30 sm:top-40" aria-label="Stories">
+        <div className="flex max-h-[65vh] flex-col items-center gap-2 overflow-y-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {visibleRings.map(({ ring, originalIndex }) => {
                 const isSeen = Boolean(seen[ring.id]);
                 const ringClass = isSeen
                   ? 'bg-muted-foreground/30'
@@ -82,13 +88,17 @@ export function StoriesBar() {
                 const preview = ring.cover_url || ring.items[0]?.media_url;
                 const previewIsVideo = !ring.cover_url && ring.items[0]?.media_type === 'video';
                 return (
-                  <button
+                  <Button
                     key={ring.id}
-                    onClick={() => setOpenIndex(index)}
-                    onPointerEnter={() => warmRing(index)}
-                    onTouchStart={() => warmRing(index)}
-                    onFocus={() => warmRing(index)}
-                    className="flex w-full shrink-0 flex-col items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Voir la story ${ring.title}`}
+                    onClick={() => setOpenIndex(originalIndex)}
+                    onPointerEnter={() => warmRing(originalIndex)}
+                    onTouchStart={() => warmRing(originalIndex)}
+                    onFocus={() => warmRing(originalIndex)}
+                    className="h-auto w-auto shrink-0 rounded-full p-0 hover:bg-transparent"
                   >
                     <span
                       className={cn('rounded-full p-[2.5px] transition-transform hover:scale-105', ringClass)}
@@ -115,39 +125,24 @@ export function StoriesBar() {
                         </span>
                       </span>
                     </span>
-                    {settings.show_titles && (
-                      <span className="w-full truncate text-center text-[11px] font-medium text-foreground">
-                        {ring.title}
-                      </span>
-                    )}
-                  </button>
+                  </Button>
                 );
               })}
-            </div>
-          </ScrollArea>
+          {orderedRings.length > 1 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={isExpanded ? 'Replier les stories' : 'Afficher toutes les stories'}
+              aria-expanded={isExpanded}
+              onClick={() => setIsExpanded((expanded) => !expanded)}
+              className="h-7 w-7 shrink-0 rounded-full bg-background/80 shadow-sm backdrop-blur-sm hover:bg-accent"
+            >
+              <ChevronDown className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-180')} />
+            </Button>
+          )}
         </div>
       </aside>
-
-      <div className="border-b border-border bg-card sm:hidden">
-        <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex items-start gap-3 px-3 py-2">
-            {rings.map((ring, index) => {
-              const preview = ring.cover_url || ring.items[0]?.media_url;
-              const isSeen = Boolean(seen[ring.id]);
-              return (
-                <button key={ring.id} onClick={() => setOpenIndex(index)} className="flex w-16 shrink-0 flex-col items-center gap-1">
-                  <span className={cn('rounded-full p-0.5', isSeen ? 'bg-muted-foreground/30' : 'bg-primary')}>
-                    <span className="block h-12 w-12 overflow-hidden rounded-full border-2 border-card bg-muted">
-                      {preview && <img src={preview} alt={ring.title} className="h-full w-full object-cover" />}
-                    </span>
-                  </span>
-                  {settings.show_titles && <span className="w-full truncate text-center text-[10px]">{ring.title}</span>}
-                </button>
-              );
-            })}
-          </div>
-        </ScrollArea>
-      </div>
 
       {openIndex !== null && (
         <StoryViewer

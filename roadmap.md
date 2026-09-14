@@ -10,7 +10,7 @@
 - [x] Persistance des préférences son + plein écran des stories (localStorage)
 - [x] Restaurer le lecteur simple des stories, sans conversion ni contrôle de codec
 
-- [ ] Remplacer la barre de stories par le rail flottant « Vertical floating stories »
+- [x] Remplacer la barre de stories par le rail flottant « Vertical floating stories »
 - [ ] Placer la barre de match avant les stories et rendre l’affichage des stories pilotable depuis l’admin
 - [ ] Garantir l’expiration et l’archivage stricts des stories 24 h
 - [ ] Réparer les badges, le temps réel et le son des notifications admin
