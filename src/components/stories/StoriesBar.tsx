@@ -136,7 +136,7 @@ export function StoriesBar() {
               aria-label={isExpanded ? 'Replier les stories' : 'Afficher toutes les stories'}
               aria-expanded={isExpanded}
               onClick={() => setIsExpanded((expanded) => !expanded)}
-              className="h-7 w-7 shrink-0 rounded-full bg-background/80 shadow-sm backdrop-blur-sm hover:bg-accent"
+              className="h-6 w-6 shrink-0 rounded-full bg-transparent p-0 text-foreground drop-shadow-sm hover:bg-transparent hover:text-primary"
             >
               <ChevronDown className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-180')} />
             </Button>
