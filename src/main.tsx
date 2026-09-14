@@ -21,9 +21,11 @@ if ('serviceWorker' in navigator) {
   // Check for updates on load and periodically
   window.addEventListener('load', () => {
     navigator.serviceWorker.ready.then((reg) => {
-      reg.update();
+      void reg.update().catch(() => undefined);
       // Periodically check for updates (every hour)
-      setInterval(() => reg.update(), 60 * 60 * 1000);
+      setInterval(() => {
+        void reg.update().catch(() => undefined);
+      }, 60 * 60 * 1000);
     }).catch(() => {
       // Stale registration recovery
     });
