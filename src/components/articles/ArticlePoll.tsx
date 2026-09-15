@@ -24,6 +24,16 @@ export const ArticlePoll = ({ articleId }: ArticlePollProps) => {
     fetchPoll();
   }, [articleId]);
 
+  // L'identifiant de vote est lié au compte si l'utilisateur est connecté
+  const getVoteIdentifier = async () => {
+    const { data } = await supabase.auth.getUser();
+    if (data.user?.id) return data.user.id;
+    const stored = localStorage.getItem("user_identifier") || crypto.randomUUID();
+    localStorage.setItem("user_identifier", stored);
+    return stored;
+  };
+
+
   const fetchPoll = async () => {
     const { data: pollData } = await supabase
       .from("article_polls")
