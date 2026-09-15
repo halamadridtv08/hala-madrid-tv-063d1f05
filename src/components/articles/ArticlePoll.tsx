@@ -24,6 +24,16 @@ export const ArticlePoll = ({ articleId }: ArticlePollProps) => {
     fetchPoll();
   }, [articleId]);
 
+  // L'identifiant de vote est lié au compte si l'utilisateur est connecté
+  const getVoteIdentifier = async () => {
+    const { data } = await supabase.auth.getUser();
+    if (data.user?.id) return data.user.id;
+    const stored = localStorage.getItem("user_identifier") || crypto.randomUUID();
+    localStorage.setItem("user_identifier", stored);
+    return stored;
+  };
+
+
   const fetchPoll = async () => {
     const { data: pollData } = await supabase
       .from("article_polls")
@@ -43,8 +53,8 @@ export const ArticlePoll = ({ articleId }: ArticlePollProps) => {
 
       setOptions(optionsData || []);
 
-      const userIdentifier = localStorage.getItem("user_identifier") || crypto.randomUUID();
-      localStorage.setItem("user_identifier", userIdentifier);
+      const userIdentifier = await getVoteIdentifier();
+
 
       const { data: voteData } = await supabase.rpc("has_voted_in_poll", {
         p_poll_id: pollData.id,
@@ -59,7 +69,7 @@ export const ArticlePoll = ({ articleId }: ArticlePollProps) => {
     if (!selectedOption || !poll) return;
 
     setLoading(true);
-    const userIdentifier = localStorage.getItem("user_identifier")!;
+    const userIdentifier = await getVoteIdentifier();
 
     const { error: voteError } = await supabase.from("poll_votes").insert({
       poll_id: poll.id,
