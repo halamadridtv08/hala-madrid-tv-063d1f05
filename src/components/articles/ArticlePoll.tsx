@@ -69,7 +69,7 @@ export const ArticlePoll = ({ articleId }: ArticlePollProps) => {
     if (!selectedOption || !poll) return;
 
     setLoading(true);
-    const userIdentifier = localStorage.getItem("user_identifier")!;
+    const userIdentifier = await getVoteIdentifier();
 
     const { error: voteError } = await supabase.from("poll_votes").insert({
       poll_id: poll.id,
