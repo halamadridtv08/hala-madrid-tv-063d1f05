@@ -53,8 +53,8 @@ export const ArticlePoll = ({ articleId }: ArticlePollProps) => {
 
       setOptions(optionsData || []);
 
-      const userIdentifier = localStorage.getItem("user_identifier") || crypto.randomUUID();
-      localStorage.setItem("user_identifier", userIdentifier);
+      const userIdentifier = await getVoteIdentifier();
+
 
       const { data: voteData } = await supabase.rpc("has_voted_in_poll", {
         p_poll_id: pollData.id,
