@@ -43,7 +43,9 @@ const Index = () => {
       <AnnouncementBar />
       <Navbar />
       <LiveMatchBar />
-      <StoriesBar />
+      <div className="relative h-0" aria-label="Stories disponibles">
+        <StoriesBar />
+      </div>
       <main>
       {isVisible('hero_section') && <HeroSection />}
       {isVisible('youtube_videos') && <FeaturedYouTubeVideo />}
