@@ -37,7 +37,7 @@ import TrainingSessionTable from "@/components/admin/TrainingSessionTable";
 import KitTable from "@/components/admin/KitTable";
 import YouTubeVideoTable from "@/components/admin/YouTubeVideoTable";
 import SettingsDashboard from "@/components/admin/SettingsDashboard";
-import { DataSynchronizer } from "@/components/admin/DataSynchronizer";
+
 import { OpposingTeamManager } from "@/components/admin/OpposingTeamManager";
 import { MatchFormationManager } from "@/components/admin/MatchFormationManager";
 import { FormationManager } from "@/components/admin/formation/FormationManager";
@@ -394,8 +394,8 @@ const Admin = () => {
   const renderDashboard = () => <div className="space-y-4 md:space-y-6">
       <QuickStatsCard playersCount={players.length} coachesCount={coaches.length} articlesCount={articles.length} videosCount={videos.length} matchesCount={matches.length} />
       
-      {/* Ajout du synchroniseur de données */}
-      <DataSynchronizer />
+
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <Card>
