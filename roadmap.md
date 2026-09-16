@@ -11,7 +11,8 @@
 - [x] Restaurer le lecteur simple des stories, sans conversion ni contrôle de codec
 
 - [x] Remplacer la barre de stories par le rail flottant « Vertical floating stories »
-- [ ] Placer la barre de match avant les stories et rendre l’affichage des stories pilotable depuis l’admin
+- [x] Placer la barre de match avant les stories et rendre l’affichage des stories pilotable depuis l’admin
+- [x] Ancrer les stories sous la barre de match sans les maintenir à l’écran au défilement
 - [ ] Garantir l’expiration et l’archivage stricts des stories 24 h
 - [ ] Réparer les badges, le temps réel et le son des notifications admin
 - [ ] Ajouter les badges de commentaires à la liste des articles

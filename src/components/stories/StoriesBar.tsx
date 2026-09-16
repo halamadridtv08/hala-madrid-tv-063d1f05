@@ -72,7 +72,7 @@ export function StoriesBar() {
 
   return (
     <>
-      <aside className="fixed left-3 top-32 z-30 sm:top-40" aria-label="Stories">
+      <aside className="absolute left-3 top-3 z-30" aria-label="Stories">
         <div className="flex max-h-[65vh] flex-col items-center gap-2 overflow-y-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {visibleRings.map(({ ring, originalIndex }) => {
                 const isSeen = Boolean(seen[ring.id]);
