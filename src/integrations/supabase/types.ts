@@ -2758,6 +2758,7 @@ export type Database = {
           age: number | null
           bio: string | null
           biography: string | null
+          celebration_image_url: string | null
           created_at: string
           "Date de naissance": string | null
           display_order: number | null
@@ -2784,6 +2785,7 @@ export type Database = {
           age?: number | null
           bio?: string | null
           biography?: string | null
+          celebration_image_url?: string | null
           created_at?: string
           "Date de naissance"?: string | null
           display_order?: number | null
@@ -2810,6 +2812,7 @@ export type Database = {
           age?: number | null
           bio?: string | null
           biography?: string | null
+          celebration_image_url?: string | null
           created_at?: string
           "Date de naissance"?: string | null
           display_order?: number | null
