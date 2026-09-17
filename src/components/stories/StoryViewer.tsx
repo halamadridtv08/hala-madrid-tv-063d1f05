@@ -77,13 +77,21 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     progressRef.current = progress;
   }, [progress]);
 
-  // Précharge le média suivant pour supprimer l'attente au changement de story
+  // Précharge le média suivant pour supprimer l'attente au changement de story.
+  // Sur mobile (ou connexion limitée) on se limite aux métadonnées pour ne pas saturer le réseau.
   useEffect(() => {
     if (!ring) return;
-    const upcoming = [ring.items[itemIndex + 1], ring.items[itemIndex + 2], rings[ringIndex + 1]?.items[0]];
+    const connection = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    const isSmallScreen = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
+    const isLightMode = Boolean(connection?.saveData) || ['slow-2g', '2g', '3g'].includes(connection?.effectiveType ?? '');
+    const upcoming = isSmallScreen || isLightMode
+      ? [ring.items[itemIndex + 1]]
+      : [ring.items[itemIndex + 1], ring.items[itemIndex + 2], rings[ringIndex + 1]?.items[0]];
     upcoming.forEach((next, i) => {
       if (!next) return;
-      prefetchMedia(next.media_url, next.media_type === 'video' ? 'video' : 'image', i === 0 ? 'auto' : 'metadata');
+      const isVideoNext = next.media_type === 'video';
+      const strategy = isVideoNext && (isSmallScreen || isLightMode || i > 0) ? 'metadata' : 'auto';
+      prefetchMedia(next.media_url, isVideoNext ? 'video' : 'image', strategy);
     });
   }, [ring, rings, ringIndex, itemIndex]);
 
@@ -254,6 +262,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     });
   }, [paused, muted, item?.id, isVideo, mediaReady, ring?.id, item?.media_url]);
 
+  // Arrière-plan vidéo : une seule image figée (pas de lecture en fond) pour économiser le CPU mobile
   useEffect(() => {
     if (!isVideo || !mediaReady) return;
     const video = videoRef.current;
@@ -261,17 +270,23 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     if (!video || !canvas) return;
     const context = canvas.getContext('2d');
     if (!context) return;
-    let frame = 0;
-    const draw = () => {
-      if (video.readyState >= 2) {
+    let cancelled = false;
+    const drawOnce = () => {
+      if (cancelled || video.readyState < 2) return;
+      try {
         if (canvas.width !== video.videoWidth) canvas.width = Math.max(1, video.videoWidth);
         if (canvas.height !== video.videoHeight) canvas.height = Math.max(1, video.videoHeight);
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      } catch {
+        /* frame non disponible, l'arrière-plan reste neutre */
       }
-      frame = window.setTimeout(draw, 180) as unknown as number;
     };
-    draw();
-    return () => window.clearTimeout(frame);
+    drawOnce();
+    const timer = window.setTimeout(drawOnce, 400);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, [isVideo, mediaReady, item?.id]);
 
   const toggleFullscreen = useCallback(async () => {
@@ -478,13 +493,15 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
                 ref={videoRef}
                 key={`${item.id}-${retryToken}`}
                 src={mediaSrc}
-                poster={posterSrc}
                 className={cn('relative h-full w-full', fitClass)}
                 style={{ transform: `scale(${zoom})`, objectPosition: position }}
                 autoPlay
                 playsInline
                 muted={muted}
                 preload="auto"
+                disablePictureInPicture
+                disableRemotePlayback
+                x-webkit-airplay="deny"
                 controls={false}
                 onLoadedMetadata={onVideoReady}
                 onLoadedData={() => {
