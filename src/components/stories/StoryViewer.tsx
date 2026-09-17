@@ -485,13 +485,15 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
                 ref={videoRef}
                 key={`${item.id}-${retryToken}`}
                 src={mediaSrc}
-                poster={posterSrc}
                 className={cn('relative h-full w-full', fitClass)}
                 style={{ transform: `scale(${zoom})`, objectPosition: position }}
                 autoPlay
                 playsInline
                 muted={muted}
                 preload="auto"
+                disablePictureInPicture
+                disableRemotePlayback
+                x-webkit-airplay="deny"
                 controls={false}
                 onLoadedMetadata={onVideoReady}
                 onLoadedData={() => {
