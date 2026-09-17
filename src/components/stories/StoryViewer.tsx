@@ -254,6 +254,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     });
   }, [paused, muted, item?.id, isVideo, mediaReady, ring?.id, item?.media_url]);
 
+  // Arrière-plan vidéo : une seule image figée (pas de lecture en fond) pour économiser le CPU mobile
   useEffect(() => {
     if (!isVideo || !mediaReady) return;
     const video = videoRef.current;
@@ -261,17 +262,23 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     if (!video || !canvas) return;
     const context = canvas.getContext('2d');
     if (!context) return;
-    let frame = 0;
-    const draw = () => {
-      if (video.readyState >= 2) {
+    let cancelled = false;
+    const drawOnce = () => {
+      if (cancelled || video.readyState < 2) return;
+      try {
         if (canvas.width !== video.videoWidth) canvas.width = Math.max(1, video.videoWidth);
         if (canvas.height !== video.videoHeight) canvas.height = Math.max(1, video.videoHeight);
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      } catch {
+        /* frame non disponible, l'arrière-plan reste neutre */
       }
-      frame = window.setTimeout(draw, 180) as unknown as number;
     };
-    draw();
-    return () => window.clearTimeout(frame);
+    drawOnce();
+    const timer = window.setTimeout(drawOnce, 400);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, [isVideo, mediaReady, item?.id]);
 
   const toggleFullscreen = useCallback(async () => {
