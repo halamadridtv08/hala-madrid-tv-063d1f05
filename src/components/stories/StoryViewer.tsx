@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { prefetchMedia } from '@/lib/mediaPrefetch';
+import { prefetchMedia, prefetchWhenIdle } from '@/lib/mediaPrefetch';
+import { getNetworkProfile, imageQualityForProfile, optimizeImageUrl } from '@/lib/networkQuality';
 import { createPortal } from 'react-dom';
 import {
   ChevronLeft,
@@ -77,21 +78,33 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
     progressRef.current = progress;
   }, [progress]);
 
-  // Précharge le média suivant pour supprimer l'attente au changement de story.
-  // Sur mobile (ou connexion limitée) on se limite aux métadonnées pour ne pas saturer le réseau.
+  // Préchargement progressif : le média immédiatement suivant d'abord,
+  // puis les suivants quand le navigateur est disponible. Sur mobile ou
+  // connexion lente, on réduit la profondeur et la qualité préchargées.
   useEffect(() => {
     if (!ring) return;
-    const connection = (navigator as unknown as { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
-    const isSmallScreen = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
-    const isLightMode = Boolean(connection?.saveData) || ['slow-2g', '2g', '3g'].includes(connection?.effectiveType ?? '');
-    const upcoming = isSmallScreen || isLightMode
-      ? [ring.items[itemIndex + 1]]
-      : [ring.items[itemIndex + 1], ring.items[itemIndex + 2], rings[ringIndex + 1]?.items[0]];
-    upcoming.forEach((next, i) => {
-      if (!next) return;
-      const isVideoNext = next.media_type === 'video';
-      const strategy = isVideoNext && (isSmallScreen || isLightMode || i > 0) ? 'metadata' : 'auto';
-      prefetchMedia(next.media_url, isVideoNext ? 'video' : 'image', strategy);
+    const profile = getNetworkProfile();
+    const light = profile.isSlow || profile.isSmallScreen;
+    const quality = imageQualityForProfile(profile);
+
+    const warm = (target: typeof ring.items[number] | undefined, eager: boolean) => {
+      if (!target) return;
+      const isVideoNext = target.media_type === 'video';
+      if (isVideoNext) {
+        prefetchMedia(target.media_url, 'video', eager && !light ? 'auto' : 'metadata');
+      } else {
+        prefetchMedia(optimizeImageUrl(target.media_url, quality) || target.media_url, 'image', 'auto');
+      }
+    };
+
+    // Étape 1 : le média suivant, tout de suite.
+    warm(ring.items[itemIndex + 1], true);
+
+    // Étape 2 : profondeur supplémentaire uniquement si le réseau le permet.
+    if (profile.isSlow) return;
+    prefetchWhenIdle(() => {
+      warm(ring.items[itemIndex + 2], false);
+      if (!profile.isSmallScreen) warm(rings[ringIndex + 1]?.items[0], false);
     });
   }, [ring, rings, ringIndex, itemIndex]);
 
@@ -422,6 +435,9 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const zoom = Math.max(1, Math.min(2, Number(item.media_zoom) || 1));
   const position = `${item.media_position_x ?? 50}% ${item.media_position_y ?? 50}%`;
   const mediaSrc = retryToken > 0 ? `${item.media_url}${item.media_url.includes('?') ? '&' : '?'}r=${retryToken}` : item.media_url;
+  const networkProfile = getNetworkProfile();
+  const imageSrc = isVideo ? mediaSrc : (optimizeImageUrl(mediaSrc, imageQualityForProfile(networkProfile)) || mediaSrc);
+  const backdropSrc = isVideo ? mediaSrc : (optimizeImageUrl(mediaSrc, { width: 360, quality: 30 }) || mediaSrc);
   const posterSrc = ring.cover_url || undefined;
 
   const onVideoReady = async () => {
