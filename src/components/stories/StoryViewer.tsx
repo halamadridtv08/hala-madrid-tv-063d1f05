@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { prefetchMedia } from '@/lib/mediaPrefetch';
+import { prefetchMedia, prefetchWhenIdle } from '@/lib/mediaPrefetch';
+import { getNetworkProfile, imageQualityForProfile, optimizeImageUrl } from '@/lib/networkQuality';
 import { createPortal } from 'react-dom';
 import {
   ChevronLeft,
@@ -434,6 +435,9 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
   const zoom = Math.max(1, Math.min(2, Number(item.media_zoom) || 1));
   const position = `${item.media_position_x ?? 50}% ${item.media_position_y ?? 50}%`;
   const mediaSrc = retryToken > 0 ? `${item.media_url}${item.media_url.includes('?') ? '&' : '?'}r=${retryToken}` : item.media_url;
+  const networkProfile = getNetworkProfile();
+  const imageSrc = isVideo ? mediaSrc : (optimizeImageUrl(mediaSrc, imageQualityForProfile(networkProfile)) || mediaSrc);
+  const backdropSrc = isVideo ? mediaSrc : (optimizeImageUrl(mediaSrc, { width: 360, quality: 30 }) || mediaSrc);
   const posterSrc = ring.cover_url || undefined;
 
   const onVideoReady = async () => {
