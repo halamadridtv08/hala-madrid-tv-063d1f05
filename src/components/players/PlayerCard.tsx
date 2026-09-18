@@ -178,12 +178,21 @@ export function PlayerCard({
         {/* Mobile & Tablet: Horizontal layout */}
         <div className="lg:hidden flex flex-row">
           <div className="relative w-32 sm:w-40 flex-shrink-0">
-            <div className="aspect-[3/4] overflow-hidden rounded-l-lg">
+            <div className="relative aspect-[3/4] overflow-hidden rounded-l-lg">
               <img
-                src={image || `https://placehold.co/300x375/1a365d/ffffff/?text=${name.charAt(0)}`}
+                src={image || fallbackImage}
                 alt={name}
-                className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                className={`w-full h-full object-cover object-top transition-all duration-500 ease-out group-hover:scale-105 ${celebrationImage ? 'group-hover:opacity-0' : ''}`}
               />
+              {celebrationImage && (
+                <img
+                  src={celebrationImage}
+                  alt={`${name} célébration`}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover object-top opacity-0 scale-110 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:scale-100"
+                />
+              )}
             </div>
             
             {/* Number badge */}
