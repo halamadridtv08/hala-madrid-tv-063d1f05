@@ -5157,6 +5157,10 @@ export type Database = {
         Args: { p_ttl_minutes?: number; p_user_id: string }
         Returns: string
       }
+      is_auth_user_identifier: {
+        Args: { p_identifier: string }
+        Returns: boolean
+      }
       is_email_domain_blocked: {
         Args: { p_email: string }
         Returns: {
