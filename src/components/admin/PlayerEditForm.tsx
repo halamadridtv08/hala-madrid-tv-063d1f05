@@ -24,6 +24,7 @@ interface Player {
   bio: string | null;
   profile_image_url: string | null;
   formation_image_url?: string | null;
+  celebration_image_url?: string | null;
   biography: string | null;
   social_media: any;
   is_active: boolean;
@@ -51,6 +52,7 @@ export function PlayerEditForm({ player, onPlayerUpdated }: PlayerEditFormProps)
     bio: player.bio || "",
     profile_image_url: player.profile_image_url || "",
     formation_image_url: player.formation_image_url || "",
+    celebration_image_url: player.celebration_image_url || "",
     biography: player.biography || "",
     social_media: player.social_media || { twitter: "", instagram: "", facebook: "" },
     is_active: player.is_active,

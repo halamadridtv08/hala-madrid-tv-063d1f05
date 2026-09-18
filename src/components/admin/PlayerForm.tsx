@@ -28,6 +28,7 @@ export const PlayerForm = ({ player, onSuccess, onCancel }: PlayerFormProps) => 
     weight: player?.weight || "",
     image_url: player?.image_url || "",
     formation_image_url: player?.formation_image_url || "",
+    celebration_image_url: player?.celebration_image_url || "",
     bio: player?.bio || "",
     is_active: player?.is_active !== false,
     is_featured: player?.is_featured || false,
