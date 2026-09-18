@@ -31,11 +31,23 @@ export function MediaUploader({
 }: MediaUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [preview, setPreview] = useState<string | null>(currentValue);
-  const [fileType, setFileType] = useState<string | null>(currentValue ? (currentValue.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? 'image' : 'video') : null);
+  const detectType = (url: string) => (url.match(/\.(mp4|webm|mov|m4v)(\?|$)/i) ? 'video' : 'image');
+  const [preview, setPreview] = useState<string | null>(currentValue || null);
+  const [fileType, setFileType] = useState<string | null>(currentValue ? detectType(currentValue) : null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadFileWithToast } = useFileUpload();
   const { toast } = useToast();
+
+  // Garde l'aperçu synchronisé avec la valeur du formulaire (URL collée, réinitialisation, édition)
+  React.useEffect(() => {
+    if (currentValue) {
+      setPreview(currentValue);
+      setFileType(detectType(currentValue));
+    } else {
+      setPreview(null);
+      setFileType(null);
+    }
+  }, [currentValue]);
 
   // Simulation de progression pour donner un feedback visuel
   const simulateProgress = () => {
