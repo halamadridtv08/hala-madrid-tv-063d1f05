@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, Film } from 'lucide-react';
 import { prefetchMedia, prefetchWhenIdle } from '@/lib/mediaPrefetch';
+import { getNetworkProfile, imageQualityForProfile, optimizeImageUrl } from '@/lib/networkQuality';
 
 const SEEN_KEY = 'hmtv-seen-stories';
 
@@ -27,14 +28,23 @@ export function StoriesBar() {
     setSeen(loadSeen());
   }, []);
 
-  // Préchauffe le cache HTTP des premiers médias dès que le navigateur est disponible
+  // Préchauffe le cache HTTP des premiers médias dès que le navigateur est disponible.
+  // La profondeur et la qualité sont adaptées au réseau (mobile / connexion lente).
   useEffect(() => {
     if (!rings.length) return;
+    const profile = getNetworkProfile();
+    if (profile.saveData) return;
+    const quality = imageQualityForProfile(profile);
+    const depth = profile.isSlow ? 1 : profile.isSmallScreen ? 3 : 6;
     prefetchWhenIdle(() => {
-      rings.slice(0, 6).forEach((ring) => {
+      rings.slice(0, depth).forEach((ring) => {
         const first = ring.items[0];
         if (!first) return;
-        prefetchMedia(first.media_url, first.media_type === 'video' ? 'video' : 'image', 'metadata');
+        if (first.media_type === 'video') {
+          prefetchMedia(first.media_url, 'video', 'metadata');
+        } else {
+          prefetchMedia(optimizeImageUrl(first.media_url, quality) || first.media_url, 'image', 'auto');
+        }
       });
     });
   }, [rings]);
@@ -42,8 +52,15 @@ export function StoriesBar() {
   const warmRing = (ringIndex: number) => {
     const ring = rings[ringIndex];
     if (!ring) return;
-    ring.items.slice(0, 2).forEach((item, i) => {
-      prefetchMedia(item.media_url, item.media_type === 'video' ? 'video' : 'image', i === 0 ? 'auto' : 'metadata');
+    const profile = getNetworkProfile();
+    const quality = imageQualityForProfile(profile);
+    const items = profile.isSlow ? ring.items.slice(0, 1) : ring.items.slice(0, 2);
+    items.forEach((item, i) => {
+      if (item.media_type === 'video') {
+        prefetchMedia(item.media_url, 'video', i === 0 && !profile.isSlow ? 'auto' : 'metadata');
+      } else {
+        prefetchMedia(optimizeImageUrl(item.media_url, quality) || item.media_url, 'image', 'auto');
+      }
     });
   };
 
