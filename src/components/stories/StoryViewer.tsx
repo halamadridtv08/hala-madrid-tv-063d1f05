@@ -466,7 +466,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
           {isVideo ? (
             <canvas ref={canvasRef} className="h-full w-full scale-125 object-cover" style={{ filter: `blur(${blur}px)`, opacity }} />
           ) : (
-            <img src={mediaSrc} alt="" className="h-full w-full scale-125 object-cover" style={{ filter: `blur(${blur}px)`, opacity, objectPosition: position }} />
+            <img src={backdropSrc} alt="" className="h-full w-full scale-125 object-cover" style={{ filter: `blur(${blur}px)`, opacity, objectPosition: position }} />
           )}
           <div className="absolute inset-0 bg-background/40" />
         </div>
@@ -538,7 +538,7 @@ export function StoryViewer({ rings, startRingIndex, onClose, onRingSeen, settin
             ) : (
               <img
                 key={`${item.id}-${retryToken}`}
-                src={mediaSrc}
+                src={imageSrc}
                 alt={item.caption ?? ring.title}
                 className={cn('relative h-full w-full', fitClass)}
                 style={{ transform: `scale(${zoom})`, objectPosition: position }}
