@@ -199,6 +199,31 @@ export const PlayerForm = ({ player, onSuccess, onCancel }: PlayerFormProps) => 
           </div>
 
           <div>
+            <Label htmlFor="celebration_image_url">Photo de célébration (survol de la carte)</Label>
+            <div className="space-y-2">
+              <Input
+                id="celebration_image_url"
+                type="url"
+                value={formData.celebration_image_url}
+                onChange={(e) => setFormData({ ...formData, celebration_image_url: e.target.value })}
+                placeholder="URL de la photo de célébration"
+              />
+              <MediaUploader
+                onSuccess={(url) => setFormData({ ...formData, celebration_image_url: url })}
+                acceptTypes="image/*"
+                maxSizeMB={10}
+                buttonText="Télécharger une photo de célébration"
+                folderPath="players"
+                currentValue={formData.celebration_image_url}
+                showPreview={true}
+              />
+              <p className="text-xs text-muted-foreground">
+                Affichée automatiquement, en fondu, quand la souris passe sur la carte du joueur dans l'effectif.
+              </p>
+            </div>
+          </div>
+
+          <div>
             <Label htmlFor="bio">Biographie</Label>
             <Textarea
               id="bio"

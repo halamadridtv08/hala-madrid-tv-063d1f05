@@ -232,6 +232,31 @@ export function PlayerEditForm({ player, onPlayerUpdated }: PlayerEditFormProps)
             </div>
 
             <div className="md:col-span-2">
+              <Label htmlFor="edit-celebration-image">Photo de célébration (survol de la carte)</Label>
+              <div className="space-y-2">
+                <Input
+                  id="edit-celebration-image"
+                  type="url"
+                  value={formData.celebration_image_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, celebration_image_url: e.target.value }))}
+                  placeholder="URL de la photo de célébration"
+                />
+                <MediaUploader
+                  onSuccess={(url) => setFormData(prev => ({ ...prev, celebration_image_url: url }))}
+                  acceptTypes="image/*"
+                  maxSizeMB={10}
+                  buttonText="Télécharger une photo de célébration"
+                  folderPath="players"
+                  currentValue={formData.celebration_image_url}
+                  showPreview={true}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Affichée en fondu lorsque la souris survole la carte du joueur dans l'effectif.
+                </p>
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
               <Label htmlFor="edit-bio">Biographie courte</Label>
               <Textarea
                 id="edit-bio"
