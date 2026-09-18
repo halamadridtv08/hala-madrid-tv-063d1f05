@@ -14,6 +14,7 @@ interface PlayerCardProps {
   secondaryPosition?: string;
   nationality?: string;
   image?: string;
+  celebrationImage?: string | null;
   stats?: {
     matches: number;
     goals: number;
@@ -32,11 +33,13 @@ export function PlayerCard({
   secondaryPosition,
   nationality, 
   image, 
+  celebrationImage,
   stats 
 }: PlayerCardProps) {
   const navigate = useNavigate();
   const { isFavorite, toggleFavorite } = useFavorites('player');
   const isPlayerFavorite = isFavorite(id);
+  const fallbackImage = `https://placehold.co/300x375/1a365d/ffffff/?text=${name.charAt(0)}`;
 
   const getPositionColor = (pos: string) => {
     if (pos.includes("Gardien")) return "bg-yellow-600 hover:bg-yellow-700";
