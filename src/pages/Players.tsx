@@ -301,7 +301,7 @@ const Players = () => {
                           {filteredGroupPlayers.map(player => {
                       const secondaryPosition = player.stats?.secondaryPosition || player.stats?.secondary_position;
                       const playerStats = statsMap[player.id];
-                      return <PlayerCard key={player.id} id={player.id} name={player.name} number={player.jersey_number || 0} position={player.position} secondaryPosition={secondaryPosition} nationality={player.nationality} image={player.image_url} stats={{
+                      return <PlayerCard key={player.id} id={player.id} name={player.name} number={player.jersey_number || 0} position={player.position} secondaryPosition={secondaryPosition} nationality={player.nationality} image={player.image_url} celebrationImage={(player as any).celebration_image_url} stats={{
                         matches: playerStats?.matches || player.stats?.matches || 0,
                         goals: playerStats?.goals || player.stats?.goals || 0,
                         assists: playerStats?.assists || player.stats?.assists || 0,

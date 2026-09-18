@@ -24,6 +24,7 @@ interface Player {
   bio: string | null;
   profile_image_url: string | null;
   formation_image_url?: string | null;
+  celebration_image_url?: string | null;
   biography: string | null;
   social_media: any;
   is_active: boolean;
@@ -51,6 +52,7 @@ export function PlayerEditForm({ player, onPlayerUpdated }: PlayerEditFormProps)
     bio: player.bio || "",
     profile_image_url: player.profile_image_url || "",
     formation_image_url: player.formation_image_url || "",
+    celebration_image_url: player.celebration_image_url || "",
     biography: player.biography || "",
     social_media: player.social_media || { twitter: "", instagram: "", facebook: "" },
     is_active: player.is_active,
@@ -225,6 +227,31 @@ export function PlayerEditForm({ player, onPlayerUpdated }: PlayerEditFormProps)
                 />
                 <p className="text-xs text-muted-foreground">
                   Utilisée uniquement dans les compositions. Sans photo, les initiales s'affichent.
+                </p>
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
+              <Label htmlFor="edit-celebration-image">Photo de célébration (survol de la carte)</Label>
+              <div className="space-y-2">
+                <Input
+                  id="edit-celebration-image"
+                  type="url"
+                  value={formData.celebration_image_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, celebration_image_url: e.target.value }))}
+                  placeholder="URL de la photo de célébration"
+                />
+                <MediaUploader
+                  onSuccess={(url) => setFormData(prev => ({ ...prev, celebration_image_url: url }))}
+                  acceptTypes="image/*"
+                  maxSizeMB={10}
+                  buttonText="Télécharger une photo de célébration"
+                  folderPath="players"
+                  currentValue={formData.celebration_image_url}
+                  showPreview={true}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Affichée en fondu lorsque la souris survole la carte du joueur dans l'effectif.
                 </p>
               </div>
             </div>
