@@ -160,7 +160,7 @@ export function MediaUploader({
         className="flex items-center gap-2"
       >
         <Upload className="w-4 h-4" />
-        {buttonText}
+        {preview ? "Remplacer l'image" : buttonText}
       </Button>
       
       {uploading && (
@@ -177,13 +177,15 @@ export function MediaUploader({
           <div className="flex items-center gap-2 mb-2">
             {getIconByFileType()}
             <span className="text-sm font-medium">Aperçu</span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="ml-auto h-6 w-6 rounded-full p-0 hover:bg-red-100"
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="ml-auto h-7 gap-1 text-destructive hover:text-destructive"
               onClick={clearPreview}
             >
               <X className="h-3 w-3" />
+              Supprimer
             </Button>
           </div>
           
