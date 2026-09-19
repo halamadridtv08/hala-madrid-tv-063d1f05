@@ -178,11 +178,14 @@ export function PlayerCard({
         {/* Mobile & Tablet: Horizontal layout */}
         <div className="lg:hidden flex flex-row">
           <div className="relative w-32 sm:w-40 flex-shrink-0">
-            <div className="relative aspect-[3/4] overflow-hidden rounded-l-lg">
+            <div
+              className="relative aspect-[3/4] overflow-hidden rounded-l-lg"
+              onClick={handlePhotoTap}
+            >
               <img
                 src={image || fallbackImage}
                 alt={name}
-                className={`w-full h-full object-cover object-top transition-all duration-500 ease-out group-hover:scale-105 ${celebrationImage ? 'group-hover:opacity-0' : ''}`}
+                className={`w-full h-full object-cover object-top transition-all duration-500 ease-out group-hover:scale-105 ${celebrationImage ? 'group-hover:opacity-0' : ''} ${celebrationImage && showCelebration ? 'opacity-0' : ''}`}
               />
               {celebrationImage && (
                 <img
@@ -190,8 +193,13 @@ export function PlayerCard({
                   alt={`${name} célébration`}
                   loading="lazy"
                   decoding="async"
-                  className="absolute inset-0 w-full h-full object-cover object-top opacity-0 scale-110 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:scale-100"
+                  className={`absolute inset-0 w-full h-full object-cover object-top transition-all duration-500 ease-out group-hover:opacity-100 group-hover:scale-100 ${showCelebration ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}
                 />
+              )}
+              {celebrationImage && (
+                <span className="absolute bottom-1 right-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[9px] font-medium text-white">
+                  {showCelebration ? 'Photo' : 'Célébration'}
+                </span>
               )}
             </div>
             
