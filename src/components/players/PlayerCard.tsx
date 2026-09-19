@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Award, Flag, Shield, Star, User, Heart } from "lucide-react";
@@ -40,6 +41,15 @@ export function PlayerCard({
   const { isFavorite, toggleFavorite } = useFavorites('player');
   const isPlayerFavorite = isFavorite(id);
   const fallbackImage = `https://placehold.co/300x375/1a365d/ffffff/?text=${name.charAt(0)}`;
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  // Sur mobile/tablette : un appui sur la photo bascule vers l'image de célébration
+  const handlePhotoTap = (e: React.MouseEvent) => {
+    if (!celebrationImage) return;
+    e.stopPropagation();
+    e.preventDefault();
+    setShowCelebration((prev) => !prev);
+  };
 
   const getPositionColor = (pos: string) => {
     if (pos.includes("Gardien")) return "bg-yellow-600 hover:bg-yellow-700";
