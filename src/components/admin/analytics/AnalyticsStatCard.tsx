@@ -45,12 +45,12 @@ const AnalyticsStatCard = ({
 
   return (
     <Card className="relative overflow-hidden border-border/50 bg-card hover:shadow-lg transition-all duration-300">
-      <CardContent className="p-4 sm:p-6">
+      <CardContent className="p-4 sm:p-5">
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-2 sm:space-y-3 min-w-0">
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{title}</p>
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground leading-snug">{title}</p>
             <div className="flex flex-wrap items-baseline gap-x-2">
-              <span className="text-xl sm:text-3xl font-bold tracking-tight">{formatValue(value)}</span>
+              <span className="text-xl sm:text-3xl font-bold">{formatValue(value)}</span>
               {trend !== undefined && (
                 <div className={cn('flex items-center gap-1 text-xs sm:text-sm font-medium', getTrendColor())}>
                   {getTrendIcon()}

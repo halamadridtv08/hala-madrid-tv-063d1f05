@@ -29,29 +29,29 @@ const TopPagesTable = ({
       </CardTitle>
       <CardDescription>{description}</CardDescription>
     </CardHeader>
-    <CardContent>
+    <CardContent className="px-4 sm:px-6">
       {pages.length ? (
-        <div className="overflow-x-auto">
-          <Table>
+        <div className="max-w-full overflow-x-auto">
+          <Table className="table-fixed sm:table-auto">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">#</TableHead>
+                <TableHead className="hidden w-12 sm:table-cell">#</TableHead>
                 <TableHead>Page</TableHead>
                 <TableHead className="text-right">Vues</TableHead>
-                <TableHead className="text-right">Visiteurs</TableHead>
-                <TableHead className="text-right">Sessions</TableHead>
+                <TableHead className="hidden text-right sm:table-cell">Visiteurs</TableHead>
+                <TableHead className="hidden text-right md:table-cell">Sessions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {pages.map((p, i) => (
                 <TableRow key={p.path} className="hover:bg-muted/50">
-                  <TableCell className="text-muted-foreground">{i + 1}</TableCell>
-                  <TableCell className="font-mono text-xs max-w-[320px] truncate" title={p.path}>
+                  <TableCell className="hidden text-muted-foreground sm:table-cell">{i + 1}</TableCell>
+                  <TableCell className="max-w-[180px] truncate font-mono text-xs sm:max-w-[320px]" title={p.path}>
                     {p.path || '/'}
                   </TableCell>
                   <TableCell className="text-right font-semibold">{p.views}</TableCell>
-                  <TableCell className="text-right">{p.visitors}</TableCell>
-                  <TableCell className="text-right">{p.sessions}</TableCell>
+                  <TableCell className="hidden text-right sm:table-cell">{p.visitors}</TableCell>
+                  <TableCell className="hidden text-right md:table-cell">{p.sessions}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

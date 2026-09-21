@@ -28,6 +28,8 @@ const ENTRY_LABELS: Record<string, string> = {
   goal: 'But !',
   own_goal: 'But contre son camp',
   penalty_goal: 'But sur penalty',
+  penalty: 'But sur penalty',
+  free_kick_goal: 'But sur coup franc',
   penalty_missed: 'Pénalty manqué',
   yellow_card: 'Carton jaune',
   second_yellow_card: 'Second carton jaune',
@@ -46,7 +48,7 @@ const ENTRY_LABELS: Record<string, string> = {
   quote: 'Citation',
 };
 
-const isGoal = (type: string) => ['goal', 'penalty_goal', 'own_goal'].includes(type);
+const isGoal = (type: string) => ['goal', 'penalty', 'penalty_goal', 'free_kick_goal', 'own_goal'].includes(type);
 
 const CardIcon = ({ type }: { type: string }) => {
   if (type === 'second_yellow_card') {

@@ -61,7 +61,7 @@ const GeographyMap = ({ data, totalVisitors }: GeographyMapProps) => {
 
   return (
     <Card className="border-border/50">
-      <CardHeader className="pb-4">
+      <CardHeader className="px-4 pb-4 sm:px-6">
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
@@ -72,9 +72,9 @@ const GeographyMap = ({ data, totalVisitors }: GeographyMapProps) => {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 px-4 sm:px-6">
         {/* World Map Visualization (Simplified) */}
-        <div className="relative h-48 bg-muted/30 rounded-xl overflow-hidden flex items-center justify-center">
+        <div className="relative aspect-[2/1] min-h-36 max-h-48 bg-muted/30 rounded-xl overflow-hidden flex items-center justify-center">
           <div className="absolute inset-0 opacity-20">
             <svg viewBox="0 0 1000 500" className="w-full h-full">
               {/* Simplified world map paths */}
@@ -126,11 +126,11 @@ const GeographyMap = ({ data, totalVisitors }: GeographyMapProps) => {
         <div className="space-y-3">
           {displayData.length > 0 ? (
             displayData.slice(0, 6).map((country, index) => (
-              <div key={country.code} className="flex items-center gap-3">
+              <div key={country.code} className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <span className="text-xl">{countryFlags[country.code] || countryFlags.unknown}</span>
-                <div className="flex-1">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-medium">{country.country}</span>
+                    <span className="truncate text-sm font-medium">{country.country}</span>
                     <span className="text-sm text-muted-foreground">{country.percentage.toFixed(1)}%</span>
                   </div>
                   <Progress 
@@ -138,7 +138,7 @@ const GeographyMap = ({ data, totalVisitors }: GeographyMapProps) => {
                     className="h-2"
                   />
                 </div>
-                <span className="text-sm font-semibold min-w-[60px] text-right">
+                <span className="min-w-[44px] text-right text-sm font-semibold sm:min-w-[60px]">
                   {country.visitors.toLocaleString()}
                 </span>
               </div>

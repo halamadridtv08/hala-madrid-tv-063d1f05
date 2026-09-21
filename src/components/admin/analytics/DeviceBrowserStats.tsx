@@ -51,7 +51,7 @@ const DeviceBrowserStats = ({ deviceStats, browserStats }: DeviceBrowserStatsPro
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
       {/* Devices */}
       <Card className="border-border/50">
         <CardHeader className="pb-4">
@@ -61,7 +61,7 @@ const DeviceBrowserStats = ({ deviceStats, browserStats }: DeviceBrowserStatsPro
           </CardTitle>
           <CardDescription>Répartition par type d'appareil</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 sm:px-6">
           {deviceStats.length > 0 ? (
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <ResponsiveContainer width={140} height={140}>
@@ -121,7 +121,7 @@ const DeviceBrowserStats = ({ deviceStats, browserStats }: DeviceBrowserStatsPro
           </CardTitle>
           <CardDescription>Répartition par navigateur</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 sm:px-6">
           {browserStats.length > 0 ? (
             <div className="space-y-4">
               {browserStats.slice(0, 5).map((stat, index) => (

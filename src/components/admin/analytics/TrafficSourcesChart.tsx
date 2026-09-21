@@ -43,14 +43,14 @@ const TrafficSourcesChart = ({ data }: TrafficSourcesChartProps) => {
 
   return (
     <Card className="border-border/50">
-      <CardHeader className="pb-4">
+      <CardHeader className="px-4 pb-4 sm:px-6">
         <CardTitle className="flex items-center gap-2">
           <Link2 className="h-5 w-5 text-primary" />
           Sources de Trafic
         </CardTitle>
         <CardDescription>D'où viennent vos visiteurs</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 sm:px-6">
         <div className="flex flex-col sm:flex-row items-center gap-6">
           <div className="relative shrink-0">
             <ResponsiveContainer width={180} height={180}>
@@ -76,7 +76,7 @@ const TrafficSourcesChart = ({ data }: TrafficSourcesChartProps) => {
               <span className="text-xs text-muted-foreground">Total</span>
             </div>
           </div>
-          <div className="flex-1 space-y-3">
+           <div className="w-full flex-1 space-y-3">
             {data.map((source, index) => (
               <div key={source.name} className="flex items-center gap-3">
                 <div

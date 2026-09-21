@@ -637,7 +637,7 @@ const AnalyticsDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-4 overflow-x-hidden sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="min-w-0">
@@ -647,8 +647,8 @@ const AnalyticsDashboard = () => {
           </h2>
           <p className="text-sm text-muted-foreground">Vue d'ensemble des performances du site</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          <Badge variant="outline" className="bg-muted/50 text-xs">
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+          <Badge variant="outline" className="col-span-2 w-fit bg-muted/50 text-xs sm:col-span-1">
             <Calendar className="h-3 w-3 mr-1" />
             {period === '24h' && 'Dernières 24h'}
             {period === '7d' && '7 derniers jours'}
@@ -658,14 +658,14 @@ const AnalyticsDashboard = () => {
           <Button 
             variant="outline" 
             size="sm" 
-            className="flex-1 sm:flex-none"
+            className="w-full sm:w-auto"
             onClick={fetchAnalytics}
             disabled={refreshing}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Actualiser
           </Button>
-          <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={handleExport}>
+          <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -674,8 +674,8 @@ const AnalyticsDashboard = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-1">
-          <TabsList className="grid w-full min-w-max grid-cols-5 lg:w-auto lg:inline-grid">
+        <div className="-mx-3 overflow-x-auto px-3 pb-2 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex h-auto w-max min-w-full justify-start p-1">
             <TabsTrigger value="overview" className="text-xs sm:text-sm whitespace-nowrap">Vue d'ensemble</TabsTrigger>
             <TabsTrigger value="audience" className="text-xs sm:text-sm whitespace-nowrap">Audience</TabsTrigger>
             <TabsTrigger value="content" className="text-xs sm:text-sm whitespace-nowrap">Contenu</TabsTrigger>
@@ -687,7 +687,7 @@ const AnalyticsDashboard = () => {
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6 mt-6">
           {/* KPI Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 min-[390px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <AnalyticsStatCard
               title="Pages Vues"
               value={data.totalPageViews}
@@ -747,7 +747,7 @@ const AnalyticsDashboard = () => {
 
         {/* Audience Tab */}
         <TabsContent value="audience" className="space-y-6 mt-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 min-[390px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <AnalyticsStatCard
               title="Visiteurs Uniques"
               value={data.uniqueVisitors}
@@ -788,7 +788,7 @@ const AnalyticsDashboard = () => {
 
           <GeographyMap data={data.countryStats} totalVisitors={data.uniqueVisitors} />
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 min-[390px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <AnalyticsStatCard
               title="Nouveaux visiteurs"
               value={data.newVisitors}
@@ -822,7 +822,7 @@ const AnalyticsDashboard = () => {
 
         {/* Content Tab */}
         <TabsContent value="content" className="space-y-6 mt-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 min-[390px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <AnalyticsStatCard
               title="Pages Vues"
               value={data.totalPageViews}
@@ -870,7 +870,7 @@ const AnalyticsDashboard = () => {
 
         {/* Engagement Tab */}
         <TabsContent value="engagement" className="space-y-6 mt-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 min-[390px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <AnalyticsStatCard
               title="Pages / session"
               value={data.pagesPerSession.toFixed(2)}

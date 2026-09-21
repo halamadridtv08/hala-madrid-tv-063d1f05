@@ -24,7 +24,7 @@ const HourlyHeatmap = ({ matrix }: HourlyHeatmapProps) => {
 
   return (
     <Card className="border-border/50">
-      <CardHeader className="pb-4">
+      <CardHeader className="px-4 pb-4 sm:px-6">
         <CardTitle className="flex items-center gap-2">
           <Clock className="h-5 w-5 text-primary" />
           Activité par heure et jour
@@ -33,8 +33,9 @@ const HourlyHeatmap = ({ matrix }: HourlyHeatmapProps) => {
           Répartition des pages vues sur une semaine — identifiez les heures de pointe
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
+      <CardContent className="px-4 sm:px-6">
+        <p className="mb-2 text-xs text-muted-foreground sm:hidden">Balayez horizontalement pour voir les 24 heures.</p>
+        <div className="max-w-full overflow-x-auto overscroll-x-contain">
           <div className="min-w-[640px]">
             <div className="grid" style={{ gridTemplateColumns: '40px repeat(24, minmax(0, 1fr))' }}>
               <div />
