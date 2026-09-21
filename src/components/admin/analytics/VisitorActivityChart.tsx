@@ -41,8 +41,8 @@ const VisitorActivityChart = ({ data, period, onPeriodChange }: VisitorActivityC
   };
 
   return (
-    <Card className="border-border/50">
-      <CardHeader className="pb-2">
+    <Card className="min-w-0 border-border/50">
+      <CardHeader className="px-4 pb-2 sm:px-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <CardTitle className="flex items-center gap-2">
@@ -76,10 +76,10 @@ const VisitorActivityChart = ({ data, period, onPeriodChange }: VisitorActivityC
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-4">
+      <CardContent className="px-2 pt-4 sm:px-6">
         {data.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={data}>
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorViewsGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(210, 79%, 46%)" stopOpacity={0.3} />

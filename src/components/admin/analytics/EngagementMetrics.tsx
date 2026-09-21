@@ -29,10 +29,10 @@ const List = ({
       <CardTitle className="flex items-center gap-2">{icon}{title}</CardTitle>
       <CardDescription>{description}</CardDescription>
     </CardHeader>
-    <CardContent>
+    <CardContent className="px-4 sm:px-6">
       {rows.length ? (
-        <div className="overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0">
-        <Table>
+        <div className="max-w-full overflow-x-auto">
+        <Table className="table-fixed sm:table-auto">
           <TableHeader>
             <TableRow>
               <TableHead>Page</TableHead>
@@ -42,7 +42,7 @@ const List = ({
           <TableBody>
             {rows.map((r) => (
               <TableRow key={r.path}>
-                <TableCell className="font-mono text-xs max-w-[260px] truncate" title={r.path}>
+                <TableCell className="max-w-[190px] truncate font-mono text-xs sm:max-w-[260px]" title={r.path}>
                   {r.path || '/'}
                 </TableCell>
                 <TableCell className="text-right font-semibold">{r.count}</TableCell>

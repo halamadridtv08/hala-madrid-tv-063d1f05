@@ -18,7 +18,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Zap, Undo2, Check, ChevronsUpDown, Info, AlertTriangle, History,
-  CircleDot, Square, ArrowLeftRight, X, Loader2,
+  CircleDot, Square, ArrowLeftRight, X, Loader2, Crosshair, Flag,
+  ShieldAlert, Activity, Stethoscope, MonitorCheck, CircleOff,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -36,7 +37,17 @@ export interface RosterPlayer {
   position?: string | null;
 }
 
-type ActionKind = 'goal' | 'card' | 'substitution';
+type ActionKind =
+  | 'goal'
+  | 'card'
+  | 'substitution'
+  | 'chance'
+  | 'corner'
+  | 'foul'
+  | 'injury'
+  | 'var'
+  | 'penalty_missed'
+  | 'second_yellow';
 
 interface StatDelta {
   playerId: string;
@@ -184,10 +195,11 @@ export const QuickActionsPanel = ({
   const [scorerId, setScorerId] = useState('');
   const [assistId, setAssistId] = useState('');
   const [freeName, setFreeName] = useState('');
-  const [goalType, setGoalType] = useState<'normal' | 'penalty' | 'header' | 'own_goal'>('normal');
+  const [goalType, setGoalType] = useState<'normal' | 'penalty' | 'free_kick' | 'header' | 'own_goal'>('normal');
   const [cardType, setCardType] = useState<'yellow' | 'red'>('yellow');
   const [subOutId, setSubOutId] = useState('');
   const [subInId, setSubInId] = useState('');
+  const [eventNote, setEventNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [journal, setJournal] = useState<JournalAction[]>([]);
   const [undoing, setUndoing] = useState<string | null>(null);
@@ -269,14 +281,16 @@ export const QuickActionsPanel = ({
         };
       return { tone: 'ok' as const, text: 'Prêt : Entrée pour valider, Échap pour annuler la saisie.' };
     }
-    if (kind === 'card') {
+    if (kind === 'card' || kind === 'second_yellow') {
       if (!scorerId && !freeName.trim())
-        return { tone: 'warn' as const, text: 'Carton : sélectionnez le joueur averti ou saisissez un nom libre.' };
-      return { tone: 'ok' as const, text: 'Prêt : Entrée pour valider le carton.' };
+        return { tone: 'warn' as const, text: `${kind === 'second_yellow' ? 'Deuxième jaune' : 'Carton'} : sélectionnez le joueur ou saisissez un nom libre.` };
+      return { tone: 'ok' as const, text: 'Prêt : Entrée pour valider la décision.' };
     }
-    if (!subOutId || !subInId)
+    if (kind === 'substitution' && (!subOutId || !subInId))
       return { tone: 'warn' as const, text: 'Remplacement : sélectionnez le sortant puis l’entrant.' };
-    return { tone: 'ok' as const, text: 'Prêt : Entrée pour publier le changement.' };
+    if (kind === 'penalty_missed' && !scorerId && !freeName.trim())
+      return { tone: 'warn' as const, text: 'Penalty manqué : sélectionnez le tireur ou saisissez son nom.' };
+    return { tone: 'ok' as const, text: 'Prêt : Entrée pour publier cet événement.' };
   }, [match, kind, isOwnSide, scorerId, freeName, subOutId, subInId, side, noOpponentRoster]);
 
   const resetForm = () => {
@@ -285,6 +299,7 @@ export const QuickActionsPanel = ({
     setFreeName('');
     setSubInId('');
     setSubOutId('');
+    setEventNote('');
     setGoalType('normal');
   };
 
@@ -336,11 +351,11 @@ export const QuickActionsPanel = ({
           .eq('id', match.id);
         onScoreChange(newHome, newAway);
 
-        const extras = goalType === 'penalty' ? ' • Penalty' : goalType === 'own_goal' ? ' • CSC' : goalType === 'header' ? ' • Tête' : '';
+        const extras = goalType === 'penalty' ? ' • Penalty' : goalType === 'free_kick' ? ' • Coup franc' : goalType === 'own_goal' ? ' • CSC' : goalType === 'header' ? ' • Tête' : '';
         const entry = await addEntry({
           match_id: match.id,
           minute,
-          entry_type: goalType === 'penalty' ? 'penalty' : 'goal',
+          entry_type: goalType === 'penalty' ? 'penalty_goal' : goalType === 'free_kick' ? 'free_kick_goal' : goalType === 'own_goal' ? 'own_goal' : 'goal',
           title: `⚽ BUT! ${name || teamName(side)} (${teamName(side)})${extras}`,
           content: [
             name ? `${name} trouve la faille pour ${teamName(side)}!` : `${teamName(side)} marque!`,
@@ -374,32 +389,44 @@ export const QuickActionsPanel = ({
           statDeltas: deltas,
         });
         toast({ title: `Action appliquée — But ${teamName(side)} (${newHome}-${newAway})`, description: name || undefined });
-      } else if (kind === 'card') {
+      } else if (kind === 'card' || kind === 'second_yellow') {
         const player = find(scorerId);
         const name = player ? label(player) : freeName.trim();
+        const secondYellow = kind === 'second_yellow';
         const entry = await addEntry({
           match_id: match.id,
           minute,
-          entry_type: cardType === 'yellow' ? 'yellow_card' : 'red_card',
-          title: `${cardType === 'yellow' ? '🟨 Carton jaune' : '🟥 Carton rouge'} — ${name}`,
-          content: cardType === 'yellow'
+          entry_type: secondYellow ? 'second_yellow_card' : cardType === 'yellow' ? 'yellow_card' : 'red_card',
+          title: `${secondYellow ? '🟨🟥 Deuxième carton jaune' : cardType === 'yellow' ? '🟨 Carton jaune' : '🟥 Carton rouge'} — ${name}`,
+          content: secondYellow
+            ? `${name} reçoit un deuxième carton jaune et est expulsé (${teamName(side)}).`
+            : cardType === 'yellow'
             ? `${name} reçoit un carton jaune (${teamName(side)}).`
             : `${name} est expulsé! Carton rouge (${teamName(side)}).`,
-          is_important: cardType === 'red',
+          is_important: secondYellow || cardType === 'red',
           author_id: userId || null,
           player_id: player?.side === 'own' ? player.id : null,
-          card_type: cardType,
+          card_type: secondYellow ? 'second_yellow' : cardType,
           team_side: side,
         });
         const deltas: StatDelta[] = [];
         if (player?.side === 'own') {
-          const field = cardType === 'yellow' ? 'yellow_cards' : 'red_cards';
-          await bumpStat(player.id, field, 1);
-          deltas.push({ playerId: player.id, field, amount: 1 });
+          if (secondYellow) {
+            await bumpStat(player.id, 'yellow_cards', 1);
+            await bumpStat(player.id, 'red_cards', 1);
+            deltas.push(
+              { playerId: player.id, field: 'yellow_cards', amount: 1 },
+              { playerId: player.id, field: 'red_cards', amount: 1 }
+            );
+          } else {
+            const field = cardType === 'yellow' ? 'yellow_cards' : 'red_cards';
+            await bumpStat(player.id, field, 1);
+            deltas.push({ playerId: player.id, field, amount: 1 });
+          }
         }
         pushJournal({
-          kind: 'card',
-          label: cardType === 'yellow' ? 'Carton jaune' : 'Carton rouge',
+          kind,
+          label: secondYellow ? 'Deuxième jaune' : cardType === 'yellow' ? 'Carton jaune' : 'Carton rouge',
           detail: `${name} — ${teamName(side)}`,
           minute,
           entryId: entry.id,
@@ -407,7 +434,7 @@ export const QuickActionsPanel = ({
           statDeltas: deltas,
         });
         toast({ title: 'Action appliquée — carton enregistré', description: name });
-      } else {
+      } else if (kind === 'substitution') {
         const out = find(subOutId);
         const inn = find(subInId);
         const entry = await addEntry({
@@ -432,6 +459,40 @@ export const QuickActionsPanel = ({
           statDeltas: [],
         });
         toast({ title: 'Action appliquée — changement publié', description: `${label(inn)} ↔ ${label(out)}` });
+      } else {
+        const player = find(scorerId);
+        const name = player ? label(player) : freeName.trim();
+        const eventConfig = {
+          chance: { type: 'chance', title: '🎯 Occasion', fallback: 'Une occasion dangereuse se présente.' },
+          corner: { type: 'corner', title: '🚩 Corner', fallback: 'Corner obtenu.' },
+          foul: { type: 'foul', title: '🛡️ Faute', fallback: 'Une faute est signalée.' },
+          injury: { type: 'injury', title: '🏥 Blessure', fallback: 'Le jeu est interrompu pour une blessure.' },
+          var: { type: 'var', title: '📺 Intervention VAR', fallback: 'La VAR examine la situation.' },
+          penalty_missed: { type: 'penalty_missed', title: '⛔ Penalty manqué', fallback: 'Le penalty est manqué.' },
+        }[kind];
+        if (!eventConfig) return;
+        const detail = [name, teamName(side)].filter(Boolean).join(' — ');
+        const entry = await addEntry({
+          match_id: match.id,
+          minute,
+          entry_type: eventConfig.type,
+          title: `${eventConfig.title}${name ? ` — ${name}` : ''}`,
+          content: eventNote.trim() || `${eventConfig.fallback}${detail ? ` ${detail}.` : ''}`,
+          is_important: kind === 'chance' || kind === 'var' || kind === 'penalty_missed' || kind === 'injury',
+          author_id: userId || null,
+          player_id: player?.side === 'own' ? player.id : null,
+          team_side: side,
+        });
+        pushJournal({
+          kind,
+          label: eventConfig.title.replace(/^\S+\s/, ''),
+          detail: detail || eventNote.trim() || teamName(side),
+          minute,
+          entryId: entry.id,
+          scoreField: null,
+          statDeltas: [],
+        });
+        toast({ title: `Action appliquée — ${eventConfig.title.replace(/^\S+\s/, '')}` });
       }
       resetForm();
     } catch (error) {
@@ -501,6 +562,13 @@ export const QuickActionsPanel = ({
     { value: 'goal', label: 'But', icon: CircleDot, hint: 'G' },
     { value: 'card', label: 'Carton', icon: Square, hint: 'C' },
     { value: 'substitution', label: 'Remplacement', icon: ArrowLeftRight, hint: 'R' },
+    { value: 'chance', label: 'Occasion', icon: Crosshair, hint: '' },
+    { value: 'corner', label: 'Corner', icon: Flag, hint: '' },
+    { value: 'foul', label: 'Faute', icon: ShieldAlert, hint: '' },
+    { value: 'injury', label: 'Blessure', icon: Stethoscope, hint: '' },
+    { value: 'var', label: 'VAR', icon: MonitorCheck, hint: '' },
+    { value: 'penalty_missed', label: 'Penalty raté', icon: CircleOff, hint: '' },
+    { value: 'second_yellow', label: '2e jaune', icon: Square, hint: '' },
   ];
 
   return (
@@ -521,7 +589,7 @@ export const QuickActionsPanel = ({
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
           {/* Composer */}
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {kinds.map((k) => {
                 const Icon = k.icon;
                 return (
@@ -530,12 +598,12 @@ export const QuickActionsPanel = ({
                     type="button"
                     variant={kind === k.value ? 'default' : 'outline'}
                     onClick={() => setKind(k.value)}
-                    className="justify-center gap-2"
+                    className="min-w-0 justify-center gap-1.5 px-2"
                     size="sm"
                   >
                     <Icon className="w-4 h-4" />
                     {k.label}
-                    <span className="text-[10px] opacity-60">{k.hint}</span>
+                    {k.hint && <span className="text-[10px] opacity-60">{k.hint}</span>}
                   </Button>
                 );
               })}
@@ -588,10 +656,11 @@ export const QuickActionsPanel = ({
                         placeholder="Passeur"
                       />
                     </div>
-                    <div className="grid grid-cols-4 gap-1">
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-1">
                       {([
                         { value: 'normal', label: 'Normal' },
                         { value: 'penalty', label: 'Penalty' },
+                        { value: 'free_kick', label: 'Coup franc' },
                         { value: 'header', label: 'Tête' },
                         { value: 'own_goal', label: 'CSC' },
                       ] as const).map((o) => (
@@ -610,7 +679,7 @@ export const QuickActionsPanel = ({
                   </div>
                 )}
 
-                {kind === 'card' && (
+                {(kind === 'card' || kind === 'second_yellow') && (
                   <div className="space-y-3">
                     <div className="space-y-1.5">
                       <Label className="text-xs">Joueur averti ({teamName(side)})</Label>
@@ -622,7 +691,7 @@ export const QuickActionsPanel = ({
                         autoOpenRef={openScorerRef}
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    {kind === 'card' && <div className="grid grid-cols-2 gap-2">
                       <Button
                         type="button"
                         size="sm"
@@ -639,7 +708,7 @@ export const QuickActionsPanel = ({
                       >
                         🟥 Rouge
                       </Button>
-                    </div>
+                    </div>}
                   </div>
                 )}
 
@@ -672,6 +741,15 @@ export const QuickActionsPanel = ({
                     disabled={!!scorerId}
                   />
                 )}
+
+                {['chance', 'corner', 'foul', 'injury', 'var', 'penalty_missed'].includes(kind) && (
+                  <Input
+                    placeholder="Précision courte (optionnelle)"
+                    value={eventNote}
+                    onChange={(e) => setEventNote(e.target.value)}
+                    className="h-9"
+                  />
+                )}
               </>
             )}
 
@@ -700,12 +778,12 @@ export const QuickActionsPanel = ({
               </p>
             )}
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button className="flex-1" onClick={submit} disabled={submitting || !match}>
                 {submitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
                 Valider l'action
               </Button>
-              <Button variant="outline" onClick={resetForm} disabled={submitting}>
+              <Button variant="outline" onClick={resetForm} disabled={submitting} className="sm:w-auto">
                 <X className="w-4 h-4 mr-1" />
                 Effacer
               </Button>

@@ -18,25 +18,25 @@ const TopReferrersTable = ({ referrers }: { referrers: RefRow[] }) => (
       </CardTitle>
       <CardDescription>Domaines qui envoient le plus de trafic</CardDescription>
     </CardHeader>
-    <CardContent>
+    <CardContent className="px-4 sm:px-6">
       {referrers.length ? (
-        <div className="overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0">
-        <Table>
+        <div className="max-w-full overflow-x-auto">
+        <Table className="table-fixed sm:table-auto">
           <TableHeader>
             <TableRow>
               <TableHead>Source</TableHead>
               <TableHead className="text-right">Visites</TableHead>
-              <TableHead className="text-right">Visiteurs</TableHead>
+              <TableHead className="hidden text-right sm:table-cell">Visiteurs</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {referrers.map((r) => (
               <TableRow key={r.source} className="hover:bg-muted/50">
-                <TableCell className="font-medium truncate max-w-[260px]" title={r.source}>
+                <TableCell className="max-w-[180px] truncate font-medium sm:max-w-[260px]" title={r.source}>
                   {r.source}
                 </TableCell>
                 <TableCell className="text-right font-semibold">{r.visits}</TableCell>
-                <TableCell className="text-right">{r.visitors}</TableCell>
+                <TableCell className="hidden text-right sm:table-cell">{r.visitors}</TableCell>
               </TableRow>
             ))}
           </TableBody>

@@ -18,3 +18,6 @@
 - [ ] Ajouter les badges de commentaires à la liste des articles
 - [ ] Remplacer l’approbation par la publication immédiate, le masquage réversible et les mots bloqués
 - [ ] Vérifier les parcours public et admin sur ordinateur et mobile
+- [ ] Enrichir les actions express du centre de match et ajouter les buts sur coup franc
+- [ ] Rendre toute la page Analytics administrable sur téléphone sans débordement horizontal
+- [ ] Vérifier le centre de match et les cinq vues Analytics sur mobile, tablette et ordinateur

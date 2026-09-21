@@ -35,7 +35,7 @@ const RealTimeVisitors = ({ activeVisitors, recentVisits }: RealTimeVisitorsProp
 
   return (
     <Card className="border-border/50">
-      <CardHeader className="pb-4">
+      <CardHeader className="px-4 pb-4 sm:px-6">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-emerald-500" />
@@ -47,9 +47,9 @@ const RealTimeVisitors = ({ activeVisitors, recentVisits }: RealTimeVisitorsProp
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 px-4 sm:px-6">
         {/* Active Visitors Counter */}
-        <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-xl">
+        <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl sm:gap-4 sm:p-4">
           <div className="p-3 bg-emerald-500/10 rounded-xl">
             <Users className="h-6 w-6 text-emerald-500" />
           </div>
@@ -79,7 +79,7 @@ const RealTimeVisitors = ({ activeVisitors, recentVisits }: RealTimeVisitorsProp
                     <p className="text-sm font-medium truncate">{getPageName(visit.page_path)}</p>
                     <p className="text-xs text-muted-foreground truncate">{visit.page_path}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="shrink-0 text-right">
                     <Badge variant="outline" className="text-xs capitalize">
                       {visit.device_type || 'desktop'}
                     </Badge>

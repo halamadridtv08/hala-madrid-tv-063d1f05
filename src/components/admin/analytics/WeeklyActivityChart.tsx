@@ -33,17 +33,17 @@ const WeeklyActivityChart = ({ data }: WeeklyActivityChartProps) => {
 
   return (
     <Card className="border-border/50">
-      <CardHeader className="pb-4">
+      <CardHeader className="px-4 pb-4 sm:px-6">
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-primary" />
           7 Derniers Jours
         </CardTitle>
         <CardDescription>Visites par jour (période glissante)</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-2 sm:px-6">
         {data.some(d => d.views > 0) ? (
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={data} barCategoryGap="20%">
+            <BarChart data={data} barCategoryGap="20%" margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} vertical={false} />
               <XAxis 
                 dataKey="shortDay" 
@@ -74,16 +74,17 @@ const WeeklyActivityChart = ({ data }: WeeklyActivityChartProps) => {
         )}
         
         {/* Day labels with highlighting */}
-        <div className="flex justify-between mt-4">
+        <div className="grid grid-cols-7 gap-0.5 mt-3">
           {data.map((day, index) => (
             <div 
               key={index}
-              className={`flex flex-col items-center p-2 rounded-lg transition-colors ${
+              className={`flex min-w-0 flex-col items-center rounded-md px-0.5 py-1 transition-colors ${
                 day.isToday ? 'bg-primary/10' : ''
               }`}
             >
-              <span className={`text-xs font-medium ${day.isToday ? 'text-primary' : 'text-muted-foreground'}`}>
-                {day.shortDay}
+              <span className={`text-[10px] min-[390px]:text-xs font-medium ${day.isToday ? 'text-primary' : 'text-muted-foreground'}`}>
+                <span className="min-[390px]:hidden">{day.shortDay.charAt(0)}</span>
+                <span className="hidden min-[390px]:inline">{day.shortDay}</span>
               </span>
               <span className={`text-sm font-bold ${day.isToday ? 'text-primary' : ''}`}>
                 {day.views >= 1000 ? `${(day.views / 1000).toFixed(1)}K` : day.views}
