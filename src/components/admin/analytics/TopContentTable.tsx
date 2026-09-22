@@ -38,13 +38,13 @@ const TopContentTable = ({ articles, title = "Articles Les Plus Lus" }: TopConte
         </CardTitle>
         <CardDescription>Top 10 des articles par nombre de vues</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 sm:px-6">
         {articles.length > 0 ? (
-          <div className="overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0">
-          <Table>
+          <div className="max-w-full overflow-x-auto">
+          <Table className="table-fixed sm:table-auto">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-10">#</TableHead>
+                <TableHead className="hidden w-10 min-[390px]:table-cell">#</TableHead>
                 <TableHead>Article</TableHead>
                 <TableHead className="w-16 sm:w-24 text-center">Vues</TableHead>
                 <TableHead className="w-24 text-center hidden sm:table-cell">Tendance</TableHead>
@@ -53,7 +53,7 @@ const TopContentTable = ({ articles, title = "Articles Les Plus Lus" }: TopConte
             <TableBody>
               {articles.map((article, index) => (
                 <TableRow key={article.id} className="hover:bg-muted/50">
-                  <TableCell>
+                  <TableCell className="hidden min-[390px]:table-cell">
                     {index < 3 ? (
                       <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10">
                         <Star className={`h-3 w-3 ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : 'text-amber-600'}`} fill="currentColor" />
@@ -62,9 +62,9 @@ const TopContentTable = ({ articles, title = "Articles Les Plus Lus" }: TopConte
                       <span className="text-muted-foreground font-medium">{index + 1}</span>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="min-w-0">
                     <div className="space-y-1">
-                      <p className="font-medium line-clamp-1">{article.title}</p>
+                      <p className="line-clamp-2 break-words font-medium sm:line-clamp-1">{article.title}</p>
                       <Badge variant="outline" className={getCategoryColor(article.category)}>
                         {article.category}
                       </Badge>

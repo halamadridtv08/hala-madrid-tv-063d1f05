@@ -758,7 +758,7 @@ const Admin = () => {
   
   const renderModeratorActivity = () => <ModeratorActivityDashboard />;
   
-  return <div className="min-h-screen bg-background flex">
+  return <div className="min-h-screen min-w-0 bg-background flex overflow-x-hidden">
       {/* Sidebar desktop */}
       <AdminSidebar 
         activeTab={activeTab} 
@@ -768,8 +768,8 @@ const Admin = () => {
       />
       
       {/* Main content */}
-      <div className={cn("flex-1 transition-all duration-300", sidebarCollapsed ? "lg:ml-[72px]" : "lg:ml-64")}>
-        <div className="madrid-container px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-8">
+      <div className={cn("min-w-0 flex-1 transition-all duration-300", sidebarCollapsed ? "lg:ml-[72px]" : "lg:ml-64")}>
+        <div className="madrid-container min-w-0 max-w-full px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-4 sm:mb-6 md:mb-8">
             <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
               <AdminMobileNav activeTab={activeTab} onTabChange={handleTabChange} />
@@ -793,7 +793,7 @@ const Admin = () => {
 
         
 
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4 md:space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="min-w-0 max-w-full space-y-4 md:space-y-6">
 
           <TabsContent value="dashboard">{renderDashboard()}</TabsContent>
           <TabsContent value="analytics">{renderAnalytics()}</TabsContent>
