@@ -256,6 +256,7 @@ export const QuickActionsPanel = ({
     () => roster.filter((p) => (side === ownSide ? p.side === 'own' : p.side === 'opponent')),
     [roster, side, ownSide]
   );
+  const simpleEventKinds: ActionKind[] = ['chance', 'corner', 'foul', 'injury', 'var', 'penalty_missed'];
 
   const find = useCallback((id: string) => roster.find((p) => p.id === id) || null, [roster]);
   const isOwnSide = side === ownSide;
@@ -730,6 +731,18 @@ export const QuickActionsPanel = ({
                   </div>
                 )}
 
+                {simpleEventKinds.includes(kind) && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Joueur concerné (optionnel)</Label>
+                    <PlayerPicker
+                      players={sideRoster}
+                      value={scorerId}
+                      onChange={setScorerId}
+                      placeholder="Sélectionner un joueur"
+                    />
+                  </div>
+                )}
+
                 {kind !== 'substitution' && (
                   <Input
                     placeholder={
@@ -742,7 +755,7 @@ export const QuickActionsPanel = ({
                   />
                 )}
 
-                {['chance', 'corner', 'foul', 'injury', 'var', 'penalty_missed'].includes(kind) && (
+                {simpleEventKinds.includes(kind) && (
                   <Input
                     placeholder="Précision courte (optionnelle)"
                     value={eventNote}
