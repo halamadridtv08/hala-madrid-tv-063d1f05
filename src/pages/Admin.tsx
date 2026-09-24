@@ -54,6 +54,7 @@ import { SiteVisibilityManager } from "@/components/admin/SiteVisibilityManager"
 import { FlashNewsCategoryManager } from "@/components/admin/FlashNewsCategoryManager";
 import { FlashNewsSourceManager } from "@/components/admin/FlashNewsSourceManager";
 import { BatchMatchImporter } from "@/components/admin/BatchMatchImporter";
+import { SofascoreImportPanel } from "@/components/admin/SofascoreImportPanel";
 import { SyncPlayerStatsFromMatches } from "@/components/admin/SyncPlayerStatsFromMatches";
 import { StatsEvolutionChart } from "@/components/admin/StatsEvolutionChart";
 import { StatsExporter } from "@/components/admin/StatsExporter";
@@ -532,6 +533,11 @@ const Admin = () => {
       <div className="mt-8">
         <h3 className="text-xl font-semibold mb-4">Import par lots</h3>
         <BatchMatchImporter />
+      </div>
+
+      <div className="mt-8">
+        <h3 className="text-xl font-semibold mb-4">Import automatique (Sofascore)</h3>
+        <SofascoreImportPanel />
       </div>
     </div>;
   const renderPressConferences = () => <div>
