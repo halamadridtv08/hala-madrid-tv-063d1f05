@@ -81,3 +81,7 @@ verify_jwt = false
 # Admin-only deployment/domain diagnostics; validates JWT and role in code
 [functions.story-domain-diagnostics]
 verify_jwt = false
+
+# Import Sofascore (Apify) - admin only, validates JWT and role in code
+[functions.sofascore-sync]
+verify_jwt = false
