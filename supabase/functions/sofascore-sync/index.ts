@@ -20,23 +20,37 @@ async function runActor(input: Json): Promise<Json[]> {
   if (!lovableKey) throw new Error('LOVABLE_API_KEY manquant');
   if (!apifyKey) throw new Error('APIFY_API_KEY manquant (connecteur Apify non lié)');
 
-  const response = await fetch(`${GATEWAY_URL}/acts/${ACTOR}/run-sync-get-dataset-items`, {
+  const headers = {
+    Authorization: `Bearer ${lovableKey}`,
+    'X-Connection-Api-Key': apifyKey,
+    'Content-Type': 'application/json',
+  };
+  const call = async (path: string, init: RequestInit = {}) => {
+    const r = await fetch(`${GATEWAY_URL}${path}`, { ...init, headers });
+    if (!r.ok) {
+      const details = await r.text();
+      console.error(`Apify gateway error [${r.status}] ${path}: ${details}`);
+      throw new Error(`Apify [${r.status}]: ${details.slice(0, 500)}`);
+    }
+    return r.json();
+  };
+
+  // Async run + short polling: avoids gateway timeouts on long scrapes
+  const started = await call(`/acts/${ACTOR}/runs?waitForFinish=30`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${lovableKey}`,
-      'X-Connection-Api-Key': apifyKey,
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(input),
   });
-
-  if (!response.ok) {
-    const details = await response.text();
-    console.error(`Apify gateway error [${response.status}]: ${details}`);
-    throw new Error(`Apify [${response.status}]: ${details.slice(0, 500)}`);
+  let run = started?.data;
+  const deadline = Date.now() + 130_000;
+  while (run && ['READY', 'RUNNING'].includes(run.status) && Date.now() < deadline) {
+    const polled = await call(`/actor-runs/${run.id}?waitForFinish=30`);
+    run = polled?.data;
   }
-
-  const data = await response.json();
+  if (!run) throw new Error('Apify: exécution introuvable');
+  if (run.status !== 'SUCCEEDED') {
+    throw new Error(`Apify: exécution ${run.status === 'RUNNING' ? 'trop longue, réduisez la période' : run.status}`);
+  }
+  const data = await call(`/datasets/${run.defaultDatasetId}/items?clean=true&limit=1000`);
   return Array.isArray(data) ? data : [];
 }
 
