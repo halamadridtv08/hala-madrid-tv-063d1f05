@@ -95,14 +95,20 @@ async function findExisting(admin: any, payload: ReturnType<typeof matchPayload>
   const fid = payload.match_details.flashscore_match_id;
   const byId = (rows ?? []).find((r: any) => r.match_details?.flashscore_match_id === fid);
   if (byId) return byId;
-  const norm = (s: string) => (s ?? '').toLowerCase().replace(/[^a-z]/g, '');
+  const STOP = new Set(['fc', 'cf', 'club', 'de', 'del', 'la', 'real', 'madrid', 'cd', 'sc', 'ud', 'rc', 'ac']);
+  const tokens = (s: string) => (s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z ]/g, ' ').split(/\s+/).filter((w) => w && !STOP.has(w));
+  const similar = (x: string, y: string) => {
+    const a = tokens(x), b = tokens(y);
+    if (!a.length || !b.length) return (x ?? '').toLowerCase().trim() === (y ?? '').toLowerCase().trim();
+    return a.some((p) => b.some((q) => p.startsWith(q.slice(0, 3)) || q.startsWith(p.slice(0, 3))));
+  };
   const t = new Date(payload.match_date).getTime();
+  const other = isRM(payload.home_team) ? payload.away_team : payload.home_team;
   return (rows ?? []).find((r: any) => {
-    const sameDay = Math.abs(new Date(r.match_date).getTime() - t) < 2 * 86400000;
-    const other = isRM(payload.home_team) ? payload.away_team : payload.home_team;
+    if (Math.abs(new Date(r.match_date).getTime() - t) > 2 * 86400000) return false;
     const rOther = isRM(r.home_team) ? r.away_team : r.home_team;
-    const a = norm(other), b = norm(rOther);
-    return sameDay && a && b && (a.includes(b) || b.includes(a) || a.slice(0, 4) === b.slice(0, 4));
+    return similar(other, rOther);
   });
 }
 
@@ -124,8 +130,11 @@ async function fixturesAction(admin: any, body: Json) {
     preview.push({ flashscore_match_id: m.match_id, existing_id: current?.id ?? null, action: current ? 'update' : 'create', ...payload });
     if (!body.apply) continue;
     if (current) {
+      // Existing match: keep your names/date/venue, only complete score, status and Flashscore link.
       const { error } = await admin.from('matches').update({
-        ...payload,
+        status: payload.status === 'upcoming' ? current.status : payload.status,
+        home_score: payload.home_score ?? current.home_score,
+        away_score: payload.away_score ?? current.away_score,
         match_details: { ...(current.match_details ?? {}), ...payload.match_details },
       }).eq('id', current.id);
       if (error) throw new Error(`Mise à jour match: ${error.message}`);
