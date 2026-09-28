@@ -136,6 +136,33 @@ export const SofascoreImportPanel = () => {
   const toggleLeague = (id: string) =>
     setSelectedLeagues((prev) => (prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id]));
 
+  const runFotmob = async (apply: boolean) => {
+    if (!fotmobMatch) {
+      toast({ title: 'Sélectionnez un match', variant: 'destructive' });
+      return;
+    }
+    setFotmobLoading(true);
+    try {
+      const data = await callFunction({
+        action: 'fotmob-details',
+        matchId: fotmobMatch,
+        fotmobMatchId: fotmobId || undefined,
+        apply,
+      });
+      setFotmobPreview(data);
+      toast({
+        title: apply ? 'Événements importés' : 'Aperçu FotMob',
+        description: apply
+          ? `${data.inserted} événement(s) ajouté(s).`
+          : `${data.events_to_add?.length ?? 0} événement(s) manquant(s) détecté(s).`,
+      });
+    } catch (e) {
+      toast({ title: 'Échec', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setFotmobLoading(false);
+    }
+  };
+
   return (
     <Card className="w-full max-w-full overflow-hidden">
       <CardHeader>
