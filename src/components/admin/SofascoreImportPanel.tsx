@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Download, CalendarDays, Radio, Users, RefreshCw } from 'lucide-react';
+import { Loader2, Download, CalendarDays, Radio, RefreshCw, ListPlus } from 'lucide-react';
 
 interface FixturePreview {
   flashscore_match_id: string;
@@ -61,6 +61,11 @@ export const SofascoreImportPanel = () => {
   const [selectedMatch, setSelectedMatch] = useState<string>('');
   const [matchPreview, setMatchPreview] = useState<any>(null);
   const [matchLoading, setMatchLoading] = useState(false);
+
+  const [fotmobMatch, setFotmobMatch] = useState<string>('');
+  const [fotmobId, setFotmobId] = useState('');
+  const [fotmobPreview, setFotmobPreview] = useState<any>(null);
+  const [fotmobLoading, setFotmobLoading] = useState(false);
 
   useEffect(() => {
     supabase
@@ -131,6 +136,33 @@ export const SofascoreImportPanel = () => {
   const toggleLeague = (id: string) =>
     setSelectedLeagues((prev) => (prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id]));
 
+  const runFotmob = async (apply: boolean) => {
+    if (!fotmobMatch) {
+      toast({ title: 'Sélectionnez un match', variant: 'destructive' });
+      return;
+    }
+    setFotmobLoading(true);
+    try {
+      const data = await callFunction({
+        action: 'fotmob-details',
+        matchId: fotmobMatch,
+        fotmobMatchId: fotmobId || undefined,
+        apply,
+      });
+      setFotmobPreview(data);
+      toast({
+        title: apply ? 'Événements importés' : 'Aperçu FotMob',
+        description: apply
+          ? `${data.inserted} événement(s) ajouté(s).`
+          : `${data.events_to_add?.length ?? 0} événement(s) manquant(s) détecté(s).`,
+      });
+    } catch (e) {
+      toast({ title: 'Échec', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setFotmobLoading(false);
+    }
+  };
+
   return (
     <Card className="w-full max-w-full overflow-hidden">
       <CardHeader>
@@ -150,6 +182,9 @@ export const SofascoreImportPanel = () => {
             </TabsTrigger>
             <TabsTrigger value="live" className="flex-shrink-0 gap-1">
               <Radio className="h-4 w-4" /> Match
+            </TabsTrigger>
+            <TabsTrigger value="fotmob" className="flex-shrink-0 gap-1">
+              <ListPlus className="h-4 w-4" /> Détails FotMob
             </TabsTrigger>
             
           </TabsList>
@@ -263,6 +298,63 @@ export const SofascoreImportPanel = () => {
               </div>
             ))}
           </TabsContent>
+
+          {/* Détails FotMob */}
+          <TabsContent value="fotmob" className="space-y-4 pt-4">
+            <div className="space-y-1">
+              <Label>Match existant</Label>
+              <Select value={fotmobMatch} onValueChange={setFotmobMatch}>
+                <SelectTrigger><SelectValue placeholder="Choisir un match" /></SelectTrigger>
+                <SelectContent>
+                  {matches.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.home_team} – {m.away_team} ({new Date(m.match_date).toLocaleDateString('fr-FR')})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="fotmobId">ID ou URL FotMob du match</Label>
+              <Input
+                id="fotmobId"
+                placeholder="https://www.fotmob.com/match/1234567 ou 1234567"
+                value={fotmobId}
+                onChange={(e) => setFotmobId(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Ouvrez le match sur fotmob.com et copiez l'URL. Le match n'est jamais recréé :
+                seuls les événements manquants (buts, cartons, changements) sont ajoutés.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button variant="outline" onClick={() => runFotmob(false)} disabled={fotmobLoading}>
+                {fotmobLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                Aperçu
+              </Button>
+              <Button onClick={() => runFotmob(true)} disabled={fotmobLoading || !fotmobPreview}>
+                Ajouter les événements manquants
+              </Button>
+            </div>
+            {fotmobPreview && (
+              <div className="space-y-2 rounded-md border p-3 text-sm">
+                <p>
+                  <strong>{fotmobPreview.match_name}</strong> · Score : {fotmobPreview.score} · Statut : {fotmobPreview.status}
+                </p>
+                <p className="text-muted-foreground">
+                  {fotmobPreview.events_found} événement(s) trouvé(s), {fotmobPreview.events_existing} déjà présent(s),{' '}
+                  {fotmobPreview.events_to_add?.length ?? 0} à ajouter.
+                </p>
+                {fotmobPreview.events_to_add?.map((e: any, i: number) => (
+                  <div key={i} className="rounded border p-2">
+                    <Badge variant="secondary" className="mr-2">{e.minute ?? '?'}′</Badge>
+                    {e.title}
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
 
           
         </Tabs>

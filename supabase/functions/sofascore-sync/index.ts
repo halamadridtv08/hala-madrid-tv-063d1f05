@@ -1,5 +1,5 @@
-// Real Madrid data sync via Flashscore (Apify actor extractify-labs~flashscore-extractor).
-// Function name kept for backward compatibility.
+// Real Madrid data sync via Flashscore (Apify actor extractify-labs~flashscore-extractor)
+// + FotMob match details (events, scorer names). Function name kept for backward compatibility.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
@@ -9,13 +9,14 @@ const corsHeaders = {
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/apify';
 const ACTOR = 'extractify-labs~flashscore-extractor';
+const FOTMOB_DETAILS_ACTOR = 'incognito_mode~fotmob-match-details-scraper';
 const RM_NAME = 'real madrid';
 const DEFAULT_LEAGUES = ['LaLiga', 'Champions League', 'Copa del Rey', 'Super Cup', 'Club World Cup'];
 const LIVE_MIN_INTERVAL_MS = 90_000;
 
 type Json = Record<string, any>;
 
-async function runActor(input: Json): Promise<Json[]> {
+async function runActorRaw(actorId: string, input: Json): Promise<Json[]> {
   const lovableKey = Deno.env.get('LOVABLE_API_KEY');
   const apifyKey = Deno.env.get('APIFY_API_KEY');
   if (!lovableKey) throw new Error('LOVABLE_API_KEY manquant');
@@ -34,9 +35,9 @@ async function runActor(input: Json): Promise<Json[]> {
     }
     return r.json();
   };
-  const started = await call(`/acts/${ACTOR}/runs?waitForFinish=30`, {
+  const started = await call(`/acts/${actorId}/runs?waitForFinish=30`, {
     method: 'POST',
-    body: JSON.stringify({ mode: 'score_mode', sports: ['football'], ...input }),
+    body: JSON.stringify(input),
   });
   let run = started?.data;
   const deadline = Date.now() + 130_000;
@@ -47,6 +48,14 @@ async function runActor(input: Json): Promise<Json[]> {
   if (run.status !== 'SUCCEEDED') throw new Error(`Apify: exécution ${run.status}`);
   const data = await call(`/datasets/${run.defaultDatasetId}/items?clean=true&limit=1000`);
   return Array.isArray(data) ? data : [];
+}
+
+function runActor(input: Json): Promise<Json[]> {
+  return runActorRaw(ACTOR, { mode: 'score_mode', sports: ['football'], ...input });
+}
+
+function runFotMobDetails(matchIds: number[]): Promise<Json[]> {
+  return runActorRaw(FOTMOB_DETAILS_ACTOR, { matchIds });
 }
 
 const isRM = (name?: string) => (name ?? '').trim().toLowerCase() === RM_NAME;
@@ -213,6 +222,25 @@ async function applyLive(admin: any, match: any, fs: Json) {
   if (goals.length) {
     await admin.from('live_blog_entries').insert(goals);
     log.push(`${goals.length} but(s)`);
+    // Enrich goal entries with scorer names from FotMob when the match is linked.
+    const fotmobId = match.match_details?.fotmob_match_id;
+    if (fotmobId) {
+      try {
+        const details = await runFotMobDetails([Number(fotmobId)]);
+        const events = mapFotMobEvents(details[0], match.home_team, match.away_team);
+        const goalEvents = events.filter((e) => e.entry_type === 'goal' && e.player_name);
+        for (const g of goals) {
+          const ev = goalEvents.find((e) => e.team_side === g.team_side && Math.abs((e.minute ?? 0) - (g.minute ?? 0)) <= 3);
+          if (ev?.player_name) {
+            await admin.from('live_blog_entries')
+              .update({ title: `${g.title} — ${ev.player_name}`, content: `${g.content} · Buteur : ${ev.player_name}` })
+              .eq('match_id', match.id).eq('entry_type', 'goal').eq('minute', g.minute).eq('team_side', g.team_side);
+          }
+        }
+      } catch (e) {
+        console.error('FotMob scorer enrichment failed:', e);
+      }
+    }
   }
 
   await admin.from('matches').update({
@@ -255,6 +283,137 @@ async function liveAction(admin: any, body: Json) {
   return { checked: candidates?.length ?? 0, synced: results.length, results };
 }
 
+// ---- FotMob match details (missing events, scorer names) ----------------
+
+function parseFotMobId(raw: unknown): number | null {
+  if (raw === undefined || raw === null) return null;
+  const s = String(raw).trim();
+  const m = s.match(/fotmob\.com\/match(?:es)?\/(\d+)/i) || s.match(/(\d{5,})/);
+  return m ? Number(m[1]) : null;
+}
+
+// Tolerant mapping of FotMob events to live_blog_entries rows.
+function mapFotMobEvents(detail: Json | undefined, homeTeam: string, awayTeam: string): Json[] {
+  const rawEvents: Json[] = Array.isArray(detail?.events) ? detail.events : [];
+  const out: Json[] = [];
+  for (const e of rawEvents) {
+    const type = String(e.type ?? e.eventType ?? '').toLowerCase();
+    const minute = num(e.minute ?? e.time ?? e.min);
+    const player = e.player?.name ?? e.playerName ?? e.name ?? e.player ?? null;
+    const assist = e.assist?.name ?? e.assistName ?? e.assist ?? null;
+    const teamName = e.team?.name ?? e.teamName ?? null;
+    const sideRaw = String(e.homeAway ?? e.side ?? '').toLowerCase();
+    let side: 'home' | 'away' | null = sideRaw === 'home' || sideRaw === 'away' ? sideRaw : null;
+    if (!side && teamName) {
+      side = similarName(teamName, homeTeam) ? 'home' : similarName(teamName, awayTeam) ? 'away' : null;
+    }
+    if (!side) continue;
+
+    if (type.includes('goal')) {
+      const isPen = type.includes('pen') && !type.includes('miss');
+      const isOwn = type.includes('own');
+      out.push({
+        entry_type: isPen ? 'penalty_goal' : 'goal',
+        minute,
+        team_side: side,
+        player_name: player,
+        title: isOwn ? `But contre son camp (${player ?? '?'})` : side === (isRM(homeTeam) ? 'home' : 'away') && isRM(side === 'home' ? homeTeam : awayTeam)
+          ? `BUUUT du Real Madrid ! — ${player ?? ''}`.trim()
+          : `But de ${side === 'home' ? homeTeam : awayTeam} — ${player ?? ''}`.trim(),
+        content: [player ? `Buteur : ${player}` : null, assist ? `Passe : ${assist}` : null].filter(Boolean).join(' · ') || 'But',
+        is_important: true,
+      });
+    } else if (type.includes('card') || type.includes('yellow') || type.includes('red')) {
+      const isRed = type.includes('red') || String(e.card ?? '').toLowerCase().includes('red');
+      const isSecondYellow = type.includes('second') || String(e.card ?? '').toLowerCase().includes('second');
+      out.push({
+        entry_type: isSecondYellow ? 'second_yellow' : isRed ? 'red_card' : 'yellow_card',
+        minute,
+        team_side: side,
+        player_name: player,
+        title: `${isRed || isSecondYellow ? 'Carton rouge' : 'Carton jaune'} — ${player ?? (side === 'home' ? homeTeam : awayTeam)}`,
+        content: player ?? '',
+        is_important: isRed || isSecondYellow,
+      });
+    } else if (type.includes('sub')) {
+      const playerIn = e.playerIn?.name ?? e.playerIn ?? null;
+      const playerOut = e.playerOut?.name ?? e.playerOut ?? player;
+      out.push({
+        entry_type: 'substitution',
+        minute,
+        team_side: side,
+        player_name: playerIn ?? playerOut,
+        title: `Changement — ${side === 'home' ? homeTeam : awayTeam}`,
+        content: [playerIn ? `Entrée : ${playerIn}` : null, playerOut ? `Sortie : ${playerOut}` : null].filter(Boolean).join(' · '),
+        is_important: false,
+      });
+    } else if (type.includes('pen') && type.includes('miss')) {
+      out.push({
+        entry_type: 'penalty_missed', minute, team_side: side, player_name: player,
+        title: `Penalty manqué — ${player ?? (side === 'home' ? homeTeam : awayTeam)}`,
+        content: player ?? '', is_important: true,
+      });
+    }
+  }
+  return out;
+}
+
+function similarName(a: string, b: string): boolean {
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z ]/g, ' ').trim();
+  const x = norm(a), y = norm(b);
+  return x === y || x.includes(y) || y.includes(x);
+}
+
+async function fotmobDetailsAction(admin: any, body: Json) {
+  const matchId = String(body.matchId ?? '');
+  if (!matchId) throw new Error('matchId requis');
+  const { data: match, error } = await admin.from('matches').select('*').eq('id', matchId).maybeSingle();
+  if (error || !match) throw new Error('Match introuvable dans la base');
+
+  const fotmobId = parseFotMobId(body.fotmobMatchId ?? body.fotmobUrl) ?? parseFotMobId(match.match_details?.fotmob_match_id);
+  if (!fotmobId) throw new Error('Fournissez l’ID ou l’URL FotMob du match (ex. https://www.fotmob.com/match/1234567)');
+
+  const details = await runFotMobDetails([fotmobId]);
+  const detail = details[0];
+  if (!detail) throw new Error('Match introuvable sur FotMob');
+
+  const events = mapFotMobEvents(detail, match.home_team, match.away_team);
+  const { data: existing } = await admin.from('live_blog_entries')
+    .select('minute, entry_type, team_side').eq('match_id', match.id);
+  const key = (e: Json) => `${e.entry_type}|${e.minute ?? -1}|${e.team_side ?? ''}`;
+  const have = new Set((existing ?? []).map(key));
+  const toAdd = events.filter((e) => !have.has(key(e)));
+
+  const homeScore = num(detail.homeTeam?.score ?? detail.homeScore);
+  const awayScore = num(detail.awayTeam?.score ?? detail.awayScore);
+  const status = detail.finished ? 'finished' : detail.started ? 'live' : match.status;
+
+  const preview = {
+    fotmob_match_id: fotmobId,
+    match_name: detail.matchName ?? `${match.home_team} – ${match.away_team}`,
+    score: `${homeScore ?? '-'}-${awayScore ?? '-'}`,
+    status,
+    events_found: events.length,
+    events_existing: events.length - toAdd.length,
+    events_to_add: toAdd,
+  };
+  if (!body.apply) return preview;
+
+  if (toAdd.length) {
+    const rows = toAdd.map((e) => ({ ...e, match_id: match.id }));
+    const { error: insErr } = await admin.from('live_blog_entries').insert(rows);
+    if (insErr) throw new Error(`Insertion événements: ${insErr.message}`);
+  }
+  await admin.from('matches').update({
+    status: status === 'upcoming' ? match.status : status,
+    home_score: homeScore ?? match.home_score,
+    away_score: awayScore ?? match.away_score,
+    match_details: { ...(match.match_details ?? {}), fotmob_match_id: fotmobId, fotmob_url: detail.matchUrl ?? null, fotmob_synced_at: new Date().toISOString() },
+  }).eq('id', match.id);
+
+  return { ...preview, applied: true, inserted: toAdd.length };
+}
+
 // ---- server -------------------------------------------------------------
 
 Deno.serve(async (req) => {
@@ -287,6 +446,7 @@ Deno.serve(async (req) => {
     let result: Json;
     if (action === 'fixtures') result = await fixturesAction(admin, body);
     else if (action === 'live') result = await liveAction(admin, { matchId: body.matchId, force: true });
+    else if (action === 'fotmob-details') result = await fotmobDetailsAction(admin, body);
     else return json({ error: `Action inconnue: ${action}` }, 400);
 
     return json({ success: true, action, ...result });
