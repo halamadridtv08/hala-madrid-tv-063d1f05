@@ -183,6 +183,9 @@ export const SofascoreImportPanel = () => {
             <TabsTrigger value="live" className="flex-shrink-0 gap-1">
               <Radio className="h-4 w-4" /> Match
             </TabsTrigger>
+            <TabsTrigger value="fotmob" className="flex-shrink-0 gap-1">
+              <ListPlus className="h-4 w-4" /> Détails FotMob
+            </TabsTrigger>
             
           </TabsList>
 
