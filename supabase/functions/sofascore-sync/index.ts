@@ -331,7 +331,7 @@ function mapFotMobEvents(detail: Json | undefined, homeTeam: string, awayTeam: s
         minute,
         team_side: side,
         player_name: player,
-        title: `${isRed || isSecondYellow ? 'Carton rouge' : 'Carton jaune'} — ${player ?? side === 'home' ? homeTeam : awayTeam}`,
+        title: `${isRed || isSecondYellow ? 'Carton rouge' : 'Carton jaune'} — ${player ?? (side === 'home' ? homeTeam : awayTeam)}`,
         content: player ?? '',
         is_important: isRed || isSecondYellow,
       });
@@ -350,7 +350,7 @@ function mapFotMobEvents(detail: Json | undefined, homeTeam: string, awayTeam: s
     } else if (type.includes('pen') && type.includes('miss')) {
       out.push({
         entry_type: 'penalty_missed', minute, team_side: side, player_name: player,
-        title: `Penalty manqué — ${player ?? side === 'home' ? homeTeam : awayTeam}`,
+        title: `Penalty manqué — ${player ?? (side === 'home' ? homeTeam : awayTeam)}`,
         content: player ?? '', is_important: true,
       });
     }
