@@ -9,13 +9,14 @@ const corsHeaders = {
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/apify';
 const ACTOR = 'extractify-labs~flashscore-extractor';
+const FOTMOB_DETAILS_ACTOR = 'incognito_mode~fotmob-match-details-scraper';
 const RM_NAME = 'real madrid';
 const DEFAULT_LEAGUES = ['LaLiga', 'Champions League', 'Copa del Rey', 'Super Cup', 'Club World Cup'];
 const LIVE_MIN_INTERVAL_MS = 90_000;
 
 type Json = Record<string, any>;
 
-async function runActor(input: Json): Promise<Json[]> {
+async function runActorRaw(actorId: string, input: Json): Promise<Json[]> {
   const lovableKey = Deno.env.get('LOVABLE_API_KEY');
   const apifyKey = Deno.env.get('APIFY_API_KEY');
   if (!lovableKey) throw new Error('LOVABLE_API_KEY manquant');
@@ -34,9 +35,9 @@ async function runActor(input: Json): Promise<Json[]> {
     }
     return r.json();
   };
-  const started = await call(`/acts/${ACTOR}/runs?waitForFinish=30`, {
+  const started = await call(`/acts/${actorId}/runs?waitForFinish=30`, {
     method: 'POST',
-    body: JSON.stringify({ mode: 'score_mode', sports: ['football'], ...input }),
+    body: JSON.stringify(input),
   });
   let run = started?.data;
   const deadline = Date.now() + 130_000;
@@ -47,6 +48,14 @@ async function runActor(input: Json): Promise<Json[]> {
   if (run.status !== 'SUCCEEDED') throw new Error(`Apify: exécution ${run.status}`);
   const data = await call(`/datasets/${run.defaultDatasetId}/items?clean=true&limit=1000`);
   return Array.isArray(data) ? data : [];
+}
+
+function runActor(input: Json): Promise<Json[]> {
+  return runActorRaw(ACTOR, { mode: 'score_mode', sports: ['football'], ...input });
+}
+
+function runFotMobDetails(matchIds: number[]): Promise<Json[]> {
+  return runActorRaw(FOTMOB_DETAILS_ACTOR, { matchIds });
 }
 
 const isRM = (name?: string) => (name ?? '').trim().toLowerCase() === RM_NAME;
@@ -213,6 +222,25 @@ async function applyLive(admin: any, match: any, fs: Json) {
   if (goals.length) {
     await admin.from('live_blog_entries').insert(goals);
     log.push(`${goals.length} but(s)`);
+    // Enrich goal entries with scorer names from FotMob when the match is linked.
+    const fotmobId = match.match_details?.fotmob_match_id;
+    if (fotmobId) {
+      try {
+        const details = await runFotMobDetails([Number(fotmobId)]);
+        const events = mapFotMobEvents(details[0], match.home_team, match.away_team);
+        const goalEvents = events.filter((e) => e.entry_type === 'goal' && e.player_name);
+        for (const g of goals) {
+          const ev = goalEvents.find((e) => e.team_side === g.team_side && Math.abs((e.minute ?? 0) - (g.minute ?? 0)) <= 3);
+          if (ev?.player_name) {
+            await admin.from('live_blog_entries')
+              .update({ title: `${g.title} — ${ev.player_name}`, content: `${g.content} · Buteur : ${ev.player_name}` })
+              .eq('match_id', match.id).eq('entry_type', 'goal').eq('minute', g.minute).eq('team_side', g.team_side);
+          }
+        }
+      } catch (e) {
+        console.error('FotMob scorer enrichment failed:', e);
+      }
+    }
   }
 
   await admin.from('matches').update({
