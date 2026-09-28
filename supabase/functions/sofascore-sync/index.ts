@@ -1,5 +1,5 @@
-// Real Madrid data sync via Flashscore (Apify actor extractify-labs~flashscore-extractor).
-// Function name kept for backward compatibility.
+// Real Madrid data sync via Flashscore (Apify actor extractify-labs~flashscore-extractor)
+// + FotMob match details (events, scorer names). Function name kept for backward compatibility.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
