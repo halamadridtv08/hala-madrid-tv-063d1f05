@@ -299,6 +299,63 @@ export const SofascoreImportPanel = () => {
             ))}
           </TabsContent>
 
+          {/* Détails FotMob */}
+          <TabsContent value="fotmob" className="space-y-4 pt-4">
+            <div className="space-y-1">
+              <Label>Match existant</Label>
+              <Select value={fotmobMatch} onValueChange={setFotmobMatch}>
+                <SelectTrigger><SelectValue placeholder="Choisir un match" /></SelectTrigger>
+                <SelectContent>
+                  {matches.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.home_team} – {m.away_team} ({new Date(m.match_date).toLocaleDateString('fr-FR')})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="fotmobId">ID ou URL FotMob du match</Label>
+              <Input
+                id="fotmobId"
+                placeholder="https://www.fotmob.com/match/1234567 ou 1234567"
+                value={fotmobId}
+                onChange={(e) => setFotmobId(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Ouvrez le match sur fotmob.com et copiez l'URL. Le match n'est jamais recréé :
+                seuls les événements manquants (buts, cartons, changements) sont ajoutés.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button variant="outline" onClick={() => runFotmob(false)} disabled={fotmobLoading}>
+                {fotmobLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                Aperçu
+              </Button>
+              <Button onClick={() => runFotmob(true)} disabled={fotmobLoading || !fotmobPreview}>
+                Ajouter les événements manquants
+              </Button>
+            </div>
+            {fotmobPreview && (
+              <div className="space-y-2 rounded-md border p-3 text-sm">
+                <p>
+                  <strong>{fotmobPreview.match_name}</strong> · Score : {fotmobPreview.score} · Statut : {fotmobPreview.status}
+                </p>
+                <p className="text-muted-foreground">
+                  {fotmobPreview.events_found} événement(s) trouvé(s), {fotmobPreview.events_existing} déjà présent(s),{' '}
+                  {fotmobPreview.events_to_add?.length ?? 0} à ajouter.
+                </p>
+                {fotmobPreview.events_to_add?.map((e: any, i: number) => (
+                  <div key={i} className="rounded border p-2">
+                    <Badge variant="secondary" className="mr-2">{e.minute ?? '?'}′</Badge>
+                    {e.title}
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+
           
         </Tabs>
       </CardContent>
