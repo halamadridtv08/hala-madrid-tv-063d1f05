@@ -446,6 +446,7 @@ Deno.serve(async (req) => {
     let result: Json;
     if (action === 'fixtures') result = await fixturesAction(admin, body);
     else if (action === 'live') result = await liveAction(admin, { matchId: body.matchId, force: true });
+    else if (action === 'fotmob-details') result = await fotmobDetailsAction(admin, body);
     else return json({ error: `Action inconnue: ${action}` }, 400);
 
     return json({ success: true, action, ...result });
