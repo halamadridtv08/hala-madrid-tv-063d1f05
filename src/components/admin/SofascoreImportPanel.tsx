@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Download, CalendarDays, Radio, Users, RefreshCw } from 'lucide-react';
+import { Loader2, Download, CalendarDays, Radio, RefreshCw, ListPlus } from 'lucide-react';
 
 interface FixturePreview {
   flashscore_match_id: string;
@@ -61,6 +61,11 @@ export const SofascoreImportPanel = () => {
   const [selectedMatch, setSelectedMatch] = useState<string>('');
   const [matchPreview, setMatchPreview] = useState<any>(null);
   const [matchLoading, setMatchLoading] = useState(false);
+
+  const [fotmobMatch, setFotmobMatch] = useState<string>('');
+  const [fotmobId, setFotmobId] = useState('');
+  const [fotmobPreview, setFotmobPreview] = useState<any>(null);
+  const [fotmobLoading, setFotmobLoading] = useState(false);
 
   useEffect(() => {
     supabase
