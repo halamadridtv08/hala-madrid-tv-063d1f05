@@ -405,7 +405,7 @@ async function fotmobDetailsAction(admin: any, body: Json) {
   if (!body.apply) return preview;
 
   if (toAdd.length) {
-    const rows = toAdd.map((e) => ({ ...e, match_id: match.id }));
+    const rows = toAdd.map(({ player_name: _p, ...e }) => ({ ...e, match_id: match.id }));
     const { error: insErr } = await admin.from('live_blog_entries').insert(rows);
     if (insErr) throw new Error(`Insertion événements: ${insErr.message}`);
   }
