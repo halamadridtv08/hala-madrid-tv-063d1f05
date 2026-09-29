@@ -297,21 +297,25 @@ function mapFotMobEvents(detail: Json | undefined, homeTeam: string, awayTeam: s
   const rawEvents: Json[] = Array.isArray(detail?.events) ? detail.events : [];
   const out: Json[] = [];
   for (const e of rawEvents) {
-    const type = String(e.type ?? e.eventType ?? '').toLowerCase();
+    const goalType = String(e.goalType ?? '').toLowerCase();
+    const type = `${String(e.type ?? e.eventType ?? '').toLowerCase()} ${goalType}`.trim();
     const minute = num(e.minute ?? e.time ?? e.min);
-    const player = e.player?.name ?? e.playerName ?? e.name ?? e.player ?? null;
-    const assist = e.assist?.name ?? e.assistName ?? e.assist ?? null;
+    const involved: string[] = Array.isArray(e.playersInvolved) ? e.playersInvolved.map(String) : [];
+    const player = e.player?.name ?? e.playerName ?? (typeof e.player === 'string' ? e.player : null) ?? null;
+    const assistRaw = e.assist?.name ?? e.assistName ?? (typeof e.assist === 'string' ? e.assist : null);
+    const assist = assistRaw ? String(assistRaw).replace(/^assist by\s+/i, '') : null;
     const teamName = e.team?.name ?? e.teamName ?? null;
     const sideRaw = String(e.homeAway ?? e.side ?? '').toLowerCase();
-    let side: 'home' | 'away' | null = sideRaw === 'home' || sideRaw === 'away' ? sideRaw : null;
+    let side: 'home' | 'away' | null = sideRaw === 'home' || sideRaw === 'away' ? sideRaw
+      : typeof e.isHome === 'boolean' ? (e.isHome ? 'home' : 'away') : null;
     if (!side && teamName) {
       side = similarName(teamName, homeTeam) ? 'home' : similarName(teamName, awayTeam) ? 'away' : null;
     }
     if (!side) continue;
 
-    if (type.includes('goal')) {
-      const isPen = type.includes('pen') && !type.includes('miss');
-      const isOwn = type.includes('own');
+    if (type.includes('goal') && !type.includes('miss')) {
+      const isPen = type.includes('pen');
+      const isOwn = type.includes('own') || e.ownGoal === true;
       out.push({
         entry_type: isPen ? 'penalty_goal' : 'goal',
         minute,
@@ -324,8 +328,9 @@ function mapFotMobEvents(detail: Json | undefined, homeTeam: string, awayTeam: s
         is_important: true,
       });
     } else if (type.includes('card') || type.includes('yellow') || type.includes('red')) {
-      const isRed = type.includes('red') || String(e.card ?? '').toLowerCase().includes('red');
-      const isSecondYellow = type.includes('second') || String(e.card ?? '').toLowerCase().includes('second');
+      const card = String(e.card ?? '').toLowerCase();
+      const isSecondYellow = type.includes('second') || card.includes('second') || card.includes('yellowred');
+      const isRed = !isSecondYellow && (type.includes('red') || card.includes('red'));
       out.push({
         entry_type: isSecondYellow ? 'second_yellow' : isRed ? 'red_card' : 'yellow_card',
         minute,
@@ -336,8 +341,8 @@ function mapFotMobEvents(detail: Json | undefined, homeTeam: string, awayTeam: s
         is_important: isRed || isSecondYellow,
       });
     } else if (type.includes('sub')) {
-      const playerIn = e.playerIn?.name ?? e.playerIn ?? null;
-      const playerOut = e.playerOut?.name ?? e.playerOut ?? player;
+      const playerIn = e.playerIn?.name ?? e.playerIn ?? involved[0] ?? null;
+      const playerOut = e.playerOut?.name ?? e.playerOut ?? involved[1] ?? player;
       out.push({
         entry_type: 'substitution',
         minute,
@@ -400,7 +405,7 @@ async function fotmobDetailsAction(admin: any, body: Json) {
   if (!body.apply) return preview;
 
   if (toAdd.length) {
-    const rows = toAdd.map((e) => ({ ...e, match_id: match.id }));
+    const rows = toAdd.map(({ player_name: _p, ...e }) => ({ ...e, match_id: match.id }));
     const { error: insErr } = await admin.from('live_blog_entries').insert(rows);
     if (insErr) throw new Error(`Insertion événements: ${insErr.message}`);
   }
