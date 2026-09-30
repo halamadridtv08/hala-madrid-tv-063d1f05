@@ -483,7 +483,7 @@ async function fotmobDetailsAction(admin: any, body: Json) {
     if (a.player_name && (`${b.title ?? ''} ${b.content ?? ''}`).toLowerCase().includes(String(a.player_name).toLowerCase())) return true;
     if (a.entry_type === 'substitution' && a.player_out_name &&
       (`${b.title ?? ''} ${b.content ?? ''}`).toLowerCase().includes(String(a.player_out_name).toLowerCase())) return true;
-    return !a.player_id && !b.player_id && !a.player_name;
+    return false;
   };
   const toAdd = events.filter((e) => !(existing ?? []).some((row: Json) => sameEvent(e, row)));
   const enriched = events.filter((e) => (existing ?? []).some((row: Json) => sameEvent(e, row) &&
