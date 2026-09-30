@@ -402,8 +402,7 @@ function fotmobMatchDetails(detail: Json, match: Json): Json {
   const keys: Array<[string, string[]]> = [
     ['total_shots', ['shots', 'total']], ['ShotsOnTarget', ['shots', 'on_target']],
     ['ShotsOffTarget', ['shots', 'off_target']], ['keeper_saves', ['goalkeeper_saves']],
-    ['matchstats.headers.tackles', ['tackles']], ['passes', ['passes', 'total']],
-    ['accurate_passes', ['passes', 'completed']], ['fouls', ['fouls']],
+    ['matchstats.headers.tackles', ['tackles']], ['fouls', ['fouls']],
   ];
   for (const [source, target] of keys) field(target, ...values(source));
   for (const [source, part] of [['passes', 'total'], ['accurate_passes', 'completed']] as const) {
