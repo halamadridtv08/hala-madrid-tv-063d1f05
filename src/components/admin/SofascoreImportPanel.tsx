@@ -151,10 +151,10 @@ export const SofascoreImportPanel = () => {
       });
       setFotmobPreview(data);
       toast({
-        title: apply ? 'Événements importés' : 'Aperçu FotMob',
+        title: apply ? 'Match mis à jour' : 'Aperçu FotMob',
         description: apply
-          ? `${data.inserted} événement(s) ajouté(s).`
-          : `${data.events_to_add?.length ?? 0} événement(s) manquant(s) détecté(s).`,
+          ? `${data.inserted} événement(s) ajouté(s), ${data.events_to_enrich ?? 0} complété(s).`
+          : `${data.events_to_add?.length ?? 0} événement(s) à ajouter, ${data.events_to_enrich ?? 0} à compléter.`,
       });
     } catch (e) {
       toast({ title: 'Échec', description: (e as Error).message, variant: 'destructive' });
@@ -324,7 +324,7 @@ export const SofascoreImportPanel = () => {
               />
               <p className="text-xs text-muted-foreground">
                 Ouvrez le match sur fotmob.com et copiez l'URL. Le match n'est jamais recréé :
-                seuls les événements manquants (buts, cartons, changements) sont ajoutés.
+                le score, les statistiques et les détails manquants sont complétés sans effacer vos saisies.
               </p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -333,7 +333,7 @@ export const SofascoreImportPanel = () => {
                 Aperçu
               </Button>
               <Button onClick={() => runFotmob(true)} disabled={fotmobLoading || !fotmobPreview}>
-                Ajouter les événements manquants
+                Compléter le match
               </Button>
             </div>
             {fotmobPreview && (
@@ -344,6 +344,9 @@ export const SofascoreImportPanel = () => {
                 <p className="text-muted-foreground">
                   {fotmobPreview.events_found} événement(s) trouvé(s), {fotmobPreview.events_existing} déjà présent(s),{' '}
                   {fotmobPreview.events_to_add?.length ?? 0} à ajouter.
+                </p>
+                <p className="text-muted-foreground">
+                  {fotmobPreview.events_to_enrich ?? 0} événement(s) à compléter · {fotmobPreview.statistics_found ?? 0} statistique(s) disponibles.
                 </p>
                 {fotmobPreview.events_to_add?.map((e: any, i: number) => (
                   <div key={i} className="rounded border p-2">

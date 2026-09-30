@@ -321,6 +321,7 @@ function mapFotMobEvents(detail: Json | undefined, homeTeam: string, awayTeam: s
         minute,
         team_side: side,
         player_name: player,
+        assist_name: assist,
         title: isOwn ? `But contre son camp (${player ?? '?'})` : side === (isRM(homeTeam) ? 'home' : 'away') && isRM(side === 'home' ? homeTeam : awayTeam)
           ? `BUUUT du Real Madrid ! — ${player ?? ''}`.trim()
           : `But de ${side === 'home' ? homeTeam : awayTeam} — ${player ?? ''}`.trim(),
@@ -332,7 +333,7 @@ function mapFotMobEvents(detail: Json | undefined, homeTeam: string, awayTeam: s
       const isSecondYellow = type.includes('second') || card.includes('second') || card.includes('yellowred');
       const isRed = !isSecondYellow && (type.includes('red') || card.includes('red'));
       out.push({
-        entry_type: isSecondYellow ? 'second_yellow' : isRed ? 'red_card' : 'yellow_card',
+        entry_type: isSecondYellow ? 'second_yellow_card' : isRed ? 'red_card' : 'yellow_card',
         minute,
         team_side: side,
         player_name: player,
@@ -341,13 +342,19 @@ function mapFotMobEvents(detail: Json | undefined, homeTeam: string, awayTeam: s
         is_important: isRed || isSecondYellow,
       });
     } else if (type.includes('sub')) {
-      const playerIn = e.playerIn?.name ?? e.playerIn ?? involved[0] ?? null;
-      const playerOut = e.playerOut?.name ?? e.playerOut ?? involved[1] ?? player;
+      const starters = (side === 'home' ? detail?.lineups?.home : detail?.lineups?.away)?.starters ?? [];
+      const firstStarts = starters.some((p: Json) => normalizePlayer(p.name) === normalizePlayer(involved[0] ?? ''));
+      const secondStarts = starters.some((p: Json) => normalizePlayer(p.name) === normalizePlayer(involved[1] ?? ''));
+      // FotMob's playersInvolved order varies: use the lineup when it identifies who left.
+      const firstIsOut = firstStarts && !secondStarts;
+      const playerIn = e.playerIn?.name ?? e.playerIn ?? involved[firstIsOut ? 1 : 0] ?? null;
+      const playerOut = e.playerOut?.name ?? e.playerOut ?? involved[firstIsOut ? 0 : 1] ?? player;
       out.push({
         entry_type: 'substitution',
         minute,
         team_side: side,
         player_name: playerIn ?? playerOut,
+        player_out_name: playerOut,
         title: `Changement — ${side === 'home' ? homeTeam : awayTeam}`,
         content: [playerIn ? `Entrée : ${playerIn}` : null, playerOut ? `Sortie : ${playerOut}` : null].filter(Boolean).join(' · '),
         is_important: false,
@@ -369,6 +376,91 @@ function similarName(a: string, b: string): boolean {
   return x === y || x.includes(y) || y.includes(x);
 }
 
+// Convert supplier values into the site's own match_details format. Never replace
+// editorial fields already present on the match.
+function fotmobMatchDetails(detail: Json, match: Json): Json {
+  const homeKey = match.home_team.toLowerCase().replace(/\s+/g, '_');
+  const awayKey = match.away_team.toLowerCase().replace(/\s+/g, '_');
+  const existing: Json = match.match_details ?? {};
+  const statistics: Json = { ...(existing.statistics ?? {}) };
+  const field = (path: string[], home: number | null, away: number | null) => {
+    if (home === null && away === null) return;
+    let node = statistics;
+    for (const part of path.slice(0, -1)) node = node[part] ??= {};
+    const leaf = path[path.length - 1];
+    const old = node[leaf] ?? {};
+    node[leaf] = { ...old, ...(home !== null && old[homeKey] == null ? { [homeKey]: home } : {}),
+      ...(away !== null && old[awayKey] == null ? { [awayKey]: away } : {}) };
+  };
+  const stats = Array.isArray(detail.teamStats) ? detail.teamStats : [];
+  const get = (key: string) => stats.find((s: Json) => s.key === key && s.home != null && s.away != null);
+  const values = (key: string): [number | null, number | null] => {
+    const row = get(key);
+    const parse = (v: unknown) => v == null ? null : Number.parseInt(String(v), 10);
+    return row ? [parse(row.home), parse(row.away)] : [null, null];
+  };
+  const keys: Array<[string, string[]]> = [
+    ['total_shots', ['shots', 'total']], ['ShotsOnTarget', ['shots', 'on_target']],
+    ['ShotsOffTarget', ['shots', 'off_target']], ['keeper_saves', ['goalkeeper_saves']],
+    ['matchstats.headers.tackles', ['tackles']], ['fouls', ['fouls']],
+  ];
+  for (const [source, target] of keys) field(target, ...values(source));
+  for (const [source, part] of [['passes', 'total'], ['accurate_passes', 'completed']] as const) {
+    const [home, away] = values(source);
+    const passes = statistics.passes ?? {};
+    if (home !== null) passes[homeKey] = { ...(passes[homeKey] ?? {}), [part]: passes[homeKey]?.[part] ?? home };
+    if (away !== null) passes[awayKey] = { ...(passes[awayKey] ?? {}), [part]: passes[awayKey]?.[part] ?? away };
+    statistics.passes = passes;
+  }
+  const possession = { ...(existing.possession ?? {}) };
+  const [homePossession, awayPossession] = values('BallPossesion');
+  if (homePossession !== null && possession[homeKey] == null) possession[homeKey] = `${homePossession}%`;
+  if (awayPossession !== null && possession[awayKey] == null) possession[awayKey] = `${awayPossession}%`;
+
+  const sourcedGoals = (Array.isArray(detail.events) ? detail.events : [])
+    .filter((e: Json) => String(e.type).toLowerCase() === 'goal')
+    .map((e: Json) => ({ minute: num(e.minute), scorer: String(e.playerName ?? '').trim(),
+      assist: String(e.assist ?? '').replace(/^assist by\s+/i, '').trim(),
+      team: e.isHome ? homeKey : awayKey,
+      type: String(e.goalType ?? '').toLowerCase() === 'penalty' ? 'penalty' :
+        String(e.goalType ?? '').toLowerCase().includes('own') ? 'own_goal' : 'goal' }))
+    .filter((g: Json) => g.scorer);
+  const oldGoals: Json[] = Array.isArray(existing.goals) ? existing.goals : [];
+  const goals = [...oldGoals];
+  for (const goal of sourcedGoals) {
+    if (!goals.some((g) => g.minute === goal.minute && similarName(String(g.scorer ?? g.player ?? ''), goal.scorer))) goals.push(goal);
+  }
+  return { ...existing, statistics, possession, goals };
+}
+
+const normalizePlayer = (s: string) => s.toLowerCase().normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+
+async function linkFotmobPlayers(admin: any, match: Json, events: Json[]): Promise<Json[]> {
+  const [squadResult, opposingResult] = await Promise.all([
+    admin.from('players').select('id,name'),
+    match.opposing_team_id
+      ? admin.from('opposing_players').select('id,name').eq('team_id', match.opposing_team_id)
+      : Promise.resolve({ data: [] }),
+  ]);
+  const resolve = (name: unknown, side: string) => {
+    if (typeof name !== 'string' || !name.trim()) return null;
+    const roster = isRM(side === 'home' ? match.home_team : match.away_team)
+      ? squadResult.data ?? [] : opposingResult.data ?? [];
+    const normalized = normalizePlayer(name);
+    const exact = roster.filter((p: Json) => normalizePlayer(p.name) === normalized);
+    if (exact.length === 1) return exact[0].id;
+    const surname = normalized.split(' ').at(-1);
+    const candidates = roster.filter((p: Json) => normalizePlayer(p.name).split(' ').at(-1) === surname);
+    return candidates.length === 1 ? candidates[0].id : null;
+  };
+  return events.map((e) => ({ ...e,
+    player_id: resolve(e.player_name, e.team_side),
+    ...(e.assist_name ? { assist_player_id: resolve(e.assist_name, e.team_side) } : {}),
+    ...(e.player_out_name ? { substituted_player_id: resolve(e.player_out_name, e.team_side) } : {}),
+  }));
+}
+
 async function fotmobDetailsAction(admin: any, body: Json) {
   const matchId = String(body.matchId ?? '');
   if (!matchId) throw new Error('matchId requis');
@@ -382,12 +474,21 @@ async function fotmobDetailsAction(admin: any, body: Json) {
   const detail = details[0];
   if (!detail) throw new Error('Match introuvable sur FotMob');
 
-  const events = mapFotMobEvents(detail, match.home_team, match.away_team);
+  const events = await linkFotmobPlayers(admin, match, mapFotMobEvents(detail, match.home_team, match.away_team));
   const { data: existing } = await admin.from('live_blog_entries')
-    .select('minute, entry_type, team_side').eq('match_id', match.id);
-  const key = (e: Json) => `${e.entry_type}|${e.minute ?? -1}|${e.team_side ?? ''}`;
-  const have = new Set((existing ?? []).map(key));
-  const toAdd = events.filter((e) => !have.has(key(e)));
+    .select('id, minute, entry_type, team_side, player_id, assist_player_id, substituted_player_id, title, content').eq('match_id', match.id);
+  const sameEvent = (a: Json, b: Json) => {
+    if (a.team_side !== b.team_side || a.entry_type !== b.entry_type || Math.abs((a.minute ?? -100) - (b.minute ?? -200)) > 1) return false;
+    if (a.player_id && b.player_id && a.player_id === b.player_id) return true;
+    if (a.player_name && (`${b.title ?? ''} ${b.content ?? ''}`).toLowerCase().includes(String(a.player_name).toLowerCase())) return true;
+    if (a.entry_type === 'substitution' && a.player_out_name &&
+      (`${b.title ?? ''} ${b.content ?? ''}`).toLowerCase().includes(String(a.player_out_name).toLowerCase())) return true;
+    return false;
+  };
+  const toAdd = events.filter((e) => !(existing ?? []).some((row: Json) => sameEvent(e, row)));
+  const enriched = events.filter((e) => (existing ?? []).some((row: Json) => sameEvent(e, row) &&
+    ((!row.player_id && e.player_id) || (!row.assist_player_id && e.assist_player_id) ||
+     (!row.substituted_player_id && e.substituted_player_id))));
 
   const homeScore = num(detail.homeTeam?.score ?? detail.homeScore);
   const awayScore = num(detail.awayTeam?.score ?? detail.awayScore);
@@ -401,20 +502,32 @@ async function fotmobDetailsAction(admin: any, body: Json) {
     events_found: events.length,
     events_existing: events.length - toAdd.length,
     events_to_add: toAdd,
+    events_to_enrich: enriched.length,
+    statistics_found: Array.isArray(detail.teamStats) ? detail.teamStats.filter((s: Json) => s.home != null).length : 0,
   };
   if (!body.apply) return preview;
 
   if (toAdd.length) {
-    const rows = toAdd.map(({ player_name: _p, ...e }) => ({ ...e, match_id: match.id }));
+    const rows = toAdd.map(({ player_name: _p, assist_name: _a, player_out_name: _o, ...e }) => ({ ...e, match_id: match.id }));
     const { error: insErr } = await admin.from('live_blog_entries').insert(rows);
     if (insErr) throw new Error(`Insertion événements: ${insErr.message}`);
   }
-  await admin.from('matches').update({
+  for (const e of enriched) {
+    const row = (existing ?? []).find((r: Json) => sameEvent(e, r));
+    if (!row) continue;
+    const update: Json = {};
+    if (!row.player_id && e.player_id) update.player_id = e.player_id;
+    if (!row.assist_player_id && e.assist_player_id) update.assist_player_id = e.assist_player_id;
+    if (!row.substituted_player_id && e.substituted_player_id) update.substituted_player_id = e.substituted_player_id;
+    if (Object.keys(update).length) await admin.from('live_blog_entries').update(update).eq('id', row.id);
+  }
+  const { error: updateError } = await admin.from('matches').update({
     status: status === 'upcoming' ? match.status : status,
     home_score: homeScore ?? match.home_score,
     away_score: awayScore ?? match.away_score,
-    match_details: { ...(match.match_details ?? {}), fotmob_match_id: fotmobId, fotmob_url: detail.matchUrl ?? null, fotmob_synced_at: new Date().toISOString() },
+    match_details: { ...fotmobMatchDetails(detail, match), fotmob_match_id: fotmobId, fotmob_url: detail.matchUrl ?? null, fotmob_synced_at: new Date().toISOString() },
   }).eq('id', match.id);
+  if (updateError) throw new Error(`Mise à jour match: ${updateError.message}`);
 
   return { ...preview, applied: true, inserted: toAdd.length };
 }

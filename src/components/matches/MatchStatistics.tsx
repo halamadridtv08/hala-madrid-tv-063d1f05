@@ -23,6 +23,8 @@ export const MatchStatistics = ({ matchDetails, homeTeam, awayTeam }: MatchStati
     || matchDetails.raw?.statistics 
     || matchDetails.raw 
     || matchDetails;
+  const hasStats = Boolean(statistics.shots || statistics.passes || statistics.tackles || statistics.fouls || matchDetails.possession);
+  if (!hasStats) return <p className="py-10 text-center text-muted-foreground">Statistiques indisponibles pour ce match</p>;
     
   const possession = matchDetails.possession 
     || matchDetails.statistics?.possession

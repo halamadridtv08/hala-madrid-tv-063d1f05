@@ -197,8 +197,8 @@ const LiveBlog = () => {
   useEffect(() => {
     const fetchPlayers = async () => {
       const [{ data: squad }, { data: opponents }] = await Promise.all([
-        supabase.from('players').select('id, name, jersey_number, position, image_url'),
-        supabase.from('opposing_players').select('id, name, jersey_number, position'),
+        supabase.from('players').select('id, name, jersey_number, position, image_url, profile_image_url'),
+        supabase.from('opposing_players').select('id, name, jersey_number, position, photo_url'),
       ]);
 
       const map: Record<string, LiveBlogPlayer> = {};
@@ -208,7 +208,7 @@ const LiveBlog = () => {
           name: p.name,
           jersey_number: p.jersey_number,
           position: p.position,
-          image_url: p.image_url,
+          image_url: p.profile_image_url || p.image_url,
         };
       });
       (opponents || []).forEach((p: any) => {
@@ -217,7 +217,7 @@ const LiveBlog = () => {
           name: p.name,
           jersey_number: p.jersey_number,
           position: p.position,
-          image_url: null,
+          image_url: p.photo_url,
         };
       });
       setPlayers(map);

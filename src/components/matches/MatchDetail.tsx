@@ -320,7 +320,11 @@ export const MatchDetail = ({
           </div>
           
           <div className="text-center">
-            <div className="text-3xl sm:text-5xl font-bold text-madrid-gold">VS</div>
+            <div className="text-3xl sm:text-5xl font-bold text-madrid-gold tabular-nums">
+              {match.homeTeam.score != null && match.awayTeam.score != null
+                ? `${match.homeTeam.score} - ${match.awayTeam.score}`
+                : 'VS'}
+            </div>
           </div>
           
           <div className="flex flex-col items-center">
