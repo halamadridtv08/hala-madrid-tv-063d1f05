@@ -67,7 +67,7 @@ const Matches = () => {
           team: goal.team || '',
           minute: goal.minute || 0,
           type: goal.type || goal.goal_type || null // Ajouter le type de but
-        }));
+        })).filter((goal: { name: string }) => goal.name);
       }
     }
     return {
@@ -89,6 +89,7 @@ const Matches = () => {
       tickets: match.home_team === 'Real Madrid',
       scorers: scorers,
       match_details: match.match_details,
+      status: match.status,
       stats: {},
       timeline: []
     };
