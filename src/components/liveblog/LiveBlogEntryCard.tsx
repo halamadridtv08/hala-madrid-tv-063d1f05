@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowRightCircle, ArrowLeftCircle } from 'lucide-react';
+import { ArrowRightCircle, ArrowLeftCircle, ArrowRightLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EntryReactions } from './EntryReactions';
 import type { LiveBlogEntry } from '@/hooks/useLiveBlog';
@@ -51,6 +51,7 @@ const ENTRY_LABELS: Record<string, string> = {
 const isGoal = (type: string) => ['goal', 'penalty_goal', 'free_kick_goal', 'own_goal'].includes(type);
 
 const CardIcon = ({ type }: { type: string }) => {
+  if (type === 'substitution') return <ArrowRightLeft className="h-5 w-5 text-primary" aria-label="Remplacement" />;
   if (type === 'second_yellow_card') {
     return (
       <span className="relative inline-block h-5 w-4 align-middle">
