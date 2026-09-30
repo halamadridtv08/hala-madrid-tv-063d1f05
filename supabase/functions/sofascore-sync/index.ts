@@ -321,6 +321,7 @@ function mapFotMobEvents(detail: Json | undefined, homeTeam: string, awayTeam: s
         minute,
         team_side: side,
         player_name: player,
+        assist_name: assist,
         title: isOwn ? `But contre son camp (${player ?? '?'})` : side === (isRM(homeTeam) ? 'home' : 'away') && isRM(side === 'home' ? homeTeam : awayTeam)
           ? `BUUUT du Real Madrid ! — ${player ?? ''}`.trim()
           : `But de ${side === 'home' ? homeTeam : awayTeam} — ${player ?? ''}`.trim(),
@@ -332,7 +333,7 @@ function mapFotMobEvents(detail: Json | undefined, homeTeam: string, awayTeam: s
       const isSecondYellow = type.includes('second') || card.includes('second') || card.includes('yellowred');
       const isRed = !isSecondYellow && (type.includes('red') || card.includes('red'));
       out.push({
-        entry_type: isSecondYellow ? 'second_yellow' : isRed ? 'red_card' : 'yellow_card',
+        entry_type: isSecondYellow ? 'second_yellow_card' : isRed ? 'red_card' : 'yellow_card',
         minute,
         team_side: side,
         player_name: player,
@@ -348,6 +349,7 @@ function mapFotMobEvents(detail: Json | undefined, homeTeam: string, awayTeam: s
         minute,
         team_side: side,
         player_name: playerIn ?? playerOut,
+        player_out_name: playerOut,
         title: `Changement — ${side === 'home' ? homeTeam : awayTeam}`,
         content: [playerIn ? `Entrée : ${playerIn}` : null, playerOut ? `Sortie : ${playerOut}` : null].filter(Boolean).join(' · '),
         is_important: false,
@@ -466,8 +468,10 @@ async function fotmobDetailsAction(admin: any, body: Json) {
     .select('id, minute, entry_type, team_side, player_id, assist_player_id, substituted_player_id, title, content').eq('match_id', match.id);
   const sameEvent = (a: Json, b: Json) => {
     if (a.team_side !== b.team_side || a.entry_type !== b.entry_type || Math.abs((a.minute ?? -100) - (b.minute ?? -200)) > 1) return false;
-    if (a.player_id && b.player_id) return a.player_id === b.player_id;
+    if (a.player_id && b.player_id && a.player_id === b.player_id) return true;
     if (a.player_name && (`${b.title ?? ''} ${b.content ?? ''}`).toLowerCase().includes(String(a.player_name).toLowerCase())) return true;
+    if (a.entry_type === 'substitution' && a.player_out_name &&
+      (`${b.title ?? ''} ${b.content ?? ''}`).toLowerCase().includes(String(a.player_out_name).toLowerCase())) return true;
     return !a.player_id && !b.player_id && !a.player_name;
   };
   const toAdd = events.filter((e) => !(existing ?? []).some((row: Json) => sameEvent(e, row)));
