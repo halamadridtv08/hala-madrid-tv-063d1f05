@@ -406,6 +406,13 @@ function fotmobMatchDetails(detail: Json, match: Json): Json {
     ['accurate_passes', ['passes', 'completed']], ['fouls', ['fouls']],
   ];
   for (const [source, target] of keys) field(target, ...values(source));
+  for (const [source, part] of [['passes', 'total'], ['accurate_passes', 'completed']] as const) {
+    const [home, away] = values(source);
+    const passes = statistics.passes ?? {};
+    if (home !== null) passes[homeKey] = { ...(passes[homeKey] ?? {}), [part]: passes[homeKey]?.[part] ?? home };
+    if (away !== null) passes[awayKey] = { ...(passes[awayKey] ?? {}), [part]: passes[awayKey]?.[part] ?? away };
+    statistics.passes = passes;
+  }
   const possession = { ...(existing.possession ?? {}) };
   const [homePossession, awayPossession] = values('BallPossesion');
   if (homePossession !== null && possession[homeKey] == null) possession[homeKey] = `${homePossession}%`;
