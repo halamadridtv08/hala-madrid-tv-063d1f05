@@ -342,8 +342,13 @@ function mapFotMobEvents(detail: Json | undefined, homeTeam: string, awayTeam: s
         is_important: isRed || isSecondYellow,
       });
     } else if (type.includes('sub')) {
-      const playerIn = e.playerIn?.name ?? e.playerIn ?? involved[0] ?? null;
-      const playerOut = e.playerOut?.name ?? e.playerOut ?? involved[1] ?? player;
+      const starters = (side === 'home' ? detail?.lineups?.home : detail?.lineups?.away)?.starters ?? [];
+      const firstStarts = starters.some((p: Json) => normalizePlayer(p.name) === normalizePlayer(involved[0] ?? ''));
+      const secondStarts = starters.some((p: Json) => normalizePlayer(p.name) === normalizePlayer(involved[1] ?? ''));
+      // FotMob's playersInvolved order varies: use the lineup when it identifies who left.
+      const firstIsOut = firstStarts && !secondStarts;
+      const playerIn = e.playerIn?.name ?? e.playerIn ?? involved[firstIsOut ? 1 : 0] ?? null;
+      const playerOut = e.playerOut?.name ?? e.playerOut ?? involved[firstIsOut ? 0 : 1] ?? player;
       out.push({
         entry_type: 'substitution',
         minute,
