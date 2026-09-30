@@ -381,12 +381,11 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
   const GoalEvent = ({ goal, index }: any) => {
     // Déterminer le type de but et l'icône
     const isPenalty = goal.type === 'penalty';
-    const isOwnGoal = goal.type === 'own_goal';
     
     return (
       <EventRow
         key={index}
-        player={goal.scorer}
+        player={goal.scorer || goal.player || ''}
         detail={goal.assist ? formatPlayerName(goal.assist) : null}
         minute={goal.minute}
         icon={isPenalty ? Shield : Goal}
@@ -404,8 +403,8 @@ export const MatchEvents = ({ matchDetails }: MatchEventsProps) => {
     return (
       <div key={index}>
         <EventRow
-          player={sub.in}
-          detail={formatPlayerName(sub.out)}
+          player={sub.in || sub.player_in || ''}
+          detail={formatPlayerName(sub.out || sub.player_out || '')}
           minute={sub.minute}
           icon={ArrowRightLeft}
           iconColor="text-red-500"
