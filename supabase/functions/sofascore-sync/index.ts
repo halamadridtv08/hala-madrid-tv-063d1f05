@@ -373,7 +373,7 @@ function mapFotMobEvents(detail: Json | undefined, homeTeam: string, awayTeam: s
 function similarName(a: string, b: string): boolean {
   const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z ]/g, ' ').trim();
   const x = norm(a), y = norm(b);
-  return x === y || x.includes(y) || y.includes(x);
+  return Boolean(x && y) && (x === y || x.includes(y) || y.includes(x));
 }
 
 // Convert supplier values into the site's own match_details format. Never replace
@@ -420,7 +420,7 @@ function fotmobMatchDetails(detail: Json, match: Json): Json {
   const sourcedGoals = (Array.isArray(detail.events) ? detail.events : [])
     .filter((e: Json) => String(e.type).toLowerCase() === 'goal')
     .map((e: Json) => ({ minute: num(e.minute), scorer: String(e.playerName ?? '').trim(),
-      assist: String(e.assist ?? '').replace(/^assist by\s+/i, '').trim(),
+      assist: String(e.assist?.name ?? e.assist ?? '').replace(/^assist by\s+/i, '').trim(),
       team: e.isHome ? homeKey : awayKey,
       type: String(e.goalType ?? '').toLowerCase() === 'penalty' ? 'penalty' :
         String(e.goalType ?? '').toLowerCase().includes('own') ? 'own_goal' : 'goal' }))
@@ -428,7 +428,8 @@ function fotmobMatchDetails(detail: Json, match: Json): Json {
   const oldGoals: Json[] = Array.isArray(existing.goals) ? existing.goals : [];
   const goals = [...oldGoals];
   for (const goal of sourcedGoals) {
-    if (!goals.some((g) => g.minute === goal.minute && similarName(String(g.scorer ?? g.player ?? ''), goal.scorer))) goals.push(goal);
+    if (!goals.some((g) => Math.abs(Number(g.minute) - Number(goal.minute)) <= 1 &&
+      similarName(String(g.scorer ?? g.player ?? ''), goal.scorer))) goals.push(goal);
   }
   return { ...existing, statistics, possession, goals };
 }
