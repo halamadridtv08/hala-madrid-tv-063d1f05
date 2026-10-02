@@ -229,6 +229,12 @@ const ArticleDetail = () => {
 
   // Use slug for canonical URL
   const articleUrl = `/news/${article.slug || article.id}`;
+  // Sharing platforms cache previews by URL. Change the shared URL when the
+  // cover changes so an old logo preview cannot survive a new article image.
+  const coverVersion = Array.from(`${article.image_url || ''}:${article.updated_at || article.published_at}`)
+    .reduce((hash, char) => ((hash * 31 + char.charCodeAt(0)) >>> 0), 0)
+    .toString(36);
+  const shareUrl = `https://hala-madrid-tv.com${articleUrl}?v=${coverVersion}`;
 
   return <>
       <SEOHead 
@@ -275,7 +281,8 @@ const ArticleDetail = () => {
                   <ShareModal 
                     title={article.title}
                     description={stripHtml(article.description).slice(0, 160)}
-                    url={typeof window !== "undefined" ? window.location.href : undefined}
+                    url={shareUrl}
+                    image={article.image_url || undefined}
                   />
                 </div>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">{article.title}</h1>
