@@ -478,14 +478,60 @@ async function fotmobDetailsAction(admin: any, body: Json) {
   const events = await linkFotmobPlayers(admin, match, mapFotMobEvents(detail, match.home_team, match.away_team));
   const { data: existing } = await admin.from('live_blog_entries')
     .select('id, minute, entry_type, team_side, player_id, assist_player_id, substituted_player_id, title, content').eq('match_id', match.id);
+
+  // Site-native formatting: same titles/content as the admin live-blog modals.
+  const ids = events.flatMap((e) => [e.player_id, e.assist_player_id, e.substituted_player_id]).filter(Boolean);
+  const people: Record<string, Json> = {};
+  if (ids.length) {
+    const [{ data: a }, { data: b }] = await Promise.all([
+      admin.from('players').select('id, name, jersey_number').in('id', ids),
+      admin.from('opposing_players').select('id, name, jersey_number').in('id', ids),
+    ]);
+    for (const p of [...(a ?? []), ...(b ?? [])]) people[p.id] = p;
+  }
+  const label = (id: string | null | undefined, fallback: string | null | undefined) => {
+    const p = id ? people[id] : null;
+    const name = p?.name ?? fallback ?? '?';
+    return p?.jersey_number ? `${name} (#${p.jersey_number})` : name;
+  };
+  const teamOf = (side: string) => (side === 'home' ? match.home_team : match.away_team);
+  for (const e of events) {
+    const who = label(e.player_id, e.player_name);
+    if (e.entry_type === 'goal' || e.entry_type === 'penalty_goal') {
+      const assist = e.assist_name ? label(e.assist_player_id, e.assist_name) : null;
+      e.title = `⚽ BUT! ${who} (${teamOf(e.team_side)})${e.entry_type === 'penalty_goal' ? ' • Penalty' : ''}`;
+      e.content = `${who} trouve la faille pour ${teamOf(e.team_side)}!${assist ? ` Passe décisive : ${assist}.` : ''}`;
+    } else if (e.entry_type === 'substitution') {
+      const out = label(e.substituted_player_id, e.player_out_name);
+      e.title = `🔄 Changement — ${who}`;
+      e.content = `🔄 Remplacement : ${out} ↔ ${who}`;
+    } else if (e.entry_type === 'yellow_card') {
+      e.title = `🟨 Carton jaune — ${who}`; e.content = who;
+    } else if (e.entry_type === 'red_card' || e.entry_type === 'second_yellow_card') {
+      e.title = `🟥 Carton rouge — ${who}`; e.content = who;
+    } else if (e.entry_type === 'penalty_missed') {
+      e.title = `❌ Penalty manqué — ${who}`; e.content = who;
+    }
+  }
+
+  const family = (t: string) => (['goal', 'penalty_goal', 'penalty'].includes(t) ? 'goal'
+    : ['red_card', 'second_yellow_card'].includes(t) ? 'red' : t);
+  const surname = (n: string | null | undefined) => (n ? normalizePlayer(n).split(' ').at(-1) ?? '' : '');
+  const text = (b: Json) => normalizePlayer(`${b.title ?? ''} ${b.content ?? ''}`);
   const sameEvent = (a: Json, b: Json) => {
-    if (a.team_side !== b.team_side || a.entry_type !== b.entry_type || Math.abs((a.minute ?? -100) - (b.minute ?? -200)) > 1) return false;
-    if (a.player_id && b.player_id && a.player_id === b.player_id) return true;
-    if (a.player_name && (`${b.title ?? ''} ${b.content ?? ''}`).toLowerCase().includes(String(a.player_name).toLowerCase())) return true;
-    if (a.entry_type === 'substitution' && a.player_out_name &&
-      (`${b.title ?? ''} ${b.content ?? ''}`).toLowerCase().includes(String(a.player_out_name).toLowerCase())) return true;
+    if (family(a.entry_type) !== family(b.entry_type)) return false;
+    if (a.team_side && b.team_side && a.team_side !== b.team_side) return false;
+    if (Math.abs((a.minute ?? -100) - (b.minute ?? -200)) > 3) return false;
+    if (a.player_id && (a.player_id === b.player_id || a.player_id === b.substituted_player_id)) return true;
+    if (a.substituted_player_id && (a.substituted_player_id === b.substituted_player_id || a.substituted_player_id === b.player_id)) return true;
+    const s1 = surname(a.player_name), s2 = surname(a.player_out_name);
+    if (s1.length > 2 && text(b).includes(s1)) return true;
+    if (s2.length > 2 && text(b).includes(s2)) return true;
     return false;
   };
+  // Chronological timestamp so imported entries slot in at their minute, not on top.
+  const kickoff = new Date(match.match_date).getTime();
+  const at = (m: number | null) => new Date(kickoff + ((m ?? 0) + ((m ?? 0) > 45 ? 15 : 0)) * 60000 + 30000).toISOString();
   const toAdd = events.filter((e) => !(existing ?? []).some((row: Json) => sameEvent(e, row)));
   const enriched = events.filter((e) => (existing ?? []).some((row: Json) => sameEvent(e, row) &&
     ((!row.player_id && e.player_id) || (!row.assist_player_id && e.assist_player_id) ||
@@ -509,7 +555,7 @@ async function fotmobDetailsAction(admin: any, body: Json) {
   if (!body.apply) return preview;
 
   if (toAdd.length) {
-    const rows = toAdd.map(({ player_name: _p, assist_name: _a, player_out_name: _o, ...e }) => ({ ...e, match_id: match.id }));
+    const rows = toAdd.map(({ player_name: _p, assist_name: _a, player_out_name: _o, ...e }) => ({ ...e, match_id: match.id, created_at: at(e.minute) }));
     const { error: insErr } = await admin.from('live_blog_entries').insert(rows);
     if (insErr) throw new Error(`Insertion événements: ${insErr.message}`);
   }
