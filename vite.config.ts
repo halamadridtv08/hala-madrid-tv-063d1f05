@@ -161,10 +161,14 @@ function articleSEOPrerender() {
 
           html = html.replace(/<\/head>/i, `${seoBlock}\n  </head>`);
 
-          const outDir = resolve(distDir, "news", slug);
-          mkdirSync(outDir, { recursive: true });
-          writeFileSync(resolve(outDir, "index.html"), html, "utf-8");
-          count++;
+          // Older shared links and RSS entries use the article UUID instead
+          // of its slug; both must provide the same thumbnail to crawlers.
+          for (const route of new Set([slug, article.id].filter(Boolean))) {
+            const outDir = resolve(distDir, "news", route);
+            mkdirSync(outDir, { recursive: true });
+            writeFileSync(resolve(outDir, "index.html"), html, "utf-8");
+            count++;
+          }
         }
         console.log(`[article-seo-prerender] ✓ ${count} pages d'articles prérendues`);
       } catch (err) {
