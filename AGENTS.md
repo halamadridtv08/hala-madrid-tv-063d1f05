@@ -1,0 +1,1 @@
+- Share article links using the canonical public domain and a stable cover-derived URL version, because social platforms cache link previews by URL.

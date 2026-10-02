@@ -21,3 +21,4 @@
 - [x] Enrichir les actions express du centre de match et ajouter les buts sur coup franc
 - [x] Rendre toute la page Analytics administrable sur téléphone sans débordement horizontal
 - [ ] Vérifier le centre de match et les cinq vues Analytics sur mobile, tablette et ordinateur
+- [x] Partager les articles avec une URL canonique actualisée lorsque leur miniature change
