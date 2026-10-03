@@ -505,6 +505,10 @@ export type Database = {
           content: string
           description: string
           featured: boolean | null
+          focal_desktop_x: number
+          focal_desktop_y: number
+          focal_mobile_x: number
+          focal_mobile_y: number
           id: string
           image_url: string | null
           is_published: boolean | null
@@ -517,6 +521,8 @@ export type Database = {
           updated_at: string | null
           video_url: string | null
           view_count: number | null
+          zoom_desktop: number
+          zoom_mobile: number
         }
         Insert: {
           author_id: string
@@ -525,6 +531,10 @@ export type Database = {
           content: string
           description: string
           featured?: boolean | null
+          focal_desktop_x?: number
+          focal_desktop_y?: number
+          focal_mobile_x?: number
+          focal_mobile_y?: number
           id?: string
           image_url?: string | null
           is_published?: boolean | null
@@ -537,6 +547,8 @@ export type Database = {
           updated_at?: string | null
           video_url?: string | null
           view_count?: number | null
+          zoom_desktop?: number
+          zoom_mobile?: number
         }
         Update: {
           author_id?: string
@@ -545,6 +557,10 @@ export type Database = {
           content?: string
           description?: string
           featured?: boolean | null
+          focal_desktop_x?: number
+          focal_desktop_y?: number
+          focal_mobile_x?: number
+          focal_mobile_y?: number
           id?: string
           image_url?: string | null
           is_published?: boolean | null
@@ -557,6 +573,8 @@ export type Database = {
           updated_at?: string | null
           video_url?: string | null
           view_count?: number | null
+          zoom_desktop?: number
+          zoom_mobile?: number
         }
         Relationships: []
       }

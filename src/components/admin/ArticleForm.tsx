@@ -1,4 +1,6 @@
 import React, { useState, useRef } from "react";
+import { FocalPointEditor } from "./FocalPointEditor";
+import { FocalSettings, DEFAULT_FOCAL, pickFocal } from "@/types/Focal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -58,6 +60,22 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
   const fileInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
+  // Cadrage (point focal + zoom) de l'image principale
+  const [focal, setFocal] = useState<FocalSettings>(pickFocal(article as any));
+  const [showFocal, setShowFocal] = useState(false);
+  const [focalSaving, setFocalSaving] = useState(false);
+  const saveFocal = async (v: FocalSettings) => {
+    if (!article?.id) {
+      toast.success("Cadrage prêt : il sera enregistré avec l'article");
+      return;
+    }
+    setFocalSaving(true);
+    const { error } = await supabase.from('articles').update(v as any).eq('id', article.id);
+    setFocalSaving(false);
+    if (error) toast.error("Impossible d'enregistrer le cadrage");
+    else toast.success("Cadrage enregistré");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -71,6 +89,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
     try {
       const dataToSubmit: any = {
         ...formData,
+        ...focal,
         author_id: user.id,
         scheduled_at: formData.scheduled_at ? new Date(formData.scheduled_at).toISOString() : null,
       };
@@ -167,6 +186,9 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
 
       if (cropTarget === 'image') {
         setFormData({ ...formData, image_url: result.url || '' });
+        // Nouvelle image : cadrage réinitialisé et module ouvert automatiquement
+        setFocal({ ...DEFAULT_FOCAL });
+        setShowFocal(true);
       } else {
         setFormData({ ...formData, thumbnail_url: result.url || '' });
       }
@@ -343,6 +365,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
                           className="w-full h-full object-cover"
                         />
                       </div>
+                      <div className="flex flex-wrap gap-2">
                       <Button 
                         type="button" 
                         variant="secondary"
@@ -356,6 +379,19 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
                         <Crop className="h-4 w-4 mr-2" />
                         Recadrer pour positionner le visage
                       </Button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setShowFocal((v) => !v)}>
+                        {showFocal ? "Masquer le cadrage" : "Cadrage de l'image"}
+                      </Button>
+                      </div>
+                      {showFocal && (
+                        <FocalPointEditor
+                          imageUrl={formData.image_url}
+                          value={focal}
+                          onChange={setFocal}
+                          saving={focalSaving}
+                          onSave={saveFocal}
+                        />
+                      )}
                     </div>
                   )}
                 </div>
