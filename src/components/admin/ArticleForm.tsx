@@ -1,4 +1,6 @@
 import React, { useState, useRef } from "react";
+import { FocalPointEditor } from "./FocalPointEditor";
+import { FocalSettings, DEFAULT_FOCAL, pickFocal } from "@/types/Focal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
