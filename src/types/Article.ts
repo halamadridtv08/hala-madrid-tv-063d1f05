@@ -1,5 +1,6 @@
+import { FocalSettings } from "@/types/Focal";
 
-export interface Article {
+export interface Article extends Partial<FocalSettings> {
   id: string;
   slug: string;
   title: string;

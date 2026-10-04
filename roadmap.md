@@ -22,3 +22,4 @@
 - [x] Rendre toute la page Analytics administrable sur téléphone sans débordement horizontal
 - [ ] Vérifier le centre de match et les cinq vues Analytics sur mobile, tablette et ordinateur
 - [x] Partager les articles avec une URL canonique actualisée lorsque leur miniature change
+- [x] Appliquer le cadrage mobile et ordinateur aux images d’articles de l’accueil, du diaporama et des bannières

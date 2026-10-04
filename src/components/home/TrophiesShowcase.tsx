@@ -8,6 +8,7 @@ import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carouse
 import { Link } from "react-router-dom";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { stripHtml } from "@/utils/stripHtml";
+import { FocalImage } from "@/components/common/FocalImage";
 
 export const TrophiesShowcase = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -73,11 +74,13 @@ export const TrophiesShowcase = () => {
           <div className="relative w-full h-[300px] md:h-[500px] lg:h-[700px] rounded-2xl overflow-hidden group order-1 lg:order-1">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#2b003e]/40 z-10" />
             
-            <img 
+            <FocalImage
               key={mainArticle.id} 
               src={mainArticle.image_url || "/placeholder.svg"} 
               alt={mainArticle.title} 
-              className={`w-full h-full object-cover transform group-hover:scale-105 transition-all duration-1000 ${
+              focal={mainArticle}
+              wrapperClassName="absolute inset-0"
+              className={`transform group-hover:scale-105 transition-all duration-1000 ${
                 isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
               }`} 
             />
@@ -121,7 +124,7 @@ export const TrophiesShowcase = () => {
                     <Link to={`/news/${(article as any).slug || article.id}`}>
                       <Card className="group relative h-[300px] md:h-[400px] overflow-hidden bg-black/40 backdrop-blur-sm border-white/10 rounded-2xl hover:shadow-2xl hover:shadow-[#FFD700]/20 transition-all duration-500 hover:-translate-y-2 hover:border-[#FFD700]/30">
                         <div className="absolute inset-0">
-                          <img src={article.image_url || "/placeholder.svg"} alt={article.title} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" />
+                          <FocalImage src={article.image_url || "/placeholder.svg"} alt={article.title} focal={article} wrapperClassName="h-full w-full" className="transform group-hover:scale-110 transition-transform duration-700" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
                         </div>
 

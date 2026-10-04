@@ -60,7 +60,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
   const fileInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
-  // Cadrage (point focal + zoom) de l'image principale
+  // Cadrage (point focal + zoom) des images d'article affichées sur l'accueil
   const [focal, setFocal] = useState<FocalSettings>(pickFocal(article as any));
   const [showFocal, setShowFocal] = useState(false);
   const [focalSaving, setFocalSaving] = useState(false);
@@ -380,7 +380,7 @@ export const ArticleForm = ({ article, onSuccess, onCancel, defaultCategory }: A
                         Recadrer pour positionner le visage
                       </Button>
                       <Button type="button" variant="outline" size="sm" onClick={() => setShowFocal((v) => !v)}>
-                        {showFocal ? "Masquer le cadrage" : "Cadrage de l'image"}
+                        {showFocal ? "Masquer les aperçus" : "Cadrage accueil"}
                       </Button>
                       </div>
                       {showFocal && (
