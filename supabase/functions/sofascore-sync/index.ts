@@ -431,7 +431,28 @@ function fotmobMatchDetails(detail: Json, match: Json): Json {
     if (!goals.some((g) => Math.abs(Number(g.minute) - Number(goal.minute)) <= 1 &&
       similarName(String(g.scorer ?? g.player ?? ''), goal.scorer))) goals.push(goal);
   }
-  return { ...existing, statistics, possession, goals };
+  // Site-native event lists used by the « Événements » tab (merged, never replaced).
+  const mapped = mapFotMobEvents(detail, match.home_team, match.away_team);
+  const teamKey = (side: string) => side === 'home' ? homeKey : awayKey;
+  const merge = (old: Json[], items: Json[], nameOf: (x: Json) => string) => {
+    const out = [...old];
+    for (const it of items) {
+      if (!out.some((o) => Math.abs(Number(o.minute) - Number(it.minute)) <= 2 && similarName(nameOf(o), nameOf(it)))) out.push(it);
+    }
+    return out;
+  };
+  const substitutions = merge(Array.isArray(existing.substitutions) ? existing.substitutions : [],
+    mapped.filter((e) => e.entry_type === 'substitution').map((e) => ({
+      minute: e.minute, team: teamKey(e.team_side), in: e.player_name ?? '', out: e.player_out_name ?? '',
+      player_in: e.player_name ?? '', player_out: e.player_out_name ?? '' })),
+    (x) => String(x.in ?? x.player_in ?? ''));
+  const ev: Json = { ...(existing.events ?? {}) };
+  const cardList = (type: string) => mapped.filter((e) => e.entry_type === type && e.player_name)
+    .map((e) => ({ player: e.player_name, minute: e.minute, team: teamKey(e.team_side) }));
+  ev.yellow_cards = merge(Array.isArray(ev.yellow_cards) ? ev.yellow_cards : [], cardList('yellow_card'), (x) => String(x.player ?? ''));
+  ev.red_cards = merge(Array.isArray(ev.red_cards) ? ev.red_cards : [], cardList('red_card'), (x) => String(x.player ?? ''));
+  ev.second_yellow_cards = merge(Array.isArray(ev.second_yellow_cards) ? ev.second_yellow_cards : [], cardList('second_yellow_card'), (x) => String(x.player ?? ''));
+  return { ...existing, statistics, possession, goals, substitutions, events: ev };
 }
 
 const normalizePlayer = (s: string) => s.toLowerCase().normalize('NFD')
@@ -446,8 +467,9 @@ async function linkFotmobPlayers(admin: any, match: Json, events: Json[]): Promi
   ]);
   const resolve = (name: unknown, side: string) => {
     if (typeof name !== 'string' || !name.trim()) return null;
-    const roster = isRM(side === 'home' ? match.home_team : match.away_team)
-      ? squadResult.data ?? [] : opposingResult.data ?? [];
+    // live_blog_entries player columns reference public.players only: never link opponents.
+    if (!isRM(side === 'home' ? match.home_team : match.away_team)) return null;
+    const roster = squadResult.data ?? [];
     const normalized = normalizePlayer(name);
     const exact = roster.filter((p: Json) => normalizePlayer(p.name) === normalized);
     if (exact.length === 1) return exact[0].id;
