@@ -15,8 +15,10 @@ import { format } from 'date-fns';
 import { fr, enUS, es } from 'date-fns/locale';
 import { stripHtml } from '@/utils/stripHtml';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { FocalImage } from '@/components/common/FocalImage';
+import { FocalSettings } from '@/types/Focal';
 
-interface TrendingArticle {
+interface TrendingArticle extends Partial<FocalSettings> {
   id: string;
   title: string;
   category: string;
@@ -37,7 +39,7 @@ export const StickyContent = () => {
         // Fetch most viewed/clicked articles as "trending"
         const { data, error } = await supabase
           .from('articles')
-          .select('id, title, category, published_at, image_url, view_count')
+          .select('id, title, category, published_at, image_url, view_count, focal_mobile_x, focal_mobile_y, zoom_mobile, focal_desktop_x, focal_desktop_y, zoom_desktop')
           .eq('is_published', true)
           .order('view_count', { ascending: false })
           .order('published_at', { ascending: false })
@@ -109,10 +111,11 @@ export const StickyContent = () => {
                 </div>
               </div>
               {article.image_url && (
-                <img 
+                <FocalImage
                   src={article.image_url} 
                   alt=""
-                  className="w-16 h-12 object-cover rounded flex-shrink-0"
+                  focal={article}
+                  wrapperClassName="w-16 h-12 rounded flex-shrink-0"
                   loading="lazy"
                 />
               )}

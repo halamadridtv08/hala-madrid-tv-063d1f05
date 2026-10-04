@@ -1,4 +1,3 @@
-import { FocalImage } from "@/components/common/FocalImage";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
@@ -313,7 +312,7 @@ const ArticleDetail = () => {
               </div>
               
               {article.image_url && <div className="mb-8">
-                  <FocalImage src={article.image_url} alt={article.title} focal={article as any} wrapperClassName="w-full aspect-[4/5] md:aspect-video max-h-[500px] rounded-lg" />
+                  <img src={article.image_url} alt={article.title} className="w-full max-h-[500px] rounded-lg object-cover" />
                 </div>}
               
               <div className="mb-12">

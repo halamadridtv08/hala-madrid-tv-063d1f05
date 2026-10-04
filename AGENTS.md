@@ -1,2 +1,3 @@
 - Share article links using the canonical public domain and a stable cover-derived URL version, because social platforms cache link previews by URL.
 - Prerender both slug and legacy UUID article paths, because social crawlers do not execute SPA metadata and older shared links use UUIDs.
+- Apply article focal-point settings to home-page article imagery only; keep article-detail covers in their original presentation.

@@ -15,8 +15,10 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { FocalImage } from "@/components/common/FocalImage";
+import { FocalSettings } from "@/types/Focal";
 
-interface Article {
+interface Article extends Partial<FocalSettings> {
   id: string;
   slug: string;
   title: string;
@@ -147,10 +149,11 @@ export function NewsCarousel() {
                 <Card className="overflow-hidden border-none h-full">
                   <CardContent className="p-0 h-full">
                     <div className="relative h-[500px] w-full">
-                      <img
+                      <FocalImage
                         src={slide.image_url || "https://via.placeholder.com/1200x500?text=Real+Madrid"}
                         alt={slide.title}
-                        className="w-full h-full object-cover object-center"
+                        focal={slide}
+                        wrapperClassName="absolute inset-0"
                         width="1200"
                         height="500"
                         loading={index === 0 ? "eager" : "lazy"}
@@ -224,10 +227,11 @@ export function NewsCarousel() {
               }`}
             >
               <div className="relative w-24 h-16 flex-shrink-0 rounded overflow-hidden">
-                <img
+                <FocalImage
                   src={slide.image_url || "https://via.placeholder.com/200x100?text=RM"}
                   alt={slide.title}
-                  className="w-full h-full object-cover"
+                  focal={slide}
+                  wrapperClassName="h-full w-full"
                 />
                 {current === index && (
                   <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">

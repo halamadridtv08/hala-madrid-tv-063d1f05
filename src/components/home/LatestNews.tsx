@@ -9,7 +9,9 @@ import { User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { useLanguage } from "@/contexts/LanguageContext";
-interface Article {
+import { FocalImage } from "@/components/common/FocalImage";
+import { FocalSettings } from "@/types/Focal";
+interface Article extends Partial<FocalSettings> {
   id: string;
   slug: string;
   title: string;
@@ -93,10 +95,12 @@ export function LatestNews() {
           </div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {articles.map(article => <Card key={article.id} className="overflow-hidden card-hover">
                 <div className="relative h-48 overflow-hidden">
-                  <img 
+                  <FocalImage
                     src={article.image_url || "https://via.placeholder.com/400x200?text=Real+Madrid"} 
                     alt={article.title} 
-                    className="w-full h-full object-cover object-center transition-transform duration-500 hover:scale-105"
+                    focal={article}
+                    wrapperClassName="h-full w-full"
+                    className="transition-transform duration-500 hover:scale-105"
                     width="400"
                     height="192"
                     loading="lazy"
