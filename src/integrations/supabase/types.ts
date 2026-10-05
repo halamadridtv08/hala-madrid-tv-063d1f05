@@ -501,6 +501,7 @@ export type Database = {
         Row: {
           author_id: string
           author_name: string | null
+          auto_generated: boolean
           category: string
           content: string
           description: string
@@ -512,10 +513,13 @@ export type Database = {
           id: string
           image_url: string | null
           is_published: boolean | null
+          meta_description: string | null
           published_at: string | null
           read_time: string | null
           scheduled_at: string | null
           slug: string
+          source_url: string | null
+          tags: string[] | null
           thumbnail_url: string | null
           title: string
           updated_at: string | null
@@ -527,6 +531,7 @@ export type Database = {
         Insert: {
           author_id: string
           author_name?: string | null
+          auto_generated?: boolean
           category: string
           content: string
           description: string
@@ -538,10 +543,13 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_published?: boolean | null
+          meta_description?: string | null
           published_at?: string | null
           read_time?: string | null
           scheduled_at?: string | null
           slug: string
+          source_url?: string | null
+          tags?: string[] | null
           thumbnail_url?: string | null
           title: string
           updated_at?: string | null
@@ -553,6 +561,7 @@ export type Database = {
         Update: {
           author_id?: string
           author_name?: string | null
+          auto_generated?: boolean
           category?: string
           content?: string
           description?: string
@@ -564,10 +573,13 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_published?: boolean | null
+          meta_description?: string | null
           published_at?: string | null
           read_time?: string | null
           scheduled_at?: string | null
           slug?: string
+          source_url?: string | null
+          tags?: string[] | null
           thumbnail_url?: string | null
           title?: string
           updated_at?: string | null
@@ -575,6 +587,98 @@ export type Database = {
           view_count?: number | null
           zoom_desktop?: number
           zoom_mobile?: number
+        }
+        Relationships: []
+      }
+      auto_article_items: {
+        Row: {
+          article_id: string | null
+          created_at: string
+          error: string | null
+          id: string
+          processed_at: string | null
+          source_title: string | null
+          source_url: string
+          status: string
+        }
+        Insert: {
+          article_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          processed_at?: string | null
+          source_title?: string | null
+          source_url: string
+          status?: string
+        }
+        Update: {
+          article_id?: string | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          processed_at?: string | null
+          source_title?: string | null
+          source_url?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auto_article_items_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      auto_article_settings: {
+        Row: {
+          default_category: string
+          fixed_times: string[]
+          id: number
+          interval_minutes: number
+          last_publish_at: string | null
+          last_scrape_at: string | null
+          lock_until: string | null
+          max_articles_per_run: number
+          paused_reason: string | null
+          publish_mode: string
+          scraping_enabled: boolean
+          source_urls: string[]
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          default_category?: string
+          fixed_times?: string[]
+          id?: number
+          interval_minutes?: number
+          last_publish_at?: string | null
+          last_scrape_at?: string | null
+          lock_until?: string | null
+          max_articles_per_run?: number
+          paused_reason?: string | null
+          publish_mode?: string
+          scraping_enabled?: boolean
+          source_urls?: string[]
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          default_category?: string
+          fixed_times?: string[]
+          id?: number
+          interval_minutes?: number
+          last_publish_at?: string | null
+          last_scrape_at?: string | null
+          lock_until?: string | null
+          max_articles_per_run?: number
+          paused_reason?: string | null
+          publish_mode?: string
+          scraping_enabled?: boolean
+          source_urls?: string[]
+          timezone?: string
+          updated_at?: string
         }
         Relationships: []
       }

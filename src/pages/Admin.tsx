@@ -55,6 +55,7 @@ import { FlashNewsCategoryManager } from "@/components/admin/FlashNewsCategoryMa
 import { FlashNewsSourceManager } from "@/components/admin/FlashNewsSourceManager";
 import { BatchMatchImporter } from "@/components/admin/BatchMatchImporter";
 import { SofascoreImportPanel } from "@/components/admin/SofascoreImportPanel";
+import { AutoArticlesPanel } from "@/components/admin/AutoArticlesPanel";
 import { SyncPlayerStatsFromMatches } from "@/components/admin/SyncPlayerStatsFromMatches";
 import { StatsEvolutionChart } from "@/components/admin/StatsEvolutionChart";
 import { StatsExporter } from "@/components/admin/StatsExporter";
@@ -507,6 +508,7 @@ const Admin = () => {
     }
     return <div>
         <h2 className="text-2xl font-bold mb-4">Gestion des Articles</h2>
+        <AutoArticlesPanel />
         <ArticleTable articles={articles} setArticles={setArticles} onManageEngagement={setSelectedArticleId} />
       </div>;
   };
