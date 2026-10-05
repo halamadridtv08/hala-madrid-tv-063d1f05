@@ -296,8 +296,9 @@ Deno.serve(async (req) => {
           }).select('id').single()
           if (error) throw error
           if (a.poll_question && a.poll_options?.length >= 2) {
-            const { error: pe } = await db.from('article_polls').insert({ article_id: art.id, question: a.poll_question, options: a.poll_options.slice(0, 4), is_active: true })
+            const { data: poll, error: pe } = await db.from('article_polls').insert({ article_id: art.id, question: a.poll_question, is_active: true }).select('id').single()
             if (pe) console.warn('poll insert', pe.message)
+            else await db.from('poll_options').insert(a.poll_options.slice(0, 4).map((o: string) => ({ poll_id: poll.id, option_text: o })))
           }
           await db.from('auto_article_items').update({ status: 'done', article_id: art.id, error: null, processed_at: new Date().toISOString() }).eq('id', item.id)
           stats.created++
