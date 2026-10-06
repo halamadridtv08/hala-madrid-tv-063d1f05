@@ -216,8 +216,9 @@ Deno.serve(async (req) => {
   const auth = req.headers.get('Authorization') ?? ''
   const cronSecret = Deno.env.get('CRON_SECRET')
   const isCron = !!cronSecret && (auth === `Bearer ${cronSecret}` || req.headers.get('x-cron-secret') === cronSecret)
-  if (!isCron) {
-    if (action === 'cron') return json({ error: 'Non autorisé' }, 401)
+  // 'cron' is safe to call without admin: it only does what the saved settings allow,
+  // guarded by the hourly scrape interval, publish interval and a DB lock.
+  if (!isCron && action !== 'cron') {
     const uc = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: auth } } })
     const { data: { user } } = await uc.auth.getUser()
     if (!user) return json({ error: 'Authentification requise' }, 401)
