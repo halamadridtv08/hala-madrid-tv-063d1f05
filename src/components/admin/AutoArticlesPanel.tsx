@@ -39,10 +39,10 @@ export const AutoArticlesPanel = ({ onChanged }: { onChanged?: () => void }) => 
       setSources(d.source_urls.join("\n"));
       setTimes(d.fixed_times.join(", "));
     }
-    const { data: dr } = await supabase
+    const { data: dr } = await (supabase as any)
       .from("articles")
       .select("id, title, image_url, category, source_url, published_at")
-      .eq("auto_generated" as any, true)
+      .eq("auto_generated", true)
       .eq("is_published", false)
       .order("published_at", { ascending: true });
     setDrafts((dr as any) ?? []);
