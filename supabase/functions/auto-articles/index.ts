@@ -168,6 +168,20 @@ async function crawlTexts(apifyKey: string, urls: string[]) {
   return map
 }
 
+const STOP = new Set(['real', 'madrid', 'pour', 'dans', 'avec', 'sans', 'mais', 'plus', 'cette', 'sont', 'nous', 'vous', 'leur', 'leurs', 'apres', 'avant', 'contre', 'entre', 'tout', 'tous', 'deja', 'encore', 'merengue', 'merengues', 'club', 'officiel', 'video', 'selon', 'aussi', 'fait', 'faire'])
+function tokens(s: string) {
+  const w = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().split(/[^a-z0-9]+/)
+  return new Set(w.filter((x) => x.length > 3 && !STOP.has(x)))
+}
+function similarity(a: Set<string>, b: Set<string>) {
+  let inter = 0
+  for (const x of a) if (b.has(x)) inter++
+  return inter / Math.min(a.size, b.size)
+}
+function fingerprint(text: string) {
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(200, 600)
+}
+
 function slugify(s: string) {
   return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 90)
 }
@@ -272,12 +286,32 @@ Deno.serve(async (req) => {
       const texts = await crawlTexts(apifyKey, pending.map((p: { source_url: string }) => p.source_url))
       const { data: admin } = await db.from('user_roles').select('user_id').eq('role', 'admin').limit(1).single()
 
+      // Anti-doublon : titres/textes déjà traités ces 4 derniers jours
+      const since = new Date(Date.now() - 4 * 86400000).toISOString()
+      const { data: recentItems } = await db.from('auto_article_items').select('source_title')
+        .eq('status', 'done').gte('created_at', since).limit(300)
+      const { data: recentArts } = await db.from('articles').select('title')
+        .gte('published_at', since).limit(300)
+      const seen: Set<string>[] = [
+        ...(recentItems ?? []).map((r: { source_title: string }) => tokens(r.source_title || '')),
+        ...(recentArts ?? []).map((r: { title: string }) => tokens(r.title || '')),
+      ].filter((t) => t.size >= 3)
+      const seenPrints = new Set<string>()
+
       for (const item of pending) {
         const src = texts.get(item.source_url)
         if (!src || src.text.length < 400) {
           await db.from('auto_article_items').update({ status: 'failed', error: 'Texte source introuvable ou trop court', processed_at: new Date().toISOString() }).eq('id', item.id)
           stats.failed++; continue
         }
+        const tk = tokens(item.source_title || src.title)
+        const print = fingerprint(src.text)
+        if (seenPrints.has(print) || (tk.size >= 3 && seen.some((s) => similarity(s, tk) >= 0.5))) {
+          await db.from('auto_article_items').update({ status: 'skipped', error: 'Doublon détecté (même info déjà traitée)', processed_at: new Date().toISOString() }).eq('id', item.id)
+          stats.skipped++; continue
+        }
+        seenPrints.add(print)
+        if (tk.size >= 3) seen.push(tk)
         try {
           const a = await rewrite(aiKey, item.source_title || src.title, src.text)
           if (!a.relevant || !a.title || !a.content) {
