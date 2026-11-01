@@ -214,39 +214,34 @@ async function applyLive(admin: any, match: any, fs: Json) {
   const goals: Json[] = [];
   for (const [side, before, after, team] of sides) {
     const diff = (after ?? 0) - (before ?? 0);
-    for (let i = 0; i < diff; i++) {
-      goals.push({
-        match_id: match.id,
-        minute,
-        entry_type: 'goal',
-        title: isRM(team) ? 'BUUUT du Real Madrid !' : `But de ${team}`,
-        content: `Score : ${match.home_team} ${payload.home_score ?? 0} - ${payload.away_score ?? 0} ${match.away_team}`,
-        team_side: side,
-        is_important: true,
-      });
-    }
+    for (let i = 0; i < diff; i++) goals.push({ side, team });
   }
   if (goals.length) {
-    await admin.from('live_blog_entries').insert(goals);
     log.push(`${goals.length} but(s)`);
-    // Enrich goal entries with scorer names from FotMob when the match is linked.
+    // Use the site's own goal template (scorer photo/number) via FotMob when linked.
+    let nativeGoals = 0;
     const fotmobId = match.match_details?.fotmob_match_id;
     if (fotmobId) {
       try {
-        const details = await runFotMobDetails([Number(fotmobId)]);
-        const events = mapFotMobEvents(details[0], match.home_team, match.away_team);
-        const goalEvents = events.filter((e) => e.entry_type === 'goal' && e.player_name);
-        for (const g of goals) {
-          const ev = goalEvents.find((e) => e.team_side === g.team_side && Math.abs((e.minute ?? 0) - (g.minute ?? 0)) <= 3);
-          if (ev?.player_name) {
-            await admin.from('live_blog_entries')
-              .update({ title: `${g.title} — ${ev.player_name}`, content: `${g.content} · Buteur : ${ev.player_name}` })
-              .eq('match_id', match.id).eq('entry_type', 'goal').eq('minute', g.minute).eq('team_side', g.team_side);
-          }
-        }
+        await admin.from('matches').update({ home_score: payload.home_score ?? match.home_score, away_score: payload.away_score ?? match.away_score }).eq('id', match.id);
+        const r: Json = await fotmobDetailsAction(admin, { matchId: match.id, apply: true });
+        nativeGoals = (r.events_to_add ?? []).filter((e: Json) => ['goal', 'penalty_goal'].includes(e.entry_type)).length;
       } catch (e) {
-        console.error('FotMob scorer enrichment failed:', e);
+        console.error('FotMob live goal import failed:', e);
       }
+    }
+    // Scorer not known yet: site-format placeholder, completed later by FotMob import.
+    const missing = goals.slice(nativeGoals);
+    if (missing.length) {
+      await admin.from('live_blog_entries').insert(missing.map((g) => ({
+        match_id: match.id,
+        minute,
+        entry_type: 'goal',
+        title: `⚽ BUT! (${g.team})`,
+        content: `${g.team} trouve la faille ! Score : ${match.home_team} ${payload.home_score ?? 0} - ${payload.away_score ?? 0} ${match.away_team}. Buteur à confirmer.`,
+        team_side: g.side,
+        is_important: true,
+      })));
     }
   }
 
