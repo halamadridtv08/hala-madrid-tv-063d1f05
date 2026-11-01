@@ -183,7 +183,13 @@ async function applyLive(admin: any, match: any, fs: Json) {
       else await admin.from('match_timer_settings').insert(row);
       await admin.from('live_blog_entries').insert({ match_id: match.id, minute: 0, entry_type: 'kickoff', title: "Coup d'envoi !", content: 'Le match commence.', is_important: true });
       log.push('kickoff');
-    } else if (timer.is_paused && timer.current_half === 1) {
+    } else if (
+      timer.is_paused && timer.current_half === 1 &&
+      // Flashscore lags: only resume if it explicitly reports the 2nd half
+      /2nd|second|2e|2ème|2\s*half/.test(rawStatus) &&
+      // and the break (manual or auto) has lasted at least 12 minutes
+      timer.updated_at && Date.now() - new Date(timer.updated_at).getTime() >= 12 * 60000
+    ) {
       await admin.from('match_timer_settings').update({ current_half: 2, half_started_at: now, is_paused: false, is_timer_running: true }).eq('id', timer.id);
       await admin.from('live_blog_entries').insert({ match_id: match.id, minute: 46, entry_type: 'kickoff', title: 'Reprise !', content: 'La seconde période commence.', is_important: true });
       log.push('second_half');
