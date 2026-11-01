@@ -168,8 +168,9 @@ function currentMinute(timer: any): number {
 async function applyLive(admin: any, match: any, fs: Json) {
   const payload = matchPayload(fs);
   const newStatus = payload.status;
-  const rawStatus = String(fs.match_status ?? '').toLowerCase();
-  const isHalfTime = rawStatus.includes('half') && !rawStatus.includes('2');
+  const rawStatus = String(fs.match_status ?? fs.status ?? fs.match_stage ?? '').toLowerCase();
+  // "1st half" / "2nd half" are play phases; only "half time"/"HT"/"break" is the pause.
+  const isHalfTime = /half[\s_-]?time|^ht$|break|pause|mi-temps/.test(rawStatus);
   const now = new Date().toISOString();
   const log: string[] = [];
 
@@ -194,7 +195,7 @@ async function applyLive(admin: any, match: any, fs: Json) {
       await admin.from('live_blog_entries').insert({ match_id: match.id, minute: 46, entry_type: 'kickoff', title: 'Reprise !', content: 'La seconde période commence.', is_important: true });
       log.push('second_half');
     }
-  } else if (isHalfTime && timer && !timer.is_paused) {
+  } else if (isHalfTime && timer && !timer.is_paused && (timer.current_half ?? 1) === 1) {
     await admin.from('match_timer_settings').update({ is_paused: true, paused_at_minute: 45, is_timer_running: false }).eq('id', timer.id);
     await admin.from('live_blog_entries').insert({ match_id: match.id, minute: 45, entry_type: 'halftime', title: 'Mi-temps', content: `Mi-temps : ${payload.home_score ?? 0} - ${payload.away_score ?? 0}`, is_important: true });
     log.push('halftime');
