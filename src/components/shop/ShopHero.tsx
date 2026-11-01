@@ -60,7 +60,7 @@ export const ShopHero = () => {
             >
               SHOP
             </motion.h1>
-            <motion.h1
+            <motion.p
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -69,7 +69,7 @@ export const ShopHero = () => {
               <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-[shimmer_3s_linear_infinite]">
                 MADRIDISTA
               </span>
-            </motion.h1>
+            </motion.p>
           </div>
 
           {/* Subtext */}

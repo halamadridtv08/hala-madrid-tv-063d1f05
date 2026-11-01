@@ -35,7 +35,8 @@ const Transfers = () => {
   return (
     <>
       <SEOHead 
-        title="Transferts - Real Madrid | Mercato 2024/25"
+        title="Transferts Real Madrid - Mercato"
+        url="/transfers"
         description="Retrouvez tous les transferts du Real Madrid pour la saison 2024/25. Prêts, transferts définitifs et retours de prêt."
       />
       <Navbar />

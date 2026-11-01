@@ -83,7 +83,7 @@ export function Navbar() {
           <div className="hidden xs:block">
             <AuthButtons />
           </div>
-          <Button variant="ghost" size="sm" onClick={toggleMenu} className="p-1">
+          <Button variant="ghost" size="sm" onClick={toggleMenu} className="p-1" aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"} aria-expanded={isMenuOpen}>
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>

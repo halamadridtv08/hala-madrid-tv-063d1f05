@@ -148,6 +148,7 @@ const Kits = () => {
       <Navbar />
       <main className="min-h-screen">
         <div className="madrid-container py-4 sm:py-6 lg:py-8">
+          <h2 className="sr-only">Galerie des maillots</h2>
           <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
               <h1 className="section-title text-center sm:text-left text-2xl sm:text-3xl md:text-4xl">

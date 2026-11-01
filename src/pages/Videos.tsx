@@ -59,6 +59,23 @@ const Videos = () => {
         title="Vidéos Real Madrid"
         description="Les meilleures vidéos du Real Madrid : résumés de matchs, buts, interviews et coulisses des Merengues."
         url="/videos"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "Vidéos Real Madrid",
+          itemListElement: videos.slice(0, 20).map((v, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            item: {
+              "@type": "VideoObject",
+              name: v.title,
+              description: v.description || v.title,
+              thumbnailUrl: v.thumbnail_url || undefined,
+              uploadDate: v.created_at,
+              contentUrl: v.video_url,
+            },
+          })),
+        }}
       />
       <Navbar />
       <div className="min-h-screen bg-background">
