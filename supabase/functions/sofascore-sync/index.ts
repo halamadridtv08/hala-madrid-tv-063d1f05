@@ -266,19 +266,27 @@ async function liveAction(admin: any, body: Json) {
   const { data: candidates } = await q;
 
   const due = (candidates ?? []).filter((m: any) => {
-    if (!m.match_details?.flashscore_match_id) return false;
     if (body.force) return true;
     const last = m.match_details?.last_live_sync ? new Date(m.match_details.last_live_sync).getTime() : 0;
     return now - last >= LIVE_MIN_INTERVAL_MS;
   });
   if (!due.length) return { checked: candidates?.length ?? 0, synced: 0, results: [] };
 
-  const leagues = [...new Set(due.map((m: any) => m.match_details.flashscore_tournament).filter(Boolean))] as string[];
+  const unlinked = due.some((m: any) => !m.match_details?.flashscore_match_id);
+  const leagues = unlinked ? [] : [...new Set(due.map((m: any) => m.match_details?.flashscore_tournament).filter(Boolean))] as string[];
   const items = await runActor({ matchStatuses: ['all'], leagues: leagues.length ? leagues : DEFAULT_LEAGUES, dayOffsets: ['-1', '0'] });
 
   const results: Json[] = [];
   for (const m of due) {
-    const fs = items.find((i) => i.match_id === m.match_details.flashscore_match_id);
+    let fs = items.find((i) => m.match_details?.flashscore_match_id && i.match_id === m.match_details.flashscore_match_id);
+    if (!fs) {
+      // Auto-link matches created manually: same opponent, kickoff within 3h.
+      const opp = isRM(m.home_team) || m.home_team === 'Real Madrid' ? m.away_team : m.home_team;
+      fs = items.find((i) => isRealMadrid(i) && i.match_date &&
+        Math.abs(new Date(toIso(i.match_date)).getTime() - new Date(m.match_date).getTime()) <= 3 * 3600_000 &&
+        (similarName(i.home_team_name, opp) || similarName(i.away_team_name, opp)));
+      if (fs) m.match_details = { ...(m.match_details ?? {}), flashscore_match_id: fs.match_id };
+    }
     if (!fs) { results.push({ matchId: m.id, error: 'Match introuvable sur Flashscore' }); continue; }
     results.push(await applyLive(admin, m, fs));
   }
