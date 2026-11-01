@@ -168,8 +168,9 @@ function currentMinute(timer: any): number {
 async function applyLive(admin: any, match: any, fs: Json) {
   const payload = matchPayload(fs);
   const newStatus = payload.status;
-  const rawStatus = String(fs.match_status ?? '').toLowerCase();
-  const isHalfTime = rawStatus.includes('half') && !rawStatus.includes('2');
+  const rawStatus = String(fs.match_status ?? fs.status ?? fs.match_stage ?? '').toLowerCase();
+  // "1st half" / "2nd half" are play phases; only "half time"/"HT"/"break" is the pause.
+  const isHalfTime = /half[\s_-]?time|^ht$|break|pause|mi-temps/.test(rawStatus);
   const now = new Date().toISOString();
   const log: string[] = [];
 
@@ -194,7 +195,7 @@ async function applyLive(admin: any, match: any, fs: Json) {
       await admin.from('live_blog_entries').insert({ match_id: match.id, minute: 46, entry_type: 'kickoff', title: 'Reprise !', content: 'La seconde période commence.', is_important: true });
       log.push('second_half');
     }
-  } else if (isHalfTime && timer && !timer.is_paused) {
+  } else if (isHalfTime && timer && !timer.is_paused && (timer.current_half ?? 1) === 1) {
     await admin.from('match_timer_settings').update({ is_paused: true, paused_at_minute: 45, is_timer_running: false }).eq('id', timer.id);
     await admin.from('live_blog_entries').insert({ match_id: match.id, minute: 45, entry_type: 'halftime', title: 'Mi-temps', content: `Mi-temps : ${payload.home_score ?? 0} - ${payload.away_score ?? 0}`, is_important: true });
     log.push('halftime');
@@ -213,39 +214,34 @@ async function applyLive(admin: any, match: any, fs: Json) {
   const goals: Json[] = [];
   for (const [side, before, after, team] of sides) {
     const diff = (after ?? 0) - (before ?? 0);
-    for (let i = 0; i < diff; i++) {
-      goals.push({
-        match_id: match.id,
-        minute,
-        entry_type: 'goal',
-        title: isRM(team) ? 'BUUUT du Real Madrid !' : `But de ${team}`,
-        content: `Score : ${match.home_team} ${payload.home_score ?? 0} - ${payload.away_score ?? 0} ${match.away_team}`,
-        team_side: side,
-        is_important: true,
-      });
-    }
+    for (let i = 0; i < diff; i++) goals.push({ side, team });
   }
   if (goals.length) {
-    await admin.from('live_blog_entries').insert(goals);
     log.push(`${goals.length} but(s)`);
-    // Enrich goal entries with scorer names from FotMob when the match is linked.
+    // Use the site's own goal template (scorer photo/number) via FotMob when linked.
+    let nativeGoals = 0;
     const fotmobId = match.match_details?.fotmob_match_id;
     if (fotmobId) {
       try {
-        const details = await runFotMobDetails([Number(fotmobId)]);
-        const events = mapFotMobEvents(details[0], match.home_team, match.away_team);
-        const goalEvents = events.filter((e) => e.entry_type === 'goal' && e.player_name);
-        for (const g of goals) {
-          const ev = goalEvents.find((e) => e.team_side === g.team_side && Math.abs((e.minute ?? 0) - (g.minute ?? 0)) <= 3);
-          if (ev?.player_name) {
-            await admin.from('live_blog_entries')
-              .update({ title: `${g.title} — ${ev.player_name}`, content: `${g.content} · Buteur : ${ev.player_name}` })
-              .eq('match_id', match.id).eq('entry_type', 'goal').eq('minute', g.minute).eq('team_side', g.team_side);
-          }
-        }
+        await admin.from('matches').update({ home_score: payload.home_score ?? match.home_score, away_score: payload.away_score ?? match.away_score }).eq('id', match.id);
+        const r: Json = await fotmobDetailsAction(admin, { matchId: match.id, apply: true });
+        nativeGoals = (r.events_to_add ?? []).filter((e: Json) => ['goal', 'penalty_goal'].includes(e.entry_type)).length;
       } catch (e) {
-        console.error('FotMob scorer enrichment failed:', e);
+        console.error('FotMob live goal import failed:', e);
       }
+    }
+    // Scorer not known yet: site-format placeholder, completed later by FotMob import.
+    const missing = goals.slice(nativeGoals);
+    if (missing.length) {
+      await admin.from('live_blog_entries').insert(missing.map((g) => ({
+        match_id: match.id,
+        minute,
+        entry_type: 'goal',
+        title: `⚽ BUT! (${g.team})`,
+        content: `${g.team} trouve la faille ! Score : ${match.home_team} ${payload.home_score ?? 0} - ${payload.away_score ?? 0} ${match.away_team}. Buteur à confirmer.`,
+        team_side: g.side,
+        is_important: true,
+      })));
     }
   }
 
@@ -270,19 +266,27 @@ async function liveAction(admin: any, body: Json) {
   const { data: candidates } = await q;
 
   const due = (candidates ?? []).filter((m: any) => {
-    if (!m.match_details?.flashscore_match_id) return false;
     if (body.force) return true;
     const last = m.match_details?.last_live_sync ? new Date(m.match_details.last_live_sync).getTime() : 0;
     return now - last >= LIVE_MIN_INTERVAL_MS;
   });
   if (!due.length) return { checked: candidates?.length ?? 0, synced: 0, results: [] };
 
-  const leagues = [...new Set(due.map((m: any) => m.match_details.flashscore_tournament).filter(Boolean))] as string[];
+  const unlinked = due.some((m: any) => !m.match_details?.flashscore_match_id);
+  const leagues = unlinked ? [] : [...new Set(due.map((m: any) => m.match_details?.flashscore_tournament).filter(Boolean))] as string[];
   const items = await runActor({ matchStatuses: ['all'], leagues: leagues.length ? leagues : DEFAULT_LEAGUES, dayOffsets: ['-1', '0'] });
 
   const results: Json[] = [];
   for (const m of due) {
-    const fs = items.find((i) => i.match_id === m.match_details.flashscore_match_id);
+    let fs = items.find((i) => m.match_details?.flashscore_match_id && i.match_id === m.match_details.flashscore_match_id);
+    if (!fs) {
+      // Auto-link matches created manually: same opponent, kickoff within 3h.
+      const opp = isRM(m.home_team) || m.home_team === 'Real Madrid' ? m.away_team : m.home_team;
+      fs = items.find((i) => isRealMadrid(i) && i.match_date &&
+        Math.abs(new Date(toIso(i.match_date)).getTime() - new Date(m.match_date).getTime()) <= 3 * 3600_000 &&
+        (similarName(i.home_team_name, opp) || similarName(i.away_team_name, opp)));
+      if (fs) m.match_details = { ...(m.match_details ?? {}), flashscore_match_id: fs.match_id };
+    }
     if (!fs) { results.push({ matchId: m.id, error: 'Match introuvable sur Flashscore' }); continue; }
     results.push(await applyLive(admin, m, fs));
   }
@@ -546,9 +550,11 @@ async function fotmobDetailsAction(admin: any, body: Json) {
     : ['red_card', 'second_yellow_card'].includes(t) ? 'red' : t);
   const surname = (n: string | null | undefined) => (n ? normalizePlayer(n).split(' ').at(-1) ?? '' : '');
   const text = (b: Json) => normalizePlayer(`${b.title ?? ''} ${b.content ?? ''}`);
+  const isPlaceholder = (b: Json) => text(b).includes('buteur a confirmer');
   const sameEvent = (a: Json, b: Json) => {
     if (family(a.entry_type) !== family(b.entry_type)) return false;
     if (a.team_side && b.team_side && a.team_side !== b.team_side) return false;
+    if (isPlaceholder(b) && Math.abs((a.minute ?? -100) - (b.minute ?? -200)) <= 6) return true;
     if (Math.abs((a.minute ?? -100) - (b.minute ?? -200)) > 3) return false;
     if (a.player_id && (a.player_id === b.player_id || a.player_id === b.substituted_player_id)) return true;
     if (a.substituted_player_id && (a.substituted_player_id === b.substituted_player_id || a.substituted_player_id === b.player_id)) return true;
@@ -562,7 +568,7 @@ async function fotmobDetailsAction(admin: any, body: Json) {
   const at = (m: number | null) => new Date(kickoff + ((m ?? 0) + ((m ?? 0) > 45 ? 15 : 0)) * 60000 + 30000).toISOString();
   const toAdd = events.filter((e) => !(existing ?? []).some((row: Json) => sameEvent(e, row)));
   const enriched = events.filter((e) => (existing ?? []).some((row: Json) => sameEvent(e, row) &&
-    ((!row.player_id && e.player_id) || (!row.assist_player_id && e.assist_player_id) ||
+    (isPlaceholder(row) || (!row.player_id && e.player_id) || (!row.assist_player_id && e.assist_player_id) ||
      (!row.substituted_player_id && e.substituted_player_id))));
 
   const homeScore = num(detail.homeTeam?.score ?? detail.homeScore);
@@ -594,6 +600,7 @@ async function fotmobDetailsAction(admin: any, body: Json) {
     if (!row.player_id && e.player_id) update.player_id = e.player_id;
     if (!row.assist_player_id && e.assist_player_id) update.assist_player_id = e.assist_player_id;
     if (!row.substituted_player_id && e.substituted_player_id) update.substituted_player_id = e.substituted_player_id;
+    if (isPlaceholder(row)) { update.title = e.title; update.content = e.content; update.entry_type = e.entry_type; update.minute = e.minute; }
     if (Object.keys(update).length) await admin.from('live_blog_entries').update(update).eq('id', row.id);
   }
   const { error: updateError } = await admin.from('matches').update({

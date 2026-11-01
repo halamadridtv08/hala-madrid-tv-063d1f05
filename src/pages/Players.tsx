@@ -195,6 +195,16 @@ const Players = () => {
         title="Effectif Real Madrid 2024/25"
         description="Découvrez l'effectif complet du Real Madrid : joueurs, entraîneur et staff. Statistiques, postes et profils détaillés des Merengues."
         url="/players"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "Effectif du Real Madrid",
+          itemListElement: players.map((p, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            item: { "@type": "Person", name: p.name, jobTitle: p.position, memberOf: { "@type": "SportsTeam", name: "Real Madrid" } },
+          })),
+        }}
       />
       <Navbar />
       <main className="min-h-screen">

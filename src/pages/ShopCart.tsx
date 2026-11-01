@@ -54,6 +54,10 @@ const ShopCart = () => {
     <>
       <Helmet>
         <title>Panier ({itemCount}) - HALA MADRID TV Shop</title>
+        <meta name="description" content="Votre panier sur la boutique HALA MADRID TV : maillots et articles du Real Madrid, livraison et paiement sécurisé." />
+        <meta property="og:title" content="Panier - HALA MADRID TV Shop" />
+        <meta property="og:description" content="Votre panier sur la boutique HALA MADRID TV : maillots et articles du Real Madrid." />
+        <meta name="robots" content="noindex, follow" />
       </Helmet>
 
       <div className="min-h-screen bg-background">

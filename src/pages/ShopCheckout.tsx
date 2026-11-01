@@ -162,7 +162,13 @@ const ShopCheckout = () => {
 
   return (
     <>
-      <Helmet><title>Checkout - HALA MADRID TV Shop</title></Helmet>
+      <Helmet>
+        <title>Checkout - HALA MADRID TV Shop</title>
+        <meta name="description" content="Finalisez votre commande sur la boutique HALA MADRID TV : adresse de livraison et paiement sécurisé." />
+        <meta property="og:title" content="Checkout - HALA MADRID TV Shop" />
+        <meta property="og:description" content="Finalisez votre commande sur la boutique HALA MADRID TV." />
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container mx-auto px-4 py-10 max-w-3xl">
