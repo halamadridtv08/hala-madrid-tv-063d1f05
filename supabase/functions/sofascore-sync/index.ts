@@ -542,9 +542,11 @@ async function fotmobDetailsAction(admin: any, body: Json) {
     : ['red_card', 'second_yellow_card'].includes(t) ? 'red' : t);
   const surname = (n: string | null | undefined) => (n ? normalizePlayer(n).split(' ').at(-1) ?? '' : '');
   const text = (b: Json) => normalizePlayer(`${b.title ?? ''} ${b.content ?? ''}`);
+  const isPlaceholder = (b: Json) => text(b).includes('buteur a confirmer');
   const sameEvent = (a: Json, b: Json) => {
     if (family(a.entry_type) !== family(b.entry_type)) return false;
     if (a.team_side && b.team_side && a.team_side !== b.team_side) return false;
+    if (isPlaceholder(b) && Math.abs((a.minute ?? -100) - (b.minute ?? -200)) <= 6) return true;
     if (Math.abs((a.minute ?? -100) - (b.minute ?? -200)) > 3) return false;
     if (a.player_id && (a.player_id === b.player_id || a.player_id === b.substituted_player_id)) return true;
     if (a.substituted_player_id && (a.substituted_player_id === b.substituted_player_id || a.substituted_player_id === b.player_id)) return true;
@@ -558,7 +560,7 @@ async function fotmobDetailsAction(admin: any, body: Json) {
   const at = (m: number | null) => new Date(kickoff + ((m ?? 0) + ((m ?? 0) > 45 ? 15 : 0)) * 60000 + 30000).toISOString();
   const toAdd = events.filter((e) => !(existing ?? []).some((row: Json) => sameEvent(e, row)));
   const enriched = events.filter((e) => (existing ?? []).some((row: Json) => sameEvent(e, row) &&
-    ((!row.player_id && e.player_id) || (!row.assist_player_id && e.assist_player_id) ||
+    (isPlaceholder(row) || (!row.player_id && e.player_id) || (!row.assist_player_id && e.assist_player_id) ||
      (!row.substituted_player_id && e.substituted_player_id))));
 
   const homeScore = num(detail.homeTeam?.score ?? detail.homeScore);
@@ -590,6 +592,7 @@ async function fotmobDetailsAction(admin: any, body: Json) {
     if (!row.player_id && e.player_id) update.player_id = e.player_id;
     if (!row.assist_player_id && e.assist_player_id) update.assist_player_id = e.assist_player_id;
     if (!row.substituted_player_id && e.substituted_player_id) update.substituted_player_id = e.substituted_player_id;
+    if (isPlaceholder(row)) { update.title = e.title; update.content = e.content; update.entry_type = e.entry_type; update.minute = e.minute; }
     if (Object.keys(update).length) await admin.from('live_blog_entries').update(update).eq('id', row.id);
   }
   const { error: updateError } = await admin.from('matches').update({
