@@ -15,7 +15,12 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (refreshing) return;
     refreshing = true;
-    window.location.reload();
+    // New version installed: never reload under the visitor's eyes.
+    // Apply it silently the next time the tab is hidden (switch tab / app).
+    if (document.visibilityState === 'hidden') { window.location.reload(); return; }
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') window.location.reload();
+    });
   });
 
   // Check for updates on load and periodically
