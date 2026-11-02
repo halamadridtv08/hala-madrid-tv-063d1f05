@@ -102,7 +102,7 @@ const handler = async (req: Request): Promise<Response> => {
     const safeModEmail = escapeHtml(moderator_email).slice(0, 320);
     const safeActionLabel = escapeHtml(ACTION_LABELS[action_type] || action_type);
 
-    console.log(`Processing notification for ${action_type} by ${moderator_email}`);
+    console.log(`Processing notification for ${action_type}`);
 
     // Get admin emails
     const { data: adminEmails, error: emailsError } = await supabase.rpc('get_admin_emails');

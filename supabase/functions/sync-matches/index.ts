@@ -195,7 +195,7 @@ serve(async (req) => {
     }
 
     // Log successful sync attempt
-    console.log(`Match sync initiated by admin user ${user.id} (${user.email})`);
+    console.log(`Match sync initiated by admin user ${user.id}`);
 
     const result = await syncMatches(supabaseClient);
     
