@@ -137,6 +137,31 @@ serve(async (req) => {
 
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
+
+    // Actions with caller-chosen identifiers (fixtures, teams, dates) are
+    // restricted to signed-in admins/moderators to protect the paid quota.
+    const STAFF_ONLY = new Set(['fixture-details', 'fixture-events', 'fixture-lineups', 'fixture-statistics', 'search-fixtures']);
+    const customParams = ['team', 'next', 'last'].some((k) => url.searchParams.has(k));
+    if (STAFF_ONLY.has(action ?? '') || customParams) {
+      const sbUrl = Deno.env.get('SUPABASE_URL') ?? '';
+      const uc = createClient(sbUrl, expectedAnon, { global: { headers: { Authorization: authHeader ?? '' } } });
+      const { data: { user } } = await uc.auth.getUser();
+      if (!user) {
+        return new Response(JSON.stringify({ error: 'Authentification requise' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      const admin = createClient(sbUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+      const { data: roles } = await admin.from('user_roles').select('role').eq('user_id', user.id).in('role', ['admin', 'moderator']);
+      if (!roles || roles.length === 0) {
+        return new Response(JSON.stringify({ error: 'Accès refusé' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      const idOk = (v: string | null) => v === null || /^\d{1,10}$/.test(v);
+      const dateOk = (v: string | null) => v === null || /^\d{4}-\d{2}-\d{2}$/.test(v);
+      if (!idOk(url.searchParams.get('fixture')) || !idOk(url.searchParams.get('team')) || !idOk(url.searchParams.get('season'))
+        || !idOk(url.searchParams.get('next')) || !idOk(url.searchParams.get('last'))
+        || !dateOk(url.searchParams.get('from')) || !dateOk(url.searchParams.get('to'))) {
+        return new Response(JSON.stringify({ error: 'Paramètres invalides' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
     
     // Get current season dynamically
     const CURRENT_SEASON = await getCurrentSeasonYear();

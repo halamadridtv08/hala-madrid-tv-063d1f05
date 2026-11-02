@@ -24,6 +24,7 @@ serve(async (req) => {
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
     if (!user?.email) throw new Error("Utilisateur non authentifié");
+    const emailVerified = !!user.email_confirmed_at;
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
@@ -66,6 +67,7 @@ serve(async (req) => {
     const { data: products, error: productsErr } = await supabaseAdmin
       .from("shop_products")
       .select("id, name, price")
+      .eq("is_published", true)
       .in("id", normalized.map((i) => i.productId));
 
     if (productsErr) throw new Error("Impossible de récupérer les produits");
@@ -107,10 +109,13 @@ serve(async (req) => {
     }
 
     // Check for existing Stripe customer
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    // Only reuse an existing Stripe customer when the email is verified
+    // and the customer was created for this same account.
     let customerId: string | undefined;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
+    if (emailVerified) {
+      const customers = await stripe.customers.list({ email: user.email, limit: 10 });
+      const match = customers.data.find((c: any) => c.metadata?.supabase_user_id === user.id);
+      if (match) customerId = match.id;
     }
 
     // Build Stripe line items using ONLY server-fetched prices
@@ -140,7 +145,14 @@ serve(async (req) => {
       });
     }
 
-    const origin = req.headers.get("origin") || "https://hala-madrid-tv.lovable.app";
+    const ALLOWED_ORIGINS = [
+      "https://hala-madrid-tv.com",
+      "https://www.hala-madrid-tv.com",
+      "https://hala-madrid-tv.lovable.app",
+      "https://id-preview--73064fd2-8b52-40c2-b76d-341c01c8ff9d.lovable.app",
+    ];
+    const reqOrigin = req.headers.get("origin") ?? "";
+    const origin = ALLOWED_ORIGINS.includes(reqOrigin) ? reqOrigin : "https://www.hala-madrid-tv.com";
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -149,11 +161,13 @@ serve(async (req) => {
       mode: "payment",
       success_url: `${origin}/shop?payment=success&order=${orderId}`,
       cancel_url: `${origin}/shop/cart?payment=cancelled`,
+      ...(customerId ? {} : { customer_creation: "always" as const }),
       metadata: {
         order_id: orderId,
         user_id: user.id,
         discount_amount: discountAmount.toString(),
       },
+      payment_intent_data: { metadata: { supabase_user_id: user.id } },
     });
 
     await supabaseAdmin

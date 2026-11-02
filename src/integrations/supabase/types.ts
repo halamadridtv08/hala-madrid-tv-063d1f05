@@ -5367,6 +5367,10 @@ export type Database = {
       update_all_players_ages: { Args: never; Returns: undefined }
       update_player_objectives_progress: { Args: never; Returns: undefined }
       user_has_totp: { Args: { p_user_id: string }; Returns: boolean }
+      verify_auto_articles_cron_token: {
+        Args: { p_token: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "user" | "moderator"
