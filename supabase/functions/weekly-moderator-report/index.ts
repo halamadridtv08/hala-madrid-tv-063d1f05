@@ -124,7 +124,7 @@ serve(async (req) => {
       byModerator[action.moderator_id].count++;
       if (byModerator[action.moderator_id].actions.length < 5) {
         byModerator[action.moderator_id].actions.push(
-          `${action.action_type}: ${action.entity_title || action.entity_type}`
+          escHtml(`${action.action_type}: ${action.entity_title || action.entity_type}`)
         );
       }
     }
@@ -146,7 +146,7 @@ serve(async (req) => {
     const moderatorRows = Object.entries(byModerator)
       .map(([_, mod]) => `
         <tr>
-          <td style="padding: 8px; border-bottom: 1px solid #eee;">${mod.email}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #eee;">${escHtml(mod.email)}</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${mod.count}</td>
           <td style="padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; color: #666;">
             ${mod.actions.join("<br>")}${mod.count > 5 ? `<br>... et ${mod.count - 5} autres` : ""}
@@ -300,3 +300,7 @@ serve(async (req) => {
     );
   }
 });
+
+function escHtml(v: unknown): string {
+  return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}

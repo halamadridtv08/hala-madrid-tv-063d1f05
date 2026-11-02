@@ -230,8 +230,16 @@ Deno.serve(async (req) => {
   const auth = req.headers.get('Authorization') ?? ''
   const cronSecret = Deno.env.get('CRON_SECRET')
   const isCron = !!cronSecret && (auth === `Bearer ${cronSecret}` || req.headers.get('x-cron-secret') === cronSecret)
-  if (action === 'cron' && !isCron) return json({ error: 'Non autorisé' }, 401)
-  if (!isCron) {
+  let isCronOk = isCron
+  if (!isCronOk) {
+    const tok = req.headers.get('x-cron-token')
+    if (tok) {
+      const { data: ok } = await db.rpc('verify_auto_articles_cron_token', { p_token: tok })
+      isCronOk = ok === true
+    }
+  }
+  if (action === 'cron' && !isCronOk) return json({ error: 'Non autorisé' }, 401)
+  if (!isCronOk) {
     const uc = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: auth } } })
     const { data: { user } } = await uc.auth.getUser()
     if (!user) return json({ error: 'Authentification requise' }, 401)
