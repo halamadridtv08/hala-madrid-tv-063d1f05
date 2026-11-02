@@ -7,7 +7,7 @@ const corsHeaders = {
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
-const MODEL = 'openai/gpt-6-astra'
+const MODEL = 'openai/gpt-6-luna' // ~100x cheaper than gpt-6-astra, same API
 const KEYWORDS = /real[-\s_]?madrid|madrid|mbapp|vinicius|vini-jr|bellingham|valverde|rodrygo|courtois|militao|rudiger|guler|tchouameni|camavinga|huijsen|carvajal|alaba|mendy|endrick|mourinho|bernabeu|merengue|madridista|pitarch|lunin|ceballos|asencio|fran-garcia|alexander-arnold|mastantuono|carreras|brahim/i
 
 const STYLE_PROMPT = `Tu es le rédacteur en chef de HALA MADRID TV, un média francophone 100 % Madridista.
