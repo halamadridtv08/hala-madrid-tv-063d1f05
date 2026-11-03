@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useMatchPredictions, MatchPrediction } from '@/hooks/useMatchPredictions';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMatchTimezone } from '@/hooks/useMatchTimezone';
 
 interface Match {
   id: string;
@@ -28,6 +29,7 @@ interface MatchPredictionCardProps {
 }
 
 export const MatchPredictionCard = ({ match, existingPrediction }: MatchPredictionCardProps) => {
+  const { formatDateTime } = useMatchTimezone();
   const { user } = useAuth();
   const { submitPrediction } = useMatchPredictions();
   const [homeScore, setHomeScore] = useState(existingPrediction?.home_score_prediction ?? 0);
@@ -79,7 +81,7 @@ export const MatchPredictionCard = ({ match, existingPrediction }: MatchPredicti
           <Badge variant="outline">{match.competition || 'Match'}</Badge>
           <div className="flex items-center text-xs text-muted-foreground">
             <Clock className="w-3 h-3 mr-1" />
-            {format(new Date(match.match_date), 'dd MMM HH:mm', { locale: fr })}
+            {formatDateTime(match.match_date, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>
       </CardHeader>

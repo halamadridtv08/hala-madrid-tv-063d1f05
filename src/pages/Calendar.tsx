@@ -10,6 +10,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Match } from "@/types/Match";
+import { useMatchTimezone, TimezoneToggle } from "@/hooks/useMatchTimezone";
 import { SEOHead } from "@/components/SEOHead";
 import { useNavigate } from "react-router-dom";
 
@@ -66,12 +67,7 @@ const CalendarPage = () => {
   // Get dates that have matches for calendar highlighting
   const matchDates = matches.map(match => new Date(match.match_date));
 
-  const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  const { formatTime } = useMatchTimezone();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -128,6 +124,7 @@ const CalendarPage = () => {
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
               Consultez tous les matchs du Real Madrid
             </p>
+            <TimezoneToggle className="mt-3" />
           </div>
 
           {/* Section Prochain Match */}

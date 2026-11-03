@@ -20,6 +20,7 @@ import { SEOHead } from '@/components/SEOHead';
 import { LiveBlogEntryCard, LiveBlogPlayer } from '@/components/liveblog/LiveBlogEntryCard';
 import { LiveBlogComments } from '@/components/liveblog/LiveBlogComments';
 import { useLiveBlogReactions } from '@/hooks/useLiveBlogSocial';
+import { useMatchTimezone, TimezoneToggle } from '@/hooks/useMatchTimezone';
 
 const translations = {
   fr: {
@@ -362,7 +363,7 @@ const LiveBlog = () => {
                 </div>
               )}
               <span className="block mt-1">
-                {format(matchDate, "EEEE dd MMMM yyyy - HH:mm", { locale: dateLocale })}
+                <LiveBlogMatchTime date={matchDate} />
               </span>
             </div>
             
@@ -568,3 +569,13 @@ const LiveBlog = () => {
 };
 
 export default LiveBlog;
+
+function LiveBlogMatchTime({ date }: { date: Date }) {
+  const { formatDateTime } = useMatchTimezone();
+  return (
+    <span className="inline-flex flex-wrap items-center gap-2">
+      {formatDateTime(date, { weekday: "long", day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+      <TimezoneToggle />
+    </span>
+  );
+}
