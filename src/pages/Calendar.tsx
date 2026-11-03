@@ -10,7 +10,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Match } from "@/types/Match";
-import { useMatchTimezone, TimezoneToggle } from "@/hooks/useMatchTimezone";
+import { useMatchTimezone, TimezoneToggle, zonedDay } from "@/hooks/useMatchTimezone";
 import { SEOHead } from "@/components/SEOHead";
 import { useNavigate } from "react-router-dom";
 
@@ -44,11 +44,12 @@ const CalendarPage = () => {
     }
   };
 
+  const { formatTime, timeZone } = useMatchTimezone();
+
   // Filter matches for selected date
   const matchesForSelectedDate = matches.filter(match => {
     if (!selectedDate) return false;
-    const matchDate = new Date(match.match_date);
-    return matchDate.toDateString() === selectedDate.toDateString();
+    return zonedDay(match.match_date, timeZone).toDateString() === selectedDate.toDateString();
   });
 
   // Get next upcoming match
@@ -59,15 +60,14 @@ const CalendarPage = () => {
 
   // Get matches for current month
   const monthMatches = matches.filter(match => {
-    const matchDate = new Date(match.match_date);
+    const matchDate = zonedDay(match.match_date, timeZone);
     return matchDate.getMonth() === currentMonth.getMonth() && 
            matchDate.getFullYear() === currentMonth.getFullYear();
   });
 
   // Get dates that have matches for calendar highlighting
-  const matchDates = matches.map(match => new Date(match.match_date));
+  const matchDates = matches.map(match => zonedDay(match.match_date, timeZone));
 
-  const { formatTime } = useMatchTimezone();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
