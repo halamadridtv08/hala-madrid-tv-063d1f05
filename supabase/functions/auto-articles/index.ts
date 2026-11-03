@@ -199,7 +199,8 @@ async function publishTick(db: any, s: any, force = false) {
   const last = s.last_publish_at ? new Date(s.last_publish_at).getTime() : 0
   if (!force) {
     if (s.publish_mode === 'interval') {
-      if (Date.now() - last < s.interval_minutes * 60000) return { published: null, reason: 'intervalle non atteint' }
+      // 10-min tolerance: cron runs every 30 min with a few seconds of jitter, so without it a 3h interval drifts to 3h30.
+      if (Date.now() - last < (s.interval_minutes - 10) * 60000) return { published: null, reason: 'intervalle non atteint' }
     } else if (s.publish_mode === 'fixed_times') {
       const cur = nowInTz(s.timezone)
       const slots = (s.fixed_times as string[]).map((t) => { const [h, m] = t.split(':').map(Number); return h * 60 + (m || 0) })
