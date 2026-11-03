@@ -50,3 +50,41 @@ export function TimezoneToggle({ className = "" }: { className?: string }) {
     </div>
   );
 }
+
+/** Parts of a date as seen in a given timezone (undefined = browser local). */
+export function zonedParts(d: string | Date, timeZone?: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
+  }).formatToParts(new Date(d));
+  const g = (t: string) => Number(parts.find((p) => p.type === t)?.value);
+  return { y: g("year"), m: g("month"), d: g("day"), h: g("hour"), min: g("minute") };
+}
+
+/** Calendar-day Date (local midnight) matching the day in the chosen timezone. */
+export function zonedDay(d: string | Date, timeZone?: string) {
+  const p = zonedParts(d, timeZone);
+  return new Date(p.y, p.m - 1, p.d);
+}
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+/** ISO -> "YYYY-MM-DDTHH:mm" in the given timezone, for datetime-local inputs. */
+export function toZonedInput(iso: string, timeZone?: string) {
+  const p = zonedParts(iso, timeZone);
+  return `${p.y}-${pad(p.m)}-${pad(p.d)}T${pad(p.h)}:${pad(p.min)}`;
+}
+
+/** "YYYY-MM-DDTHH:mm" typed in the given timezone -> UTC ISO string. */
+export function fromZonedInput(value: string, timeZone?: string) {
+  if (!timeZone) return new Date(value).toISOString();
+  const [date, time] = value.split("T");
+  const [y, m, d] = date.split("-").map(Number);
+  const [h, mi] = time.split(":").map(Number);
+  const target = Date.UTC(y, m - 1, d, h, mi);
+  let guess = target;
+  for (let i = 0; i < 3; i++) {
+    const p = zonedParts(new Date(guess), timeZone);
+    guess += target - Date.UTC(p.y, p.m - 1, p.d, p.h, p.min);
+  }
+  return new Date(guess).toISOString();
+}

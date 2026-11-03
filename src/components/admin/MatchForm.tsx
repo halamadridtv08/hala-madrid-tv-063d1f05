@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Match } from "@/types/Match";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { toZonedInput, fromZonedInput, MADRID_TZ } from "@/hooks/useMatchTimezone";
 
 interface MatchFormProps {
   match?: Match;
@@ -18,6 +19,15 @@ interface MatchFormProps {
 
 export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
   const [loading, setLoading] = useState(false);
+  const [inputTz, setInputTz] = useState<"madrid" | "local">("madrid");
+  const switchInputTz = (next: "madrid" | "local") => {
+    if (next === inputTz) return;
+    if (formData.match_date) {
+      const iso = fromZonedInput(formData.match_date, inputTz === "madrid" ? MADRID_TZ : undefined);
+      setFormData((f) => ({ ...f, match_date: toZonedInput(iso, next === "madrid" ? MADRID_TZ : undefined) }));
+    }
+    setInputTz(next);
+  };
   const [opposingTeams, setOpposingTeams] = useState<Array<{id: string, name: string, logo_url?: string, stadium?: string | null}>>([]);
   
   const [formData, setFormData] = useState({
@@ -25,7 +35,7 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
     away_team: match?.away_team || "",
     home_team_logo: match?.home_team_logo || "",
     away_team_logo: match?.away_team_logo || "",
-    match_date: match?.match_date ? new Date(match.match_date).toISOString().slice(0, 16) : "",
+    match_date: match?.match_date ? toZonedInput(match.match_date, MADRID_TZ) : "",
     venue: match?.venue || "",
     competition: match?.competition || "",
     home_score: match?.home_score || 0,
@@ -99,7 +109,7 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
     try {
       const matchData = {
         ...formData,
-        match_date: new Date(formData.match_date).toISOString(),
+        match_date: fromZonedInput(formData.match_date, inputTz === "madrid" ? MADRID_TZ : undefined),
         opposing_team_id: formData.opposing_team_id || null,
       };
 
@@ -226,7 +236,17 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
           </div>
           
           <div>
-            <Label htmlFor="match_date" className="text-sm">Date et heure du match</Label>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+              <Label htmlFor="match_date" className="text-sm">Date et heure du match</Label>
+              <div className="inline-flex rounded-full border border-border bg-muted p-0.5 text-xs" role="group" aria-label="Fuseau de saisie">
+                {(["madrid", "local"] as const).map((m) => (
+                  <button key={m} type="button" aria-pressed={inputTz === m} onClick={() => switchInputTz(m)}
+                    className={`rounded-full px-2.5 py-1 font-medium transition-colors ${inputTz === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                    {m === "madrid" ? "Heure de Madrid" : "Mon heure locale"}
+                  </button>
+                ))}
+              </div>
+            </div>
             <Input
               id="match_date"
               type="datetime-local"
@@ -235,6 +255,9 @@ export const MatchForm = ({ match, onSuccess, onCancel }: MatchFormProps) => {
               required
               className="h-9 text-sm"
             />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Saisie en {inputTz === "madrid" ? "heure de Madrid (Espagne)" : "heure locale de cet appareil"}. Les visiteurs voient l'heure convertie selon leur choix.
+            </p>
           </div>
           
           <div>
