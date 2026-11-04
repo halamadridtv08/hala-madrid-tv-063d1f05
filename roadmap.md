@@ -1,25 +1,11 @@
-- [x] Comparer les bundles et assets du domaine personnalisé avec la publication Lovable
-- [x] Afficher tous les écarts de déploiement dans le diagnostic admin
-- [x] Activer l’audio par défaut et mémoriser uniquement le choix explicite de l’utilisateur
-- [x] Maintenir le plein écran pendant le passage entre stories
-- [x] Vérifier puis publier les correctifs
-- [x] Détecter et refuser les vidéos HEVC/MOV incompatibles avant l’upload des stories
-- [x] Afficher une erreur de format claire sans relances réseau inutiles
+# Roadmap
 
-- [x] Conversion auto MP4 H.264/AAC (ffmpeg.wasm) pour les vidéos de stories incompatibles
-- [x] Persistance des préférences son + plein écran des stories (localStorage)
-- [x] Restaurer le lecteur simple des stories, sans conversion ni contrôle de codec
+## En cours
+- [ ] Bouton admin pour arrêter/reprendre la synchro Flashscore (économie de crédits Apify)
+- [ ] Bascule automatique entre deux comptes Apify (clé principale + clé de secours) quand la première est épuisée
+- [ ] Intégration FotMob : classement LaLiga, calendrier/résultats, stats joueurs, notes, Shotmap, effectifs des équipes ADVERSes uniquement (l'effectif du Real Madrid reste géré manuellement par l'admin)
 
-- [x] Remplacer la barre de stories par le rail flottant « Vertical floating stories »
-- [x] Placer la barre de match avant les stories et rendre l’affichage des stories pilotable depuis l’admin
-- [x] Ancrer les stories sous la barre de match sans les maintenir à l’écran au défilement
-- [ ] Garantir l’expiration et l’archivage stricts des stories 24 h
-- [ ] Réparer les badges, le temps réel et le son des notifications admin
-- [ ] Ajouter les badges de commentaires à la liste des articles
-- [ ] Remplacer l’approbation par la publication immédiate, le masquage réversible et les mots bloqués
-- [ ] Vérifier les parcours public et admin sur ordinateur et mobile
-- [x] Enrichir les actions express du centre de match et ajouter les buts sur coup franc
-- [x] Rendre toute la page Analytics administrable sur téléphone sans débordement horizontal
-- [ ] Vérifier le centre de match et les cinq vues Analytics sur mobile, tablette et ordinateur
-- [x] Partager les articles avec une URL canonique actualisée lorsque leur miniature change
-- [x] Appliquer le cadrage mobile et ordinateur aux images d’articles de l’accueil, du diaporama et des bannières
+## Contraintes validées par l'utilisateur
+- Effectif Real Madrid : gestion manuelle uniquement, ne jamais importer/écraser via FotMob
+- Flashscore : pouvoir l'arrêter depuis l'admin (consomme trop de crédits)
+- Deux comptes Apify : bascule automatique possible
