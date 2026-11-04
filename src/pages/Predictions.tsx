@@ -8,6 +8,7 @@ import { Target, Trophy, Calendar, History } from 'lucide-react';
 import { useMatches } from '@/hooks/useMatches';
 import { useMatchPredictions } from '@/hooks/useMatchPredictions';
 import { MatchPredictionCard } from '@/components/predictions/MatchPredictionCard';
+import { TimezoneToggle } from '@/hooks/useMatchTimezone';
 import { PredictionLeaderboard } from '@/components/predictions/PredictionLeaderboard';
 
 const Predictions = () => {
@@ -43,6 +44,7 @@ const Predictions = () => {
               Score exact = 3 points, bon résultat = 1 point. 
               Affrontez les autres Madridistas !
             </p>
+            <TimezoneToggle className="mt-4" />
           </div>
 
           {/* Points Explanation */}
