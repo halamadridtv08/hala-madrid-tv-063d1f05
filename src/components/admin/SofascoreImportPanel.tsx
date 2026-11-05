@@ -459,8 +459,72 @@ export const SofascoreImportPanel = () => {
             )}
           </TabsContent>
 
+          {/* Effectif adverse (FotMob) */}
+          <TabsContent value="squad" className="space-y-4 pt-4">
+            <div className="space-y-1">
+              <Label htmlFor="squadUrl">URL ou ID FotMob de l'équipe adverse</Label>
+              <Input
+                id="squadUrl"
+                placeholder="https://www.fotmob.com/teams/9906/overview/atletico-madrid"
+                value={squadUrl}
+                onChange={(e) => setSquadUrl(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Ouvrez l'équipe sur fotmob.com et copiez l'URL. L'effectif du Real Madrid n'est
+                jamais importé : il reste géré manuellement.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button variant="outline" onClick={() => runSquad(false)} disabled={squadLoading}>
+                {squadLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                Aperçu
+              </Button>
+              <Button onClick={() => runSquad(true)} disabled={squadLoading || !squadPreview}>
+                Importer l'effectif
+              </Button>
+            </div>
+            {squadPreview && (
+              <div className="space-y-2 rounded-md border p-3 text-sm">
+                <p>
+                  <strong>{squadPreview.team_name}</strong> · {squadPreview.players_found} joueur(s) ·{' '}
+                  <Badge variant={squadPreview.action === 'create' ? 'default' : 'secondary'}>
+                    {squadPreview.action === 'create' ? 'Nouvelle équipe' : 'Équipe existante'}
+                  </Badge>
+                </p>
+                <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                  {squadPreview.players?.map((p: any, i: number) => (
+                    <p key={i} className="text-muted-foreground">
+                      {p.jersey_number ? `#${p.jersey_number} ` : ''}{p.name} <span className="text-xs">({p.position})</span>
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+          </TabsContent>
 
-          
+          {/* Classement LaLiga (FotMob) */}
+          <TabsContent value="standings" className="space-y-4 pt-4">
+            <p className="text-sm text-muted-foreground">
+              Met à jour le classement LaLiga affiché sur le site depuis FotMob.
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button variant="outline" onClick={() => runStandings(false)} disabled={standingsLoading}>
+                {standingsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                Aperçu
+              </Button>
+              <Button onClick={() => runStandings(true)} disabled={standingsLoading || !standingsPreview}>
+                Mettre à jour le classement
+              </Button>
+            </div>
+            {standingsPreview && (
+              <div className="space-y-1 rounded-md border p-3 text-sm">
+                <p className="font-medium">Saison {standingsPreview.season}</p>
+                {standingsPreview.teams?.map((t: string, i: number) => (
+                  <p key={i} className="text-muted-foreground">{t}</p>
+                ))}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </CardContent>
     </Card>
