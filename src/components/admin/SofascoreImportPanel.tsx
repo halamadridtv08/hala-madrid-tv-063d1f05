@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Download, CalendarDays, Radio, RefreshCw, ListPlus } from 'lucide-react';
+import { Loader2, Download, CalendarDays, Radio, RefreshCw, ListPlus, Users, Trophy } from 'lucide-react';
 
 interface FixturePreview {
   flashscore_match_id: string;
@@ -67,6 +67,16 @@ export const SofascoreImportPanel = () => {
   const [fotmobPreview, setFotmobPreview] = useState<any>(null);
   const [fotmobLoading, setFotmobLoading] = useState(false);
 
+  const [flashEnabled, setFlashEnabled] = useState<boolean | null>(null);
+  const [flashToggling, setFlashToggling] = useState(false);
+
+  const [squadUrl, setSquadUrl] = useState('');
+  const [squadPreview, setSquadPreview] = useState<any>(null);
+  const [squadLoading, setSquadLoading] = useState(false);
+
+  const [standingsPreview, setStandingsPreview] = useState<any>(null);
+  const [standingsLoading, setStandingsLoading] = useState(false);
+
   useEffect(() => {
     supabase
       .from('matches')
@@ -74,6 +84,12 @@ export const SofascoreImportPanel = () => {
       .order('match_date', { ascending: false })
       .limit(40)
       .then(({ data }) => setMatches((data as MatchRow[]) || []));
+    supabase
+      .from('site_content')
+      .select('content_value')
+      .eq('content_key', 'flashscore_live_enabled')
+      .maybeSingle()
+      .then(({ data }) => setFlashEnabled(data?.content_value !== 'false'));
   }, []);
 
   const callFunction = async (body: Record<string, unknown>) => {
@@ -135,6 +151,68 @@ export const SofascoreImportPanel = () => {
 
   const toggleLeague = (id: string) =>
     setSelectedLeagues((prev) => (prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id]));
+
+  const toggleFlash = async (enabled: boolean) => {
+    setFlashToggling(true);
+    try {
+      const { error } = await supabase
+        .from('site_content')
+        .update({ content_value: enabled ? 'true' : 'false' })
+        .eq('content_key', 'flashscore_live_enabled');
+      if (error) throw error;
+      setFlashEnabled(enabled);
+      toast({
+        title: enabled ? 'Synchro automatique activée' : 'Synchro automatique arrêtée',
+        description: enabled
+          ? 'Les matchs en direct se mettent à jour toutes les 2 minutes.'
+          : 'Plus aucun appel Flashscore — zéro crédit Apify dépensé.',
+      });
+    } catch (e) {
+      toast({ title: 'Échec', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setFlashToggling(false);
+    }
+  };
+
+  const runSquad = async (apply: boolean) => {
+    if (!squadUrl.trim()) {
+      toast({ title: "Collez l'URL FotMob de l'équipe adverse", variant: 'destructive' });
+      return;
+    }
+    setSquadLoading(true);
+    try {
+      const data = await callFunction({ action: 'fotmob-squad', teamUrl: squadUrl.trim(), apply });
+      setSquadPreview(data);
+      toast({
+        title: apply ? 'Effectif importé' : 'Aperçu FotMob',
+        description: apply
+          ? `${data.players_added} joueur(s) ajouté(s), ${data.players_updated} mis à jour.`
+          : `${data.players_found} joueur(s) trouvé(s) pour ${data.team_name}.`,
+      });
+    } catch (e) {
+      toast({ title: 'Échec', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setSquadLoading(false);
+    }
+  };
+
+  const runStandings = async (apply: boolean) => {
+    setStandingsLoading(true);
+    try {
+      const data = await callFunction({ action: 'fotmob-standings', apply });
+      setStandingsPreview(data);
+      toast({
+        title: apply ? 'Classement mis à jour' : 'Aperçu du classement',
+        description: apply
+          ? `${data.teams_updated} équipe(s) mises à jour.`
+          : `${data.teams?.length ?? 0} équipe(s) trouvée(s).`,
+      });
+    } catch (e) {
+      toast({ title: 'Échec', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setStandingsLoading(false);
+    }
+  };
 
   const runFotmob = async (apply: boolean) => {
     if (!fotmobMatch) {
