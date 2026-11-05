@@ -112,6 +112,56 @@ async function getCurrentSeasonYear(): Promise<number> {
   }
 }
 
+// ---- Local data first (API-Football account suspended: the site now relies on
+// its own matches table, fed by the Flashscore/FotMob sync, and on the local
+// laliga_standings table, fed by FotMob). API-Football remains a fallback.
+
+function getAdminClient() {
+  return createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+}
+
+// Local standings in the exact API-Football shape the frontend expects.
+async function localStandings(season: number) {
+  const { data } = await getAdminClient()
+    .from('laliga_standings').select('*').eq('season', season).order('rank', { ascending: true });
+  if (!data?.length) return null;
+  return data.map((t: any) => ({
+    rank: t.rank,
+    team: { id: t.team_api_id, name: t.team_name, logo: t.team_logo ?? '' },
+    points: t.points,
+    goalsDiff: t.goal_difference,
+    form: '',
+    all: {
+      played: t.played, win: t.won, draw: t.drawn, lose: t.lost,
+      goals: { for: t.goals_for, against: t.goals_against },
+    },
+  }));
+}
+
+const matchToFixture = (m: any) => ({
+  fixture: {
+    id: m.id,
+    status: { short: m.status === 'live' ? 'LIVE' : m.status === 'finished' ? 'FT' : 'NS', elapsed: null },
+    date: m.match_date,
+  },
+  league: { name: m.competition ?? '' },
+  teams: {
+    home: { id: 0, name: m.home_team, logo: '' },
+    away: { id: 0, name: m.away_team, logo: '' },
+  },
+  goals: { home: m.home_score, away: m.away_score },
+});
+
+async function localFixtures(kind: 'live' | 'next' | 'last', count: number) {
+  const admin = getAdminClient();
+  let q = admin.from('matches').select('id, home_team, away_team, match_date, status, home_score, away_score, competition');
+  if (kind === 'live') q = q.eq('status', 'live');
+  else if (kind === 'next') q = q.eq('status', 'upcoming').gte('match_date', new Date().toISOString()).order('match_date', { ascending: true }).limit(count);
+  else q = q.eq('status', 'finished').order('match_date', { ascending: false }).limit(count);
+  const { data } = await q;
+  return data?.length ? data.map(matchToFixture) : null;
+}
+
 serve(async (req) => {
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
