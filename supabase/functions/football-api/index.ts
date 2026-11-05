@@ -224,10 +224,13 @@ serve(async (req) => {
         cacheKey = `standings_${FOOTBALL_API.LA_LIGA_ID}_${CURRENT_SEASON}`;
         responseData = getCached(cacheKey);
         if (!responseData) {
-          const data = await fetchFromApi(
-            `/standings?league=${FOOTBALL_API.LA_LIGA_ID}&season=${CURRENT_SEASON}`
-          );
-          responseData = data.response?.[0]?.league?.standings?.[0] || [];
+          responseData = await localStandings(CURRENT_SEASON);
+          if (!responseData) {
+            const data = await fetchFromApi(
+              `/standings?league=${FOOTBALL_API.LA_LIGA_ID}&season=${CURRENT_SEASON}`
+            );
+            responseData = data.response?.[0]?.league?.standings?.[0] || [];
+          }
           setCache(cacheKey, responseData);
         }
         break;
@@ -236,10 +239,13 @@ serve(async (req) => {
         cacheKey = `live_${FOOTBALL_API.LA_LIGA_ID}`;
         responseData = getCached(cacheKey);
         if (!responseData) {
-          const data = await fetchFromApi(
-            `/fixtures?league=${FOOTBALL_API.LA_LIGA_ID}&season=${CURRENT_SEASON}&live=all`
-          );
-          responseData = data.response || [];
+          responseData = await localFixtures('live', 0);
+          if (!responseData) {
+            const data = await fetchFromApi(
+              `/fixtures?league=${FOOTBALL_API.LA_LIGA_ID}&season=${CURRENT_SEASON}&live=all`
+            );
+            responseData = data.response || [];
+          }
           setCache(cacheKey, responseData);
         }
         break;
@@ -262,10 +268,15 @@ serve(async (req) => {
         cacheKey = `fixtures_${teamId}_next_${next}`;
         responseData = getCached(cacheKey);
         if (!responseData) {
-          const data = await fetchFromApi(
-            `/fixtures?team=${teamId}&next=${next}`
-          );
-          responseData = data.response || [];
+          if (String(teamId) === String(FOOTBALL_API.REAL_MADRID_ID)) {
+            responseData = await localFixtures('next', Number(next) || 5);
+          }
+          if (!responseData) {
+            const data = await fetchFromApi(
+              `/fixtures?team=${teamId}&next=${next}`
+            );
+            responseData = data.response || [];
+          }
           setCache(cacheKey, responseData);
         }
         break;
@@ -276,10 +287,15 @@ serve(async (req) => {
         cacheKey = `last_matches_${lastTeamId}_${last}`;
         responseData = getCached(cacheKey);
         if (!responseData) {
-          const data = await fetchFromApi(
-            `/fixtures?team=${lastTeamId}&last=${last}`
-          );
-          responseData = data.response || [];
+          if (String(lastTeamId) === String(FOOTBALL_API.REAL_MADRID_ID)) {
+            responseData = await localFixtures('last', Number(last) || 5);
+          }
+          if (!responseData) {
+            const data = await fetchFromApi(
+              `/fixtures?team=${lastTeamId}&last=${last}`
+            );
+            responseData = data.response || [];
+          }
           setCache(cacheKey, responseData);
         }
         break;
