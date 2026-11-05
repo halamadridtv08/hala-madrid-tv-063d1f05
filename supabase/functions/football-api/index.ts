@@ -112,6 +112,56 @@ async function getCurrentSeasonYear(): Promise<number> {
   }
 }
 
+// ---- Local data first (API-Football account suspended: the site now relies on
+// its own matches table, fed by the Flashscore/FotMob sync, and on the local
+// laliga_standings table, fed by FotMob). API-Football remains a fallback.
+
+function getAdminClient() {
+  return createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
+}
+
+// Local standings in the exact API-Football shape the frontend expects.
+async function localStandings(season: number) {
+  const { data } = await getAdminClient()
+    .from('laliga_standings').select('*').eq('season', season).order('rank', { ascending: true });
+  if (!data?.length) return null;
+  return data.map((t: any) => ({
+    rank: t.rank,
+    team: { id: t.team_api_id, name: t.team_name, logo: t.team_logo ?? '' },
+    points: t.points,
+    goalsDiff: t.goal_difference,
+    form: '',
+    all: {
+      played: t.played, win: t.won, draw: t.drawn, lose: t.lost,
+      goals: { for: t.goals_for, against: t.goals_against },
+    },
+  }));
+}
+
+const matchToFixture = (m: any) => ({
+  fixture: {
+    id: m.id,
+    status: { short: m.status === 'live' ? 'LIVE' : m.status === 'finished' ? 'FT' : 'NS', elapsed: null },
+    date: m.match_date,
+  },
+  league: { name: m.competition ?? '' },
+  teams: {
+    home: { id: 0, name: m.home_team, logo: '' },
+    away: { id: 0, name: m.away_team, logo: '' },
+  },
+  goals: { home: m.home_score, away: m.away_score },
+});
+
+async function localFixtures(kind: 'live' | 'next' | 'last', count: number) {
+  const admin = getAdminClient();
+  let q = admin.from('matches').select('id, home_team, away_team, match_date, status, home_score, away_score, competition');
+  if (kind === 'live') q = q.eq('status', 'live');
+  else if (kind === 'next') q = q.eq('status', 'upcoming').gte('match_date', new Date().toISOString()).order('match_date', { ascending: true }).limit(count);
+  else q = q.eq('status', 'finished').order('match_date', { ascending: false }).limit(count);
+  const { data } = await q;
+  return data?.length ? data.map(matchToFixture) : null;
+}
+
 serve(async (req) => {
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
@@ -174,10 +224,13 @@ serve(async (req) => {
         cacheKey = `standings_${FOOTBALL_API.LA_LIGA_ID}_${CURRENT_SEASON}`;
         responseData = getCached(cacheKey);
         if (!responseData) {
-          const data = await fetchFromApi(
-            `/standings?league=${FOOTBALL_API.LA_LIGA_ID}&season=${CURRENT_SEASON}`
-          );
-          responseData = data.response?.[0]?.league?.standings?.[0] || [];
+          responseData = await localStandings(CURRENT_SEASON);
+          if (!responseData) {
+            const data = await fetchFromApi(
+              `/standings?league=${FOOTBALL_API.LA_LIGA_ID}&season=${CURRENT_SEASON}`
+            );
+            responseData = data.response?.[0]?.league?.standings?.[0] || [];
+          }
           setCache(cacheKey, responseData);
         }
         break;
@@ -186,10 +239,13 @@ serve(async (req) => {
         cacheKey = `live_${FOOTBALL_API.LA_LIGA_ID}`;
         responseData = getCached(cacheKey);
         if (!responseData) {
-          const data = await fetchFromApi(
-            `/fixtures?league=${FOOTBALL_API.LA_LIGA_ID}&season=${CURRENT_SEASON}&live=all`
-          );
-          responseData = data.response || [];
+          responseData = await localFixtures('live', 0);
+          if (!responseData) {
+            const data = await fetchFromApi(
+              `/fixtures?league=${FOOTBALL_API.LA_LIGA_ID}&season=${CURRENT_SEASON}&live=all`
+            );
+            responseData = data.response || [];
+          }
           setCache(cacheKey, responseData);
         }
         break;
@@ -212,10 +268,15 @@ serve(async (req) => {
         cacheKey = `fixtures_${teamId}_next_${next}`;
         responseData = getCached(cacheKey);
         if (!responseData) {
-          const data = await fetchFromApi(
-            `/fixtures?team=${teamId}&next=${next}`
-          );
-          responseData = data.response || [];
+          if (String(teamId) === String(FOOTBALL_API.REAL_MADRID_ID)) {
+            responseData = await localFixtures('next', Number(next) || 5);
+          }
+          if (!responseData) {
+            const data = await fetchFromApi(
+              `/fixtures?team=${teamId}&next=${next}`
+            );
+            responseData = data.response || [];
+          }
           setCache(cacheKey, responseData);
         }
         break;
@@ -226,10 +287,15 @@ serve(async (req) => {
         cacheKey = `last_matches_${lastTeamId}_${last}`;
         responseData = getCached(cacheKey);
         if (!responseData) {
-          const data = await fetchFromApi(
-            `/fixtures?team=${lastTeamId}&last=${last}`
-          );
-          responseData = data.response || [];
+          if (String(lastTeamId) === String(FOOTBALL_API.REAL_MADRID_ID)) {
+            responseData = await localFixtures('last', Number(last) || 5);
+          }
+          if (!responseData) {
+            const data = await fetchFromApi(
+              `/fixtures?team=${lastTeamId}&last=${last}`
+            );
+            responseData = data.response || [];
+          }
           setCache(cacheKey, responseData);
         }
         break;

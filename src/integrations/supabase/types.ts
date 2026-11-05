@@ -1308,6 +1308,63 @@ export type Database = {
         }
         Relationships: []
       }
+      laliga_standings: {
+        Row: {
+          drawn: number
+          goal_difference: number
+          goals_against: number
+          goals_for: number
+          id: string
+          league_id: number
+          lost: number
+          played: number
+          points: number
+          rank: number
+          season: number
+          team_api_id: number
+          team_logo: string | null
+          team_name: string
+          updated_at: string
+          won: number
+        }
+        Insert: {
+          drawn?: number
+          goal_difference?: number
+          goals_against?: number
+          goals_for?: number
+          id?: string
+          league_id?: number
+          lost?: number
+          played?: number
+          points?: number
+          rank: number
+          season: number
+          team_api_id: number
+          team_logo?: string | null
+          team_name: string
+          updated_at?: string
+          won?: number
+        }
+        Update: {
+          drawn?: number
+          goal_difference?: number
+          goals_against?: number
+          goals_for?: number
+          id?: string
+          league_id?: number
+          lost?: number
+          played?: number
+          points?: number
+          rank?: number
+          season?: number
+          team_api_id?: number
+          team_logo?: string | null
+          team_name?: string
+          updated_at?: string
+          won?: number
+        }
+        Relationships: []
+      }
       live_blog_comment_reports: {
         Row: {
           comment_id: string

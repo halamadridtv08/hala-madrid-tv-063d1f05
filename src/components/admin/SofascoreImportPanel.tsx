@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Download, CalendarDays, Radio, RefreshCw, ListPlus } from 'lucide-react';
+import { Loader2, Download, CalendarDays, Radio, RefreshCw, ListPlus, Users, Trophy } from 'lucide-react';
 
 interface FixturePreview {
   flashscore_match_id: string;
@@ -67,6 +67,16 @@ export const SofascoreImportPanel = () => {
   const [fotmobPreview, setFotmobPreview] = useState<any>(null);
   const [fotmobLoading, setFotmobLoading] = useState(false);
 
+  const [flashEnabled, setFlashEnabled] = useState<boolean | null>(null);
+  const [flashToggling, setFlashToggling] = useState(false);
+
+  const [squadUrl, setSquadUrl] = useState('');
+  const [squadPreview, setSquadPreview] = useState<any>(null);
+  const [squadLoading, setSquadLoading] = useState(false);
+
+  const [standingsPreview, setStandingsPreview] = useState<any>(null);
+  const [standingsLoading, setStandingsLoading] = useState(false);
+
   useEffect(() => {
     supabase
       .from('matches')
@@ -74,6 +84,12 @@ export const SofascoreImportPanel = () => {
       .order('match_date', { ascending: false })
       .limit(40)
       .then(({ data }) => setMatches((data as MatchRow[]) || []));
+    supabase
+      .from('site_content')
+      .select('content_value')
+      .eq('content_key', 'flashscore_live_enabled')
+      .maybeSingle()
+      .then(({ data }) => setFlashEnabled(data?.content_value !== 'false'));
   }, []);
 
   const callFunction = async (body: Record<string, unknown>) => {
@@ -136,6 +152,68 @@ export const SofascoreImportPanel = () => {
   const toggleLeague = (id: string) =>
     setSelectedLeagues((prev) => (prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id]));
 
+  const toggleFlash = async (enabled: boolean) => {
+    setFlashToggling(true);
+    try {
+      const { error } = await supabase
+        .from('site_content')
+        .update({ content_value: enabled ? 'true' : 'false' })
+        .eq('content_key', 'flashscore_live_enabled');
+      if (error) throw error;
+      setFlashEnabled(enabled);
+      toast({
+        title: enabled ? 'Synchro automatique activée' : 'Synchro automatique arrêtée',
+        description: enabled
+          ? 'Les matchs en direct se mettent à jour toutes les 2 minutes.'
+          : 'Plus aucun appel Flashscore — zéro crédit Apify dépensé.',
+      });
+    } catch (e) {
+      toast({ title: 'Échec', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setFlashToggling(false);
+    }
+  };
+
+  const runSquad = async (apply: boolean) => {
+    if (!squadUrl.trim()) {
+      toast({ title: "Collez l'URL FotMob de l'équipe adverse", variant: 'destructive' });
+      return;
+    }
+    setSquadLoading(true);
+    try {
+      const data = await callFunction({ action: 'fotmob-squad', teamUrl: squadUrl.trim(), apply });
+      setSquadPreview(data);
+      toast({
+        title: apply ? 'Effectif importé' : 'Aperçu FotMob',
+        description: apply
+          ? `${data.players_added} joueur(s) ajouté(s), ${data.players_updated} mis à jour.`
+          : `${data.players_found} joueur(s) trouvé(s) pour ${data.team_name}.`,
+      });
+    } catch (e) {
+      toast({ title: 'Échec', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setSquadLoading(false);
+    }
+  };
+
+  const runStandings = async (apply: boolean) => {
+    setStandingsLoading(true);
+    try {
+      const data = await callFunction({ action: 'fotmob-standings', apply });
+      setStandingsPreview(data);
+      toast({
+        title: apply ? 'Classement mis à jour' : 'Aperçu du classement',
+        description: apply
+          ? `${data.teams_updated} équipe(s) mises à jour.`
+          : `${data.teams?.length ?? 0} équipe(s) trouvée(s).`,
+      });
+    } catch (e) {
+      toast({ title: 'Échec', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setStandingsLoading(false);
+    }
+  };
+
   const runFotmob = async (apply: boolean) => {
     if (!fotmobMatch) {
       toast({ title: 'Sélectionnez un match', variant: 'destructive' });
@@ -173,6 +251,24 @@ export const SofascoreImportPanel = () => {
           Récupère uniquement les matchs du Real Madrid. Pendant un match importé, le score, les buts,
           la mi-temps, la fin et le minuteur se mettent à jour automatiquement toutes les 2 minutes.
         </CardDescription>
+        {flashEnabled !== null && (
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-md border p-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">Synchro automatique Flashscore</p>
+              <p className="text-xs text-muted-foreground">
+                {flashEnabled
+                  ? 'Active : appels Apify toutes les 2 minutes pendant les matchs.'
+                  : 'Arrêtée : plus aucun appel Apify, zéro crédit dépensé.'}
+              </p>
+            </div>
+            <Switch
+              checked={flashEnabled}
+              disabled={flashToggling}
+              onCheckedChange={toggleFlash}
+              aria-label="Activer ou arrêter la synchro automatique Flashscore"
+            />
+          </div>
+        )}
       </CardHeader>
       <CardContent className="min-w-0">
         <Tabs defaultValue="fixtures" className="w-full min-w-0">
@@ -186,7 +282,12 @@ export const SofascoreImportPanel = () => {
             <TabsTrigger value="fotmob" className="flex-shrink-0 gap-1">
               <ListPlus className="h-4 w-4" /> Détails FotMob
             </TabsTrigger>
-            
+            <TabsTrigger value="squad" className="flex-shrink-0 gap-1">
+              <Users className="h-4 w-4" /> Effectif adverse
+            </TabsTrigger>
+            <TabsTrigger value="standings" className="flex-shrink-0 gap-1">
+              <Trophy className="h-4 w-4" /> Classement
+            </TabsTrigger>
           </TabsList>
 
           {/* Calendrier */}
@@ -358,8 +459,72 @@ export const SofascoreImportPanel = () => {
             )}
           </TabsContent>
 
+          {/* Effectif adverse (FotMob) */}
+          <TabsContent value="squad" className="space-y-4 pt-4">
+            <div className="space-y-1">
+              <Label htmlFor="squadUrl">URL ou ID FotMob de l'équipe adverse</Label>
+              <Input
+                id="squadUrl"
+                placeholder="https://www.fotmob.com/teams/9906/overview/atletico-madrid"
+                value={squadUrl}
+                onChange={(e) => setSquadUrl(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Ouvrez l'équipe sur fotmob.com et copiez l'URL. L'effectif du Real Madrid n'est
+                jamais importé : il reste géré manuellement.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button variant="outline" onClick={() => runSquad(false)} disabled={squadLoading}>
+                {squadLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                Aperçu
+              </Button>
+              <Button onClick={() => runSquad(true)} disabled={squadLoading || !squadPreview}>
+                Importer l'effectif
+              </Button>
+            </div>
+            {squadPreview && (
+              <div className="space-y-2 rounded-md border p-3 text-sm">
+                <p>
+                  <strong>{squadPreview.team_name}</strong> · {squadPreview.players_found} joueur(s) ·{' '}
+                  <Badge variant={squadPreview.action === 'create' ? 'default' : 'secondary'}>
+                    {squadPreview.action === 'create' ? 'Nouvelle équipe' : 'Équipe existante'}
+                  </Badge>
+                </p>
+                <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                  {squadPreview.players?.map((p: any, i: number) => (
+                    <p key={i} className="text-muted-foreground">
+                      {p.jersey_number ? `#${p.jersey_number} ` : ''}{p.name} <span className="text-xs">({p.position})</span>
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
+          </TabsContent>
 
-          
+          {/* Classement LaLiga (FotMob) */}
+          <TabsContent value="standings" className="space-y-4 pt-4">
+            <p className="text-sm text-muted-foreground">
+              Met à jour le classement LaLiga affiché sur le site depuis FotMob.
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button variant="outline" onClick={() => runStandings(false)} disabled={standingsLoading}>
+                {standingsLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                Aperçu
+              </Button>
+              <Button onClick={() => runStandings(true)} disabled={standingsLoading || !standingsPreview}>
+                Mettre à jour le classement
+              </Button>
+            </div>
+            {standingsPreview && (
+              <div className="space-y-1 rounded-md border p-3 text-sm">
+                <p className="font-medium">Saison {standingsPreview.season}</p>
+                {standingsPreview.teams?.map((t: string, i: number) => (
+                  <p key={i} className="text-muted-foreground">{t}</p>
+                ))}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </CardContent>
     </Card>

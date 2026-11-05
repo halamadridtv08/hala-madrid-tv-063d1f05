@@ -10,17 +10,40 @@ const corsHeaders = {
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/apify';
 const ACTOR = 'extractify-labs~flashscore-extractor';
 const FOTMOB_DETAILS_ACTOR = 'incognito_mode~fotmob-match-details-scraper';
+const FOTMOB_ACTOR = 'crawloop~fotmob-scraper';
+const FOTMOB_LALIGA_ID = 87;
+const FOTMOB_RM_TEAM_ID = 8633;
 const RM_NAME = 'real madrid';
 const DEFAULT_LEAGUES = ['LaLiga', 'Champions League', 'Copa del Rey', 'Super Cup', 'Club World Cup'];
 const LIVE_MIN_INTERVAL_MS = 90_000;
 
 type Json = Record<string, any>;
 
+// Two Apify accounts: if the main one runs out of credits (or its key is
+// rejected), the same run is retried once with the backup account.
 async function runActorRaw(actorId: string, input: Json): Promise<Json[]> {
   const lovableKey = Deno.env.get('LOVABLE_API_KEY');
-  const apifyKey = Deno.env.get('APIFY_API_KEY');
   if (!lovableKey) throw new Error('LOVABLE_API_KEY manquant');
-  if (!apifyKey) throw new Error('APIFY_API_KEY manquant (connecteur Apify non lié)');
+  const accounts = [
+    { name: 'principal', key: Deno.env.get('APIFY_API_KEY') },
+    { name: 'secours', key: Deno.env.get('APIFY_API_KEY_BACKUP') },
+  ].filter((a) => a.key);
+  if (!accounts.length) throw new Error('APIFY_API_KEY manquant (connecteur Apify non lié)');
+  let lastError: Error | null = null;
+  for (const account of accounts) {
+    try {
+      return await runActorWithKey(actorId, input, lovableKey, account.key!, account.name);
+    } catch (e) {
+      lastError = e as Error;
+      // Switch account only on credit/auth/quota problems; other errors would fail identically.
+      if (!/(\b401\b|\b402\b|\b403\b|\b429\b|payment|credit|quota|limit exceeded|insufficient)/i.test(lastError.message)) throw lastError;
+      console.error(`Compte Apify ${account.name} indisponible: ${lastError.message.slice(0, 150)} — essai du compte suivant`);
+    }
+  }
+  throw lastError ?? new Error('Apify: aucun compte disponible');
+}
+
+async function runActorWithKey(actorId: string, input: Json, lovableKey: string, apifyKey: string, accountName: string): Promise<Json[]> {
   const headers = {
     Authorization: `Bearer ${lovableKey}`,
     'X-Connection-Api-Key': apifyKey,
@@ -614,6 +637,139 @@ async function fotmobDetailsAction(admin: any, body: Json) {
   return { ...preview, applied: true, inserted: toAdd.length };
 }
 
+// ---- FotMob: opponent squads + LaLiga standings --------------------------
+
+function parseFotMobTeamId(raw: unknown): number | null {
+  if (raw === undefined || raw === null) return null;
+  const s = String(raw).trim();
+  const m = s.match(/fotmob\.com\/teams\/(\d+)/i) || s.match(/^(\d{3,})$/);
+  return m ? Number(m[1]) : null;
+}
+
+const SQUAD_POSITIONS: Record<string, string> = {
+  keepers: 'GK', defenders: 'DF', midfielders: 'MF', attackers: 'FW',
+};
+
+// Imports an OPPONENT team's squad into opposing_teams/opposing_players.
+// The Real Madrid squad is managed manually by the admin and is never touched.
+async function fotmobSquadAction(admin: any, body: Json) {
+  const teamId = parseFotMobTeamId(body.teamId ?? body.teamUrl);
+  if (!teamId) throw new Error("Fournissez l'ID ou l'URL FotMob de l'équipe (ex. https://www.fotmob.com/teams/9906/overview/atletico-madrid)");
+  if (teamId === FOTMOB_RM_TEAM_ID) throw new Error("L'effectif du Real Madrid est géré manuellement — import bloqué.");
+
+  const items = await runActorRaw(FOTMOB_ACTOR, {
+    mode: 'team', teamIds: [String(teamId)],
+    includeSquad: true, includeFixtures: false, includeStandings: false, maxItems: 5,
+  });
+  const team = items.find((i) => i.recordType === 'team') ?? items[0];
+  if (!team?.name) throw new Error('Équipe introuvable sur FotMob');
+  if (isRM(team.name)) throw new Error("L'effectif du Real Madrid est géré manuellement — import bloqué.");
+
+  const members = (Array.isArray(team.squad) ? team.squad : [])
+    .filter((g: Json) => g.group !== 'coach')
+    .flatMap((g: Json) => (Array.isArray(g.members) ? g.members : []).map((p: Json) => ({
+      name: String(p.name ?? '').trim(),
+      position: SQUAD_POSITIONS[String(g.group)] ?? String(p.position ?? ''),
+      jersey_number: num(p.shirtNumber),
+    })))
+    .filter((p: Json) => p.name);
+
+  let teamRow: any = null;
+  if (body.opposingTeamId) {
+    const { data } = await admin.from('opposing_teams').select('*').eq('id', String(body.opposingTeamId)).maybeSingle();
+    teamRow = data;
+  }
+  if (!teamRow) {
+    const { data: candidates } = await admin.from('opposing_teams').select('*');
+    teamRow = (candidates ?? []).find((t: any) => similarName(t.name, String(team.name)));
+  }
+
+  const preview = {
+    fotmob_team_id: teamId,
+    team_name: team.name,
+    players_found: members.length,
+    existing_team_id: teamRow?.id ?? null,
+    action: teamRow ? 'update' : 'create',
+    players: members,
+  };
+  if (!body.apply) return preview;
+
+  if (!teamRow) {
+    const { data, error } = await admin.from('opposing_teams').insert({
+      name: team.name,
+      short_name: team.name,
+      logo_url: `https://images.fotmob.com/image_resources/logo/teamlogo/${teamId}.png`,
+      is_own_team: false,
+    }).select().single();
+    if (error) throw new Error(`Création équipe: ${error.message}`);
+    teamRow = data;
+  }
+
+  const { data: existingPlayers } = await admin.from('opposing_players').select('id, name').eq('team_id', teamRow.id);
+  let added = 0, updated = 0;
+  for (const p of members) {
+    const current = (existingPlayers ?? []).find((e: any) => normalizePlayer(e.name) === normalizePlayer(p.name));
+    if (current) {
+      const update: Json = { updated_at: new Date().toISOString() };
+      if (p.position) update.position = p.position;
+      if (p.jersey_number !== null) update.jersey_number = p.jersey_number;
+      await admin.from('opposing_players').update(update).eq('id', current.id);
+      updated++;
+    } else {
+      const { error } = await admin.from('opposing_players').insert({
+        team_id: teamRow.id, name: p.name, position: p.position, jersey_number: p.jersey_number,
+      });
+      if (!error) added++;
+    }
+  }
+  return { ...preview, applied: true, team_id: teamRow.id, players_added: added, players_updated: updated };
+}
+
+// LaLiga standings from FotMob into the local laliga_standings table.
+async function fotmobStandingsAction(admin: any, body: Json) {
+  const leagueId = Number(body.leagueId ?? FOTMOB_LALIGA_ID);
+  const items = await runActorRaw(FOTMOB_ACTOR, {
+    mode: 'league', leagueIds: [String(leagueId)],
+    includeStandings: true, includeFixtures: false, includeTopPlayers: false, maxItems: 3,
+  });
+  const league = items.find((i) => i.recordType === 'league');
+  const table = (Array.isArray(league?.standings) ? league.standings : []).filter((s: Json) => s.tableKey === 'all');
+  if (!table.length) throw new Error('Classement introuvable sur FotMob');
+
+  // The season column follows the site's own setting, not the supplier's label.
+  const { data: seasonRow } = await admin.from('site_content').select('content_value').eq('content_key', 'current_season').maybeSingle();
+  const season = parseInt(String(seasonRow?.content_value ?? '').split('/')[0]) || new Date().getFullYear();
+
+  const { data: existing } = await admin.from('laliga_standings').select('*').eq('season', season);
+  const rows = table.map((s: Json) => {
+    const [gf, ga] = String(s.scoresStr ?? '0-0').split('-').map((v) => parseInt(v) || 0);
+    const previous = (existing ?? []).find((e: any) => similarName(e.team_name, String(s.teamName)));
+    return {
+      team_api_id: previous?.team_api_id ?? Number(s.teamId),
+      team_name: previous?.team_name ?? String(s.teamName),
+      team_logo: previous?.team_logo ?? `https://images.fotmob.com/image_resources/logo/teamlogo/${s.teamId}.png`,
+      rank: num(s.rank) ?? 0,
+      points: num(s.pts) ?? 0,
+      played: num(s.played) ?? 0,
+      won: num(s.wins) ?? 0,
+      drawn: num(s.draws) ?? 0,
+      lost: num(s.losses) ?? 0,
+      goals_for: gf,
+      goals_against: ga,
+      goal_difference: num(s.goalConDiff) ?? 0,
+      season,
+      league_id: 140,
+      updated_at: new Date().toISOString(),
+    };
+  });
+
+  const preview = { season, teams: rows.map((r: Json) => `${r.rank}. ${r.team_name} — ${r.points} pts`) };
+  if (!body.apply) return preview;
+  const { error } = await admin.from('laliga_standings').upsert(rows, { onConflict: 'team_api_id,season' });
+  if (error) throw new Error(`Classement: ${error.message}`);
+  return { ...preview, applied: true, teams_updated: rows.length };
+}
+
 // ---- server -------------------------------------------------------------
 
 Deno.serve(async (req) => {
@@ -630,6 +786,11 @@ Deno.serve(async (req) => {
     // Scheduled automatic live check: public, but only runs during a Real Madrid match window
     // and at most once every 90s per match (throttled in the database), no custom input.
     if (action === 'live-auto') {
+      // Admin kill switch: when disabled, skip before any Apify call (zero credits spent).
+      const { data: flag } = await admin.from('site_content').select('content_value').eq('content_key', 'flashscore_live_enabled').maybeSingle();
+      if (flag?.content_value === 'false') {
+        return json({ success: true, action, skipped: 'flashscore_live_disabled', synced: 0, results: [] });
+      }
       return json({ success: true, action, ...(await liveAction(admin, {})) });
     }
 
@@ -647,6 +808,8 @@ Deno.serve(async (req) => {
     if (action === 'fixtures') result = await fixturesAction(admin, body);
     else if (action === 'live') result = await liveAction(admin, { matchId: body.matchId, force: true });
     else if (action === 'fotmob-details') result = await fotmobDetailsAction(admin, body);
+    else if (action === 'fotmob-squad') result = await fotmobSquadAction(admin, body);
+    else if (action === 'fotmob-standings') result = await fotmobStandingsAction(admin, body);
     else return json({ error: `Action inconnue: ${action}` }, 400);
 
     return json({ success: true, action, ...result });
