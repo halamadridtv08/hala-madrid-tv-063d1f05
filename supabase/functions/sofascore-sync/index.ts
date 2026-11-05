@@ -10,17 +10,40 @@ const corsHeaders = {
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/apify';
 const ACTOR = 'extractify-labs~flashscore-extractor';
 const FOTMOB_DETAILS_ACTOR = 'incognito_mode~fotmob-match-details-scraper';
+const FOTMOB_ACTOR = 'crawloop~fotmob-scraper';
+const FOTMOB_LALIGA_ID = 87;
+const FOTMOB_RM_TEAM_ID = 8633;
 const RM_NAME = 'real madrid';
 const DEFAULT_LEAGUES = ['LaLiga', 'Champions League', 'Copa del Rey', 'Super Cup', 'Club World Cup'];
 const LIVE_MIN_INTERVAL_MS = 90_000;
 
 type Json = Record<string, any>;
 
+// Two Apify accounts: if the main one runs out of credits (or its key is
+// rejected), the same run is retried once with the backup account.
 async function runActorRaw(actorId: string, input: Json): Promise<Json[]> {
   const lovableKey = Deno.env.get('LOVABLE_API_KEY');
-  const apifyKey = Deno.env.get('APIFY_API_KEY');
   if (!lovableKey) throw new Error('LOVABLE_API_KEY manquant');
-  if (!apifyKey) throw new Error('APIFY_API_KEY manquant (connecteur Apify non lié)');
+  const accounts = [
+    { name: 'principal', key: Deno.env.get('APIFY_API_KEY') },
+    { name: 'secours', key: Deno.env.get('APIFY_API_KEY_BACKUP') },
+  ].filter((a) => a.key);
+  if (!accounts.length) throw new Error('APIFY_API_KEY manquant (connecteur Apify non lié)');
+  let lastError: Error | null = null;
+  for (const account of accounts) {
+    try {
+      return await runActorWithKey(actorId, input, lovableKey, account.key!, account.name);
+    } catch (e) {
+      lastError = e as Error;
+      // Switch account only on credit/auth/quota problems; other errors would fail identically.
+      if (!/(\b401\b|\b402\b|\b403\b|\b429\b|payment|credit|quota|limit exceeded|insufficient)/i.test(lastError.message)) throw lastError;
+      console.error(`Compte Apify ${account.name} indisponible: ${lastError.message.slice(0, 150)} — essai du compte suivant`);
+    }
+  }
+  throw lastError ?? new Error('Apify: aucun compte disponible');
+}
+
+async function runActorWithKey(actorId: string, input: Json, lovableKey: string, apifyKey: string, accountName: string): Promise<Json[]> {
   const headers = {
     Authorization: `Bearer ${lovableKey}`,
     'X-Connection-Api-Key': apifyKey,
