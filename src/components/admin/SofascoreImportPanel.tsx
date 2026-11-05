@@ -251,6 +251,24 @@ export const SofascoreImportPanel = () => {
           Récupère uniquement les matchs du Real Madrid. Pendant un match importé, le score, les buts,
           la mi-temps, la fin et le minuteur se mettent à jour automatiquement toutes les 2 minutes.
         </CardDescription>
+        {flashEnabled !== null && (
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-md border p-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">Synchro automatique Flashscore</p>
+              <p className="text-xs text-muted-foreground">
+                {flashEnabled
+                  ? 'Active : appels Apify toutes les 2 minutes pendant les matchs.'
+                  : 'Arrêtée : plus aucun appel Apify, zéro crédit dépensé.'}
+              </p>
+            </div>
+            <Switch
+              checked={flashEnabled}
+              disabled={flashToggling}
+              onCheckedChange={toggleFlash}
+              aria-label="Activer ou arrêter la synchro automatique Flashscore"
+            />
+          </div>
+        )}
       </CardHeader>
       <CardContent className="min-w-0">
         <Tabs defaultValue="fixtures" className="w-full min-w-0">
@@ -264,7 +282,12 @@ export const SofascoreImportPanel = () => {
             <TabsTrigger value="fotmob" className="flex-shrink-0 gap-1">
               <ListPlus className="h-4 w-4" /> Détails FotMob
             </TabsTrigger>
-            
+            <TabsTrigger value="squad" className="flex-shrink-0 gap-1">
+              <Users className="h-4 w-4" /> Effectif adverse
+            </TabsTrigger>
+            <TabsTrigger value="standings" className="flex-shrink-0 gap-1">
+              <Trophy className="h-4 w-4" /> Classement
+            </TabsTrigger>
           </TabsList>
 
           {/* Calendrier */}
